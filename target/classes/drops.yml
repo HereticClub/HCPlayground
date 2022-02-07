@@ -1,0 +1,15 @@
+blocks:
+  1:
+    block: potato
+    # rate: calculated by percentage
+    rate: 5.2
+    age: 7
+    drops:
+      - DIAMOND
+      - Emerald
+  2:
+    block: crops
+    rate: 10
+    age: 7
+    drops:
+      - iron_ingot

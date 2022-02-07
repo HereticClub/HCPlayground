@@ -1,0 +1,46 @@
+# 武器物品定义
+weapons:
+  # Unique Item ID
+  item1:
+    # Item's display name
+    name: '&6开山斧'
+    material: IRON_AXE
+    # Attack Damage, float value
+    attackDamage: 15.2
+    # Attack Speed, float value
+    attackSpeed: -2.2
+    # EquipmentSlot: MUST be one of value from HAND, OFF_HAND, HEAD, CHEST, LEGS, FEET
+    # Comment this feature if no equipment slot is specified
+    #equipmentSlot: HAND
+    itemFlags:
+      #设置显示/隐藏该Item的属性,例如伤害.
+      - HIDE_ATTRIBUTES
+      #设置显示/隐藏哪些ItemStack可以被破坏.
+      #- HIDE_DESTROYS
+      #设置显示/隐藏彩色皮革盔甲的染料.
+      #- HIDE_DYE
+      #设置显示/隐藏附魔.
+      #- HIDE_ENCHANTS
+      #设置显示/隐藏哪些ItemStack可以被放置.
+      #- HIDE_PLACED_ON
+      #设置显示/隐藏ItemStack的药水效果.
+      #- HIDE_POTION_EFFECTS
+      #设置显示/隐藏不可破坏属性.
+      #- HIDE_UNBREAKABLE
+    lore:
+      - '&f诸神黄昏'
+      - '&f见神杀神'
+  item2:
+    name: 天残剑
+    material: iron_sword
+    attackDamage: 20
+    crit: 5.2
+    unbreakable: true
+    lore:
+      - '天大地大我最大'
+# 盔甲物品定义
+armors: []
+# 饰品物品定义
+accessories: []
+# 副手物品定义
+offHand: []

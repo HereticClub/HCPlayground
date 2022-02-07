@@ -1,0 +1,84 @@
+name: HCPlayground
+version: 1.0-SNAPSHOT
+author: Terry NG
+main: org.hcmc.hcplayground.HCPlayground
+softdepend:
+  - Vault
+  - WorldGuard
+commands:
+  hcplayground:
+    aliases:
+      - hc
+      - hp
+      - hcp
+    description: The plugin management commands
+    permission: hcplayground.*
+    usage: |-
+      §9/<command> reload §7- §fReload configuration
+  quartermaster:
+    aliases:
+      - quarter
+      - master
+      - qm
+    description: The quartermaster, who manages weapons, off-hand items, armor, accessories
+    usage: |-
+      §9/<command> weapon §7- §fManage the weapon items
+      §9/<command> armor §7- §fManage the armor items
+      §9/<command> off-hand §7- §fManage the off-hand items
+      §9/<command> accessory §7- §fManage the accessory items
+      §9/<command> gui §7- §fOpen item list by chest gui
+
+permissions:
+  hcplayground.*:
+    # default, one of value as op, not op, true, false
+    # true - everyone has permission
+    # false - no one has permission, include op
+    # op - only op has permission
+    # not op - everyone but op has permission
+    default: op
+    description: Grant all permissions to player to handle the plugin
+    children:
+      - hcplayground.all
+  quartermaster.*:
+    default: op
+    description: Grant permission to player as quartermaster, to manage all items include weapons, off-hand items, armor, accessories
+    children:
+      - quartermaster.all
+
+  hcplayground.all:
+    default: op
+    description: Grant all permissions to player to handle the plugin
+    children:
+      - hcplayground.reload
+  quartermaster.all:
+    description: Grant permission to player as quartermaster, to manage all items include weapons, off-hand items, armor, accessories
+    default: op
+    children:
+      - quartermaster.weapon
+      - quartermaster.armor
+      - quartermaster.off-hand
+      - quartermaster.accessory
+      - quartermaster.gui
+
+  hcplayground.reload:
+    description: Permission to reload this plugin
+    default: op
+
+  quartermaster.use:
+    description: Grant permission to player to use
+    default: true
+  quartermaster.weapon:
+    description: Grant permission to player to manage weapon
+    default: op
+  quartermaster.armor:
+    description: Grant permission to player to manage armor
+    default: op
+  quartermaster.off-hand:
+    description: Grant permission to player to manage off-hand
+    default: op
+  quartermaster.accessory:
+    description: Grant permission to player to manage accessory
+    default: op
+  quartermaster.gui:
+    description: Grant permission to player to manage items from chest dialog
+    default: op
