@@ -1,4 +1,4 @@
-package org.hcmc.hcplayground.Deserializer;
+package org.hcmc.hcplayground.deserializer;
 
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;

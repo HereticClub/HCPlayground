@@ -1,4 +1,4 @@
-package org.hcmc.hcplayground.Handler;
+package org.hcmc.hcplayground.handler;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;

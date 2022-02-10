@@ -1,4 +1,4 @@
-package org.hcmc.hcplayground.Model;
+package org.hcmc.hcplayground.model;
 
 import java.util.Random;
 

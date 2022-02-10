@@ -5,11 +5,11 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.hcmc.hcplayground.Drops.DropManager;
-import org.hcmc.hcplayground.Items.ItemManager;
-import org.hcmc.hcplayground.Listener.PluginListener;
-import org.hcmc.hcplayground.Model.Global;
-import org.hcmc.hcplayground.TabCompleter.QuartermasterTabCompleter;
+import org.hcmc.hcplayground.drops.DropManager;
+import org.hcmc.hcplayground.items.ItemManager;
+import org.hcmc.hcplayground.listener.PluginListener;
+import org.hcmc.hcplayground.model.Global;
+import org.hcmc.hcplayground.tabCompleter.QuartermasterTabCompleter;
 
 import java.io.File;
 

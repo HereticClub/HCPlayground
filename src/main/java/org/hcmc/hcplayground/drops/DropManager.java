@@ -1,4 +1,4 @@
-package org.hcmc.hcplayground.Drops;
+package org.hcmc.hcplayground.drops;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -11,8 +11,8 @@ import org.bukkit.block.data.BlockData;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
-import org.hcmc.hcplayground.Deserializer.MaterialDeserializer;
-import org.hcmc.hcplayground.Model.RandomNumber;
+import org.hcmc.hcplayground.deserializer.MaterialDeserializer;
+import org.hcmc.hcplayground.model.RandomNumber;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,9 +1,9 @@
-package org.hcmc.hcplayground.TabCompleter;
+package org.hcmc.hcplayground.tabCompleter;
 
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
-import org.hcmc.hcplayground.Handler.PermissionHandler;
+import org.hcmc.hcplayground.handler.PermissionHandler;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

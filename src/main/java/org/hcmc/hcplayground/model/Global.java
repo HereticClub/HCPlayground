@@ -1,4 +1,4 @@
-package org.hcmc.hcplayground.Model;
+package org.hcmc.hcplayground.model;
 
 import com.sk89q.worldguard.WorldGuard;
 import net.milkbowl.vault.chat.Chat;

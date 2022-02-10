@@ -1,4 +1,4 @@
-package org.hcmc.hcplayground.Drops;
+package org.hcmc.hcplayground.drops;
 
 import org.bukkit.Material;
 
