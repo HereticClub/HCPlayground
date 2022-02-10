@@ -1,30 +1,29 @@
 package org.hcmc.hcplayground.listener;
 
-import org.bukkit.Bukkit;
+import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.event.player.PlayerSwapHandItemsEvent;
-import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.persistence.PersistentDataContainer;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.scheduler.BukkitScheduler;
 import org.hcmc.hcplayground.drops.DropManager;
+import org.hcmc.hcplayground.items.ItemManager;
+import org.hcmc.hcplayground.items.offhand.OffHand;
+import org.hcmc.hcplayground.items.weapon.Weapon;
 import org.hcmc.hcplayground.model.Global;
 import org.hcmc.hcplayground.HCPlayground;
+import org.hcmc.hcplayground.scheduler.PluginRunnable;
 
 import java.io.File;
 import java.io.IOException;
@@ -90,19 +89,20 @@ public class PluginListener implements Listener {
         if (event.isCancelled()) return;
 
         Inventory inv = event.getClickedInventory();
-        if(inv == null) return;
+        if (inv == null) return;
         if (inv.getType() != InventoryType.PLAYER) return;
 
         InventoryAction action = event.getAction();
-        if(action != InventoryAction.PLACE_ALL && action != InventoryAction.PLACE_ONE && action != InventoryAction.PLACE_SOME) return;
+        if (action != InventoryAction.PLACE_ALL && action != InventoryAction.PLACE_ONE && action != InventoryAction.PLACE_SOME)
+            return;
 
+        PluginRunnable s = new PluginRunnable(inv, PluginRunnable.ScheduleType.GetOffHandItem);
+        s.runTask(plugin);
+        ItemStack is = s.getIsOffHand();
+        String id = getPersistentItemID(is);
+        if(id == null) return;
 
-
-        ItemStack is = ((PlayerInventory)inv).getItem(EquipmentSlot.OFF_HAND);
-        if(is == null) return;
-        System.out.println(is.getType());
-
-
+        ItemManager.FindItemById(id, OffHand.class);
 
     }
 
@@ -112,5 +112,15 @@ public class PluginListener implements Listener {
 
         Block b = event.getBlock();
         DropManager.AdditionalDrops(b);
+    }
+
+    private String getPersistentItemID(ItemStack is) {
+        if(is == null)return null;
+        if (is.getItemMeta() == null) return null;
+
+        PersistentDataContainer container = is.getItemMeta().getPersistentDataContainer();
+        NamespacedKey mainKey = new NamespacedKey(plugin, Global.PERSISTENT_MAIN_KEY);
+
+        return container.get(mainKey, PersistentDataType.STRING);
     }
 }

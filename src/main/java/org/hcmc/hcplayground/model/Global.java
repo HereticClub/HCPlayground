@@ -4,6 +4,7 @@ import com.sk89q.worldguard.WorldGuard;
 import net.milkbowl.vault.chat.Chat;
 import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.permission.Permission;
+import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
@@ -23,6 +24,10 @@ public final class Global {
     private final static Map<String, YamlConfiguration> yamlMap;
     private final static String[] ymlFilenames;
     private final static JavaPlugin plugin;
+
+    public final static String PERSISTENT_MAIN_KEY = "hccraft";
+    public final static String PERSISTENT_SUB_KEY = "content";
+    public final static String PERSISTENT_CRIT_KEY = "crit";
 
     public static WorldGuard WorldGuardApi = null;
     public static YamlConfiguration yamlPlayer = null;
@@ -111,7 +116,7 @@ public final class Global {
     }
 
     public static void LogWarning(String message) {
-        plugin.getLogger().log(Level.WARNING,message);
+        plugin.getLogger().log(Level.WARNING, message);
     }
 
     private static void SetVaultEconomy() {

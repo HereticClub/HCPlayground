@@ -2,6 +2,7 @@ name: HCPlayground
 version: 1.0-SNAPSHOT
 author: Terry NG
 main: org.hcmc.hcplayground.HCPlayground
+api-version: 1.13
 softdepend:
   - Vault
   - WorldGuard
