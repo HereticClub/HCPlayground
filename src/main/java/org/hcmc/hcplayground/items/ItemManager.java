@@ -23,10 +23,12 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.potion.PotionEffect;
 import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.deserializer.EquipmentSlotDeserializer;
 import org.hcmc.hcplayground.deserializer.ItemFlagsDeserializer;
 import org.hcmc.hcplayground.deserializer.MaterialDeserializer;
+import org.hcmc.hcplayground.deserializer.PotionEffectDeserializer;
 import org.hcmc.hcplayground.handler.PermissionHandler;
 import org.hcmc.hcplayground.items.armor.Armor;
 import org.hcmc.hcplayground.items.offhand.OffHand;
@@ -50,7 +52,7 @@ public class ItemManager implements CommandExecutor {
         ItemWeapons = new ArrayList<>();
         ItemArmors = new ArrayList<>();
         ItemOffHand = new ArrayList<>();
-        plugin = JavaPlugin.getPlugin(HCPlayground.class);
+        plugin = HCPlayground.getPlugin();
     }
 
     public ItemManager() {
@@ -257,6 +259,7 @@ public class ItemManager implements CommandExecutor {
                 .registerTypeAdapter(Material.class, new MaterialDeserializer())
                 .registerTypeAdapter(ItemFlag.class, new ItemFlagsDeserializer())
                 .registerTypeAdapter(EquipmentSlot.class, new EquipmentSlotDeserializer())
+                .registerTypeAdapter(PotionEffect.class, new PotionEffectDeserializer())
                 .create();
 
         for (String s : keys) {
@@ -275,13 +278,11 @@ public class ItemManager implements CommandExecutor {
     }
 
     private ItemMeta SetBaseItemMeta(ItemStack is, ItemBase ib) {
-        NamespacedKey mainKey;
-        PersistentDataContainer mainContainer;
         ItemMeta im = is.getItemMeta();
         if (im == null) return null;
 
-        mainKey = new NamespacedKey(plugin, Global.PERSISTENT_MAIN_KEY);
-        mainContainer = im.getPersistentDataContainer();
+        NamespacedKey mainKey = new NamespacedKey(plugin, Global.PERSISTENT_MAIN_KEY);
+        PersistentDataContainer mainContainer = im.getPersistentDataContainer();
         mainContainer.set(mainKey, PersistentDataType.STRING, ib.id);
 
         List<String> lores = new ArrayList<>(Arrays.stream(ib.lore).toList());

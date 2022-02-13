@@ -1,6 +1,5 @@
 package org.hcmc.hcplayground;
 
-import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
@@ -16,11 +15,10 @@ import java.io.File;
 
 public class HCPlayground extends JavaPlugin {
 
-    private final HCPlayground instance;
+    private static HCPlayground instance;
 
     public HCPlayground() {
-        /* TODO: Initialize plugin here*/
-        instance = this;
+
     }
 
     @Override
@@ -36,6 +34,7 @@ public class HCPlayground extends JavaPlugin {
 
     @Override
     public void onLoad() {
+        instance = this;
         super.onLoad();
     }
 
@@ -51,8 +50,12 @@ public class HCPlayground extends JavaPlugin {
         return true;
     }
 
-    public HCPlayground getInstance() {
+    public static HCPlayground getInstance() {
         return instance;
+    }
+
+    public static JavaPlugin getPlugin() {
+        return getPlugin(instance.getClass());
     }
 
     private void InitialChildrenFolders() {
@@ -64,7 +67,7 @@ public class HCPlayground extends JavaPlugin {
         }
     }
 
-    private void ReloadPlugin(){
+    private void ReloadPlugin() {
 
         InitialChildrenFolders();
 
@@ -83,5 +86,6 @@ public class HCPlayground extends JavaPlugin {
 
         // 注册Listener
         getServer().getPluginManager().registerEvents(new PluginListener(), this);
+
     }
 }
