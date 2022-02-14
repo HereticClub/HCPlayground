@@ -1,6 +1,6 @@
 # 武器物品定义
 weapons:
-  # 物品Id，值必须唯一
+  # 物品Id，值必须唯一，用于give指令
   item1:
     # 物品的显示名称
     name: '&6开山斧'
@@ -49,7 +49,7 @@ weapons:
       - '天大地大我最大'
 # 盔甲物品定义
 armors:
-  # 物品Id，值必须唯一
+  # 物品Id，值必须唯一，用于give指令
   item1:
     # 物品的显示名称
     name: 蚕丝甲
@@ -91,11 +91,11 @@ armors:
     equipmentSlot: FEET
     flags: []
 
-# 饰品物品定义
+# 饰品物品定义，开发中
 accessories: []
 # 副手物品定义
 offHands:
-  # 物品Id，值必须唯一
+  # 物品Id，值必须唯一，用于give指令
   item1:
     name: '&4诅咒的钻石'
     # 物品的显示名称
@@ -107,32 +107,6 @@ offHands:
       - '&7副手物品'
     # 幸运值，可以和幸运附魔叠加，取值范围：-1024 - 1024
     luck: 10
-    flags:
-      #设置显示/隐藏该Item的属性,例如伤害.
-      - HIDE_ATTRIBUTES
-      #设置显示/隐藏哪些ItemStack可以被破坏.
-      #- HIDE_DESTROYS
-      #设置显示/隐藏彩色皮革盔甲的染料.
-      #- HIDE_DYE
-      #设置显示/隐藏附魔.
-      - HIDE_ENCHANTS
-      #设置显示/隐藏哪些ItemStack可以被放置.
-      #- HIDE_PLACED_ON
-      #设置显示/隐藏ItemStack的药水效果.
-      #- HIDE_POTION_EFFECTS
-      #设置显示/隐藏不可破坏属性.
-      #- HIDE_UNBREAKABLE
-  item2:
-    name: '&a愤怒的蒲公英'
-    # 物品的显示名称
-    material: DANDELION
-    # 物品显示是都带有附魔效果
-    glowing: true
-    # 物品的额外信息
-    lore:
-      - '&7副手物品'
-    # 幸运值，可以和幸运附魔叠加，取值范围：-1024 - 1024
-    luck: 5
     potions:
       # 第一个参数表示药水效果类型
       # 第二个参数表示药水效果的生效时间，时间单位: Tick(50毫秒)
@@ -154,35 +128,26 @@ offHands:
       #- HIDE_POTION_EFFECTS
       #设置显示/隐藏不可破坏属性.
       #- HIDE_UNBREAKABLE
-  item3:
-    name: '&c魔咒之书'
-    # 物品的显示名称
-    material: book
-    # 物品显示是都带有附魔效果
+  item2:
+    name: '&a愤怒的蒲公英'
+    material: DANDELION
     glowing: true
-    # 物品的额外信息
     lore:
       - '&7副手物品'
-    # 幸运值，可以和幸运附魔叠加，取值范围：-1024 - 1024
+    luck: 5
+    flags:
+      - HIDE_ATTRIBUTES
+      - HIDE_ENCHANTS
+  item3:
+    name: '&c魔咒之书'
+    material: book
+    glowing: true
+    lore:
+      - '&7副手物品'
     luck: 5
     potions:
-      # 第一个参数表示药水效果类型
-      # 第二个参数表示药水效果的生效时间，时间单位: Tick(50毫秒)
-      # 第三个参数表示药水效果的增加倍数，0表示不增加倍数
       - 'DAMAGE_RESISTANCE, 300, 0'
       - 'DOLPHINS_GRACE, 300, 0'
     flags:
-      #设置显示/隐藏该Item的属性,例如伤害.
       - HIDE_ATTRIBUTES
-      #设置显示/隐藏哪些ItemStack可以被破坏.
-      #- HIDE_DESTROYS
-      #设置显示/隐藏彩色皮革盔甲的染料.
-      #- HIDE_DYE
-      #设置显示/隐藏附魔.
       - HIDE_ENCHANTS
-      #设置显示/隐藏哪些ItemStack可以被放置.
-      #- HIDE_PLACED_ON
-      #设置显示/隐藏ItemStack的药水效果.
-      #- HIDE_POTION_EFFECTS
-      #设置显示/隐藏不可破坏属性.
-      #- HIDE_UNBREAKABLE
