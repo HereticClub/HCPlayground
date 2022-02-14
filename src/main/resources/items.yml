@@ -39,7 +39,6 @@ weapons:
   item2:
     name: 天残剑
     material: iron_sword
-    # 攻击伤害
     attackDamage: 20
     attackSpeed: 1.2
     attackReach: 3
@@ -91,7 +90,8 @@ armors:
     equipmentSlot: FEET
     flags: []
 
-# 饰品物品定义，开发中
+# 饰品物品定义，带有光环效果Buff
+# 比如X格子范围内的所有玩家都带有效果，开发中
 accessories: []
 # 副手物品定义
 offHands:
