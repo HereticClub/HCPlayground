@@ -7,19 +7,21 @@ import com.google.gson.JsonParseException;
 import org.bukkit.Material;
 
 import java.lang.reflect.Type;
+import java.util.Arrays;
+import java.util.List;
 
 public class MaterialDeserializer implements JsonDeserializer<Material> {
 
+    public MaterialDeserializer() {
+
+    }
+
     @Override
     public Material deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
-        Material[] materials = Material.values();
-        for (Material m : materials) {
-            if (m.name().equalsIgnoreCase(jsonElement.getAsString())) {
-                return m;
-            }
-        }
+        List<Material> materials = Arrays.stream(Material.values()).toList();
+        String value = jsonElement.getAsString();
 
-        return null;
+        return materials.stream().filter(x -> x.name().equalsIgnoreCase(value)).findFirst().orElse(null);
     }
 }
 

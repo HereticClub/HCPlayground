@@ -1,7 +1,5 @@
-package org.hcmc.hcplayground.drops;
+package org.hcmc.hcplayground.dropManager;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -11,12 +9,15 @@ import org.bukkit.block.data.BlockData;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
-import org.hcmc.hcplayground.deserializer.MaterialDeserializer;
+import org.hcmc.hcplayground.itemManager.ItemBase;
+import org.hcmc.hcplayground.itemManager.armor.Armor;
+import org.hcmc.hcplayground.itemManager.offhand.OffHand;
+import org.hcmc.hcplayground.itemManager.weapon.Weapon;
+import org.hcmc.hcplayground.model.Global;
 import org.hcmc.hcplayground.model.RandomNumber;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 public class DropManager {
 
@@ -39,27 +40,18 @@ public class DropManager {
     }
 
     public static void Load(YamlConfiguration yaml) {
-        // 在items.yml文档里获取items节段
+        // 在drops.yml文档里获取blocks节段
         ConfigurationSection section = yaml.getConfigurationSection("blocks");
-        Set<String> itemKeys = section.getKeys(false);
-
-        Gson gson = new GsonBuilder()
-                .enableComplexMapKeySerialization()
-                .disableHtmlEscaping()
-                .registerTypeAdapter(Material.class, new MaterialDeserializer())
-                .create();
-
-        dropEntities.clear();
-        for (String s : itemKeys) {
-            ConfigurationSection itemSection = section.getConfigurationSection(s);
-            String Value = gson.toJson(itemSection.getValues(false)).replace('&', '§');
-            DropEntity de = gson.fromJson(Value, DropEntity.class);
-
-            dropEntities.add(de);
+        if (section == null) return;
+        //Set<String> itemKeys = section.getKeys(false);
+        try {
+            dropEntities = Global.SetItemList(section, DropEntity.class);
+        } catch (IllegalAccessException ex) {
+            ex.printStackTrace();
         }
     }
 
-    public static void AdditionalDrops(Block b){
+    public static void AdditionalDrops(Block b) {
         BlockData bd = b.getBlockData();
         World w = b.getWorld();
         Location l = b.getLocation();
@@ -67,11 +59,19 @@ public class DropManager {
 
         if (de == null) return;
         if (bd instanceof Ageable) if (((Ageable) bd).getAge() < de.age) return;
+        System.out.printf("BlockData: %s", bd.getClass());
 
         if (RandomNumber.checkBingo(de.rate)) {
-            for (Material m : de.drops) {
-                ItemStack is = new ItemStack(m);
-                w.dropItemNaturally(l, is);
+            ItemStack is = null;
+            for (ItemBase ib : de.drops) {
+                if (ib.id == null) {
+                    is = new ItemStack(ib.material);
+                } else {
+                    if(ib instanceof Weapon) is = ((Weapon) ib).toItemStack();
+                    if(ib instanceof Armor) is = ((Armor) ib).toItemStack();
+                    if(ib instanceof OffHand) is = ((OffHand) ib).toItemStack();
+                }
+                if(is != null) w.dropItemNaturally(l, is);
             }
         }
     }

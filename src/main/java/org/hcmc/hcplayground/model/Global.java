@@ -1,20 +1,28 @@
 package org.hcmc.hcplayground.model;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.sk89q.worldguard.WorldGuard;
 import net.milkbowl.vault.chat.Chat;
 import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.permission.Permission;
-import org.bukkit.NamespacedKey;
+import org.bukkit.Material;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.potion.PotionEffect;
 import org.hcmc.hcplayground.HCPlayground;
-import org.hcmc.hcplayground.scheduler.PotionEffectRunnable;
+import org.hcmc.hcplayground.deserializer.*;
+import org.hcmc.hcplayground.itemManager.ItemBase;
+import org.hcmc.hcplayground.playerManager.PlayerData;
 
 import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
+import java.lang.reflect.Field;
+import java.util.*;
 import java.util.logging.Level;
 
 /**
@@ -30,6 +38,7 @@ public final class Global {
     public final static String PERSISTENT_SUB_KEY = "content";
     public final static String PERSISTENT_CRIT_KEY = "crit";
 
+    public static Map<UUID, PlayerData> playerMap;
     public static WorldGuard WorldGuardApi = null;
     public static YamlConfiguration yamlPlayer = null;
     public static Economy EconomyApi = null;
@@ -38,8 +47,43 @@ public final class Global {
 
     static {
         plugin = JavaPlugin.getPlugin(HCPlayground.class);
-        yamlMap = new HashMap<>();
         ymlFilenames = new String[]{"config.yml", "items.yml", "drops.yml"};
+        yamlMap = new HashMap<>();
+        playerMap = new HashMap<>();
+    }
+
+    /**
+     * 获取section内所有子节段，利用Gson反序列到每一个T对象，然后返回List&lt;T&gt;数组
+     */
+    public static <T> List<T> SetItemList(ConfigurationSection section, Class<T> tClass) throws IllegalAccessException {
+        Set<String> keys = section.getKeys(false);
+        String ClassName = tClass.getSimpleName();
+        List<T> list = new ArrayList<>();
+
+        Gson gson = new GsonBuilder()
+                .enableComplexMapKeySerialization()
+                .disableHtmlEscaping()
+                .serializeNulls()
+                .registerTypeAdapter(Material.class, new MaterialDeserializer())
+                .registerTypeAdapter(ItemFlag.class, new ItemFlagsDeserializer())
+                .registerTypeAdapter(EquipmentSlot.class, new EquipmentSlotDeserializer())
+                .registerTypeAdapter(PotionEffect.class, new PotionEffectDeserializer())
+                .registerTypeAdapter(ItemBase.class, new ItemBaseDeserializer())
+                .excludeFieldsWithoutExposeAnnotation()
+                .create();
+
+        for (String s : keys) {
+            ConfigurationSection itemSection = section.getConfigurationSection(s);
+            if (itemSection == null) continue;
+            String value = gson.toJson(itemSection.getValues(false)).replace('&', '§');
+
+            T item = gson.fromJson(value, tClass);
+            Field fieldId = Arrays.stream(tClass.getFields()).filter(x -> x.getName().equalsIgnoreCase("id")).findAny().orElse(null);
+            if (fieldId != null) fieldId.set(item, String.format("%s.%s", ClassName, s));
+            list.add(item);
+        }
+
+        return list;
     }
 
     /**

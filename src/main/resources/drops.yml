@@ -2,7 +2,7 @@ blocks:
   # Id，可以是任意字符串或者数值，必须唯一
   1:
     # 正在挖掘的方块
-    block: potato
+    block: potatoes
     # 掉落率，最大值100
     rate: 5.2
     # 带有age值的物品，比如小麦
@@ -13,8 +13,13 @@ blocks:
       - DIAMOND
       - Emerald
   2:
-    block: crops
+    block: wheat
     rate: 10
     age: 7
     drops:
       - iron_ingot
+  3:
+    block: grass_block
+    rate: 100
+    drops:
+      - weapon.item1

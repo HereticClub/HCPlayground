@@ -1,12 +1,24 @@
 package org.hcmc.hcplayground;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
+import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.hcmc.hcplayground.drops.DropManager;
-import org.hcmc.hcplayground.items.ItemManager;
+import org.bukkit.potion.PotionEffect;
+import org.hcmc.hcplayground.deserializer.EquipmentSlotDeserializer;
+import org.hcmc.hcplayground.deserializer.ItemFlagsDeserializer;
+import org.hcmc.hcplayground.deserializer.MaterialDeserializer;
+import org.hcmc.hcplayground.deserializer.PotionEffectDeserializer;
+import org.hcmc.hcplayground.dropManager.DropManager;
+import org.hcmc.hcplayground.itemManager.ItemManager;
+import org.hcmc.hcplayground.itemManager.weapon.Weapon;
 import org.hcmc.hcplayground.listener.PluginListener;
 import org.hcmc.hcplayground.model.Global;
 import org.hcmc.hcplayground.tabCompleter.QuartermasterTabCompleter;
@@ -68,7 +80,7 @@ public class HCPlayground extends JavaPlugin {
     }
 
     private void ReloadPlugin() {
-
+        // 创建插件所需要的子目录
         InitialChildrenFolders();
 
         // 复制并且加载所有Yml格式文档到插件目录
@@ -81,11 +93,13 @@ public class HCPlayground extends JavaPlugin {
         Global.ValidVaultPlugin();
 
         // 注册Command
-        getCommand("quartermaster").setExecutor(new ItemManager());
-        getCommand("quartermaster").setTabCompleter(new QuartermasterTabCompleter());
+        PluginCommand qmCommand = getCommand("quartermaster");
+        if (qmCommand != null) {
+            qmCommand.setExecutor(new ItemManager());
+            qmCommand.setTabCompleter(new QuartermasterTabCompleter());
+        }
 
         // 注册Listener
         getServer().getPluginManager().registerEvents(new PluginListener(), this);
-
     }
 }

@@ -3,7 +3,6 @@ package org.hcmc.hcplayground.listener;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -19,18 +18,19 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitTask;
-import org.hcmc.hcplayground.drops.DropManager;
-import org.hcmc.hcplayground.event.InventoryChangedEvent;
-import org.hcmc.hcplayground.items.ItemManager;
-import org.hcmc.hcplayground.items.offhand.OffHand;
-import org.hcmc.hcplayground.model.Global;
 import org.hcmc.hcplayground.HCPlayground;
+import org.hcmc.hcplayground.dropManager.DropManager;
+import org.hcmc.hcplayground.event.InventoryChangedEvent;
+import org.hcmc.hcplayground.itemManager.ItemManager;
+import org.hcmc.hcplayground.itemManager.offhand.OffHand;
+import org.hcmc.hcplayground.model.Global;
+import org.hcmc.hcplayground.playerManager.PlayerData;
+import org.hcmc.hcplayground.playerManager.PlayerManager;
 import org.hcmc.hcplayground.scheduler.InventoryChangingRunnable;
 import org.hcmc.hcplayground.scheduler.PotionEffectRunnable;
 
 import java.io.File;
-import java.io.IOException;
+import java.util.UUID;
 
 /*
 Java 本身的编程思路就已经足够混乱
@@ -52,8 +52,6 @@ InventoryClickEvent只能获取当前任何类型的Inventory是否被点击
 public class PluginListener implements Listener {
 
     private final JavaPlugin plugin = HCPlayground.getPlugin();
-    private static PotionEffectRunnable potionRunnable = null;
-    private static BukkitTask bt = null;
 
     public PluginListener() {
 
@@ -64,18 +62,22 @@ public class PluginListener implements Listener {
      */
     @EventHandler
     public void onPlayerJoin(final PlayerJoinEvent event) {
-        Player p = event.getPlayer();
-        String playerUuid = p.getUniqueId().toString();
-        File f = new File(plugin.getDataFolder(), "profile/" + playerUuid + ".yml");
+        Player player = event.getPlayer();
+        UUID playerUuid = player.getUniqueId();
+        File f = new File(plugin.getDataFolder(), String.format("profile/%s.yml", playerUuid));
+        PlayerManager.Load(f);
 
-        if (!f.exists()) {
-            Global.yamlPlayer = new YamlConfiguration();
+        PlayerData playerData;
+        if (Global.playerMap.containsKey(playerUuid)) {
+            playerData = Global.playerMap.get(playerUuid);
         } else {
-            Global.yamlPlayer = YamlConfiguration.loadConfiguration(f);
+            playerData = new PlayerData(player);
+            Global.playerMap.put(playerUuid, playerData);
         }
 
-        potionRunnable = new PotionEffectRunnable(p);
-        bt = potionRunnable.runTaskTimer(plugin, 20, 200);
+        playerData.RunPotionTimer(plugin, 20, 200);
+        Global.playerMap.replace(playerUuid, playerData);
+
     }
 
     /**
@@ -84,19 +86,18 @@ public class PluginListener implements Listener {
     @EventHandler
     public void onPlayerLeave(PlayerQuitEvent event) {
         Player p = event.getPlayer();
-        String playerUuid = p.getUniqueId().toString();
+        UUID playerUuid = p.getUniqueId();
         File f = new File(plugin.getDataFolder(), String.format("profile/%s.yml", playerUuid));
+        PlayerManager.Save(f);
 
-        if (bt != null && potionRunnable != null) {
-            bt.cancel();
-            potionRunnable.cancel();
+        PlayerData playerData = Global.playerMap.get(playerUuid);
+        if (playerData == null) return;
+        if (playerData.BukkitTask != null && playerData.PotionRunnable != null) {
+            playerData.BukkitTask.cancel();
+            playerData.PotionRunnable.cancel();
         }
 
-        try {
-            if (Global.yamlPlayer != null) Global.yamlPlayer.save(f);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        Global.playerMap.remove(playerUuid, playerData);
     }
 
     /**
@@ -126,14 +127,19 @@ public class PluginListener implements Listener {
         if (inv == null) return;
         if (!inv.getType().equals(InventoryType.PLAYER)) return;
 
+        Player player = (Player) event.getWhoClicked();
+        UUID playerUuid = player.getUniqueId();
         InventoryAction action = event.getAction();
         InventoryChangingRunnable s = new InventoryChangingRunnable(inv, action, EquipmentSlot.OFF_HAND);
         s.runTask(plugin);
 
-        if (potionRunnable == null) {
-            potionRunnable = new PotionEffectRunnable((Player) event.getWhoClicked());
-            bt = potionRunnable.runTaskTimer(plugin, 20, 200);
+        PlayerData playerData = Global.playerMap.get(playerUuid);
+        if(playerData == null) return;
+        if (playerData.PotionRunnable == null) {
+            playerData.PotionRunnable = new PotionEffectRunnable(player);
+            playerData.RunPotionTimer(plugin, 20, 200);
         }
+        Global.playerMap.replace(playerUuid, playerData);
     }
 
     @EventHandler
@@ -143,23 +149,33 @@ public class PluginListener implements Listener {
         ItemStack is = event.getItemStack();
         InventoryAction action = event.getAction();
         Player player = (Player) event.getWhoClicked();
+        UUID playerUuid = player.getUniqueId();
 
         String id = getPersistentItemID(is);
-        OffHand offHand = (OffHand) ItemManager.FindItemById(id, OffHand.class);
+        OffHand offHand = (OffHand) ItemManager.FindItemById(id);
 
+        PlayerData playerData = Global.playerMap.get(playerUuid);
         if (offHand != null) {
-            potionRunnable.setPotionEffects(offHand.potions);
+            playerData.PotionRunnable.setPotionEffects(offHand.potions);
         } else {
-            potionRunnable.setPotionEffects(null);
+            playerData.PotionRunnable.setPotionEffects(null);
         }
+        Global.playerMap.replace(playerUuid, playerData);
     }
 
     @EventHandler
     public void onBlockBreak(final BlockBreakEvent event) {
         if (event.isCancelled()) return;
 
-        Block b = event.getBlock();
-        DropManager.AdditionalDrops(b);
+        Player player = event.getPlayer();
+        Block block = event.getBlock();
+
+        DropManager.AdditionalDrops(block);
+        //UUID playerUuid = player.getUniqueId();
+
+        //PlayerData playerData = Global.playerMap.get(playerUuid);
+        //ItemStack is = new ItemStack(Material.AIR);
+
     }
 
     private String getPersistentItemID(ItemStack is) {
