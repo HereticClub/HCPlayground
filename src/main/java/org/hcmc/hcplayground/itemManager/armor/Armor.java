@@ -1,13 +1,14 @@
 package org.hcmc.hcplayground.itemManager.armor;
 
 import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.hcmc.hcplayground.itemManager.ItemBase;
+import org.hcmc.hcplayground.itemManager.ItemBaseA;
 import org.hcmc.hcplayground.model.Global;
 
 import java.util.ArrayList;
@@ -15,17 +16,22 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
-public class Armor extends ItemBase {
+public class Armor extends ItemBaseA {
 
     @Expose
+    @SerializedName(value = "armor")
     public float armor = 0.0f;
     @Expose
+    @SerializedName(value = "armorToughness")
     public float armorToughness = 0.0f;
     @Expose
+    @SerializedName(value = "knockbackResistance")
     public float knockbackResistance = 0.0f;
     @Expose
+    @SerializedName(value = "movementSpeed")
     public float movementSpeed = 0.0f;
     @Expose
+    @SerializedName(value = "equipmentSlot")
     public EquipmentSlot equipmentSlot;
 
     public Armor() {
@@ -33,7 +39,7 @@ public class Armor extends ItemBase {
     }
 
     public ItemStack toItemStack() {
-        ItemStack is = new ItemStack(this.material, 1);
+        ItemStack is = new ItemStack(this.getMaterial(), 1);
         ItemMeta im = SetBaseItemMeta(is);
 
         if (im != null) {
@@ -72,7 +78,7 @@ public class Armor extends ItemBase {
             /*
             强制添加隐藏属性标记
             */
-            if (!Arrays.asList(this.flags).contains(ItemFlag.HIDE_ATTRIBUTES)) {
+            if (!Arrays.asList(this.getFlags()).contains(ItemFlag.HIDE_ATTRIBUTES)) {
                 im.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
             }
 

@@ -20,6 +20,6 @@ blocks:
       - iron_ingot
   3:
     block: grass_block
-    rate: 100
+    rate: 4
     drops:
       - weapon.item1

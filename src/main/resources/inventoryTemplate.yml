@@ -1,0 +1,93 @@
+# 箱子界面的Id，必须唯一
+Template1:
+  # 箱子界面的显示标题，可以使用颜色代码
+  title: '&6异族游乐场 &8- &f主菜单'
+  # 箱子界面的大小，最多填写54
+  size: 54
+  # 箱子界面的类型，必须是以下列表中的一种， 默认值: CHEST
+  # 如果设置了CHEST以外的值，则忽略size属性
+  # ANVIL - An anvil inventory, with 2 CRAFTING slots and 1 RESULT slot
+  # BARREL - A barrel box inventory, with 27 slots of type CONTAINER.
+  # BEACON - A beacon inventory, with 1 CRAFTING slot
+  # BLAST_FURNACE - A blast furnace inventory, with a RESULT slot, a CRAFTING slot, and a FUEL slot.
+  # BREWING - A brewing stand inventory, with one FUEL slot and four CRAFTING slots.
+  # CARTOGRAPHY - Cartography inventory with 2 CRAFTING slots, and 1 RESULT slot.
+  # CHEST - A chest inventory, with 0, 9, 18, 27, 36, 45, or 54 slots of type CONTAINER.
+  # COMPOSTER - Pseudo composter inventory with 0 or 1 slots of undefined type.
+  # CRAFTING - A player's crafting inventory, with 4 CRAFTING slots and a RESULT slot.
+  # CREATIVE - The creative mode inventory, with only 9 QUICKBAR slots and nothing else.
+  # DISPENSER - A dispenser inventory, with 9 slots of type CONTAINER.
+  # DROPPER - A dropper inventory, with 9 slots of type CONTAINER.
+  # ENCHANTING - An enchantment table inventory, with two CRAFTING slots and three enchanting buttons.
+  # ENDER_CHEST - The ender chest inventory, with 27 slots.
+  # FURNACE - A furnace inventory, with a RESULT slot, a CRAFTING slot, and a FUEL slot.
+  # GRINDSTONE - Grindstone inventory with 2 CRAFTING slots, and 1 RESULT slot.
+  # HOPPER - A hopper inventory, with 5 slots of type CONTAINER.
+  # LECTERN - A lectern inventory, with 1 BOOK slot.
+  # LOOM - Loom inventory, with 3 CRAFTING slots, and 1 RESULT slot.
+  # MERCHANT - The merchant inventory, with 2 CRAFTING slots, and 1 RESULT slot.
+  # PLAYER - A player's inventory, with 9 QUICKBAR slots, 27 CONTAINER slots, 4 ARMOR slots and 1 offhand slot.
+  # SHULKER_BOX - A shulker box inventory, with 27 slots of type CONTAINER.
+  # SMITHING - A smithing inventory, with 2 CRAFTING slots and 1 RESULT slot
+  # SMOKER - A smoker inventory, with a RESULT slot, a CRAFTING slot, and a FUEL slot.
+  # STONECUTTER - Stonecutter inventory with 1 CRAFTING slot, and 1 RESULT slot.
+  # WORKBENCH - A workbench inventory, with 9 CRAFTING slots and a RESULT slot.
+  type: chest
+  # 装饰方块列表，点击无效
+  decorates:
+      # 物品插槽位置，基于1为开始的序列号，最大值54
+    - slot: 46
+      # 要显示的标题
+      displayText: '&8[御用装饰]'
+      # 要显示的材质，通常用颜色玻璃板
+      # WHITE_STAINED_GLASS_PANE - 白色染色玻璃板
+      # ORANGE_STAINED_GLASS_PANE - 橙色染色玻璃板
+      # MAGENTA_STAINED_GLASS_PANE - 品红色染色玻璃板
+      # LIGHT_BLUE_STAINED_GLASS_PANE - 淡蓝色染色玻璃板
+      # YELLOW_STAINED_GLASS_PANE - 黄色染色玻璃板
+      # LIME_STAINED_GLASS_PANE - 黄绿色染色玻璃板
+      # PINK_STAINED_GLASS_PANE - 粉红色染色玻璃板
+      # GRAY_STAINED_GLASS_PANE - 灰色染色玻璃板
+      # LIGHT_GRAY_STAINED_GLASS_PANE - 淡灰色染色玻璃板
+      # CYAN_STAINED_GLASS_PANE - 青色染色玻璃板
+      # PURPLE_STAINED_GLASS_PANE - 紫色染色玻璃板
+      # BLUE_STAINED_GLASS_PANE - 蓝色染色玻璃板
+      # BROWN_STAINED_GLASS_PANE - 棕色染色玻璃板
+      # GREEN_STAINED_GLASS_PANE - 绿色染色玻璃板
+      # RED_STAINED_GLASS_PANE - 红色染色玻璃板
+      # BLACK_STAINED_GLASS_PANE - 黑色染色玻璃板
+      material: yellow_stained_glass_pane
+      # 要显示的说明，一般不会设置该属性
+      lores: []
+    - slot: 47
+      displayText: '&8[御用装饰]'
+      material: yellow_stained_glass_pane
+      lores: []
+    - slot: 48
+      displayText: '&8[御用装饰]'
+      material: yellow_stained_glass_pane
+      lores: []
+    - slot: 49
+      displayText: '&8[御用装饰]'
+      material: yellow_stained_glass_pane
+      lores: []
+    - slot: 50
+      displayText: '&8[御用装饰]'
+      material: yellow_stained_glass_pane
+      lores: []
+    - slot: 51
+      displayText: '&8[御用装饰]'
+      material: yellow_stained_glass_pane
+      lores: []
+    - slot: 52
+      displayText: '&8[御用装饰]'
+      material: yellow_stained_glass_pane
+      lores: []
+    - slot: 53
+      displayText: '&8[御用装饰]'
+      material: yellow_stained_glass_pane
+      lores: []
+    - slot: 54
+      displayText: '&8[御用装饰]'
+      material: yellow_stained_glass_pane
+      lores: []

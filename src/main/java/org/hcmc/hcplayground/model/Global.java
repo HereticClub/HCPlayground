@@ -9,6 +9,7 @@ import net.milkbowl.vault.permission.Permission;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.plugin.Plugin;
@@ -17,39 +18,71 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
 import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.deserializer.*;
-import org.hcmc.hcplayground.itemManager.ItemBase;
+import org.hcmc.hcplayground.itemManager.ItemBaseA;
 import org.hcmc.hcplayground.playerManager.PlayerData;
 
 import java.io.File;
 import java.lang.reflect.Field;
 import java.util.*;
 import java.util.logging.Level;
+import java.util.regex.Pattern;
 
 /**
  * @Desciption Store global static variants and methods
  */
 public final class Global {
-
-    private final static Map<String, YamlConfiguration> yamlMap;
     private final static String[] ymlFilenames;
     private final static JavaPlugin plugin;
 
     public final static String PERSISTENT_MAIN_KEY = "hccraft";
     public final static String PERSISTENT_SUB_KEY = "content";
     public final static String PERSISTENT_CRIT_KEY = "crit";
+    public final static Pattern patternNumber = Pattern.compile("-?\\d+(\\.\\d+)?");
 
+    public static Map<String, YamlConfiguration> yamlMap;
     public static Map<UUID, PlayerData> playerMap;
+    public static Gson GsonObject;
     public static WorldGuard WorldGuardApi = null;
-    public static YamlConfiguration yamlPlayer = null;
     public static Economy EconomyApi = null;
     public static Chat ChatApi = null;
     public static Permission PermissionApi = null;
 
     static {
         plugin = JavaPlugin.getPlugin(HCPlayground.class);
-        ymlFilenames = new String[]{"config.yml", "items.yml", "drops.yml"};
+        ymlFilenames = new String[]{"config.yml", "items.yml", "drops.yml", "messages.yml", "levels.yml", "command.yml", "inventoryTemplate.yml"};
         yamlMap = new HashMap<>();
         playerMap = new HashMap<>();
+
+        GsonObject = new GsonBuilder()
+                .disableHtmlEscaping()
+                .enableComplexMapKeySerialization()
+                .excludeFieldsWithoutExposeAnnotation()
+                .registerTypeAdapter(EquipmentSlot.class, new EquipmentSlotDeserializer())
+                .registerTypeAdapter(InventoryType.class, new InventoryTypeDeserializer())
+                .registerTypeAdapter(ItemBaseA.class, new ItemBaseDeserializer())
+                .registerTypeAdapter(ItemFlag.class, new ItemFlagsDeserializer())
+                .registerTypeAdapter(Material.class, new MaterialDeserializer())
+                .registerTypeAdapter(PotionEffect.class, new PotionEffectDeserializer())
+                .serializeNulls()
+                .setPrettyPrinting()
+                .create();
+    }
+
+    /**
+     * 清理所有正在执行的对象，特别是所有继承于BukkitRunnable的对象<br>
+     * 在执行/reload指令或者插件退出时都需要执行该方法
+     */
+    public static void Dispose() {
+        Set<UUID> uuids = playerMap.keySet();
+        for (UUID uuid : uuids) {
+            PlayerData data = playerMap.get(uuid);
+            if (data == null) continue;
+
+            data.CancelPotionTimer();
+        }
+
+        playerMap.clear();
+        yamlMap.clear();
     }
 
     /**
@@ -60,26 +93,48 @@ public final class Global {
         String ClassName = tClass.getSimpleName();
         List<T> list = new ArrayList<>();
 
-        Gson gson = new GsonBuilder()
-                .enableComplexMapKeySerialization()
-                .disableHtmlEscaping()
-                .serializeNulls()
-                .registerTypeAdapter(Material.class, new MaterialDeserializer())
-                .registerTypeAdapter(ItemFlag.class, new ItemFlagsDeserializer())
-                .registerTypeAdapter(EquipmentSlot.class, new EquipmentSlotDeserializer())
-                .registerTypeAdapter(PotionEffect.class, new PotionEffectDeserializer())
-                .registerTypeAdapter(ItemBase.class, new ItemBaseDeserializer())
-                .excludeFieldsWithoutExposeAnnotation()
-                .create();
-
         for (String s : keys) {
             ConfigurationSection itemSection = section.getConfigurationSection(s);
             if (itemSection == null) continue;
-            String value = gson.toJson(itemSection.getValues(false)).replace('&', '§');
+            String value = GsonObject.toJson(itemSection.getValues(false)).replace('&', '§');
+            //System.out.println(value);
 
-            T item = gson.fromJson(value, tClass);
+            T item = GsonObject.fromJson(value, tClass);
+            Class<?> findClass = tClass;
+            Field fieldId = null;
+            while (findClass != null) {
+                Field[] fields = findClass.getDeclaredFields();
+                fieldId = Arrays.stream(fields).filter(x -> x.getName().equalsIgnoreCase("id")).findAny().orElse(null);
+                if (fieldId != null) break;
+                findClass = findClass.getSuperclass();
+            }
+
+            if (fieldId != null) {
+                fieldId.setAccessible(true);
+                fieldId.set(item, String.format("%s.%s", ClassName, s));
+            }
+            list.add(item);
+        }
+
+        return list;
+    }
+
+    /**
+     * 获取yml文档内所有子节段，利用Gson反序列到每一个T对象，然后返回List&lt;T&gt;数组
+     */
+    public static <T> List<T> SetItemList(YamlConfiguration yaml, Class<T> tClass) throws IllegalAccessException {
+        Set<String> keys = yaml.getKeys(false);
+        List<T> list = new ArrayList<>();
+
+        for (String s : keys) {
+            ConfigurationSection itemSection = yaml.getConfigurationSection(s);
+            if (itemSection == null) continue;
+            String value = GsonObject.toJson(itemSection.getValues(false)).replace('&', '§');
+            //System.out.println(value);
+
+            T item = GsonObject.fromJson(value, tClass);
             Field fieldId = Arrays.stream(tClass.getFields()).filter(x -> x.getName().equalsIgnoreCase("id")).findAny().orElse(null);
-            if (fieldId != null) fieldId.set(item, String.format("%s.%s", ClassName, s));
+            if (fieldId != null) fieldId.set(item, s);
             list.add(item);
         }
 

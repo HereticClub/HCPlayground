@@ -9,7 +9,7 @@ import org.bukkit.block.data.BlockData;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
-import org.hcmc.hcplayground.itemManager.ItemBase;
+import org.hcmc.hcplayground.itemManager.ItemBaseA;
 import org.hcmc.hcplayground.itemManager.armor.Armor;
 import org.hcmc.hcplayground.itemManager.offhand.OffHand;
 import org.hcmc.hcplayground.itemManager.weapon.Weapon;
@@ -21,7 +21,7 @@ import java.util.List;
 
 public class DropManager {
 
-    private static List<DropEntity> dropEntities;
+    private static List<DropItem> dropEntities;
 
     static {
         dropEntities = new ArrayList<>();
@@ -31,31 +31,27 @@ public class DropManager {
 
     }
 
-    public static DropEntity Find(Material material) {
+    public static DropItem Find(Material material) {
         return dropEntities.stream().filter(x -> x.block.equals(material)).findAny().orElse(null);
     }
 
-    public static List<DropEntity> getDropEntities() {
+    public static List<DropItem> getDropEntities() {
         return dropEntities;
     }
 
-    public static void Load(YamlConfiguration yaml) {
+    public static void Load(YamlConfiguration yaml) throws IllegalAccessException {
         // 在drops.yml文档里获取blocks节段
         ConfigurationSection section = yaml.getConfigurationSection("blocks");
         if (section == null) return;
-        //Set<String> itemKeys = section.getKeys(false);
-        try {
-            dropEntities = Global.SetItemList(section, DropEntity.class);
-        } catch (IllegalAccessException ex) {
-            ex.printStackTrace();
-        }
+        // 获取额外掉落物品列表
+        dropEntities = Global.SetItemList(section, DropItem.class);
     }
 
-    public static void AdditionalDrops(Block b) {
+    public static void ExtraDrops(Block b) {
         BlockData bd = b.getBlockData();
         World w = b.getWorld();
         Location l = b.getLocation();
-        DropEntity de = Find(b.getType());
+        DropItem de = Find(b.getType());
 
         if (de == null) return;
         if (bd instanceof Ageable) if (((Ageable) bd).getAge() < de.age) return;
@@ -63,15 +59,15 @@ public class DropManager {
 
         if (RandomNumber.checkBingo(de.rate)) {
             ItemStack is = null;
-            for (ItemBase ib : de.drops) {
-                if (ib.id == null) {
-                    is = new ItemStack(ib.material);
+            for (ItemBaseA ib : de.drops) {
+                if (ib.getId() == null) {
+                    is = new ItemStack(ib.getMaterial());
                 } else {
-                    if(ib instanceof Weapon) is = ((Weapon) ib).toItemStack();
-                    if(ib instanceof Armor) is = ((Armor) ib).toItemStack();
-                    if(ib instanceof OffHand) is = ((OffHand) ib).toItemStack();
+                    if (ib instanceof Weapon) is = ((Weapon) ib).toItemStack();
+                    if (ib instanceof Armor) is = ((Armor) ib).toItemStack();
+                    if (ib instanceof OffHand) is = ((OffHand) ib).toItemStack();
                 }
-                if(is != null) w.dropItemNaturally(l, is);
+                if (is != null) w.dropItemNaturally(l, is);
             }
         }
     }

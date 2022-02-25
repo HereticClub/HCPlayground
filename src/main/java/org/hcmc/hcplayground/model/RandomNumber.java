@@ -4,18 +4,24 @@ import java.util.Random;
 
 public class RandomNumber {
 
+    private static float randomValue;
+    private static final float bound = 100.0f;
+
     public RandomNumber() {
         /* TODO: */
     }
 
+    public float getRandomValue() {
+        return randomValue;
+    }
+
     public static boolean checkBingo(float rate) {
-        if (rate >= 100.0f) return true;
+        if (rate >= bound) return true;
         if (rate <= 0.0f) return false;
 
-        float bound = 100.0f;
         Random rnd = new Random();
-        float number = rnd.nextFloat(bound);
+        randomValue = rnd.nextFloat(bound);
 
-        return number < rate;
+        return randomValue < rate;
     }
 }

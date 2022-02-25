@@ -1,27 +1,19 @@
 package org.hcmc.hcplayground;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
-import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.EquipmentSlot;
-import org.bukkit.inventory.ItemFlag;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.potion.PotionEffect;
-import org.hcmc.hcplayground.deserializer.EquipmentSlotDeserializer;
-import org.hcmc.hcplayground.deserializer.ItemFlagsDeserializer;
-import org.hcmc.hcplayground.deserializer.MaterialDeserializer;
-import org.hcmc.hcplayground.deserializer.PotionEffectDeserializer;
+import org.hcmc.hcplayground.command.CommandManager;
 import org.hcmc.hcplayground.dropManager.DropManager;
 import org.hcmc.hcplayground.itemManager.ItemManager;
-import org.hcmc.hcplayground.itemManager.weapon.Weapon;
+import org.hcmc.hcplayground.level.LevelManager;
 import org.hcmc.hcplayground.listener.PluginListener;
+import org.hcmc.hcplayground.localization.Localization;
 import org.hcmc.hcplayground.model.Global;
-import org.hcmc.hcplayground.tabCompleter.QuartermasterTabCompleter;
+import org.hcmc.hcplayground.template.TemplateManager;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 
@@ -36,12 +28,18 @@ public class HCPlayground extends JavaPlugin {
     @Override
     public void onEnable() {
         super.onEnable();
-        ReloadPlugin();
+
+        try {
+            ReloadPlugin();
+        } catch (IllegalAccessException | NoSuchFieldException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
     public void onDisable() {
         super.onDisable();
+        Global.Dispose();
     }
 
     @Override
@@ -51,7 +49,7 @@ public class HCPlayground extends JavaPlugin {
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         if (sender instanceof ConsoleCommandSender) {
             System.out.println("Console send a command");
         }
@@ -79,25 +77,23 @@ public class HCPlayground extends JavaPlugin {
         }
     }
 
-    private void ReloadPlugin() {
+    private void ReloadPlugin() throws IllegalAccessException, NoSuchFieldException {
         // 创建插件所需要的子目录
         InitialChildrenFolders();
 
         // 复制并且加载所有Yml格式文档到插件目录
         Global.SaveYamlResource();
-        ItemManager.Load(Global.getYamlConfiguration("items.yml"));
+        // 本地化对象必须在最开始运行
+        Localization.Load(Global.getYamlConfiguration("messages.yml"));
+        CommandManager.Load(Global.getYamlConfiguration("command.yml"));
         DropManager.Load(Global.getYamlConfiguration("drops.yml"));
+        ItemManager.Load(Global.getYamlConfiguration("items.yml"));
+        LevelManager.Load(Global.getYamlConfiguration("levels.yml"));
+        TemplateManager.Load(Global.getYamlConfiguration("inventoryTemplate.yml"));
 
         // 验证并且注册所依赖的Plugin
         Global.ValidWorldGuardPlugin();
         Global.ValidVaultPlugin();
-
-        // 注册Command
-        PluginCommand qmCommand = getCommand("quartermaster");
-        if (qmCommand != null) {
-            qmCommand.setExecutor(new ItemManager());
-            qmCommand.setTabCompleter(new QuartermasterTabCompleter());
-        }
 
         // 注册Listener
         getServer().getPluginManager().registerEvents(new PluginListener(), this);

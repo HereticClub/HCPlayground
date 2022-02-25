@@ -9,7 +9,7 @@ import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffect;
-import org.hcmc.hcplayground.itemManager.ItemBase;
+import org.hcmc.hcplayground.itemManager.ItemBaseA;
 import org.hcmc.hcplayground.model.Global;
 
 import java.util.ArrayList;
@@ -17,7 +17,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
-public class OffHand extends ItemBase {
+public class OffHand extends ItemBaseA {
 
     @Expose
     public float luck = 0.0f;
@@ -29,7 +29,7 @@ public class OffHand extends ItemBase {
     }
 
     public ItemStack toItemStack() {
-        ItemStack is = new ItemStack(this.material, 1);
+        ItemStack is = new ItemStack(this.getMaterial(), 1);
         ItemMeta im = SetBaseItemMeta(is);
 
         if (im != null) {
@@ -43,9 +43,9 @@ public class OffHand extends ItemBase {
             /*
             添加附魔效果
             */
-            if (this.glowing) {
+            if (this.getGlowing()) {
                 im.addEnchant(Enchantment.DURABILITY, 10, true);
-                if (!Arrays.asList(this.flags).contains(ItemFlag.HIDE_ENCHANTS))
+                if (!Arrays.asList(this.getFlags()).contains(ItemFlag.HIDE_ENCHANTS))
                     im.addItemFlags(ItemFlag.HIDE_ENCHANTS);
             }
             /*

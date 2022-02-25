@@ -1,12 +1,24 @@
 package org.hcmc.hcplayground.playerManager;
 
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
+import com.google.gson.reflect.TypeToken;
+import org.bukkit.Material;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
+import org.hcmc.hcplayground.HCPlayground;
+import org.hcmc.hcplayground.model.Global;
 import org.hcmc.hcplayground.scheduler.PotionEffectRunnable;
 
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 public class PlayerData {
     /*
@@ -19,20 +31,81 @@ public class PlayerData {
     Value:
     破快或放置该方块的总数量
     */
-    public Map<String, Integer> BreakList = new HashMap<>();
-    public Map<String, Integer> PlaceList = new HashMap<>();
+    private static final String Section_Key_BreakList = "breakList";
+    private static final String Section_Key_PlaceList = "placeList";
 
+    @SerializedName(value = "breakList")
+    @Expose
+    public Map<Material, Integer> BreakList = new HashMap<>();
+    @Expose
+    @SerializedName(value = "placeList")
+    public Map<Material, Integer> PlaceList = new HashMap<>();
+
+    @Expose(serialize = false, deserialize = false)
     private final Player player;
+    @Expose(serialize = false, deserialize = false)
+    private final JavaPlugin plugin = HCPlayground.getPlugin();
 
-    public PotionEffectRunnable PotionRunnable;
-    public BukkitTask BukkitTask;
+    @Expose(serialize = false, deserialize = false)
+    public PotionEffectRunnable PotionTimer;
+    @Expose(serialize = false, deserialize = false)
+    public BukkitTask PotionTask;
+
+    private boolean isScheduled = false;
 
     public PlayerData(Player player) {
         this.player = player;
-        this.PotionRunnable = new PotionEffectRunnable(player);
+        this.PotionTimer = new PotionEffectRunnable(player);
     }
 
     public void RunPotionTimer(JavaPlugin plugin, long delay, long period) {
-        this.BukkitTask = PotionRunnable.runTaskTimer(plugin, delay, period);
+        if (isScheduled) return;
+        this.PotionTask = PotionTimer.runTaskTimer(plugin, delay, period);
+        isScheduled = true;
+    }
+
+    public void CancelPotionTimer() {
+        if (!isScheduled) return;
+        if (PotionTask != null) PotionTask.cancel();
+        if (PotionTimer != null) PotionTimer.cancel();
+        isScheduled = false;
+    }
+
+    public YamlConfiguration toYaml() {
+        YamlConfiguration yaml = new YamlConfiguration();
+
+        yaml.createSection("breakList", BreakList);
+        yaml.createSection("placeList", PlaceList);
+
+        return yaml;
+    }
+
+    public void LoadConfig() {
+        UUID playerUuid = player.getUniqueId();
+        ConfigurationSection breakSection, placeSection;
+        String sectionValue;
+        Type mapType = new TypeToken<Map<Material, Integer>>() {
+        }.getType();
+        File f = new File(plugin.getDataFolder(), String.format("profile/%s.yml", playerUuid));
+
+        YamlConfiguration yaml = YamlConfiguration.loadConfiguration(f);
+        breakSection = yaml.getConfigurationSection(Section_Key_BreakList);
+        if (breakSection != null) {
+            sectionValue = Global.GsonObject.toJson(breakSection.getValues(false));
+            BreakList = Global.GsonObject.fromJson(sectionValue, mapType);
+        }
+        placeSection = yaml.getConfigurationSection(Section_Key_PlaceList);
+        if (placeSection != null) {
+            sectionValue = Global.GsonObject.toJson(placeSection.getValues(false));
+            PlaceList = Global.GsonObject.fromJson(sectionValue, mapType);
+        }
+    }
+
+    public void SaveConfig() throws IOException {
+        UUID playerUuid = player.getUniqueId();
+        File f = new File(plugin.getDataFolder(), String.format("profile/%s.yml", playerUuid));
+
+        toYaml().save(f);
+
     }
 }

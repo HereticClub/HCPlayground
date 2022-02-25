@@ -7,9 +7,11 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.EquipmentSlot;
@@ -25,11 +27,10 @@ import org.hcmc.hcplayground.itemManager.ItemManager;
 import org.hcmc.hcplayground.itemManager.offhand.OffHand;
 import org.hcmc.hcplayground.model.Global;
 import org.hcmc.hcplayground.playerManager.PlayerData;
-import org.hcmc.hcplayground.playerManager.PlayerManager;
 import org.hcmc.hcplayground.scheduler.InventoryChangingRunnable;
 import org.hcmc.hcplayground.scheduler.PotionEffectRunnable;
 
-import java.io.File;
+import java.io.IOException;
 import java.util.UUID;
 
 /*
@@ -64,19 +65,11 @@ public class PluginListener implements Listener {
     public void onPlayerJoin(final PlayerJoinEvent event) {
         Player player = event.getPlayer();
         UUID playerUuid = player.getUniqueId();
-        File f = new File(plugin.getDataFolder(), String.format("profile/%s.yml", playerUuid));
-        PlayerManager.Load(f);
 
-        PlayerData playerData;
-        if (Global.playerMap.containsKey(playerUuid)) {
-            playerData = Global.playerMap.get(playerUuid);
-        } else {
-            playerData = new PlayerData(player);
-            Global.playerMap.put(playerUuid, playerData);
-        }
-
+        PlayerData playerData = new PlayerData(player);
+        playerData.LoadConfig();
         playerData.RunPotionTimer(plugin, 20, 200);
-        Global.playerMap.replace(playerUuid, playerData);
+        Global.playerMap.put(playerUuid, playerData);
 
     }
 
@@ -84,34 +77,17 @@ public class PluginListener implements Listener {
      * 玩家离开服务器事件
      */
     @EventHandler
-    public void onPlayerLeave(PlayerQuitEvent event) {
+    public void onPlayerLeave(PlayerQuitEvent event) throws IOException {
         Player p = event.getPlayer();
         UUID playerUuid = p.getUniqueId();
-        File f = new File(plugin.getDataFolder(), String.format("profile/%s.yml", playerUuid));
-        PlayerManager.Save(f);
-
         PlayerData playerData = Global.playerMap.get(playerUuid);
-        if (playerData == null) return;
-        if (playerData.BukkitTask != null && playerData.PotionRunnable != null) {
-            playerData.BukkitTask.cancel();
-            playerData.PotionRunnable.cancel();
+
+        if (playerData != null) {
+            playerData.CancelPotionTimer();
+            playerData.SaveConfig();
         }
 
         Global.playerMap.remove(playerUuid, playerData);
-    }
-
-    /**
-     * 任意 Inventory 点击事件
-     */
-    @EventHandler
-    public void onInventoryClick1(final InventoryClickEvent event) {
-        if (event.isCancelled()) return;
-        if (event.getCursor() == null) return;
-        if (event.getCursor().getType().equals(Material.AIR)) return;
-
-        Player player = (Player) event.getWhoClicked();
-        Inventory inv = event.getInventory();
-        ItemStack itemStack = event.getCurrentItem();
     }
 
     /**
@@ -134,9 +110,10 @@ public class PluginListener implements Listener {
         s.runTask(plugin);
 
         PlayerData playerData = Global.playerMap.get(playerUuid);
-        if(playerData == null) return;
-        if (playerData.PotionRunnable == null) {
-            playerData.PotionRunnable = new PotionEffectRunnable(player);
+        if (playerData == null) return;
+
+        if (playerData.PotionTimer == null) {
+            playerData.PotionTimer = new PotionEffectRunnable(player);
             playerData.RunPotionTimer(plugin, 20, 200);
         }
         Global.playerMap.replace(playerUuid, playerData);
@@ -147,7 +124,6 @@ public class PluginListener implements Listener {
         if (event.isCancelled()) return;
 
         ItemStack is = event.getItemStack();
-        InventoryAction action = event.getAction();
         Player player = (Player) event.getWhoClicked();
         UUID playerUuid = player.getUniqueId();
 
@@ -155,26 +131,62 @@ public class PluginListener implements Listener {
         OffHand offHand = (OffHand) ItemManager.FindItemById(id);
 
         PlayerData playerData = Global.playerMap.get(playerUuid);
+        if (playerData == null) return;
+
         if (offHand != null) {
-            playerData.PotionRunnable.setPotionEffects(offHand.potions);
+            playerData.PotionTimer.setPotionEffects(offHand.potions);
         } else {
-            playerData.PotionRunnable.setPotionEffects(null);
+            playerData.PotionTimer.setPotionEffects(null);
         }
         Global.playerMap.replace(playerUuid, playerData);
     }
 
     @EventHandler
-    public void onBlockBreak(final BlockBreakEvent event) {
+    private void onHandItemClick(final PlayerInteractEvent event) {
+
+    }
+
+    @EventHandler
+    public void onBlockBroke(final BlockBreakEvent event) {
         if (event.isCancelled()) return;
 
         Player player = event.getPlayer();
         Block block = event.getBlock();
+        Material material = block.getType();
 
-        DropManager.AdditionalDrops(block);
-        //UUID playerUuid = player.getUniqueId();
+        DropManager.ExtraDrops(block);
+        UUID playerUuid = player.getUniqueId();
 
-        //PlayerData playerData = Global.playerMap.get(playerUuid);
-        //ItemStack is = new ItemStack(Material.AIR);
+        PlayerData playerData = Global.playerMap.get(playerUuid);
+        if (playerData == null) {
+            playerData = new PlayerData(player);
+            Global.playerMap.put(playerUuid, playerData);
+        }
+
+        int count = playerData.BreakList.getOrDefault(material, 0);
+        playerData.BreakList.put(material, count + 1);
+        Global.playerMap.replace(playerUuid, playerData);
+
+    }
+
+    @EventHandler
+    public void onBlockPlaced(final BlockPlaceEvent event) {
+        if (event.isCancelled()) return;
+
+        Player player = event.getPlayer();
+        Block block = event.getBlock();
+        Material material = block.getType();
+        UUID playerUuid = player.getUniqueId();
+
+        PlayerData playerData = Global.playerMap.get(playerUuid);
+        if (playerData == null) {
+            playerData = new PlayerData(player);
+            Global.playerMap.put(playerUuid, playerData);
+        }
+
+        int count = playerData.PlaceList.getOrDefault(material, 0);
+        playerData.PlaceList.put(material, count + 1);
+        Global.playerMap.replace(playerUuid, playerData);
 
     }
 

@@ -11,7 +11,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
-import org.hcmc.hcplayground.itemManager.ItemBase;
+import org.hcmc.hcplayground.itemManager.ItemBaseA;
 import org.hcmc.hcplayground.model.Global;
 
 import java.util.ArrayList;
@@ -19,7 +19,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
-public class Weapon extends ItemBase {
+public class Weapon extends ItemBaseA {
     /**
      * 攻击伤害
      */
@@ -54,7 +54,7 @@ public class Weapon extends ItemBase {
         /*
         将Item Model转换为ItemStack对象，并且为ItemStack添加的新命名空间和新的物品ID
         */
-        ItemStack is = new ItemStack(this.material, 1);
+        ItemStack is = new ItemStack(this.getMaterial(), 1);
         ItemMeta im = SetBaseItemMeta(is);
 
         if (im != null) {
@@ -98,7 +98,7 @@ public class Weapon extends ItemBase {
             /*
             强制添加隐藏属性标记
             */
-            if (!Arrays.asList(this.flags).contains(ItemFlag.HIDE_ATTRIBUTES)) {
+            if (!Arrays.asList(this.getFlags()).contains(ItemFlag.HIDE_ATTRIBUTES)) {
                 im.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
             }
 
