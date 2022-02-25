@@ -12,6 +12,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemFlag;
+import org.bukkit.permissions.PermissionDefault;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -49,9 +50,18 @@ public final class Global {
 
     static {
         plugin = JavaPlugin.getPlugin(HCPlayground.class);
-        ymlFilenames = new String[]{"config.yml", "items.yml", "drops.yml", "messages.yml", "levels.yml", "command.yml", "inventoryTemplate.yml"};
         yamlMap = new HashMap<>();
         playerMap = new HashMap<>();
+        ymlFilenames = new String[]{
+                "config.yml",
+                "items.yml",
+                "drops.yml",
+                "messages.yml",
+                "levels.yml",
+                "command.yml",
+                "inventoryTemplate.yml",
+                "permission.yml",
+        };
 
         GsonObject = new GsonBuilder()
                 .disableHtmlEscaping()
@@ -63,6 +73,7 @@ public final class Global {
                 .registerTypeAdapter(ItemFlag.class, new ItemFlagsDeserializer())
                 .registerTypeAdapter(Material.class, new MaterialDeserializer())
                 .registerTypeAdapter(PotionEffect.class, new PotionEffectDeserializer())
+                .registerTypeAdapter(PermissionDefault.class, new PermissionDefaultDeserializer())
                 .serializeNulls()
                 .setPrettyPrinting()
                 .create();

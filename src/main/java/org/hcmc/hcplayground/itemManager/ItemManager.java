@@ -1,13 +1,11 @@
 package org.hcmc.hcplayground.itemManager;
 
 import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.permissions.Permission;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.itemManager.armor.Armor;
@@ -19,7 +17,6 @@ import org.hcmc.hcplayground.model.Global;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 
 public class ItemManager {
@@ -89,7 +86,7 @@ public class ItemManager {
 
     public static void Give(CommandSender sender, String playerName, String itemId, int amount) {
         Player[] players = Bukkit.getOnlinePlayers().toArray(new Player[0]);
-        Player player = Arrays.stream(players).filter(x->x.getName().equalsIgnoreCase(playerName)).findAny().orElse(null);
+        Player player = Arrays.stream(players).filter(x -> x.getName().equalsIgnoreCase(playerName)).findAny().orElse(null);
 
         if (player == null) {
             sender.sendMessage(Localization.Messages.get("playerNotExist").replace("%player%", playerName));

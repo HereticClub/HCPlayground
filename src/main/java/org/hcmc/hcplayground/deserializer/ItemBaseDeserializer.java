@@ -38,7 +38,7 @@ public class ItemBaseDeserializer implements JsonDeserializer<ItemBase> {
         return ib;
     }
 
-    private static class ItemBaseX extends ItemBaseA{
+    private static class ItemBaseX extends ItemBaseA {
 
         @Override
         public ItemStack toItemStack() {

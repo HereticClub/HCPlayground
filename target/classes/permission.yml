@@ -1,0 +1,40 @@
+permissions:
+  permission1:
+    # name of permission
+    name: hc.*
+    # default, one of value as op, not op, true, false
+    # true - everyone has permission
+    # false - no one has permission, include op
+    # op - only op has permission
+    # not op - everyone but op has permission
+    default: op
+    # permission description
+    description: Grant all permissions to player to handle the plugin
+    # permission include the sub-permissions as below
+    children:
+      - hc.reload
+      - hc.quartermaster.*
+  permission2:
+    name: hc.quartermaster.*
+    default: op
+    description: Grant permission to player as quartermaster, to manage all items include weapons, off-hand items, armor, accessories
+    children:
+      - hc.quartermaster.give
+      - hc.quartermaster.take
+      - hc.quartermaster.gui
+  permission3:
+    name: hc.reload
+    description: Permission to reload this plugin
+    default: op
+  permission4:
+    name: hc.quartermaster.gui
+    description: Grant permission to player to use
+    default: true
+  permission5:
+    name: hc.quartermaster.take
+    description: Grant permission to player to manage weapon
+    default: op
+  permission6:
+    name: hc.quartermaster.give
+    description: Grant permission to player to manage armor
+    default: op

@@ -12,6 +12,7 @@ import org.hcmc.hcplayground.level.LevelManager;
 import org.hcmc.hcplayground.listener.PluginListener;
 import org.hcmc.hcplayground.localization.Localization;
 import org.hcmc.hcplayground.model.Global;
+import org.hcmc.hcplayground.permission.PermissionManager;
 import org.hcmc.hcplayground.template.TemplateManager;
 import org.jetbrains.annotations.NotNull;
 
@@ -85,6 +86,7 @@ public class HCPlayground extends JavaPlugin {
         Global.SaveYamlResource();
         // 本地化对象必须在最开始运行
         Localization.Load(Global.getYamlConfiguration("messages.yml"));
+        PermissionManager.Load(Global.getYamlConfiguration("permission.yml"));
         CommandManager.Load(Global.getYamlConfiguration("command.yml"));
         DropManager.Load(Global.getYamlConfiguration("drops.yml"));
         ItemManager.Load(Global.getYamlConfiguration("items.yml"));

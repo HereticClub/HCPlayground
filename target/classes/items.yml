@@ -211,7 +211,7 @@ joins:
       - ''
       - '&f如果阁下第一次来到这里'
       - '&f还请先花点时间读完这个手册'
-    # 物品可以允许使用的世界列表
+    # 物品可以被允许使用的世界列表
     worlds: []
     # 书本的作者
     author: '&6异族世界'
@@ -224,6 +224,21 @@ joins:
     # TATTERED - 破烂的书本，玩家无法获得
     generation: ORIGINAL
     # 书本的页数和内容
+    flags:
+      #设置显示/隐藏该Item的属性,例如伤害.
+      - HIDE_ATTRIBUTES
+      #设置显示/隐藏哪些ItemStack可以被破坏.
+      #- HIDE_DESTROYS
+      #设置显示/隐藏彩色皮革盔甲的染料.
+      #- HIDE_DYE
+      #设置显示/隐藏附魔.
+      - HIDE_ENCHANTS
+      #设置显示/隐藏哪些ItemStack可以被放置.
+      #- HIDE_PLACED_ON
+      #设置显示/隐藏ItemStack的药水效果.
+      #- HIDE_POTION_EFFECTS
+      #设置显示/隐藏不可破坏属性.
+      #- HIDE_UNBREAKABLE
     pages:
       - number: 1
         content:
@@ -286,18 +301,3 @@ joins:
           - '&c详细情况请到Q群看公告'
           - '&0Q群: &1837290837'
           - ''
-    flags:
-      #设置显示/隐藏该Item的属性,例如伤害.
-      - HIDE_ATTRIBUTES
-      #设置显示/隐藏哪些ItemStack可以被破坏.
-      #- HIDE_DESTROYS
-      #设置显示/隐藏彩色皮革盔甲的染料.
-      #- HIDE_DYE
-      #设置显示/隐藏附魔.
-      - HIDE_ENCHANTS
-      #设置显示/隐藏哪些ItemStack可以被放置.
-      #- HIDE_PLACED_ON
-      #设置显示/隐藏ItemStack的药水效果.
-      #- HIDE_POTION_EFFECTS
-      #设置显示/隐藏不可破坏属性.
-      #- HIDE_UNBREAKABLE
