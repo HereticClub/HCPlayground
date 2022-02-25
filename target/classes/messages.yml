@@ -1,0 +1,34 @@
+messages:
+  # 没有权限运行该指令时的提示，可使用%permission%占位符，代表当前需要的权限
+  permission-message: '&4You need &e%permission% &4to run this command.'
+  # 当命令不能在控制台运行时的提示，可使用%command%占位符，代表当前指令名称
+  console-message: '&4The command &e%command% &4can''t be run from console'
+  # 当命令不能被玩家运行时的提示，可使用%command%占位符，代表当前指令名称
+  player-message: '&4The command &e%command% &4can''t be run by a player'
+  # 当命令不能当前世界执行时的提示
+  # 可使用%command%占位符，代表当前指令名称
+  # 可使用%world%占位符，代表当前执行指令时所在的世界
+  world-message: '&cThe command &e%command% &ccan''t be run on the world: &f%world%'
+  playerNotExist: 'Player %player% is not found'
+  # 可使用%player%占位符，代表当前执行指令时所指向的玩家名称
+  playerOffLine: '%player% is already offline'
+  # 运行指令时输入的参数不正确时显示
+  parameterInCorrect: 'Parameter incorrect'
+  # 可使用%item%占位符，运行带有item参数的命令时并且找不到item时显示
+  noSuchItem: 'No such item as %item%'
+  # 异族游乐场主菜单指令说明，必须与定义的指令名称一致
+  menu:
+    # 指令说明，当使用/help menu时显示
+    description: Open the main menu of HCPlayground for player
+    # 指令的帮助提示，当使用/help menu时显示
+    usage: |-
+      §9/<command> §7- §fOpen the main menu of HCPlayground for player(chest box style)
+  # 军需官指令说明，必须与定义的指令名称一致
+  quartermaster:
+    description: The quartermaster, who manages weapons, off-hand items, armor, accessories
+    usage: |-
+      §f <command> command usage:
+      §e/<command> {give|take|gui} {player} {item} [amount]
+      §9/<command> give §7- §fGive an item to player
+      §9/<command> take §7- §fTake an item from player
+      §9/<command> gui §7- §fShow item list in gui
