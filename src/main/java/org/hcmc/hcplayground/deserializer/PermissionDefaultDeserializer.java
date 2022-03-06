@@ -4,7 +4,6 @@ import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
-import org.bukkit.Material;
 import org.bukkit.permissions.PermissionDefault;
 
 import java.lang.reflect.Type;

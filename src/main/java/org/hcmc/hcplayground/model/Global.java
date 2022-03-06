@@ -6,14 +6,9 @@ import com.sk89q.worldguard.WorldGuard;
 import net.milkbowl.vault.chat.Chat;
 import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.permission.Permission;
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.HumanEntity;
-import org.bukkit.entity.NPC;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemFlag;
@@ -26,9 +21,11 @@ import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.deserializer.*;
 import org.hcmc.hcplayground.itemManager.ItemBaseA;
 import org.hcmc.hcplayground.playerManager.PlayerData;
+import org.hcmc.hcplayground.sqlite.SqliteManager;
 
 import java.io.File;
 import java.lang.reflect.Field;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.regex.Pattern;
@@ -48,6 +45,7 @@ public final class Global {
     public static Map<String, YamlConfiguration> yamlMap;
     public static Map<UUID, PlayerData> playerMap;
     public static Gson GsonObject;
+    public static SqliteManager Sqlite = null;
     public static WorldGuard WorldGuardApi = null;
     public static Economy EconomyApi = null;
     public static Chat ChatApi = null;
@@ -66,6 +64,7 @@ public final class Global {
                 "command.yml",
                 "inventoryTemplate.yml",
                 "permission.yml",
+                "database/hcdb.db",
         };
 
         GsonObject = new GsonBuilder()
@@ -88,7 +87,7 @@ public final class Global {
      * 清理所有正在执行的对象，特别是所有继承于BukkitRunnable的对象<br>
      * 在执行/reload指令或者插件退出时都需要执行该方法
      */
-    public static void Dispose() {
+    public static void Dispose() throws SQLException {
         Set<UUID> uuids = playerMap.keySet();
         for (UUID uuid : uuids) {
             PlayerData data = playerMap.get(uuid);
@@ -96,7 +95,7 @@ public final class Global {
 
             data.CancelPotionTimer();
         }
-
+        Sqlite.Disconnect();
         playerMap.clear();
         yamlMap.clear();
     }

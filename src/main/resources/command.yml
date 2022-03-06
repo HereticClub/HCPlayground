@@ -15,7 +15,7 @@ menu:
       # 当参数的位置是2或者更多，可以使用%parent%占位符
       # %parent%将代替当前位置参数的上一个参数的名称
       # 例如：设置了当前参数的权限为permission.%parent%.use
-      # 如果仓前参数的上一个参数为arg1，则权限会被改为permission.arg1.use
+      # 如果当前参数的上一个参数为arg1，则权限会被改为permission.arg1.use
       permission: ''
       # 该参数在当前指令的位置，例如：/command arg1 arg2 ... argN
       # 1表示第一个参数，2表示第二个参数，如此类推
@@ -46,3 +46,40 @@ quartermaster:
     - quarter
     - master
     - qm
+login:
+  runOnConsole: false
+  runOnPlayer: true
+  args: []
+  worlds: []
+  aliases:
+    - log
+    - l
+logout:
+  runOnConsole: false
+  runOnPlayer: true
+  args: []
+  worlds: []
+register:
+  runOnConsole: false
+  runOnPlayer: true
+  args: []
+  worlds: []
+  aliases:
+    - reg
+    - r
+unregister:
+  runOnConsole: false
+  runOnPlayer: true
+  args: []
+  worlds: []
+  aliases:
+    - unreg
+    - ur
+changepassword:
+  runOnConsole: false
+  runOnPlayer: true
+  args: []
+  worlds: []
+  aliases:
+    - changepass
+    - cp

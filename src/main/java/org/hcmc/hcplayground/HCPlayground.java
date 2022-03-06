@@ -13,10 +13,12 @@ import org.hcmc.hcplayground.listener.PluginListener;
 import org.hcmc.hcplayground.localization.Localization;
 import org.hcmc.hcplayground.model.Global;
 import org.hcmc.hcplayground.permission.PermissionManager;
+import org.hcmc.hcplayground.sqlite.SqliteManager;
 import org.hcmc.hcplayground.template.TemplateManager;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
+import java.sql.SQLException;
 
 public class HCPlayground extends JavaPlugin {
 
@@ -32,7 +34,7 @@ public class HCPlayground extends JavaPlugin {
 
         try {
             ReloadPlugin();
-        } catch (IllegalAccessException | NoSuchFieldException e) {
+        } catch (IllegalAccessException | NoSuchFieldException | SQLException e) {
             e.printStackTrace();
         }
     }
@@ -40,7 +42,12 @@ public class HCPlayground extends JavaPlugin {
     @Override
     public void onDisable() {
         super.onDisable();
-        Global.Dispose();
+
+        try {
+            Global.Dispose();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -70,21 +77,23 @@ public class HCPlayground extends JavaPlugin {
     }
 
     private void InitialChildrenFolders() {
-        String[] childrenFolders = new String[]{"profile"};
+        String[] childrenFolders = new String[]{"profile", "database"};
+
+        if (!getDataFolder().exists()) getDataFolder().mkdir();
 
         for (String s : childrenFolders) {
-            File f = new File(getDataFolder(), s);
+            File f = new File(String.format("%s/%s", getDataFolder(), s));
             boolean flag = f.mkdir();
         }
     }
 
-    private void ReloadPlugin() throws IllegalAccessException, NoSuchFieldException {
+    private void ReloadPlugin() throws IllegalAccessException, NoSuchFieldException, SQLException {
         // 创建插件所需要的子目录
         InitialChildrenFolders();
-
         // 复制并且加载所有Yml格式文档到插件目录
         Global.SaveYamlResource();
         // 本地化对象必须在最开始运行
+        Global.Sqlite = new SqliteManager();
         Localization.Load(Global.getYamlConfiguration("messages.yml"));
         PermissionManager.Load(Global.getYamlConfiguration("permission.yml"));
         CommandManager.Load(Global.getYamlConfiguration("command.yml"));
