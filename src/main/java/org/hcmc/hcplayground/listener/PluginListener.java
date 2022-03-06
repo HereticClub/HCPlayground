@@ -28,7 +28,6 @@ import org.hcmc.hcplayground.itemManager.offhand.OffHand;
 import org.hcmc.hcplayground.model.Global;
 import org.hcmc.hcplayground.playerManager.PlayerData;
 import org.hcmc.hcplayground.scheduler.InventoryChangingRunnable;
-import org.hcmc.hcplayground.scheduler.PotionEffectRunnable;
 
 import java.io.IOException;
 import java.util.UUID;
@@ -68,7 +67,6 @@ public class PluginListener implements Listener {
 
         PlayerData playerData = new PlayerData(player);
         playerData.LoadConfig();
-        playerData.RunPotionTimer(plugin, 20, 200);
         Global.playerMap.put(playerUuid, playerData);
 
     }
@@ -83,7 +81,6 @@ public class PluginListener implements Listener {
         PlayerData playerData = Global.playerMap.get(playerUuid);
 
         if (playerData != null) {
-            playerData.CancelPotionTimer();
             playerData.SaveConfig();
         }
 
@@ -112,10 +109,13 @@ public class PluginListener implements Listener {
         PlayerData playerData = Global.playerMap.get(playerUuid);
         if (playerData == null) return;
 
+        /*
         if (playerData.PotionTimer == null) {
-            playerData.PotionTimer = new PotionEffectRunnable(player);
+            playerData.PotionTimer = new PluginRunnable(player);
             playerData.RunPotionTimer(plugin, 20, 200);
         }
+
+         */
         Global.playerMap.replace(playerUuid, playerData);
     }
 
@@ -133,11 +133,14 @@ public class PluginListener implements Listener {
         PlayerData playerData = Global.playerMap.get(playerUuid);
         if (playerData == null) return;
 
+        /*
         if (offHand != null) {
             playerData.PotionTimer.setPotionEffects(offHand.potions);
         } else {
             playerData.PotionTimer.setPotionEffects(null);
         }
+
+         */
         Global.playerMap.replace(playerUuid, playerData);
     }
 

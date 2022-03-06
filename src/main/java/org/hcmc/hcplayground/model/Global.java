@@ -21,6 +21,7 @@ import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.deserializer.*;
 import org.hcmc.hcplayground.itemManager.ItemBaseA;
 import org.hcmc.hcplayground.playerManager.PlayerData;
+import org.hcmc.hcplayground.scheduler.PluginRunnable;
 import org.hcmc.hcplayground.sqlite.SqliteManager;
 
 import java.io.File;
@@ -42,6 +43,7 @@ public final class Global {
     public final static String PERSISTENT_CRIT_KEY = "crit";
     public final static Pattern patternNumber = Pattern.compile("-?\\d+(\\.\\d+)?");
 
+    public static PluginRunnable runnable;
     public static Map<String, YamlConfiguration> yamlMap;
     public static Map<UUID, PlayerData> playerMap;
     public static Gson GsonObject;
@@ -52,6 +54,7 @@ public final class Global {
     public static Permission PermissionApi = null;
 
     static {
+        runnable = new PluginRunnable();
         plugin = JavaPlugin.getPlugin(HCPlayground.class);
         yamlMap = new HashMap<>();
         playerMap = new HashMap<>();
@@ -93,8 +96,9 @@ public final class Global {
             PlayerData data = playerMap.get(uuid);
             if (data == null) continue;
 
-            data.CancelPotionTimer();
+            //data.CancelPotionTimer();
         }
+        runnable.cancel();
         Sqlite.Disconnect();
         playerMap.clear();
         yamlMap.clear();

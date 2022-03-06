@@ -7,13 +7,13 @@ import org.bukkit.scheduler.BukkitRunnable;
 import java.util.Arrays;
 import java.util.Collection;
 
-public class PotionEffectRunnable extends BukkitRunnable {
+public class PluginRunnable extends BukkitRunnable {
 
-    private final Player player;
+    private Player player;
     private PotionEffect[] effects;
 
-    public PotionEffectRunnable(Player player) {
-        this.player = player;
+    public PluginRunnable() {
+
     }
 
     public void setPotionEffects(PotionEffect[] effects) {
@@ -22,7 +22,7 @@ public class PotionEffectRunnable extends BukkitRunnable {
 
     @Override
     public void run() {
-        setPlayerPotionEffects();
+
     }
 
     private void setPlayerPotionEffects() {

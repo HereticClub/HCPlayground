@@ -5,6 +5,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitTask;
 import org.hcmc.hcplayground.command.CommandManager;
 import org.hcmc.hcplayground.dropManager.DropManager;
 import org.hcmc.hcplayground.itemManager.ItemManager;
@@ -13,6 +14,7 @@ import org.hcmc.hcplayground.listener.PluginListener;
 import org.hcmc.hcplayground.localization.Localization;
 import org.hcmc.hcplayground.model.Global;
 import org.hcmc.hcplayground.permission.PermissionManager;
+import org.hcmc.hcplayground.scheduler.PluginRunnable;
 import org.hcmc.hcplayground.sqlite.SqliteManager;
 import org.hcmc.hcplayground.template.TemplateManager;
 import org.jetbrains.annotations.NotNull;
@@ -23,6 +25,7 @@ import java.sql.SQLException;
 public class HCPlayground extends JavaPlugin {
 
     private static HCPlayground instance;
+    private static BukkitTask task;
 
     public HCPlayground() {
 
@@ -44,6 +47,7 @@ public class HCPlayground extends JavaPlugin {
         super.onDisable();
 
         try {
+            task.cancel();
             Global.Dispose();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -105,6 +109,8 @@ public class HCPlayground extends JavaPlugin {
         // 验证并且注册所依赖的Plugin
         Global.ValidWorldGuardPlugin();
         Global.ValidVaultPlugin();
+
+        task = Global.runnable.runTaskTimer(this, 20, 20);
 
         // 注册Listener
         getServer().getPluginManager().registerEvents(new PluginListener(), this);

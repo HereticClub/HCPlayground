@@ -8,10 +8,8 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitTask;
 import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.model.Global;
-import org.hcmc.hcplayground.scheduler.PotionEffectRunnable;
 
 import java.io.File;
 import java.io.IOException;
@@ -47,17 +45,41 @@ public class PlayerData {
     private final JavaPlugin plugin = HCPlayground.getPlugin();
 
     @Expose(serialize = false, deserialize = false)
+    private final UUID uuid;
+    @Expose(serialize = false, deserialize = false)
+    private final String name;
+    /*
+    @Expose(serialize = false, deserialize = false)
     public PotionEffectRunnable PotionTimer;
     @Expose(serialize = false, deserialize = false)
     public BukkitTask PotionTask;
 
-    private boolean isScheduled = false;
+     */
+
+    //private boolean isScheduled = false;
 
     public PlayerData(Player player) {
         this.player = player;
-        this.PotionTimer = new PotionEffectRunnable(player);
+        //this.PotionTimer = new PotionEffectRunnable(player);
+
+        name = player.getName();
+        uuid = player.getUniqueId();
     }
 
+    public UUID getUuid() {
+        return uuid;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public boolean checkLogin(String password){
+
+        return false;
+    }
+
+    /*
     public void RunPotionTimer(JavaPlugin plugin, long delay, long period) {
         if (isScheduled) return;
         this.PotionTask = PotionTimer.runTaskTimer(plugin, delay, period);
@@ -70,6 +92,8 @@ public class PlayerData {
         if (PotionTimer != null) PotionTimer.cancel();
         isScheduled = false;
     }
+
+     */
 
     public YamlConfiguration toYaml() {
         YamlConfiguration yaml = new YamlConfiguration();
