@@ -1,7 +1,6 @@
-setting:
-  name: abc
-  time-out: 5
-world:
-  x: -1
-  y: 64
-  z: 0
+# 用户加入服务器时登录设置
+authme:
+  # 在登录或注册前的提示信息间隔，单位: 秒
+  remainInterval: 5
+  # 在时间段内仍然没有注册或者登录，则被踢出服务器，单位: 秒
+  timeout: 60

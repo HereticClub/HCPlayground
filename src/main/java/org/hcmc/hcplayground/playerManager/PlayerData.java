@@ -14,7 +14,9 @@ import org.hcmc.hcplayground.model.Global;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Type;
-import java.time.LocalDateTime;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -40,6 +42,11 @@ public class PlayerData {
     @Expose
     @SerializedName(value = "placeList")
     public Map<Material, Integer> PlaceList = new HashMap<>();
+    /**
+     * 玩家在进入服务器后登陆前或注册前的信息提醒的时间检查点
+     */
+    @Expose(serialize = false, deserialize = false)
+    public long remindCheckpoint = 0;
 
     @Expose(serialize = false, deserialize = false)
     private final Player player;
@@ -55,7 +62,7 @@ public class PlayerData {
     @Expose(serialize = false, deserialize = false)
     private boolean isRegister;
     @Expose(serialize = false, deserialize = false)
-    private LocalDateTime loginDTTM;
+    private Date loginDTTM;
     /*
     @Expose(serialize = false, deserialize = false)
     public PotionEffectRunnable PotionTimer;
@@ -82,11 +89,11 @@ public class PlayerData {
         isLogin = value;
     }
 
-    public LocalDateTime getLoginDTTM() {
+    public Date getLoginDTTM() {
         return loginDTTM;
     }
 
-    public void setLoginDTTM(LocalDateTime value) {
+    public void setLoginDTTM(Date value) {
         loginDTTM = value;
     }
 
@@ -109,6 +116,14 @@ public class PlayerData {
     public boolean checkLogin() {
 
         return false;
+    }
+
+    public boolean isDBExist() throws SQLException {
+        String commandText = String.format("select * from player where uuid = '%s'", uuid);
+        Statement statement = Global.Sqlite.createStatement();
+        ResultSet resultSet = statement.executeQuery(commandText);
+
+        return resultSet.next();
     }
 
     /*

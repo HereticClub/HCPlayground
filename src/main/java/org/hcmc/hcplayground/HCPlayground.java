@@ -14,7 +14,6 @@ import org.hcmc.hcplayground.listener.PluginListener;
 import org.hcmc.hcplayground.localization.Localization;
 import org.hcmc.hcplayground.model.Global;
 import org.hcmc.hcplayground.permission.PermissionManager;
-import org.hcmc.hcplayground.scheduler.PluginRunnable;
 import org.hcmc.hcplayground.sqlite.SqliteManager;
 import org.hcmc.hcplayground.template.TemplateManager;
 import org.jetbrains.annotations.NotNull;
@@ -98,6 +97,8 @@ public class HCPlayground extends JavaPlugin {
         InitialChildrenFolders();
         // 复制并且加载所有Yml格式文档到插件目录
         Global.SaveYamlResource();
+        // 加载插件的基本设置config.yml
+        Global.LoadConfig();
         // 本地化对象必须在最开始运行
         Localization.Load(Global.getYamlConfiguration("messages.yml"));
         PermissionManager.Load(Global.getYamlConfiguration("permission.yml"));
@@ -107,7 +108,7 @@ public class HCPlayground extends JavaPlugin {
         LevelManager.Load(Global.getYamlConfiguration("levels.yml"));
         TemplateManager.Load(Global.getYamlConfiguration("inventoryTemplate.yml"));
         // 连接和加载Sqlite数据库
-        Global.Sqlite = new SqliteManager();
+        Global.Sqlite = SqliteManager.CreateSqliteConnection();
         // 验证并且注册所依赖的Plugin
         Global.ValidWorldGuardPlugin();
         Global.ValidVaultPlugin();

@@ -16,6 +16,14 @@ messages:
   parameterInCorrect: 'Parameter incorrect'
   # 可使用%item%占位符，运行带有item参数的命令时并且找不到item时显示
   noSuchItem: 'No such item as %item%'
+  # 玩家连接到服务器后，但在指定时间内没有登录时的显示，可使用%player%占位符，代表当前要登录的玩家名称
+  playerLoginTimeout: 'My dear %player%, please login for first before playing game on this server'
+  # 玩家连接到服务器后，但在指定时间内没有注册时的显示，可使用%player%占位符，代表当前要注册的玩家名称
+  playerRegisterTimeout: 'My dear %player%, please register for first before playing game on this server'
+  # 玩家连接到服务器后，在登陆超时前，仍然没有进行登录时的提醒显示，可使用%remain%占位符，代表登陆超时的剩余时间
+  playerLoginRemind: '&7Please use &9/login your-password &7 command to login to server, &cRemain: %remain% seconds'
+  # 玩家连接到服务器后，在登陆超时前，仍然没有进行注册时的提醒显示，可使用%remain%占位符，代表注册超时的剩余时间
+  playerRegisterRemind: '&7Please use &9/register your-password your-password &7 command to register to server, &cRemain: %remain% seconds'
   # 异族游乐场主菜单指令说明，必须与定义的指令名称一致
   menu:
     # 指令说明，当使用/help menu时显示
@@ -32,3 +40,8 @@ messages:
       §9/<command> give §7- §fGive an item to player
       §9/<command> take §7- §fTake an item from player
       §9/<command> gui §7- §fShow item list in gui
+  login:
+    description: Player login command, player must login for first before playing on this server
+    usage: |-
+      §f <command> command usage:
+      §9/<command> your-password

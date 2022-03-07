@@ -22,10 +22,10 @@ import org.hcmc.hcplayground.deserializer.*;
 import org.hcmc.hcplayground.itemManager.ItemBaseA;
 import org.hcmc.hcplayground.playerManager.PlayerData;
 import org.hcmc.hcplayground.scheduler.PluginRunnable;
-import org.hcmc.hcplayground.sqlite.SqliteManager;
 
 import java.io.File;
 import java.lang.reflect.Field;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.logging.Level;
@@ -47,7 +47,8 @@ public final class Global {
     public static Map<String, YamlConfiguration> yamlMap;
     public static Map<UUID, PlayerData> playerMap;
     public static Gson GsonObject;
-    public static SqliteManager Sqlite = null;
+    public static Authme authme = null;
+    public static Connection Sqlite = null;
     public static WorldGuard WorldGuardApi = null;
     public static Economy EconomyApi = null;
     public static Chat ChatApi = null;
@@ -99,9 +100,24 @@ public final class Global {
             //data.CancelPotionTimer();
         }
         runnable.cancel();
-        Sqlite.Disconnect();
         playerMap.clear();
         yamlMap.clear();
+        if(!Sqlite.isClosed()) Sqlite.close();
+    }
+
+    /**
+     * 从config.yml加载插件的基本设置
+     */
+    public static void LoadConfig() {
+        String value;
+        YamlConfiguration config = (YamlConfiguration) plugin.getConfig();
+
+        ConfigurationSection authmeSection = config.getConfigurationSection("authme");
+        if (authmeSection != null) {
+            value = GsonObject.toJson(authmeSection.getValues(false));
+            authme = GsonObject.fromJson(value, Authme.class);
+        }
+
     }
 
     /**
