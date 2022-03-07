@@ -2,11 +2,16 @@ package org.hcmc.hcplayground.sqlite;
 
 import org.bukkit.plugin.java.JavaPlugin;
 import org.hcmc.hcplayground.HCPlayground;
+import org.hcmc.hcplayground.playerManager.PlayerData;
 
-import javax.crypto.KeyGenerator;
-import java.io.File;
-import java.security.NoSuchAlgorithmException;
+import javax.crypto.*;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+import java.nio.charset.StandardCharsets;
+import java.security.*;
+import java.security.spec.InvalidKeySpecException;
 import java.sql.*;
+import java.util.Base64;
 import java.util.UUID;
 
 public class SqliteManager {
@@ -25,18 +30,10 @@ public class SqliteManager {
     }
 
     public boolean isPlayerExist(UUID playerUuid) throws SQLException {
-        String commandText =String.format("select * from player where uuid = '%s'", playerUuid);
+        String commandText = String.format("select * from player where uuid = '%s'", playerUuid);
         Statement statement = connection.createStatement();
         ResultSet resultSet = statement.executeQuery(commandText);
 
         return resultSet.next();
-    }
-
-    private String Encrypt(String key, String raw) throws NoSuchAlgorithmException {
-        // TODO: make security password
-        KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
-        keyGenerator.init(256);
-
-        return "";
     }
 }

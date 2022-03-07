@@ -25,11 +25,22 @@ import org.hcmc.hcplayground.dropManager.DropManager;
 import org.hcmc.hcplayground.event.InventoryChangedEvent;
 import org.hcmc.hcplayground.itemManager.ItemManager;
 import org.hcmc.hcplayground.itemManager.offhand.OffHand;
+import org.hcmc.hcplayground.model.AesAlgorithm;
 import org.hcmc.hcplayground.model.Global;
 import org.hcmc.hcplayground.playerManager.PlayerData;
 import org.hcmc.hcplayground.scheduler.InventoryChangingRunnable;
+import org.hcmc.hcplayground.sqlite.SqliteManager;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import java.io.IOException;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
+import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 /*
@@ -61,14 +72,21 @@ public class PluginListener implements Listener {
      * 玩家进入世界事件
      */
     @EventHandler
-    public void onPlayerJoin(final PlayerJoinEvent event) {
+    public void onPlayerJoin(final PlayerJoinEvent event) throws SQLException, InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException {
         Player player = event.getPlayer();
         UUID playerUuid = player.getUniqueId();
 
         PlayerData playerData = new PlayerData(player);
         playerData.LoadConfig();
-        Global.playerMap.put(playerUuid, playerData);
 
+        SqliteManager sm = new SqliteManager();
+        boolean exist = sm.isPlayerExist(playerUuid);
+        playerData.setRegister(exist);
+        playerData.setLoginDTTM(LocalDateTime.now());
+
+        System.out.println(LocalDateTime.now());
+
+        Global.playerMap.put(playerUuid, playerData);
     }
 
     /**

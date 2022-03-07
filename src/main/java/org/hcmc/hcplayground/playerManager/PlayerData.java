@@ -14,6 +14,8 @@ import org.hcmc.hcplayground.model.Global;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -48,6 +50,12 @@ public class PlayerData {
     private final UUID uuid;
     @Expose(serialize = false, deserialize = false)
     private final String name;
+    @Expose(serialize = false, deserialize = false)
+    private boolean isLogin;
+    @Expose(serialize = false, deserialize = false)
+    private boolean isRegister;
+    @Expose(serialize = false, deserialize = false)
+    private LocalDateTime loginDTTM;
     /*
     @Expose(serialize = false, deserialize = false)
     public PotionEffectRunnable PotionTimer;
@@ -66,6 +74,30 @@ public class PlayerData {
         uuid = player.getUniqueId();
     }
 
+    public boolean getLogin() {
+        return isLogin;
+    }
+
+    public void setLogin(boolean value) {
+        isLogin = value;
+    }
+
+    public LocalDateTime getLoginDTTM() {
+        return loginDTTM;
+    }
+
+    public void setLoginDTTM(LocalDateTime value) {
+        loginDTTM = value;
+    }
+
+    public boolean getRegister() {
+        return isRegister;
+    }
+
+    public void setRegister(boolean value) {
+        isRegister = value;
+    }
+
     public UUID getUuid() {
         return uuid;
     }
@@ -74,7 +106,7 @@ public class PlayerData {
         return name;
     }
 
-    public boolean checkLogin(String password){
+    public boolean checkLogin() {
 
         return false;
     }

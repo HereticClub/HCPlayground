@@ -20,6 +20,8 @@ import org.hcmc.hcplayground.template.TemplateManager;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.sql.SQLException;
 
 public class HCPlayground extends JavaPlugin {
@@ -37,7 +39,7 @@ public class HCPlayground extends JavaPlugin {
 
         try {
             ReloadPlugin();
-        } catch (IllegalAccessException | NoSuchFieldException | SQLException e) {
+        } catch (IllegalAccessException | NoSuchFieldException | SQLException | NoSuchAlgorithmException | InvalidKeySpecException e) {
             e.printStackTrace();
         }
     }
@@ -91,13 +93,12 @@ public class HCPlayground extends JavaPlugin {
         }
     }
 
-    private void ReloadPlugin() throws IllegalAccessException, NoSuchFieldException, SQLException {
+    private void ReloadPlugin() throws IllegalAccessException, NoSuchFieldException, SQLException, NoSuchAlgorithmException, InvalidKeySpecException {
         // 创建插件所需要的子目录
         InitialChildrenFolders();
         // 复制并且加载所有Yml格式文档到插件目录
         Global.SaveYamlResource();
         // 本地化对象必须在最开始运行
-        Global.Sqlite = new SqliteManager();
         Localization.Load(Global.getYamlConfiguration("messages.yml"));
         PermissionManager.Load(Global.getYamlConfiguration("permission.yml"));
         CommandManager.Load(Global.getYamlConfiguration("command.yml"));
@@ -105,7 +106,8 @@ public class HCPlayground extends JavaPlugin {
         ItemManager.Load(Global.getYamlConfiguration("items.yml"));
         LevelManager.Load(Global.getYamlConfiguration("levels.yml"));
         TemplateManager.Load(Global.getYamlConfiguration("inventoryTemplate.yml"));
-
+        // 连接和加载Sqlite数据库
+        Global.Sqlite = new SqliteManager();
         // 验证并且注册所依赖的Plugin
         Global.ValidWorldGuardPlugin();
         Global.ValidVaultPlugin();

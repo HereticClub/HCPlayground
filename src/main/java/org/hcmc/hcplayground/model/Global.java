@@ -208,13 +208,15 @@ public final class Global {
         yamlMap.clear();
 
         for (String s : ymlFilenames) {
-            File f = new File(plugin.getDataFolder(), s);
+            File f = new File(String.format("%s/%s", plugin.getDataFolder(), s));
             if (!f.exists()) {
-                LogMessage(String.format("Copying %s ......", f.getName()));
-                plugin.saveResource(f.getName(), false);
+                LogMessage(String.format("Copying %s ......", s));
+                plugin.saveResource(s, false);
             }
 
-            yamlMap.put(s, YamlConfiguration.loadConfiguration(f));
+            if(!s.equalsIgnoreCase("database/hcdb.db")) {
+                yamlMap.put(s, YamlConfiguration.loadConfiguration(f));
+            }
         }
     }
 

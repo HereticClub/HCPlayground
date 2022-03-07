@@ -8,7 +8,7 @@ public class RandomNumber {
     private static final float bound = 100.0f;
 
     public RandomNumber() {
-        /* TODO: */
+
     }
 
     public float getRandomValue() {
