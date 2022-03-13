@@ -9,6 +9,7 @@ import net.milkbowl.vault.permission.Permission;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemFlag;
@@ -117,7 +118,6 @@ public final class Global {
             value = GsonObject.toJson(authmeSection.getValues(false));
             authme = GsonObject.fromJson(value, Authme.class);
         }
-
     }
 
     /**
@@ -184,6 +184,22 @@ public final class Global {
      */
     public static YamlConfiguration getYamlConfiguration(String filename) {
         return yamlMap.get(filename);
+    }
+
+    /**
+     * 获取实体玩家的所有配置信息
+     * @param player 实体玩家实例
+     * @return 该实体玩家的配置信息实例
+     */
+    public static PlayerData getPlayerData(Player player) {
+        PlayerData pd = playerMap.get(player.getUniqueId());
+
+        if (pd == null) {
+            pd = new PlayerData(player);
+            pd.LoadConfig();
+        }
+
+        return pd;
     }
 
     /**

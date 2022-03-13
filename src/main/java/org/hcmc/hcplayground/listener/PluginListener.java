@@ -25,6 +25,7 @@ import org.hcmc.hcplayground.dropManager.DropManager;
 import org.hcmc.hcplayground.event.InventoryChangedEvent;
 import org.hcmc.hcplayground.itemManager.ItemManager;
 import org.hcmc.hcplayground.itemManager.offhand.OffHand;
+import org.hcmc.hcplayground.localization.Localization;
 import org.hcmc.hcplayground.model.Global;
 import org.hcmc.hcplayground.playerManager.PlayerData;
 import org.hcmc.hcplayground.scheduler.InventoryChangingRunnable;
@@ -77,6 +78,12 @@ public class PluginListener implements Listener {
 
         PlayerData playerData = new PlayerData(player);
         playerData.LoadConfig();
+
+        if (playerData.isDBBanned()) {
+            String bannedMessage = Localization.Messages.get("playerBannedMessage").replace("%player%", player.getName());
+            player.kickPlayer(bannedMessage);
+            return;
+        }
 
         boolean exist = playerData.isDBExist();
         playerData.setRegister(exist);

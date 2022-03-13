@@ -81,5 +81,17 @@ changepassword:
   args: []
   worlds: []
   aliases:
-    - changepass
+    - passwd
     - cp
+banplayer:
+  permission: hc.banplayer.ban
+  runOnConsole: true
+  runOnPlayer: true
+  worlds: []
+  aliases:
+    - banp
+    - bp
+  args:
+    - name: u
+      permission: hc.banplayer.unban
+      index: 2

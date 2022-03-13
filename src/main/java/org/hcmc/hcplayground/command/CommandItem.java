@@ -14,9 +14,19 @@ import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.itemManager.ItemManager;
 import org.hcmc.hcplayground.localization.Localization;
 import org.hcmc.hcplayground.model.Global;
+import org.hcmc.hcplayground.playerManager.PlayerData;
+import org.hcmc.hcplayground.scheduler.PluginRunnable;
 import org.hcmc.hcplayground.template.TemplateManager;
 import org.jetbrains.annotations.NotNull;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -113,8 +123,25 @@ public class CommandItem extends Command {
         String commandText = getName();
         if (!ValidateCommand(sender, args)) return false;
 
-        if (commandText.equalsIgnoreCase("menu")) RunMenuCommand((Player) sender);
-        if (commandText.equalsIgnoreCase("quartermaster")) RunQuartermasterCommand(sender, args);
+        try {
+            if (commandText.equalsIgnoreCase("menu")) RunMenuCommand((Player) sender);
+            if (commandText.equalsIgnoreCase("quartermaster")) RunQuartermasterCommand(sender, args);
+            if (commandText.equalsIgnoreCase("register")) {
+                return RunRegisterCommand(sender, args);
+            }
+            if (commandText.equalsIgnoreCase("login")) {
+                return RunLoginCommand(sender, args);
+            }
+            if (commandText.equalsIgnoreCase("changepassword")) {
+                return RunChangePasswordCommand(sender, args);
+            }
+            if (commandText.equalsIgnoreCase("banplayer")) {
+                return RunBanPlayerCommand(sender, args);
+            }
+
+        } catch (SQLException | InvalidAlgorithmParameterException | NoSuchPaddingException | IllegalBlockSizeException | NoSuchAlgorithmException | InvalidKeySpecException | BadPaddingException | InvalidKeyException e) {
+            e.printStackTrace();
+        }
 
         return false;
     }
@@ -122,6 +149,69 @@ public class CommandItem extends Command {
     public void Enroll(@NotNull CommandMap commandMap) {
         setCommandMessage();
         commandMap.register(id, this);
+    }
+
+    private boolean RunLoginCommand(CommandSender sender, String[] args) throws InvalidAlgorithmParameterException, SQLException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException {
+        // 该指令必须玩家执行
+        if (!(sender instanceof Player player)) return false;
+        // 检查参数数量，必须至少1个参数
+        if (args.length <= 0) {
+            sender.sendMessage(Localization.Messages.get("parameterInCorrect").replace("%length%", "1"));
+            return false;
+        }
+
+        PlayerData playerData = Global.getPlayerData(player);
+        return playerData.DBLogin(args[0]);
+    }
+
+    private boolean RunRegisterCommand(CommandSender sender, String[] args) throws SQLException, InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException {
+        // 该指令必须玩家执行
+        if (!(sender instanceof Player player)) return false;
+        // 检查参数数量，必须至少2个参数
+        if (args.length <= 1) {
+            sender.sendMessage(Localization.Messages.get("parameterInCorrect").replace("%length%", "2"));
+            return false;
+        }
+        // 检查2个参数(密码)是否一样，不区分大小写
+        if (!args[0].equalsIgnoreCase(args[1])) {
+            sender.sendMessage(Localization.Messages.get("passwordNotMatch"));
+            return false;
+        }
+
+        PlayerData playerData = Global.getPlayerData(player);
+        return playerData.DBCreate(args[0]);
+    }
+
+    private boolean RunChangePasswordCommand(CommandSender sender, String[] args) throws InvalidAlgorithmParameterException, SQLException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException {
+        // 该指令必须玩家执行
+        if (!(sender instanceof Player player)) return false;
+        // 检查参数数量，必须至少3个参数
+        if (args.length <= 2) {
+            sender.sendMessage(Localization.Messages.get("parameterInCorrect").replace("%length%", "3"));
+            return false;
+        }
+        if (!args[1].equalsIgnoreCase(args[2])) {
+            sender.sendMessage(Localization.Messages.get("passwordNotMatch"));
+            return false;
+        }
+
+        PlayerData playerData = Global.getPlayerData(player);
+        return playerData.DBChangePassword(args[0], args[1]);
+    }
+
+    private boolean RunBanPlayerCommand(CommandSender sender, String[] args) throws SQLException {
+        // 该指令必须玩家执行
+        if (!(sender instanceof Player player)) return false;
+        // 检查参数数量，必须至少2个参数
+        if (args.length <= 1) {
+            sender.sendMessage(Localization.Messages.get("parameterInCorrect").replace("%length%", "2"));
+            return false;
+        }
+
+        PlayerData playerData = Global.getPlayerData(player);
+        playerData.DBBanPlayer(args[0], args[1]);
+
+        return true;
     }
 
     private void RunMenuCommand(Player player) {
@@ -135,7 +225,7 @@ public class CommandItem extends Command {
         CommandArgument ca;
 
         if (args.length <= 2) {
-            sender.sendMessage(Localization.Messages.get("parameterInCorrect"));
+            sender.sendMessage(Localization.Messages.get("parameterInCorrect").replace("%length%", "3"));
             return;
         }
 
@@ -160,12 +250,15 @@ public class CommandItem extends Command {
             return false;
         }
         // 验证参数名称
+        /*
         for (String s : args) {
             int index = Arrays.asList(args).indexOf(s);
             List<CommandArgument> keys = this.args.stream().filter(x -> x.index == index + 1).toList();
             if (keys.size() <= 0) continue;
             if (keys.stream().noneMatch(x -> x.name.equalsIgnoreCase(s))) return false;
         }
+
+         */
         // 如果指令时可以通过控制台发送，则不验证权限
         // 反之如果通过玩家发送当前指令，需要验证权限
         if (sender instanceof Player player) {
@@ -180,6 +273,8 @@ public class CommandItem extends Command {
             }
             // 验证指令的参数的权限
             for (String s : args) {
+                // 定义的参数个数为0，表示当前指令不需要参数验证，即使当前指令需要带有参数
+                if (this.args.size() == 0) continue;
                 // 获取每个参数实例在指令参数列表的位置
                 CommandArgument arg = this.args.stream().filter(x -> x.name.equalsIgnoreCase(s)).findAny().orElse(null);
                 // 如果当前指令参数不在参数集合内，则指令语法错误，提示/<command> usage

@@ -14,6 +14,8 @@ permissions:
     children:
       - hc.reload
       - hc.quartermaster.*
+      - hc.banplayer.*
+
   permission2:
     name: hc.quartermaster.*
     default: op
@@ -22,10 +24,12 @@ permissions:
       - hc.quartermaster.give
       - hc.quartermaster.take
       - hc.quartermaster.gui
+
   permission3:
     name: hc.reload
     description: Permission to reload this plugin
     default: op
+
   permission4:
     name: hc.quartermaster.gui
     description: Grant permission to player to use
@@ -38,3 +42,11 @@ permissions:
     name: hc.quartermaster.give
     description: Grant permission to player to manage armor
     default: op
+
+  permission7:
+    name: hc.banplayer.*
+    description: Grant permission to the player to ban or unban other players
+    default: op
+    children:
+      - hc.banplayer.ban
+      - hc.banplayer.unban

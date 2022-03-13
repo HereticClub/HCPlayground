@@ -1,6 +1,5 @@
 package org.hcmc.hcplayground.scheduler;
 
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
@@ -30,17 +29,17 @@ public class PluginRunnable extends BukkitRunnable {
 
     private void doBukkitTask() {
         for (PlayerData pd : Global.playerMap.values()) {
-            boolean isLogin = pd.getLogin();
-            boolean register = pd.getRegister();
-
-            if (register && !isLogin) doRemindLogin(pd);
-            if (!register && !isLogin) doRemindRegister(pd);
+            doRemindLogin(pd);
         }
     }
 
-    private void doRemindRegister(PlayerData pd) {
+    private void doRemindLogin(PlayerData pd) {
         long currentSeconds = new Date().getTime() / 1000;
         long loginSeconds = pd.getLoginDTTM().getTime() / 1000;
+
+        boolean isLogin = pd.getLogin();
+        boolean isRegister = pd.getRegister();
+        if (isLogin) return;
 
         if (pd.remindCheckpoint == 0) pd.remindCheckpoint = currentSeconds;
 
@@ -49,27 +48,22 @@ public class PluginRunnable extends BukkitRunnable {
 
         if (currentSeconds - pd.remindCheckpoint >= Global.authme.remainInterval) {
             long remain = Global.authme.timeout - (currentSeconds - loginSeconds);
-            player.sendMessage(Localization.Messages.get("playerRegisterRemind").replace("%remain%", String.valueOf(remain)));
+            if (!isRegister) {
+                player.sendMessage(Localization.Messages.get("playerRegisterRemind").replace("%remain%", String.valueOf(remain)));
+            } else {
+                player.sendMessage(Localization.Messages.get("playerLoginRemind").replace("%remain%", String.valueOf(remain)));
+            }
             pd.remindCheckpoint = currentSeconds;
         }
         if (currentSeconds - loginSeconds >= Global.authme.timeout) {
-            player.kickPlayer(Localization.Messages.get("playerRegisterTimeout").replace("%player%", player.getName()));
+            if (!isRegister) {
+                player.kickPlayer(Localization.Messages.get("playerRegisterTimeout").replace("%player%", player.getName()));
+            } else {
+                player.kickPlayer(Localization.Messages.get("playerLoginTimeout").replace("%player%", player.getName()));
+            }
         }
-    }
 
-    private void doRemindLogin(PlayerData pd) {
-
-        long currentSeconds = new Date().getTime() / 1000;
-
-        if (pd.remindCheckpoint == 0) pd.remindCheckpoint = currentSeconds;
-
-        Player player = plugin.getServer().getPlayer(pd.getUuid());
-        if(player == null) return;
-
-        if (currentSeconds - pd.remindCheckpoint >= 5) {
-            player.sendMessage("Login please");
-            pd.remindCheckpoint = currentSeconds;
-        }
+        Global.playerMap.put(pd.getUuid(), pd);
     }
 
     public void setPotionEffects(PotionEffect[] effects) {
