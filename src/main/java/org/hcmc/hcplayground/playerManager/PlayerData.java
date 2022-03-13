@@ -9,6 +9,7 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.flywaydb.core.internal.util.TimeFormat;
 import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.localization.Localization;
 import org.hcmc.hcplayground.model.AesAlgorithm;
@@ -27,6 +28,11 @@ import java.security.spec.InvalidKeySpecException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
+import java.text.DateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.util.*;
 
 public class PlayerData {
@@ -133,13 +139,26 @@ public class PlayerData {
     }
 
     public boolean isDBBanned() throws SQLException {
-        String commandText = String.format("select * from player where uuid = '%s' and isBanned = 'true'", uuid);
+        String commandText = String.format("select * from banDetails where playerId = '%s'", uuid);
         Statement statement = Global.Sqlite.createStatement();
         ResultSet resultSet = statement.executeQuery(commandText);
-        boolean exist = resultSet.next();
 
-        statement.close();
+        boolean exist = resultSet.next();
+        DateFormat df = DateFormat.getDateInstance(DateFormat.FULL, Locale.CHINA);
+        DateFormat tf = DateFormat.getTimeInstance(DateFormat.FULL, Locale.CHINA);
+
+        if (exist) {
+            String masterName = resultSet.getString("masterName");
+            String reason = resultSet.getString("message");
+            Date banDate = resultSet.getDate("banDTTM");
+            String banDateTime = String.format("%s %s", df.format(banDate), tf.format(banDate));
+
+            String bannedMessage = Localization.Messages.get("playerBannedMessage").replace("%player%", name).replace("%master%", masterName).replace("%reason%", reason).replace("%banDate%", banDateTime);
+            player.kickPlayer(bannedMessage);
+        }
+
         resultSet.close();
+        statement.close();
 
         return exist;
     }
@@ -216,33 +235,30 @@ public class PlayerData {
     }
 
     public void DBBanPlayer(String targetPlayer, String reason) throws SQLException {
-        String commandText = String.format("select * from player where name = '%s'", targetPlayer);
+        boolean isBan = !reason.equalsIgnoreCase("u");
+        String masterName = Localization.Messages.get("systemAdminName");
+        Date banDate = new Date();
+        DateFormat df = DateFormat.getDateInstance(DateFormat.FULL, Locale.CHINA);
+        DateFormat tf = DateFormat.getTimeInstance(DateFormat.FULL, Locale.CHINA);
         Statement statement = Global.Sqlite.createStatement();
-        ResultSet resultSet = statement.executeQuery(commandText);
-        boolean exist = resultSet.next();
-        if (!exist) {
+        String banDateTime = String.format("%s %s", df.format(banDate), tf.format(banDate));
+
+        String commandText = "";
+        UUID targetUuid = null;
+        Player target = null;
+
+        OfflinePlayer[] offlinePlayers = plugin.getServer().getOfflinePlayers();
+        OfflinePlayer o = Arrays.stream(offlinePlayers).filter(x -> Objects.requireNonNull(x.getName()).equalsIgnoreCase(targetPlayer)).findAny().orElse(null);
+        if (o == null) {
             player.sendMessage(Localization.Messages.get("playerNotExist").replace("%player%", targetPlayer));
             return;
         }
-
-        //String uuid = resultSet.getString("uuid");
-
-        boolean isBan;
-        isBan = !reason.equalsIgnoreCase("u");
-
-        UUID targetUuid = null;
-        Player target = null;
-        OfflinePlayer[] offlinePlayers = plugin.getServer().getOfflinePlayers();
-        for (OfflinePlayer o : offlinePlayers) {
-            if (Objects.requireNonNull(o.getName()).equalsIgnoreCase(targetPlayer)) {
-                targetUuid = o.getUniqueId();
-                target = o.getPlayer();
-            }
-        }
+        target = o.getPlayer();
+        targetUuid = o.getUniqueId();
 
         if (isBan) {
             if (target != null && target.isOnline()) {
-                target.kickPlayer(Localization.Messages.get("playerBannedMessage").replace("%player%", targetPlayer).replace("%master%", name).replace("%reason%", reason));
+                target.kickPlayer(Localization.Messages.get("playerBannedMessage").replace("%player%", targetPlayer).replace("%master%", name).replace("%reason%", reason).replace("%banDate%", banDateTime));
             }
             commandText = String.format("insert into banRecord (id,masterId,playerId,message) values ('%s','%s','%s','%s')", UUID.randomUUID(), uuid, targetUuid, reason);
             statement.executeUpdate(commandText);
@@ -251,11 +267,9 @@ public class PlayerData {
             player.sendMessage(Localization.Messages.get("playerUnBanned").replace("%player%", targetPlayer));
         }
 
-
         commandText = String.format("update player set isBanned = '%s' where uuid = '%s'", isBan, targetUuid);
         statement.executeUpdate(commandText);
 
-        resultSet.close();
         statement.close();
     }
 

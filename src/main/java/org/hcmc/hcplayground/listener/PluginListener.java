@@ -80,8 +80,6 @@ public class PluginListener implements Listener {
         playerData.LoadConfig();
 
         if (playerData.isDBBanned()) {
-            String bannedMessage = Localization.Messages.get("playerBannedMessage").replace("%player%", player.getName());
-            player.kickPlayer(bannedMessage);
             return;
         }
 

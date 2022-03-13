@@ -208,8 +208,13 @@ public class CommandItem extends Command {
             return false;
         }
 
+        StringBuilder reason = new StringBuilder();
+        for (String s : args) {
+            if (Arrays.asList(args).indexOf(s) == 0) continue;
+            reason.append(s).append(" ");
+        }
         PlayerData playerData = Global.getPlayerData(player);
-        playerData.DBBanPlayer(args[0], args[1]);
+        playerData.DBBanPlayer(args[0], reason.toString().trim());
 
         return true;
     }
