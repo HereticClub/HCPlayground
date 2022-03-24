@@ -8,7 +8,7 @@ import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.hcmc.hcplayground.itemManager.ItemBaseA;
+import org.hcmc.hcplayground.itemManager.ItemBase;
 import org.hcmc.hcplayground.model.Global;
 
 import java.util.ArrayList;
@@ -16,7 +16,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
-public class Armor extends ItemBaseA {
+public class Armor extends ItemBase {
 
     @Expose
     @SerializedName(value = "armor")

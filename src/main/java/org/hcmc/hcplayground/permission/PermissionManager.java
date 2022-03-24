@@ -8,10 +8,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.model.Global;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class PermissionManager {
 
@@ -28,6 +25,11 @@ public class PermissionManager {
         ConfigurationSection section = yaml.getConfigurationSection("permissions");
         if (section == null) return;
         Permissions = Global.SetItemList(section, PermissionItem.class);
+
+        Set<Permission> bukkitPerms = pluginManager.getPermissions();
+        for (Permission p : bukkitPerms) {
+            pluginManager.removePermission(p);
+        }
 
         for (PermissionItem p : Permissions) {
             Map<String, Boolean> children = new HashMap<>();

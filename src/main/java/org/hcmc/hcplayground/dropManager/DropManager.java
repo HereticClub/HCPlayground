@@ -8,23 +8,23 @@ import org.bukkit.block.data.Ageable;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Item;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.hcmc.hcplayground.itemManager.ItemBaseA;
-import org.hcmc.hcplayground.itemManager.armor.Armor;
-import org.hcmc.hcplayground.itemManager.offhand.OffHand;
-import org.hcmc.hcplayground.itemManager.weapon.Weapon;
+import org.hcmc.hcplayground.itemManager.ItemBase;
 import org.hcmc.hcplayground.model.Global;
 import org.hcmc.hcplayground.model.RandomNumber;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class DropManager {
 
-    private static List<DropItem> dropEntities;
+    private static List<DropItem> dropItemList;
 
     static {
-        dropEntities = new ArrayList<>();
+        dropItemList = new ArrayList<>();
     }
 
     public DropManager() {
@@ -32,21 +32,39 @@ public class DropManager {
     }
 
     public static DropItem Find(Material material) {
-        return dropEntities.stream().filter(x -> x.block.equals(material)).findAny().orElse(null);
+        return dropItemList.stream().filter(x -> Arrays.asList(x.materials).contains(material)).findFirst().orElse(null);
     }
 
-    public static List<DropItem> getDropEntities() {
-        return dropEntities;
+    public static List<DropItem> getDropBreakingList() {
+        return dropItemList;
     }
 
     public static void Load(YamlConfiguration yaml) throws IllegalAccessException {
         // 在drops.yml文档里获取blocks节段
-        ConfigurationSection section = yaml.getConfigurationSection("blocks");
+        ConfigurationSection section = yaml.getConfigurationSection("dropList");
         if (section == null) return;
         // 获取额外掉落物品列表
-        dropEntities = Global.SetItemList(section, DropItem.class);
+        dropItemList = Global.SetItemList(section, DropItem.class);
     }
 
+    // 钓鱼时的额外掉落
+    public static void ExtraDrops(Item item, Player player) {
+        Material material = item.getItemStack().getType();
+
+        DropItem de = Find(material);
+        if (de == null) return;
+
+        boolean checkBingo = RandomNumber.checkBingo(de.rate);
+        if (checkBingo) {
+            ItemStack is;
+            for (ItemBase ib : de.drops) {
+                is = ib.getId() == null ? new ItemStack(ib.getMaterial()) : ib.toItemStack();
+                player.getInventory().addItem(is);
+            }
+        }
+    }
+
+    // 破坏方块时的额外掉落
     public static void ExtraDrops(Block b) {
         BlockData bd = b.getBlockData();
         World w = b.getWorld();
@@ -55,19 +73,17 @@ public class DropManager {
 
         if (de == null) return;
         if (bd instanceof Ageable) if (((Ageable) bd).getAge() < de.age) return;
-        System.out.printf("BlockData: %s", bd.getClass());
 
-        if (RandomNumber.checkBingo(de.rate)) {
-            ItemStack is = null;
-            for (ItemBaseA ib : de.drops) {
+        boolean checkBingo =RandomNumber.checkBingo(de.rate);
+        if (checkBingo) {
+            ItemStack is;
+            for (ItemBase ib : de.drops) {
                 if (ib.getId() == null) {
                     is = new ItemStack(ib.getMaterial());
                 } else {
-                    if (ib instanceof Weapon) is = ((Weapon) ib).toItemStack();
-                    if (ib instanceof Armor) is = ((Armor) ib).toItemStack();
-                    if (ib instanceof OffHand) is = ((OffHand) ib).toItemStack();
+                    is = ib.toItemStack();
                 }
-                if (is != null) w.dropItemNaturally(l, is);
+                w.dropItemNaturally(l, is);
             }
         }
     }

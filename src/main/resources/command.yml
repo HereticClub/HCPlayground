@@ -1,5 +1,23 @@
 # 指令，在聊天栏中输入/<command>
 # /menu指令，打开异族游乐场主菜单
+hcplayground:
+  permission: hc.*
+  # True or False，控制台是否可执行该命令，默认值: False
+  runOnConsole: true
+  # True or False，玩家是否可执行该命令，默认值: False
+  runOnPlayer: true
+  # 指令参数，每条指令可设置多个参数，不设置则改指令没有参数
+  args:
+    - name: reload
+      permission: hc.reload
+      index: 1
+      parent: []
+  # 表示那些世界可以使用该指令，不设置该属性则任何世界都可用
+  worlds: []
+  # 指令的别名
+  aliases:
+    - hc
+
 menu:
   # 指令的使用权限，不设置该属性则不需要权限
   permission: ''
@@ -7,20 +25,20 @@ menu:
   runOnConsole: false
   # True or False，玩家是否可执行该命令，默认值: False
   runOnPlayer: true
-  # 指令参数，每条指令可设置多个参数，不设置则改指令没有参数
+  # 指令参数，每条指令可设置多个参数，不设置则该指令没有参数
+  # name: 参数的名称
+  # permission: 该参数的使用权限
+  # 当参数的位置是2或者更多，可以使用%parent%占位符
+  # %parent%将代替当前位置参数的上一个参数的名称
+  # 例如：设置了当前参数的权限为permission.%parent%.use
+  # 如果当前参数的上一个参数为arg1，则权限会被改为permission.arg1.use
+  # index: 该参数在当前指令的位置，例如：/command arg1 arg2 ... argN
+  # 1表示第一个参数，2表示第二个参数，如此类推
+  # parent: 当前参数的上一个参数所属
   args:
-      # 该参数的名称
     - name: gui
-      # 该参数的使用权限
-      # 当参数的位置是2或者更多，可以使用%parent%占位符
-      # %parent%将代替当前位置参数的上一个参数的名称
-      # 例如：设置了当前参数的权限为permission.%parent%.use
-      # 如果当前参数的上一个参数为arg1，则权限会被改为permission.arg1.use
       permission: ''
-      # 该参数在当前指令的位置，例如：/command arg1 arg2 ... argN
-      # 1表示第一个参数，2表示第二个参数，如此类推
       index: 1
-      # 当前参数的上一个参数所属
       parent: []
   # 表示那些世界可以使用该指令，不设置该属性则任何世界都可用
   worlds:
@@ -37,10 +55,10 @@ quartermaster:
       permission: ''
       index: 1
     - name: give
-      permission: 'hc.quartermaster.give'
+      permission: hc.quartermaster.give
       index: 1
     - name: take
-      permission: 'hc.quartermaster.take'
+      permission: hc.quartermaster.take
       index: 1
   aliases:
     - quarter

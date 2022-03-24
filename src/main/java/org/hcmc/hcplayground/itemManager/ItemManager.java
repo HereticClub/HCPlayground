@@ -22,7 +22,7 @@ import java.util.List;
 public class ItemManager {
 
     private static final JavaPlugin plugin;
-    private static final List<ItemBase> ItemEntire;
+    private static final List<IItemBase> ItemEntire;
     private static List<Weapon> ItemWeapons;
     private static List<Armor> ItemArmors;
     private static List<OffHand> ItemOffHands;
@@ -47,7 +47,7 @@ public class ItemManager {
         return instance;
     }
 
-    public static List<ItemBase> getItemEntire() {
+    public static List<IItemBase> getItemEntire() {
         return ItemEntire;
     }
 
@@ -80,7 +80,7 @@ public class ItemManager {
         }
     }
 
-    public static ItemBase FindItemById(String id) {
+    public static IItemBase FindItemById(String id) {
         return ItemEntire.stream().filter(x -> x.getId().equalsIgnoreCase(id)).findAny().orElse(null);
     }
 
@@ -98,7 +98,7 @@ public class ItemManager {
             return;
         }
 
-        ItemBase ib = FindItemById(itemId);
+        IItemBase ib = FindItemById(itemId);
         if (ib == null) {
             sender.sendMessage(Localization.Messages.get("noSuchItem").replace("%item%", itemId));
             return;

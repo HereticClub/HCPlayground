@@ -3,17 +3,18 @@ package org.hcmc.hcplayground.listener;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryType;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.*;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -25,20 +26,11 @@ import org.hcmc.hcplayground.dropManager.DropManager;
 import org.hcmc.hcplayground.event.InventoryChangedEvent;
 import org.hcmc.hcplayground.itemManager.ItemManager;
 import org.hcmc.hcplayground.itemManager.offhand.OffHand;
-import org.hcmc.hcplayground.localization.Localization;
 import org.hcmc.hcplayground.model.Global;
 import org.hcmc.hcplayground.playerManager.PlayerData;
 import org.hcmc.hcplayground.scheduler.InventoryChangingRunnable;
-import org.hcmc.hcplayground.sqlite.SqliteManager;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
 import java.io.IOException;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
 import java.sql.SQLException;
 import java.util.Date;
 import java.util.UUID;
@@ -69,19 +61,17 @@ public class PluginListener implements Listener {
     }
 
     /**
-     * 玩家进入世界事件
+     * 玩家进入服务器事件
+     * @param event 玩家进入服务器时触发的事件实例
+     * @throws SQLException 当SQL执行操作时发生异常
      */
     @EventHandler
-    public void onPlayerJoin(final PlayerJoinEvent event) throws SQLException {
+    public void onPlayerJoined(final PlayerJoinEvent event) throws SQLException {
         Player player = event.getPlayer();
         UUID playerUuid = player.getUniqueId();
 
-        PlayerData playerData = new PlayerData(player);
-        playerData.LoadConfig();
-
-        if (playerData.isDBBanned()) {
-            return;
-        }
+        PlayerData playerData = Global.getPlayerData(player);
+        if (playerData.isDBBanned()) return;
 
         boolean exist = playerData.isDBExist();
         playerData.setRegister(exist);
@@ -92,23 +82,84 @@ public class PluginListener implements Listener {
 
     /**
      * 玩家离开服务器事件
+     * @param event 玩家离开服务器时触发的事件实例
+     * @throws IOException 当IO执行操作时发生异常
      */
     @EventHandler
     public void onPlayerLeave(PlayerQuitEvent event) throws IOException {
-        Player p = event.getPlayer();
-        UUID playerUuid = p.getUniqueId();
-        PlayerData playerData = Global.playerMap.get(playerUuid);
-
-        if (playerData != null) {
-            playerData.SaveConfig();
-        }
-
+        Player player = event.getPlayer();
+        UUID playerUuid = player.getUniqueId();
+        PlayerData playerData = Global.getPlayerData(player);
+        playerData.SaveConfig();
         Global.playerMap.remove(playerUuid, playerData);
     }
 
     /**
-     * 任意 Inventory 点击事件
+     * 玩家扔掉物品事件
+     * @param event 玩家扔掉物品时触发的事件实例
      */
+    @EventHandler
+    public void onItemDropped(PlayerDropItemEvent event) {
+        if (event.isCancelled()) return;
+        Player player = event.getPlayer();
+        UUID playerUuid = player.getUniqueId();
+        Item item = event.getItemDrop();
+        Material material = item.getItemStack().getType();
+
+        PlayerData playerData = Global.getPlayerData(player);
+        int count = playerData.DropList.getOrDefault(material, 0);
+        playerData.DropList.put(material, count + 1);
+        Global.playerMap.replace(playerUuid, playerData);
+    }
+
+    @EventHandler
+    public void onItemPickup(EntityPickupItemEvent event) {
+        if (event.isCancelled()) return;
+        System.out.println(event.getEntity().getType());
+    }
+
+    /**
+     * 玩家钓鱼事件
+     * @param event 玩家钓鱼时触发的事件实例
+     */
+    @EventHandler
+    public void onPlayerFished(PlayerFishEvent event) {
+        if (event.isCancelled()) return;
+        // 获取玩家实例
+        Player player = event.getPlayer();
+        UUID playerUuid = player.getUniqueId();
+        // 扔出鱼饵，无论扔到水里或者地上，或者其他实体身上，getCaught()都会返回null
+        // 钓鱼收竿时没有任何物品被钓上来，getCaught()都会返回null
+        // 仅仅当钓到任何物品时，getCaught()才会返回Item实例
+        Item item = (Item) event.getCaught();
+        if (item == null) return;
+        // 玩家的钓鱼记录
+        PlayerData playerData = Global.getPlayerData(player);
+        Material material = item.getItemStack().getType();
+        int count = playerData.FishingList.getOrDefault(material, 0);
+        playerData.FishingList.put(material, count + 1);
+        Global.playerMap.replace(playerUuid, playerData);
+        // 钓鱼时的额外掉落，额外掉落物品直接放入玩家背包
+        DropManager.ExtraDrops(item, player);
+    }
+
+    @EventHandler
+    public void onItemClicked(final InventoryClickEvent event) {
+        if (event.isCancelled()) return;
+        Inventory inv = event.getClickedInventory();
+        if (inv == null) return;
+
+        Player player = (Player) event.getWhoClicked();
+
+    }
+
+    @EventHandler
+    public void onItemClicked(final PlayerInteractEvent event) {
+
+
+    }
+
+    /*
     @EventHandler
     public void onOffHandChanging(final InventoryClickEvent event) {
         if (event.isCancelled()) return;
@@ -126,15 +177,6 @@ public class PluginListener implements Listener {
         s.runTask(plugin);
 
         PlayerData playerData = Global.playerMap.get(playerUuid);
-        if (playerData == null) return;
-
-        /*
-        if (playerData.PotionTimer == null) {
-            playerData.PotionTimer = new PluginRunnable(player);
-            playerData.RunPotionTimer(plugin, 20, 200);
-        }
-
-         */
         Global.playerMap.replace(playerUuid, playerData);
     }
 
@@ -150,47 +192,36 @@ public class PluginListener implements Listener {
         OffHand offHand = (OffHand) ItemManager.FindItemById(id);
 
         PlayerData playerData = Global.playerMap.get(playerUuid);
-        if (playerData == null) return;
-
-        /*
-        if (offHand != null) {
-            playerData.PotionTimer.setPotionEffects(offHand.potions);
-        } else {
-            playerData.PotionTimer.setPotionEffects(null);
-        }
-
-         */
         Global.playerMap.replace(playerUuid, playerData);
     }
 
-    @EventHandler
-    private void onHandItemClick(final PlayerInteractEvent event) {
+     */
 
-    }
-
+    /**
+     * 方块被破坏时触发的事件
+     * @param event 方块被破坏时触发的事件实例
+     */
     @EventHandler
     public void onBlockBroke(final BlockBreakEvent event) {
         if (event.isCancelled()) return;
 
         Player player = event.getPlayer();
+        UUID playerUuid = player.getUniqueId();
         Block block = event.getBlock();
         Material material = block.getType();
 
         DropManager.ExtraDrops(block);
-        UUID playerUuid = player.getUniqueId();
 
-        PlayerData playerData = Global.playerMap.get(playerUuid);
-        if (playerData == null) {
-            playerData = new PlayerData(player);
-            Global.playerMap.put(playerUuid, playerData);
-        }
-
+        PlayerData playerData = Global.getPlayerData(player);
         int count = playerData.BreakList.getOrDefault(material, 0);
         playerData.BreakList.put(material, count + 1);
         Global.playerMap.replace(playerUuid, playerData);
-
     }
 
+    /**
+     * 方块被放置时触发的事件
+     * @param event 方块被放置时触发的事件实例
+     */
     @EventHandler
     public void onBlockPlaced(final BlockPlaceEvent event) {
         if (event.isCancelled()) return;
@@ -200,18 +231,13 @@ public class PluginListener implements Listener {
         Material material = block.getType();
         UUID playerUuid = player.getUniqueId();
 
-        PlayerData playerData = Global.playerMap.get(playerUuid);
-        if (playerData == null) {
-            playerData = new PlayerData(player);
-            Global.playerMap.put(playerUuid, playerData);
-        }
-
+        PlayerData playerData = Global.getPlayerData(player);
         int count = playerData.PlaceList.getOrDefault(material, 0);
         playerData.PlaceList.put(material, count + 1);
         Global.playerMap.replace(playerUuid, playerData);
-
     }
 
+    /*
     private String getPersistentItemID(ItemStack is) {
         if (is == null) return null;
         if (is.getItemMeta() == null) return null;
@@ -221,4 +247,5 @@ public class PluginListener implements Listener {
 
         return container.get(mainKey, PersistentDataType.STRING);
     }
+     */
 }

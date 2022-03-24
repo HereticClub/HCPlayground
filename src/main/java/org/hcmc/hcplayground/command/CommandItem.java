@@ -15,13 +15,13 @@ import org.hcmc.hcplayground.itemManager.ItemManager;
 import org.hcmc.hcplayground.localization.Localization;
 import org.hcmc.hcplayground.model.Global;
 import org.hcmc.hcplayground.playerManager.PlayerData;
-import org.hcmc.hcplayground.scheduler.PluginRunnable;
 import org.hcmc.hcplayground.template.TemplateManager;
 import org.jetbrains.annotations.NotNull;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
+import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -29,9 +29,22 @@ import java.security.spec.InvalidKeySpecException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
 public class CommandItem extends Command {
+
+    private static final String COMMAND_REGISTER = "register";
+    private static final String COMMAND_UNREGISTER = "unregister";
+    private static final String COMMAND_LOGIN = "login";
+    private static final String COMMAND_LOGOUT = "logout";
+    private static final String COMMAND_CHANGE_PASSWORD = "changepassword";
+    private static final String COMMAND_BAN_PLAYER = "banplayer";
+    private static final String COMMAND_MENU = "menu";
+    private static final String COMMAND_QUARTERMASTER = "quartermaster";
+    private static final String COMMAND_HC_RELOAD ="reload";
+    private static final String COMMAND_HCPLAYGROUND = "hcplayground";
+
     /**
      * 当前指令的使用权限，设置为null或者空字符串，表示当前命令不需要权限
      */
@@ -124,31 +137,92 @@ public class CommandItem extends Command {
         if (!ValidateCommand(sender, args)) return false;
 
         try {
-            if (commandText.equalsIgnoreCase("menu")) RunMenuCommand((Player) sender);
-            if (commandText.equalsIgnoreCase("quartermaster")) RunQuartermasterCommand(sender, args);
-            if (commandText.equalsIgnoreCase("register")) {
+            // 打开菜单指令
+            if (commandText.equalsIgnoreCase(COMMAND_MENU)) {
+                return RunMenuCommand((Player) sender);
+            }
+            // 军需官指令 - /quatermaster
+            if (commandText.equalsIgnoreCase(COMMAND_QUARTERMASTER)) {
+                return RunQuartermasterCommand(sender, args);
+            }
+            // 玩家注册指令 - /register
+            if (commandText.equalsIgnoreCase(COMMAND_REGISTER)) {
                 return RunRegisterCommand(sender, args);
             }
-            if (commandText.equalsIgnoreCase("login")) {
+            // 玩家注销指令 - /unregister
+            if (commandText.equalsIgnoreCase(COMMAND_UNREGISTER)) {
+                return RunUnRegisterCommand(sender, args);
+            }
+            // 玩家登录指令 - /login
+            if (commandText.equalsIgnoreCase(COMMAND_LOGIN)) {
                 return RunLoginCommand(sender, args);
             }
-            if (commandText.equalsIgnoreCase("changepassword")) {
+            // 玩家登出指令 - /logout
+            if (commandText.equalsIgnoreCase(COMMAND_LOGOUT)) {
+                return RunLogoutCommand(sender, args);
+            }
+            // 玩家修改密码指令 - /changepassword
+            if (commandText.equalsIgnoreCase(COMMAND_CHANGE_PASSWORD)) {
                 return RunChangePasswordCommand(sender, args);
             }
-            if (commandText.equalsIgnoreCase("banplayer")) {
+            // 禁止玩家进入服务器指令 - /banplayer
+            if (commandText.equalsIgnoreCase(COMMAND_BAN_PLAYER)) {
                 return RunBanPlayerCommand(sender, args);
             }
-
-        } catch (SQLException | InvalidAlgorithmParameterException | NoSuchPaddingException | IllegalBlockSizeException | NoSuchAlgorithmException | InvalidKeySpecException | BadPaddingException | InvalidKeyException e) {
+            // 执行hc指令 - /hcplayground
+            if (commandText.equalsIgnoreCase(COMMAND_HCPLAYGROUND)) {
+                return RunHCPlaygroundCommand(sender, args);
+            }
+        } catch (SQLException | InvalidAlgorithmParameterException | NoSuchPaddingException | IllegalBlockSizeException | NoSuchAlgorithmException | InvalidKeySpecException | BadPaddingException | InvalidKeyException | NoSuchFieldException | IllegalAccessException | IOException e) {
             e.printStackTrace();
         }
 
         return false;
     }
 
+    /**
+     * 向Bukkit核心注册命令
+     */
     public void Enroll(@NotNull CommandMap commandMap) {
         setCommandMessage();
         commandMap.register(id, this);
+    }
+
+    private boolean RunHCReloadCommand(CommandSender sender) throws SQLException, NoSuchAlgorithmException, InvalidKeySpecException, NoSuchFieldException, IllegalAccessException, IOException {
+        long a = new Date().getTime();
+        HCPlayground.getInstance().ReloadConfiguration();
+
+        long b = new Date().getTime();
+        long c = b - a;
+        sender.sendMessage(Localization.Messages.get("reload").replace("%time_escaped%", String.valueOf(c)));
+
+        return true;
+    }
+
+    // 执行hc指令
+    private boolean RunHCPlaygroundCommand(CommandSender sender, String[] args) throws SQLException, NoSuchAlgorithmException, InvalidKeySpecException, NoSuchFieldException, IllegalAccessException, IOException {
+        // 当前hc指令需要至少1个参数
+        if (args.length <= 0) return false;
+        // /hc reload
+        if (args[0].equalsIgnoreCase(COMMAND_HC_RELOAD)) {
+            return RunHCReloadCommand(sender);
+        }
+
+        return false;
+    }
+
+    private boolean RunUnRegisterCommand(CommandSender sender, String[] args) throws InvalidAlgorithmParameterException, SQLException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException {
+        // TODO: UnRegister Command
+        // 该指令必须玩家执行
+        if (!(sender instanceof Player player)) return false;
+        // 检查参数数量，必须至少1个参数
+        if (args.length <= 0) {
+            sender.sendMessage(Localization.Messages.get("parameterInCorrect").replace("%length%", "1"));
+            return false;
+        }
+
+        PlayerData playerData = Global.getPlayerData(player);
+        return playerData.DBRemove(args[0]);
     }
 
     private boolean RunLoginCommand(CommandSender sender, String[] args) throws InvalidAlgorithmParameterException, SQLException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException {
@@ -164,6 +238,14 @@ public class CommandItem extends Command {
         return playerData.DBLogin(args[0]);
     }
 
+    private boolean RunLogoutCommand(CommandSender sender, String[] args) {
+        // 该指令必须玩家执行
+        if (!(sender instanceof Player player)) return false;
+
+        player.kickPlayer(Localization.Messages.get("playerLogout").replace("%player%", player.getName()));
+        return true;
+    }
+
     private boolean RunRegisterCommand(CommandSender sender, String[] args) throws SQLException, InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException {
         // 该指令必须玩家执行
         if (!(sender instanceof Player player)) return false;
@@ -174,7 +256,7 @@ public class CommandItem extends Command {
         }
         // 检查2个参数(密码)是否一样，不区分大小写
         if (!args[0].equalsIgnoreCase(args[1])) {
-            sender.sendMessage(Localization.Messages.get("passwordNotMatch"));
+            sender.sendMessage(Localization.Messages.get("playerPasswordNotMatch"));
             return false;
         }
 
@@ -191,7 +273,7 @@ public class CommandItem extends Command {
             return false;
         }
         if (!args[1].equalsIgnoreCase(args[2])) {
-            sender.sendMessage(Localization.Messages.get("passwordNotMatch"));
+            sender.sendMessage(Localization.Messages.get("playerPasswordNotMatch"));
             return false;
         }
 
@@ -219,19 +301,21 @@ public class CommandItem extends Command {
         return true;
     }
 
-    private void RunMenuCommand(Player player) {
+    private boolean RunMenuCommand(Player player) {
         Inventory inv = TemplateManager.CreateInventory("Template1", null);
-        if (inv == null) return;
+        if (inv == null) return false;
         player.openInventory(inv);
+
+        return true;
     }
 
-    private void RunQuartermasterCommand(CommandSender sender, String[] args) {
+    private boolean RunQuartermasterCommand(CommandSender sender, String[] args) {
         int amount = 1;
         CommandArgument ca;
 
         if (args.length <= 2) {
             sender.sendMessage(Localization.Messages.get("parameterInCorrect").replace("%length%", "3"));
-            return;
+            return false;
         }
 
         if (args.length >= 4 && args[3] != null && Global.patternNumber.matcher(args[3]).matches()) {
@@ -239,6 +323,8 @@ public class CommandItem extends Command {
         }
 
         if (args[0].equalsIgnoreCase("give")) ItemManager.Give(sender, args[1], args[2], amount);
+
+        return true;
     }
 
     private boolean ValidateCommand(CommandSender sender, String[] args) {

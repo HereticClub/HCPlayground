@@ -9,7 +9,7 @@ import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffect;
-import org.hcmc.hcplayground.itemManager.ItemBaseA;
+import org.hcmc.hcplayground.itemManager.ItemBase;
 import org.hcmc.hcplayground.model.Global;
 
 import java.util.ArrayList;
@@ -17,7 +17,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
-public class OffHand extends ItemBaseA {
+public class OffHand extends ItemBase {
 
     @Expose
     public float luck = 0.0f;

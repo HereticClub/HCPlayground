@@ -20,12 +20,16 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
 import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.deserializer.*;
-import org.hcmc.hcplayground.itemManager.ItemBaseA;
+import org.hcmc.hcplayground.itemManager.ItemBase;
 import org.hcmc.hcplayground.playerManager.PlayerData;
 import org.hcmc.hcplayground.scheduler.PluginRunnable;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.lang.reflect.Field;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.*;
@@ -78,7 +82,7 @@ public final class Global {
                 .excludeFieldsWithoutExposeAnnotation()
                 .registerTypeAdapter(EquipmentSlot.class, new EquipmentSlotDeserializer())
                 .registerTypeAdapter(InventoryType.class, new InventoryTypeDeserializer())
-                .registerTypeAdapter(ItemBaseA.class, new ItemBaseDeserializer())
+                .registerTypeAdapter(ItemBase.class, new ItemBaseDeserializer())
                 .registerTypeAdapter(ItemFlag.class, new ItemFlagsDeserializer())
                 .registerTypeAdapter(Material.class, new MaterialDeserializer())
                 .registerTypeAdapter(PotionEffect.class, new PotionEffectDeserializer())
@@ -92,13 +96,10 @@ public final class Global {
      * 清理所有正在执行的对象，特别是所有继承于BukkitRunnable的对象<br>
      * 在执行/reload指令或者插件退出时都需要执行该方法
      */
-    public static void Dispose() throws SQLException {
-        Set<UUID> uuids = playerMap.keySet();
-        for (UUID uuid : uuids) {
-            PlayerData data = playerMap.get(uuid);
-            if (data == null) continue;
-
-            //data.CancelPotionTimer();
+    public static void Dispose() throws SQLException, IOException {
+        for (Player player : plugin.getServer().getOnlinePlayers()) {
+            PlayerData pd = getPlayerData(player);
+            pd.SaveConfig();
         }
         runnable.cancel();
         playerMap.clear();
@@ -235,19 +236,21 @@ public final class Global {
      * 加载所有Yml资源文档
      * 创建全局Map<String, YamlConfiguration>对象
      */
-    public static void SaveYamlResource() {
+    public static void SaveYamlResource() throws IOException {
 
         yamlMap.clear();
 
         for (String s : ymlFilenames) {
-            File f = new File(String.format("%s/%s", plugin.getDataFolder(), s));
-            if (!f.exists()) {
-                LogMessage(String.format("Copying %s ......", s));
-                plugin.saveResource(s, false);
-            }
+            String ext = s.substring(s.length() - 3);
 
-            if(!s.equalsIgnoreCase("database/hcdb.db")) {
-                yamlMap.put(s, YamlConfiguration.loadConfiguration(f));
+            if (!ext.equalsIgnoreCase("yml")) {
+                plugin.saveResource(s, false);
+            } else {
+                YamlConfiguration yaml = MigrateConfiguration(s);
+                if (yaml == null) continue;
+
+                yaml.save(String.format("%s/%s", plugin.getDataFolder(), s));
+                yamlMap.put(s, yaml);
             }
         }
     }
@@ -291,5 +294,33 @@ public final class Global {
         if (rsp == null) return;
 
         PermissionApi = rsp.getProvider();
+    }
+
+    private static YamlConfiguration MigrateConfiguration(String filename) {
+        YamlConfiguration yamlResource, yamlPlugin;
+
+        InputStream stream = plugin.getResource(filename);
+        if (stream == null) return null;
+        InputStreamReader reader = new InputStreamReader(stream, StandardCharsets.UTF_8);
+        yamlResource = YamlConfiguration.loadConfiguration(reader);
+
+        File f = new File(String.format("%s/%s", plugin.getDataFolder(), filename));
+        yamlPlugin = YamlConfiguration.loadConfiguration(f);
+
+        Set<String> keysResource = yamlResource.getKeys(true);
+        Set<String> keysPlugin = yamlPlugin.getKeys(true);
+
+        for (String key: keysResource) {
+            List<String> comments = yamlResource.getComments(key);
+            Object obj = yamlResource.get(key);
+
+            String exist = keysPlugin.stream().filter(x -> x.equalsIgnoreCase(key)).findAny().orElse(null);
+            if (exist == null) {
+                yamlPlugin.set(key, obj);
+                yamlPlugin.setComments(key, comments);
+            }
+        }
+
+        return yamlPlugin;
     }
 }

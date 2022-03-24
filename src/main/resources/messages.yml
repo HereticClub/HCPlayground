@@ -26,17 +26,25 @@ messages:
   # 玩家连接到服务器后，在登陆超时前，仍然没有进行注册时的提醒显示，可使用%remain%占位符，代表注册超时的剩余时间
   playerRegisterRemind: '&7Please use &9/register your-password your-password &7 command to register to server, &cRemain: %remain% seconds'
   # 玩家在执行注册指令时，两次输入密码不一致时显示
-  passwordNotMatch: '&7The password inputted twice is not match'
+  playerPasswordNotMatch: '&7The password inputted twice is not match'
   # 玩家在执行注册指令时，如果该玩家之前已经注册时显示，可以使用%player%占位符，代表当前执行该指令的玩家名称
   playerRegisterExist: '&7Player %player% has registered, no need to register again, use &9/changepassword &7command to change your password'
   # 玩家注册成功时发出的公告，可以使用%player%占位符，代表当前注册成功的玩家
   playerRegisterWelcome: '&7[Broadcast] &fWelcome the newbie player %player%'
   # 玩家在登陆失败时显示，可以使用%player%占位符，代表当前正在登录的玩家
   playerLoginFailed: '&7Player %player% login failed, make sure your password is correctly'
+  # 玩家登出服务器时显示
+  playerLogout: 'My dear %player%, thank you for your playing, hope you come back soon'
   # 当前玩家已经成功登录后再次使用登录指令时显示，可以使用%player%占位符，代表执行该指令的玩家
   playerHasLogin: '%player% has logged in, no need to login again.'
   # 当玩家尝试修改密码，并且输入旧密码错误时显示，可以使用%player%占位符，代表执行该指令的玩家
-  playerPasswordNotRight: '%player% old password is not right'
+  playerOldPasswordNotRight: '%player% old password is not right'
+  # 当玩家注销账号，并且在输入密码不正确时显示，可以使用%player%占位符，代表执行该指令的玩家
+  playerURPasswordNotRight: '%player% register password is not right'
+  # 当玩家成功注销账号时显示，可以使用%player%占位符，代表执行该指令的玩家
+  playerUnregistered: |-
+    &6My dear %player%, your account has been removed just now
+    &6To join this server next time, you must register your account again, thanks!
   # 当玩家修改密码成功时显示，可以使用%player%占位符，代表执行该指令的玩家
   playerPasswordChanged: '%player%''s password has been changed'
   # 当玩家修改密码失败时显示，一般情况下只有当系统出错时才会显示此信息，可以使用%player%占位符，代表执行该指令的玩家
@@ -45,6 +53,8 @@ messages:
   playerBanned: '&cPlayer %player% has been banned!'
   # 当玩家被管理员解禁时显示，可以使用%player%占位符，代表被解禁的玩家名称
   playerUnBanned: '&cPlayer %player% has been unbanned!'
+  # 重新加载插件配置时显示，可以使用%time_escaped%占位符，表示重新加载插件所使用的时间，单位: 毫秒
+  reload: 'Configuration reload completed, time escaped: %time_escaped% ms'
   # 系统管理员的名字，当使用控制台指令时以此名称代替执行指令的玩家名称
   systemAdminName: '&eSystem Administrator'
   # 玩家账号被禁用并且被移出服务器时显示
@@ -84,11 +94,21 @@ messages:
     usage: |-
       §f <command> command usage:
       §9/<command> your-password
+  logout:
+    description: Player logout command, disconnect player from server
+    usage: |-
+      §f <command> command usage:
+      §9/<command>
   register:
     description: Player register command, player must register for first before playing on this server
     usage: |-
       §f <command> command usage:
       §9/<command> your-password your-password
+  unregister:
+    description: Unregister player account, all attached items and points of this player will be distroyed
+    usage: |-
+      §f <command> command usage:
+      §9/<command> your-password
   changepassword:
     description: Player change password command, player can change password by this command any time
     usage: |-
