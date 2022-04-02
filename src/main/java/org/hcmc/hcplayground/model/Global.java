@@ -32,6 +32,7 @@ import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.text.DateFormat;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.regex.Pattern;
@@ -273,6 +274,16 @@ public final class Global {
 
     public static void LogWarning(String message) {
         plugin.getLogger().log(Level.WARNING, message);
+    }
+
+    public static String getDateFormat(Date date, int format, Locale locale) {
+        String dateFormat;
+
+        DateFormat df = DateFormat.getDateInstance(format, locale);
+        DateFormat tf = DateFormat.getTimeInstance(format, locale);
+        dateFormat = String.format("%s %s", df.format(date), tf.format(date));
+
+        return dateFormat;
     }
 
     private static void SetVaultEconomy() {

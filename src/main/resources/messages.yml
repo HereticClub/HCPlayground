@@ -49,14 +49,29 @@ messages:
   playerPasswordChanged: '%player%''s password has been changed'
   # 当玩家修改密码失败时显示，一般情况下只有当系统出错时才会显示此信息，可以使用%player%占位符，代表执行该指令的玩家
   playerChangePasswordError: 'Oooooooops!!! Something went wrong!'
+  # 玩家上一次登录时间，当使用seen指令时显示
+  # 可以使用%player%占位符，表示被查看的玩家名称
+  # 可以使用%onlineStatusMessage%占位符，表示被查看的玩家的在线状态
+  # 可以使用%logintime%占位符，表示被查看的玩家的最后一次登陆时间
+  playerLastLoginTime: |-
+    Player %player% status: %onlineStatusMessage%
+    Last login time: %logintime%
   # 当玩家被管理员禁止进入服务器时显示，可以使用%player%占位符，代表被禁止的玩家名称
   playerBanned: '&cPlayer %player% has been banned!'
   # 当玩家被管理员解禁时显示，可以使用%player%占位符，代表被解禁的玩家名称
   playerUnBanned: '&cPlayer %player% has been unbanned!'
   # 重新加载插件配置时显示，可以使用%time_escaped%占位符，表示重新加载插件所使用的时间，单位: 毫秒
   reload: 'Configuration reload completed, time escaped: %time_escaped% ms'
+  # 玩家在线状态信息
+  onlineStatusMessage:
+    # 玩家在线时信息提示
+    true: 'Online'
+    # 玩家离线时信息提示
+    false: 'Offline'
   # 系统管理员的名字，当使用控制台指令时以此名称代替执行指令的玩家名称
   systemAdminName: '&eSystem Administrator'
+  # 当玩法或者功能正在开发中，并且被玩家尝试使用时显示
+  UnderConstruction: '&eThis feature is under construction and will be available soon'
   # 玩家账号被禁用并且被移出服务器时显示
   # 可以使用%player%占位符，代表被禁用的玩家名称
   # 可以使用%master%占位符，代表发出禁止指令的玩家名称
@@ -85,10 +100,16 @@ messages:
     description: The quartermaster, who manages weapons, off-hand items, armor, accessories
     usage: |-
       §f <command> command usage:
-      §e/<command> {give|take|gui} {player} {item} [amount]
+      §e/<command> {help|give|gui} {player} {item} [amount]
+      §9/<command> help §7- §fShow help of this command on this screen
       §9/<command> give §7- §fGive an item to player
-      §9/<command> take §7- §fTake an item from player
       §9/<command> gui §7- §fShow item list in gui
+  hcplayground:
+    description: HC playground main command
+    usage: |-
+      §f <command> command usage:
+      §9/<command> help &7- &fShow help for this command
+      §9/<command> reload &7- &fReload all configuration files
   login:
     description: Player login command, player must login for first before playing on this server
     usage: |-
@@ -114,13 +135,18 @@ messages:
     usage: |-
       §f <command> command usage:
       §9/<command> old-password new-password new-password
+  seen:
+    description: See a player's online status
+    usage: |-
+      §f <command> command usage:
+      §9/<command> {player} &7- The player name who is being seen by you
   banplayer:
     description: Forbidden a player to enter the server
     usage: |-
       §f <command> command usage:
-      §9/<command> player [u]
+      §9/<command> {player} [u]
       §9player &7- The player name to be banned
       §9u &7- Ban message, if u parameter is specified, the player will be unbanned
       §aFor example:
-      §a/<command> player1 You have been banned! &7- ban player1, he can connect to server no longer and get message &f"You have been banned!"
-      §a/<command> player1 u &7- unban player1, he can connect to server again
+      §a/<command> {player} You have been banned! &7- ban player, he/she can connect to server no longer and get message &f"You have been banned!"
+      §a/<command> {player} u &7- unban player, he/she can connect to server again

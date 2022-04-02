@@ -86,18 +86,6 @@ public class HCPlayground extends JavaPlugin {
         super.onLoad();
     }
 
-    @Override
-    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
-        if (sender instanceof ConsoleCommandSender) {
-            System.out.println("Console send a command");
-        }
-        if (sender instanceof Player) {
-            System.out.println("Player send a command");
-        }
-
-        return true;
-    }
-
     public static HCPlayground getInstance() {
         return instance;
     }

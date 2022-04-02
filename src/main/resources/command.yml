@@ -8,6 +8,9 @@ hcplayground:
   runOnPlayer: true
   # 指令参数，每条指令可设置多个参数，不设置则改指令没有参数
   args:
+    - name: help
+      index: 1
+      parent: []
     - name: reload
       permission: hc.reload
       index: 1
@@ -52,13 +55,12 @@ quartermaster:
   runOnPlayer: true
   args:
     - name: gui
-      permission: ''
+      permission: hc.quartermaster.gui
       index: 1
     - name: give
       permission: hc.quartermaster.give
       index: 1
-    - name: take
-      permission: hc.quartermaster.take
+    - name: help
       index: 1
   aliases:
     - quarter
@@ -101,6 +103,12 @@ changepassword:
   aliases:
     - passwd
     - cp
+seen:
+  runOnConsole: true
+  runOnPlayer: true
+  args: []
+  worlds: []
+  aliases: []
 banplayer:
   permission: hc.banplayer.ban
   runOnConsole: true
