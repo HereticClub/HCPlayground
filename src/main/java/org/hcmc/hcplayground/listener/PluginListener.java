@@ -1,38 +1,38 @@
 package org.hcmc.hcplayground.listener;
 
+import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.block.Block;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.Item;
-import org.bukkit.entity.Player;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
-import org.bukkit.event.inventory.InventoryAction;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryType;
-import org.bukkit.event.player.*;
-import org.bukkit.inventory.EquipmentSlot;
-import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.persistence.PersistentDataContainer;
-import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.event.entity.EntitySpawnEvent;
+import org.bukkit.event.player.PlayerDropItemEvent;
+import org.bukkit.event.player.PlayerFishEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.metadata.MetadataValue;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.dropManager.DropManager;
-import org.hcmc.hcplayground.event.InventoryChangedEvent;
-import org.hcmc.hcplayground.itemManager.ItemManager;
-import org.hcmc.hcplayground.itemManager.offhand.OffHand;
+import org.hcmc.hcplayground.mobs.MobEntity;
+import org.hcmc.hcplayground.mobs.MobManager;
 import org.hcmc.hcplayground.model.Global;
+import org.hcmc.hcplayground.model.RandomNumber;
 import org.hcmc.hcplayground.playerManager.PlayerData;
-import org.hcmc.hcplayground.scheduler.InventoryChangingRunnable;
 
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Date;
+import java.util.Locale;
+import java.util.Random;
 import java.util.UUID;
 
 /*
@@ -62,6 +62,7 @@ public class PluginListener implements Listener {
 
     /**
      * 玩家进入服务器事件
+     *
      * @param event 玩家进入服务器时触发的事件实例
      * @throws SQLException 当SQL执行操作时发生异常
      */
@@ -82,6 +83,7 @@ public class PluginListener implements Listener {
 
     /**
      * 玩家离开服务器事件
+     *
      * @param event 玩家离开服务器时触发的事件实例
      * @throws IOException 当IO执行操作时发生异常
      */
@@ -96,6 +98,7 @@ public class PluginListener implements Listener {
 
     /**
      * 玩家扔掉物品事件
+     *
      * @param event 玩家扔掉物品时触发的事件实例
      */
     @EventHandler
@@ -120,6 +123,7 @@ public class PluginListener implements Listener {
 
     /**
      * 玩家钓鱼事件
+     *
      * @param event 玩家钓鱼时触发的事件实例
      */
     @EventHandler
@@ -143,62 +147,9 @@ public class PluginListener implements Listener {
         DropManager.ExtraDrops(item, player);
     }
 
-    @EventHandler
-    public void onItemClicked(final InventoryClickEvent event) {
-        if (event.isCancelled()) return;
-        Inventory inv = event.getClickedInventory();
-        if (inv == null) return;
-
-        Player player = (Player) event.getWhoClicked();
-
-    }
-
-    @EventHandler
-    public void onItemClicked(final PlayerInteractEvent event) {
-
-
-    }
-
-    /*
-    @EventHandler
-    public void onOffHandChanging(final InventoryClickEvent event) {
-        if (event.isCancelled()) return;
-        if (event.getCursor() == null) return;
-        if (event.getCursor().getType().equals(Material.AIR)) return;
-
-        Inventory inv = event.getClickedInventory();
-        if (inv == null) return;
-        if (!inv.getType().equals(InventoryType.PLAYER)) return;
-
-        Player player = (Player) event.getWhoClicked();
-        UUID playerUuid = player.getUniqueId();
-        InventoryAction action = event.getAction();
-        InventoryChangingRunnable s = new InventoryChangingRunnable(inv, action, EquipmentSlot.OFF_HAND);
-        s.runTask(plugin);
-
-        PlayerData playerData = Global.playerMap.get(playerUuid);
-        Global.playerMap.replace(playerUuid, playerData);
-    }
-
-    @EventHandler
-    public void onOffHandChanged(InventoryChangedEvent event) {
-        if (event.isCancelled()) return;
-
-        ItemStack is = event.getItemStack();
-        Player player = (Player) event.getWhoClicked();
-        UUID playerUuid = player.getUniqueId();
-
-        String id = getPersistentItemID(is);
-        OffHand offHand = (OffHand) ItemManager.FindItemById(id);
-
-        PlayerData playerData = Global.playerMap.get(playerUuid);
-        Global.playerMap.replace(playerUuid, playerData);
-    }
-
-     */
-
     /**
      * 方块被破坏时触发的事件
+     *
      * @param event 方块被破坏时触发的事件实例
      */
     @EventHandler
@@ -220,6 +171,7 @@ public class PluginListener implements Listener {
 
     /**
      * 方块被放置时触发的事件
+     *
      * @param event 方块被放置时触发的事件实例
      */
     @EventHandler
@@ -237,15 +189,69 @@ public class PluginListener implements Listener {
         Global.playerMap.replace(playerUuid, playerData);
     }
 
-    /*
-    private String getPersistentItemID(ItemStack is) {
-        if (is == null) return null;
-        if (is.getItemMeta() == null) return null;
+    @EventHandler
+    public void onMonsterSpawned(final EntitySpawnEvent event) {
+        if (event.isCancelled()) return;
 
-        PersistentDataContainer container = is.getItemMeta().getPersistentDataContainer();
-        NamespacedKey mainKey = new NamespacedKey(plugin, Global.PERSISTENT_MAIN_KEY);
+        Entity entity = event.getEntity();
+        EntityType type = entity.getType();
+        if (!(entity instanceof Monster monster)) return;
 
-        return container.get(mainKey, PersistentDataType.STRING);
+        MobEntity mob = MobManager.MobEntities.stream().filter(x -> x.type.equals(type)).findAny().orElse(null);
+        if (mob == null) return;
+        if (!RandomNumber.checkBingo(mob.spawnRate)) return;
+
+        int health = (int) Math.round(RandomNumber.getRandomNumber(mob.minHealth, mob.maxHealth));
+
+        AttributeInstance attributeInstance = monster.getAttribute(Attribute.GENERIC_MAX_HEALTH);
+        if (attributeInstance != null) {
+            int baseHealth = (int) attributeInstance.getBaseValue();
+            attributeInstance.setBaseValue(baseHealth + health);
+            monster.setHealth(baseHealth + health);
+        }
+        if (mob.displays.length >= 1) {
+            monster.setCustomName(mob.displays[RandomNumber.getRandomNumber(mob.displays.length)]);
+        }
+        /*
+        Player player = plugin.getServer().getPlayer("TerryNG9527");
+        Location location = player.getLocation();
+        location.add(5, 0, 0);
+        monster.teleport(location);
+
+         */
     }
-     */
+
+    @EventHandler
+    public void onMonsterAttacked(EntityDamageByEntityEvent event) {
+        if (event.isCancelled()) return;
+
+        Entity entity = event.getDamager();
+        EntityType type = entity.getType();
+        if (!(entity instanceof Monster)) return;
+
+        MobEntity mob = MobManager.MobEntities.stream().filter(x -> x.type.equals(type)).findAny().orElse(null);
+        if (mob == null) return;
+
+        int damage = (int) Math.round(RandomNumber.getRandomNumber(mob.minDamage, mob.maxDamage));
+        event.setDamage(event.getDamage() + damage);
+    }
+
+    @EventHandler
+    public void onMonsterDeath(EntityDeathEvent event) {
+        LivingEntity entity = event.getEntity();
+        if (!(entity instanceof Monster)) return;
+
+        EntityType type = entity.getType();
+        Location location = entity.getLocation();
+
+        MobEntity mob = MobManager.MobEntities.stream().filter(x -> x.type.equals(type)).findAny().orElse(null);
+        if (mob == null) return;
+
+        if (RandomNumber.checkBingo(mob.spawnRate)) {
+            DropManager.ExtraDrops(location, mob.drops);
+        }
+
+
+        System.out.println(entity);
+    }
 }

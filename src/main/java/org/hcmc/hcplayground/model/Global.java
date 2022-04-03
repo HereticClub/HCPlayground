@@ -9,6 +9,7 @@ import net.milkbowl.vault.permission.Permission;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.EquipmentSlot;
@@ -47,6 +48,9 @@ public final class Global {
     public final static String PERSISTENT_MAIN_KEY = "hccraft";
     public final static String PERSISTENT_SUB_KEY = "content";
     public final static String PERSISTENT_CRIT_KEY = "crit";
+    public final static String PERSISTENT_POTIONS_KEY = "potions";
+    public final static String CONFIG_AUTHME = "authme";
+    public final static String CONFIG_OFFHANDPOTIONEFFECT = "offhandPotionEffect";
     public final static Pattern patternNumber = Pattern.compile("-?\\d+(\\.\\d+)?");
 
     public static PluginRunnable runnable;
@@ -54,11 +58,13 @@ public final class Global {
     public static Map<UUID, PlayerData> playerMap;
     public static Gson GsonObject;
     public static Authme authme = null;
+    public static OffhandPotionEffect offhandPotionEffect = null;
     public static Connection Sqlite = null;
     public static WorldGuard WorldGuardApi = null;
     public static Economy EconomyApi = null;
     public static Chat ChatApi = null;
     public static Permission PermissionApi = null;
+
 
     static {
         runnable = new PluginRunnable();
@@ -74,6 +80,7 @@ public final class Global {
                 "command.yml",
                 "inventoryTemplate.yml",
                 "permission.yml",
+                "mobs.yml",
                 "database/hcdb.db",
         };
 
@@ -88,6 +95,7 @@ public final class Global {
                 .registerTypeAdapter(Material.class, new MaterialDeserializer())
                 .registerTypeAdapter(PotionEffect.class, new PotionEffectDeserializer())
                 .registerTypeAdapter(PermissionDefault.class, new PermissionDefaultDeserializer())
+                .registerTypeAdapter(EntityType.class, new EntityTypeDeserializer())
                 .serializeNulls()
                 .setPrettyPrinting()
                 .create();
@@ -105,7 +113,7 @@ public final class Global {
         runnable.cancel();
         playerMap.clear();
         yamlMap.clear();
-        if(!Sqlite.isClosed()) Sqlite.close();
+        if (!Sqlite.isClosed()) Sqlite.close();
     }
 
     /**
@@ -113,12 +121,18 @@ public final class Global {
      */
     public static void LoadConfig() {
         String value;
+        ConfigurationSection section;
         YamlConfiguration config = (YamlConfiguration) plugin.getConfig();
 
-        ConfigurationSection authmeSection = config.getConfigurationSection("authme");
-        if (authmeSection != null) {
-            value = GsonObject.toJson(authmeSection.getValues(false));
+        section = config.getConfigurationSection(CONFIG_AUTHME);
+        if (section != null) {
+            value = GsonObject.toJson(section.getValues(false));
             authme = GsonObject.fromJson(value, Authme.class);
+        }
+        section = config.getConfigurationSection(CONFIG_OFFHANDPOTIONEFFECT);
+        if (section != null) {
+            value = GsonObject.toJson(section.getValues(false));
+            offhandPotionEffect = GsonObject.fromJson(value, OffhandPotionEffect.class);
         }
     }
 
@@ -190,6 +204,7 @@ public final class Global {
 
     /**
      * 获取实体玩家的所有配置信息
+     *
      * @param player 实体玩家实例
      * @return 该实体玩家的配置信息实例
      */
@@ -321,7 +336,7 @@ public final class Global {
         Set<String> keysResource = yamlResource.getKeys(true);
         Set<String> keysPlugin = yamlPlugin.getKeys(true);
 
-        for (String key: keysResource) {
+        for (String key : keysResource) {
             List<String> comments = yamlResource.getComments(key);
             Object obj = yamlResource.get(key);
 

@@ -1,8 +1,5 @@
 package org.hcmc.hcplayground;
 
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandSender;
-import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
@@ -12,12 +9,12 @@ import org.hcmc.hcplayground.itemManager.ItemManager;
 import org.hcmc.hcplayground.level.LevelManager;
 import org.hcmc.hcplayground.listener.PluginListener;
 import org.hcmc.hcplayground.localization.Localization;
+import org.hcmc.hcplayground.mobs.MobManager;
 import org.hcmc.hcplayground.model.Global;
 import org.hcmc.hcplayground.permission.PermissionManager;
 import org.hcmc.hcplayground.playerManager.PlayerData;
 import org.hcmc.hcplayground.sqlite.SqliteManager;
 import org.hcmc.hcplayground.template.TemplateManager;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
@@ -128,5 +125,7 @@ public class HCPlayground extends JavaPlugin {
         LevelManager.Load(Global.getYamlConfiguration("levels.yml"));
         // 7.加载各种菜单(箱子)模板
         TemplateManager.Load(Global.getYamlConfiguration("inventoryTemplate.yml"));
+        // 8.加载各种可生成的生物列表
+        MobManager.Load(Global.getYamlConfiguration("mobs.yml"));
     }
 }

@@ -8,6 +8,7 @@ import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.potion.PotionEffect;
 import org.hcmc.hcplayground.itemManager.ItemBase;
 import org.hcmc.hcplayground.model.Global;
 
@@ -33,6 +34,12 @@ public class Armor extends ItemBase {
     @Expose
     @SerializedName(value = "equipmentSlot")
     public EquipmentSlot equipmentSlot;
+    /**
+     * 附加在装备上的药水效果
+     */
+    @Expose
+    @SerializedName(value = "potions")
+    public PotionEffect[] potions;
 
     public Armor() {
 

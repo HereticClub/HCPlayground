@@ -1,5 +1,6 @@
 package org.hcmc.hcplayground.dropManager;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -74,17 +75,32 @@ public class DropManager {
         if (de == null) return;
         if (bd instanceof Ageable) if (((Ageable) bd).getAge() < de.age) return;
 
-        boolean checkBingo =RandomNumber.checkBingo(de.rate);
-        if (checkBingo) {
-            ItemStack is;
-            for (ItemBase ib : de.drops) {
-                if (ib.getId() == null) {
-                    is = new ItemStack(ib.getMaterial());
-                } else {
-                    is = ib.toItemStack();
-                }
-                w.dropItemNaturally(l, is);
+        boolean checkBingo = RandomNumber.checkBingo(de.rate);
+        if (!checkBingo) return;
+
+        ItemStack is;
+        for (ItemBase ib : de.drops) {
+            if (ib.getId() == null) {
+                is = new ItemStack(ib.getMaterial());
+            } else {
+                is = ib.toItemStack();
             }
+            w.dropItemNaturally(l, is);
+        }
+    }
+
+    public static void ExtraDrops(Location location, ItemBase[] itemBases) {
+        ItemStack is;
+        World world = location.getWorld();
+        if (world == null) return;
+
+        for (ItemBase ib : itemBases) {
+            if (ib.getId() == null) {
+                is = new ItemStack(ib.getMaterial());
+            } else {
+                is = ib.toItemStack();
+            }
+            world.dropItemNaturally(location, is);
         }
     }
 }

@@ -9,14 +9,12 @@ import org.bukkit.command.CommandMap;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.Inventory;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.itemManager.ItemManager;
 import org.hcmc.hcplayground.localization.Localization;
 import org.hcmc.hcplayground.model.Global;
 import org.hcmc.hcplayground.playerManager.PlayerData;
-import org.hcmc.hcplayground.template.TemplateManager;
 import org.jetbrains.annotations.NotNull;
 
 import javax.crypto.BadPaddingException;
@@ -362,7 +360,7 @@ public class CommandItem extends Command {
         return true;
     }
 
-    private boolean RunQMGuiCommand(Player player, String[] args){
+    private boolean RunQMGuiCommand(Player player, String[] args) {
         // TODO: 需要实施/quartermaster gui指令
         player.sendMessage(Localization.Messages.get("UnderConstruction"));
         return true;

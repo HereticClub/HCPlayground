@@ -3,7 +3,9 @@ package org.hcmc.hcplayground.sqlite;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.hcmc.hcplayground.HCPlayground;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 
 public class SqliteManager {
 

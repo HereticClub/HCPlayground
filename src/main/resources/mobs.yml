@@ -1,0 +1,25 @@
+# 敌对生物生成的配置
+zombie1:
+  # 在原有生命值的基础上，额外增加的生命值，从minHealth到maxHealth之间随机取值
+  minHealth: 0
+  # 如果maxHealth属性的值设置为小于minHealth属性值，则生物的生命值取系统默认值
+  maxHealth: 20
+  # 在原有的攻击强度的基础上，额外增加的攻击强度，从minDamage到maxDamage之间随机取值
+  minDamage: 0
+  # 如果maxDamage属性设置为小于minDamage属性值，则生物的攻击强度取系统默认值
+  maxDamage: 5
+  # 生物的类型
+  type: zombie
+  # 生物的名称，从以下名称中随机获取一个
+  displays:
+    - 肮脏的贝蒂
+    - 吵闹的冈萨雷斯
+  # 生物的额外掉落，可以是额外配置的物品的ID名称，也可以是物品的Material名称
+  # 该列表是物品同时掉落列表
+  drops: []
+  #  - weapon.item1
+  #  - diamond
+  # 当前设置生物的生成率，最大值100
+  spawnRate: 10
+  # 生物死亡后的物品掉落率，最大值100
+  dropRate: 10

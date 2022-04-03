@@ -9,7 +9,6 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.flywaydb.core.internal.util.TimeFormat;
 import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.localization.Localization;
 import org.hcmc.hcplayground.model.AesAlgorithm;
@@ -28,11 +27,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.sql.Timestamp;
 import java.text.DateFormat;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
 import java.util.*;
 
 public class PlayerData {
@@ -67,10 +62,11 @@ public class PlayerData {
     @SerializedName(value = Section_Key_DropList)
     public Map<Material, Integer> DropList = new HashMap<>();
     /**
-     * 玩家在进入服务器后登陆前或注册前的信息提醒的时间检查点
+     * 玩家在runnable线程的时间检查点，初始化为登陆时间
+     * 通常不会更改这个属性的值
      */
     @Expose(serialize = false, deserialize = false)
-    public long remindCheckpoint = 0;
+    public long CheckpointTime = 0;
 
     @Expose(serialize = false, deserialize = false)
     private final Player player;
