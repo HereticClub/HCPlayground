@@ -8,7 +8,8 @@ import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.hcmc.hcplayground.itemManager.ItemBaseA;
+import org.bukkit.potion.PotionEffect;
+import org.hcmc.hcplayground.itemManager.ItemBase;
 import org.hcmc.hcplayground.model.Global;
 
 import java.util.ArrayList;
@@ -16,7 +17,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
-public class Armor extends ItemBaseA {
+public class Armor extends ItemBase {
 
     @Expose
     @SerializedName(value = "armor")
@@ -33,6 +34,12 @@ public class Armor extends ItemBaseA {
     @Expose
     @SerializedName(value = "equipmentSlot")
     public EquipmentSlot equipmentSlot;
+    /**
+     * 附加在装备上的药水效果
+     */
+    @Expose
+    @SerializedName(value = "potions")
+    public PotionEffect[] potions;
 
     public Armor() {
 

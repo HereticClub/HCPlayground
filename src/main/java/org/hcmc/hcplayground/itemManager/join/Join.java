@@ -7,14 +7,14 @@ import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BookMeta;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.hcmc.hcplayground.itemManager.ItemBaseA;
+import org.hcmc.hcplayground.itemManager.ItemBase;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
-public class Join extends ItemBaseA {
+public class Join extends ItemBase {
     /**
      * 在主手时左键点击的运行指令列表
      */

@@ -9,6 +9,8 @@ import net.milkbowl.vault.permission.Permission;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemFlag;
@@ -19,14 +21,19 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
 import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.deserializer.*;
-import org.hcmc.hcplayground.itemManager.ItemBaseA;
+import org.hcmc.hcplayground.itemManager.ItemBase;
 import org.hcmc.hcplayground.playerManager.PlayerData;
 import org.hcmc.hcplayground.scheduler.PluginRunnable;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.lang.reflect.Field;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.text.DateFormat;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.regex.Pattern;
@@ -41,6 +48,9 @@ public final class Global {
     public final static String PERSISTENT_MAIN_KEY = "hccraft";
     public final static String PERSISTENT_SUB_KEY = "content";
     public final static String PERSISTENT_CRIT_KEY = "crit";
+    public final static String PERSISTENT_POTIONS_KEY = "potions";
+    public final static String CONFIG_AUTHME = "authme";
+    public final static String CONFIG_OFFHANDPOTIONEFFECT = "offhandPotionEffect";
     public final static Pattern patternNumber = Pattern.compile("-?\\d+(\\.\\d+)?");
 
     public static PluginRunnable runnable;
@@ -48,11 +58,13 @@ public final class Global {
     public static Map<UUID, PlayerData> playerMap;
     public static Gson GsonObject;
     public static Authme authme = null;
+    public static OffhandPotionEffect offhandPotionEffect = null;
     public static Connection Sqlite = null;
     public static WorldGuard WorldGuardApi = null;
     public static Economy EconomyApi = null;
     public static Chat ChatApi = null;
     public static Permission PermissionApi = null;
+
 
     static {
         runnable = new PluginRunnable();
@@ -68,6 +80,7 @@ public final class Global {
                 "command.yml",
                 "inventoryTemplate.yml",
                 "permission.yml",
+                "mobs.yml",
                 "database/hcdb.db",
         };
 
@@ -77,11 +90,12 @@ public final class Global {
                 .excludeFieldsWithoutExposeAnnotation()
                 .registerTypeAdapter(EquipmentSlot.class, new EquipmentSlotDeserializer())
                 .registerTypeAdapter(InventoryType.class, new InventoryTypeDeserializer())
-                .registerTypeAdapter(ItemBaseA.class, new ItemBaseDeserializer())
+                .registerTypeAdapter(ItemBase.class, new ItemBaseDeserializer())
                 .registerTypeAdapter(ItemFlag.class, new ItemFlagsDeserializer())
                 .registerTypeAdapter(Material.class, new MaterialDeserializer())
                 .registerTypeAdapter(PotionEffect.class, new PotionEffectDeserializer())
                 .registerTypeAdapter(PermissionDefault.class, new PermissionDefaultDeserializer())
+                .registerTypeAdapter(EntityType.class, new EntityTypeDeserializer())
                 .serializeNulls()
                 .setPrettyPrinting()
                 .create();
@@ -91,18 +105,15 @@ public final class Global {
      * 清理所有正在执行的对象，特别是所有继承于BukkitRunnable的对象<br>
      * 在执行/reload指令或者插件退出时都需要执行该方法
      */
-    public static void Dispose() throws SQLException {
-        Set<UUID> uuids = playerMap.keySet();
-        for (UUID uuid : uuids) {
-            PlayerData data = playerMap.get(uuid);
-            if (data == null) continue;
-
-            //data.CancelPotionTimer();
+    public static void Dispose() throws SQLException, IOException {
+        for (Player player : plugin.getServer().getOnlinePlayers()) {
+            PlayerData pd = getPlayerData(player);
+            pd.SaveConfig();
         }
         runnable.cancel();
         playerMap.clear();
         yamlMap.clear();
-        if(!Sqlite.isClosed()) Sqlite.close();
+        if (!Sqlite.isClosed()) Sqlite.close();
     }
 
     /**
@@ -110,14 +121,19 @@ public final class Global {
      */
     public static void LoadConfig() {
         String value;
+        ConfigurationSection section;
         YamlConfiguration config = (YamlConfiguration) plugin.getConfig();
 
-        ConfigurationSection authmeSection = config.getConfigurationSection("authme");
-        if (authmeSection != null) {
-            value = GsonObject.toJson(authmeSection.getValues(false));
+        section = config.getConfigurationSection(CONFIG_AUTHME);
+        if (section != null) {
+            value = GsonObject.toJson(section.getValues(false));
             authme = GsonObject.fromJson(value, Authme.class);
         }
-
+        section = config.getConfigurationSection(CONFIG_OFFHANDPOTIONEFFECT);
+        if (section != null) {
+            value = GsonObject.toJson(section.getValues(false));
+            offhandPotionEffect = GsonObject.fromJson(value, OffhandPotionEffect.class);
+        }
     }
 
     /**
@@ -187,6 +203,23 @@ public final class Global {
     }
 
     /**
+     * 获取实体玩家的所有配置信息
+     *
+     * @param player 实体玩家实例
+     * @return 该实体玩家的配置信息实例
+     */
+    public static PlayerData getPlayerData(Player player) {
+        PlayerData pd = playerMap.get(player.getUniqueId());
+
+        if (pd == null) {
+            pd = new PlayerData(player);
+            pd.LoadConfig();
+        }
+
+        return pd;
+    }
+
+    /**
      * 验证并且注册WorldGuard插件
      */
     public static void ValidWorldGuardPlugin() {
@@ -219,19 +252,21 @@ public final class Global {
      * 加载所有Yml资源文档
      * 创建全局Map<String, YamlConfiguration>对象
      */
-    public static void SaveYamlResource() {
+    public static void SaveYamlResource() throws IOException {
 
         yamlMap.clear();
 
         for (String s : ymlFilenames) {
-            File f = new File(String.format("%s/%s", plugin.getDataFolder(), s));
-            if (!f.exists()) {
-                LogMessage(String.format("Copying %s ......", s));
-                plugin.saveResource(s, false);
-            }
+            String ext = s.substring(s.length() - 3);
 
-            if(!s.equalsIgnoreCase("database/hcdb.db")) {
-                yamlMap.put(s, YamlConfiguration.loadConfiguration(f));
+            if (!ext.equalsIgnoreCase("yml")) {
+                plugin.saveResource(s, false);
+            } else {
+                YamlConfiguration yaml = MigrateConfiguration(s);
+                if (yaml == null) continue;
+
+                yaml.save(String.format("%s/%s", plugin.getDataFolder(), s));
+                yamlMap.put(s, yaml);
             }
         }
     }
@@ -256,6 +291,16 @@ public final class Global {
         plugin.getLogger().log(Level.WARNING, message);
     }
 
+    public static String getDateFormat(Date date, int format, Locale locale) {
+        String dateFormat;
+
+        DateFormat df = DateFormat.getDateInstance(format, locale);
+        DateFormat tf = DateFormat.getTimeInstance(format, locale);
+        dateFormat = String.format("%s %s", df.format(date), tf.format(date));
+
+        return dateFormat;
+    }
+
     private static void SetVaultEconomy() {
         RegisteredServiceProvider<Economy> rsp = plugin.getServer().getServicesManager().getRegistration(Economy.class);
         if (rsp == null) return;
@@ -275,5 +320,33 @@ public final class Global {
         if (rsp == null) return;
 
         PermissionApi = rsp.getProvider();
+    }
+
+    private static YamlConfiguration MigrateConfiguration(String filename) {
+        YamlConfiguration yamlResource, yamlPlugin;
+
+        InputStream stream = plugin.getResource(filename);
+        if (stream == null) return null;
+        InputStreamReader reader = new InputStreamReader(stream, StandardCharsets.UTF_8);
+        yamlResource = YamlConfiguration.loadConfiguration(reader);
+
+        File f = new File(String.format("%s/%s", plugin.getDataFolder(), filename));
+        yamlPlugin = YamlConfiguration.loadConfiguration(f);
+
+        Set<String> keysResource = yamlResource.getKeys(true);
+        Set<String> keysPlugin = yamlPlugin.getKeys(true);
+
+        for (String key : keysResource) {
+            List<String> comments = yamlResource.getComments(key);
+            Object obj = yamlResource.get(key);
+
+            String exist = keysPlugin.stream().filter(x -> x.equalsIgnoreCase(key)).findAny().orElse(null);
+            if (exist == null) {
+                yamlPlugin.set(key, obj);
+                yamlPlugin.setComments(key, comments);
+            }
+        }
+
+        return yamlPlugin;
     }
 }

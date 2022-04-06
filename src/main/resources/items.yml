@@ -14,25 +14,25 @@ weapons:
     # 攻击距离，该设置按百分比算，玩家默认值3，取值范围：0.0 - 6.0
     # 玩家攻击距离总值=3.0*(1+当前设置值)
     attackReach: 0.0
-    # 玩家暴击，最大总值1，MC本身没有该项设定
+    # 玩家暴击，最大总值1(100%)，MC本身没有该项设定
     crit: 0.1
-    # 物品是否可被破坏
+    # Potions: 药水效果，放在主手，副手，装备时会起作用
+    # 第一个参数表示药水效果类型
+    # 第二个参数表示药水效果的生效时间，时间单位: Tick(50毫秒)
+    # 第三个参数表示药水效果的增加倍数，0表示不增加倍数
+    potions:
+      - 'jump, 300, 2'
+      - 'ABSORPTION, 300, 1'    # 物品是否可被破坏
     unbreakable: false
-    itemFlags: []
-      #设置显示/隐藏该Item的属性,例如伤害.
-      #- HIDE_ATTRIBUTES
-      #设置显示/隐藏哪些ItemStack可以被破坏.
-      #- HIDE_DESTROYS
-      #设置显示/隐藏彩色皮革盔甲的染料.
-      #- HIDE_DYE
-      #设置显示/隐藏附魔.
-      #- HIDE_ENCHANTS
-      #设置显示/隐藏哪些ItemStack可以被放置.
-      #- HIDE_PLACED_ON
-      #设置显示/隐藏ItemStack的药水效果.
-      #- HIDE_POTION_EFFECTS
-      #设置显示/隐藏不可破坏属性.
-      #- HIDE_UNBREAKABLE
+    # 物品标签
+    # HIDE_ATTRIBUTES - 设置显示/隐藏该Item的属性,例如伤害.
+    # HIDE_DESTROYS - 设置显示/隐藏哪些ItemStack可以被破坏.
+    # HIDE_DYE - 设置显示/隐藏彩色皮革盔甲的染料.
+    # HIDE_ENCHANTS - 设置显示/隐藏附魔.
+    # HIDE_PLACED_ON - 设置显示/隐藏哪些ItemStack可以被放置.
+    # HIDE_POTION_EFFECTS - 设置显示/隐藏ItemStack的药水效果.
+    # HIDE_UNBREAKABLE - 设置显示/隐藏不可破坏属性.
+    flags: []
     # 物品的额外信息
     lore:
       - '&f诸神黄昏'
@@ -69,21 +69,15 @@ armors:
     movementSpeed: 0
     # EquipmentSlot: 必须是以下值之一：HEAD, CHEST, LEGS, FEET
     equipmentSlot: CHEST
+    # 物品标签
+    # HIDE_ATTRIBUTES - 设置显示/隐藏该Item的属性,例如伤害.
+    # HIDE_DESTROYS - 设置显示/隐藏哪些ItemStack可以被破坏.
+    # HIDE_DYE - 设置显示/隐藏彩色皮革盔甲的染料.
+    # HIDE_ENCHANTS - 设置显示/隐藏附魔.
+    # HIDE_PLACED_ON - 设置显示/隐藏哪些ItemStack可以被放置.
+    # HIDE_POTION_EFFECTS - 设置显示/隐藏ItemStack的药水效果.
+    # HIDE_UNBREAKABLE - 设置显示/隐藏不可破坏属性.
     flags: []
-      #设置显示/隐藏该Item的属性,例如伤害.
-      #- HIDE_ATTRIBUTES
-      #设置显示/隐藏哪些ItemStack可以被破坏.
-      #- HIDE_DESTROYS
-      #设置显示/隐藏彩色皮革盔甲的染料.
-      #- HIDE_DYE
-      #设置显示/隐藏附魔.
-      #- HIDE_ENCHANTS
-      #设置显示/隐藏哪些ItemStack可以被放置.
-      #- HIDE_PLACED_ON
-      #设置显示/隐藏ItemStack的药水效果.
-      #- HIDE_POTION_EFFECTS
-      #设置显示/隐藏不可破坏属性.
-      #- HIDE_UNBREAKABLE
   item2:
     name: '&a疾行靴'
     material: iron_boots
@@ -95,8 +89,8 @@ armors:
 # 饰品物品定义，带有光环效果Buff
 # 比如X格子范围内的所有玩家都带有效果，开发中
 accessories: []
-# 副手物品定义
-offHands:
+# 手持物品定义，包括主手和副手
+hands:
   # 物品Id，值必须唯一，用于give指令
   item1:
     # 物品的显示名称
@@ -110,27 +104,24 @@ offHands:
       - '&7副手物品'
     # 幸运值，可以和幸运附魔叠加，取值范围：-1024 - 1024
     luck: 10
+    # Potions: 药水效果，放在副手时会起作用
+    # 第一个参数表示药水效果类型
+    # 第二个参数表示药水效果的生效时间，时间单位: Tick(50毫秒)
+    # 第三个参数表示药水效果的增加倍数，0表示不增加倍数
     potions:
-      # 第一个参数表示药水效果类型
-      # 第二个参数表示药水效果的生效时间，时间单位: Tick(50毫秒)
-      # 第三个参数表示药水效果的增加倍数，0表示不增加倍数
       - 'jump, 300, 2'
       - 'ABSORPTION, 300, 1'
+    # 物品标签
+    # HIDE_ATTRIBUTES - 设置显示/隐藏该Item的属性,例如伤害.
+    # HIDE_DESTROYS - 设置显示/隐藏哪些ItemStack可以被破坏.
+    # HIDE_DYE - 设置显示/隐藏彩色皮革盔甲的染料.
+    # HIDE_ENCHANTS - 设置显示/隐藏附魔.
+    # HIDE_PLACED_ON - 设置显示/隐藏哪些ItemStack可以被放置.
+    # HIDE_POTION_EFFECTS - 设置显示/隐藏ItemStack的药水效果.
+    # HIDE_UNBREAKABLE - 设置显示/隐藏不可破坏属性.
     flags:
-      #设置显示/隐藏该Item的属性,例如伤害.
       - HIDE_ATTRIBUTES
-      #设置显示/隐藏哪些ItemStack可以被破坏.
-      #- HIDE_DESTROYS
-      #设置显示/隐藏彩色皮革盔甲的染料.
-      #- HIDE_DYE
-      #设置显示/隐藏附魔.
       - HIDE_ENCHANTS
-      #设置显示/隐藏哪些ItemStack可以被放置.
-      #- HIDE_PLACED_ON
-      #设置显示/隐藏ItemStack的药水效果.
-      #- HIDE_POTION_EFFECTS
-      #设置显示/隐藏不可破坏属性.
-      #- HIDE_UNBREAKABLE
   item2:
     name: '&a愤怒的蒲公英'
     material: DANDELION
@@ -155,9 +146,10 @@ offHands:
       - HIDE_ATTRIBUTES
       - HIDE_ENCHANTS
 # 额外加入物品定义
+# 可以使用鼠标左键右键点击，通常是用来执行一些指令
 joins:
-  # 物品Id，值必须唯一，用于give指令
   # 普通物品示例
+  # 物品Id，值必须唯一，用于give指令
   playground_menu:
     # 物品的显示名称
     name: '&b&l异族游乐场&f主菜单'
@@ -176,29 +168,25 @@ joins:
       - 'console: dm open lobby_menu %player_name%'
     # 物品在主手时左键点击的运行指令列表
     mainhand-left-click: []
-    # 物品在菜单时右键点击的运行指令列表
+    # 物品在菜单(箱子界面)时右键点击的运行指令列表
     mouse-right-click: []
-    # 物品在菜单时左键点击的运行指令列表
+    # 物品在菜单(箱子界面)时左键点击的运行指令列表
     mouse-left-click: []
     # 物品可以允许使用的世界列表
     worlds: []
+    # 物品标签
+    # HIDE_ATTRIBUTES - 设置显示/隐藏该Item的属性,例如伤害.
+    # HIDE_DESTROYS - 设置显示/隐藏哪些ItemStack可以被破坏.
+    # HIDE_DYE - 设置显示/隐藏彩色皮革盔甲的染料.
+    # HIDE_ENCHANTS - 设置显示/隐藏附魔.
+    # HIDE_PLACED_ON - 设置显示/隐藏哪些ItemStack可以被放置.
+    # HIDE_POTION_EFFECTS - 设置显示/隐藏ItemStack的药水效果.
+    # HIDE_UNBREAKABLE - 设置显示/隐藏不可破坏属性.
     flags:
-      #设置显示/隐藏该Item的属性,例如伤害.
       - HIDE_ATTRIBUTES
-      #设置显示/隐藏哪些ItemStack可以被破坏.
-      #- HIDE_DESTROYS
-      #设置显示/隐藏彩色皮革盔甲的染料.
-      #- HIDE_DYE
-      #设置显示/隐藏附魔.
       - HIDE_ENCHANTS
-      #设置显示/隐藏哪些ItemStack可以被放置.
-      #- HIDE_PLACED_ON
-      #设置显示/隐藏ItemStack的药水效果.
-      #- HIDE_POTION_EFFECTS
-      #设置显示/隐藏不可破坏属性.
-      #- HIDE_UNBREAKABLE
-  # 物品Id，值必须唯一，用于give指令
   # 书本物品示例
+  # 物品Id，值必须唯一，用于give指令
   lobby_book:
     # 物品的显示材质
     material: written_book
@@ -223,22 +211,18 @@ joins:
     # COPY_OF_ORIGINAL - 书本内容来自于原创
     # TATTERED - 破烂的书本，玩家无法获得
     generation: ORIGINAL
-    # 书本的页数和内容
+    # 物品标签
+    # HIDE_ATTRIBUTES - 设置显示/隐藏该Item的属性,例如伤害.
+    # HIDE_DESTROYS - 设置显示/隐藏哪些ItemStack可以被破坏.
+    # HIDE_DYE - 设置显示/隐藏彩色皮革盔甲的染料.
+    # HIDE_ENCHANTS - 设置显示/隐藏附魔.
+    # HIDE_PLACED_ON - 设置显示/隐藏哪些ItemStack可以被放置.
+    # HIDE_POTION_EFFECTS - 设置显示/隐藏ItemStack的药水效果.
+    # HIDE_UNBREAKABLE - 设置显示/隐藏不可破坏属性.
     flags:
-      #设置显示/隐藏该Item的属性,例如伤害.
       - HIDE_ATTRIBUTES
-      #设置显示/隐藏哪些ItemStack可以被破坏.
-      #- HIDE_DESTROYS
-      #设置显示/隐藏彩色皮革盔甲的染料.
-      #- HIDE_DYE
-      #设置显示/隐藏附魔.
       - HIDE_ENCHANTS
-      #设置显示/隐藏哪些ItemStack可以被放置.
-      #- HIDE_PLACED_ON
-      #设置显示/隐藏ItemStack的药水效果.
-      #- HIDE_POTION_EFFECTS
-      #设置显示/隐藏不可破坏属性.
-      #- HIDE_UNBREAKABLE
+    # 书本的页数和内容
     pages:
       - number: 1
         content:
@@ -301,3 +285,47 @@ joins:
           - '&c详细情况请到Q群看公告'
           - '&0Q群: &1837290837'
           - ''
+  flying_spell_fragments1:
+    name: '&6飞行咒语碎片(之一)'
+    material: map
+    glowing: true
+    amount: 1
+    lore:
+      - '&7某天你在收菜的时候发现了这个'
+    worlds: []
+    flags:
+      - HIDE_ATTRIBUTES
+      - HIDE_ENCHANTS
+  flying_spell_fragments2:
+    name: '&6飞行咒语碎片(之二)'
+    material: paper
+    glowing: true
+    amount: 1
+    lore:
+      - '&7某天你在挖矿的时候发现了这个'
+    worlds: []
+    flags:
+      - HIDE_ATTRIBUTES
+      - HIDE_ENCHANTS
+  flying_spell_fragments3:
+    name: '&6飞行咒语碎片(之三)'
+    material: map
+    glowing: true
+    amount: 1
+    lore:
+      - '&7某天你在撸树的时候发现了这个'
+    worlds: []
+    flags:
+      - HIDE_ATTRIBUTES
+      - HIDE_ENCHANTS
+  flying_spell_fragments4:
+    name: '&6飞行咒语碎片(之四)'
+    material: paper
+    glowing: true
+    amount: 1
+    lore:
+      - '&7某天你在钓鱼的时候发现了这个'
+    worlds: []
+    flags:
+      - HIDE_ATTRIBUTES
+      - HIDE_ENCHANTS

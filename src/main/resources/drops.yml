@@ -1,25 +1,55 @@
-blocks:
+# 额外掉落列表
+dropList:
   # Id，可以是任意字符串或者数值，必须唯一
   1:
-    # 正在挖掘的方块
-    block: potatoes
+    # 可破坏，可放置，可击杀，可垂钓的Material名称
+    materials:
+      - potatoes
+      - wheat
+      - carrots
     # 掉落率，最大值100
-    rate: 5.2
+    rate: 0.05
     # 带有age值的物品，比如小麦
     # 没有age值的物品填写0
+    # 如果设置了age属性，属性blocks设置的所有material必须都带有age属性，而且所有material的age属性值都必须一致
     age: 7
     # 概率同时掉落的物品
+    # 填写Material名称则掉落相应普通物品
+    # 填写ItemID则掉落自items.yml的自定义物品
     drops:
-      - DIAMOND
-      - Emerald
+      - join.flying_spell_fragments1
   2:
-    block: wheat
-    rate: 10
-    age: 7
+    materials:
+      - beetroots
+    rate: 0.05
+    age: 3
     drops:
-      - iron_ingot
+      - join.flying_spell_fragments1
   3:
-    block: grass_block
-    rate: 4
+    materials:
+      - andesite
+      - diorite
+      - granite
+    rate: 0.05
     drops:
-      - weapon.item1
+      - join.flying_spell_fragments2
+  4:
+    materials:
+      - oak_log
+      - birch_log
+      - spruce_log
+      - jungle_log
+      - acacia_log
+      - dark_oak_log
+    rate: 0.05
+    drops:
+      - join.flying_spell_fragments3
+  5:
+    materials:
+      - salmon
+      - cod
+      - tropical_fish
+      - pufferfish
+    rate: 0.05
+    drops:
+      - join.flying_spell_fragments4

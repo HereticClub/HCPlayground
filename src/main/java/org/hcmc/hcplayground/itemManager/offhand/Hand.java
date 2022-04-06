@@ -9,7 +9,7 @@ import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffect;
-import org.hcmc.hcplayground.itemManager.ItemBaseA;
+import org.hcmc.hcplayground.itemManager.ItemBase;
 import org.hcmc.hcplayground.model.Global;
 
 import java.util.ArrayList;
@@ -17,14 +17,14 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
-public class OffHand extends ItemBaseA {
+public class Hand extends ItemBase {
 
     @Expose
     public float luck = 0.0f;
     @Expose
     public PotionEffect[] potions;
 
-    public OffHand() {
+    public Hand() {
 
     }
 
@@ -33,8 +33,11 @@ public class OffHand extends ItemBaseA {
         ItemMeta im = SetBaseItemMeta(is);
 
         if (im != null) {
-            List<String> lores = im.getLore();
-            if (lores == null) lores = new ArrayList<>();
+            /*
+            获取已设置的lores
+            */
+            List<String> lore = im.getLore();
+            if (lore == null) lore = new ArrayList<>();
             /*
             添加AttributeModifier
             */
@@ -55,7 +58,7 @@ public class OffHand extends ItemBaseA {
                 im.removeItemFlags(ItemFlag.HIDE_ATTRIBUTES);
             }
 
-            im.setLore(lores);
+            im.setLore(lore);
             is.setItemMeta(im);
         }
 

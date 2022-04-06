@@ -10,7 +10,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.itemManager.armor.Armor;
 import org.hcmc.hcplayground.itemManager.join.Join;
-import org.hcmc.hcplayground.itemManager.offhand.OffHand;
+import org.hcmc.hcplayground.itemManager.offhand.Hand;
 import org.hcmc.hcplayground.itemManager.weapon.Weapon;
 import org.hcmc.hcplayground.localization.Localization;
 import org.hcmc.hcplayground.model.Global;
@@ -22,19 +22,18 @@ import java.util.List;
 public class ItemManager {
 
     private static final JavaPlugin plugin;
-    private static final List<ItemBase> ItemEntire;
-    private static List<Weapon> ItemWeapons;
-    private static List<Armor> ItemArmors;
-    private static List<OffHand> ItemOffHands;
-    private static List<Join> ItemJoins;
+    private static final List<IItemBase> ItemEntire;
+    private static List<Weapon> itemWeapons;
+    private static List<Armor> itemArmors;
+    private static List<Hand> itemHands;
+    private static List<Join> itemJoins;
     private static ItemManager instance = null;
 
-
     static {
-        ItemWeapons = new ArrayList<>();
-        ItemArmors = new ArrayList<>();
-        ItemOffHands = new ArrayList<>();
-        ItemJoins = new ArrayList<>();
+        itemWeapons = new ArrayList<>();
+        itemArmors = new ArrayList<>();
+        itemHands = new ArrayList<>();
+        itemJoins = new ArrayList<>();
         ItemEntire = new ArrayList<>();
         plugin = HCPlayground.getPlugin();
     }
@@ -47,7 +46,7 @@ public class ItemManager {
         return instance;
     }
 
-    public static List<ItemBase> getItemEntire() {
+    public static List<IItemBase> getItemEntire() {
         return ItemEntire;
     }
 
@@ -62,25 +61,25 @@ public class ItemManager {
 
         try {
             section = yaml.getConfigurationSection("weapons");
-            if (section != null) ItemWeapons = Global.SetItemList(section, Weapon.class);
+            if (section != null) itemWeapons = Global.SetItemList(section, Weapon.class);
             section = yaml.getConfigurationSection("armors");
-            if (section != null) ItemArmors = Global.SetItemList(section, Armor.class);
-            section = yaml.getConfigurationSection("offHands");
-            if (section != null) ItemOffHands = Global.SetItemList(section, OffHand.class);
+            if (section != null) itemArmors = Global.SetItemList(section, Armor.class);
+            section = yaml.getConfigurationSection("hands");
+            if (section != null) itemHands = Global.SetItemList(section, Hand.class);
             section = yaml.getConfigurationSection("joins");
-            if (section != null) ItemJoins = Global.SetItemList(section, Join.class);
+            if (section != null) itemJoins = Global.SetItemList(section, Join.class);
 
             ItemEntire.clear();
-            ItemEntire.addAll(ItemArmors);
-            ItemEntire.addAll(ItemOffHands);
-            ItemEntire.addAll(ItemWeapons);
-            ItemEntire.addAll(ItemJoins);
+            ItemEntire.addAll(itemArmors);
+            ItemEntire.addAll(itemHands);
+            ItemEntire.addAll(itemWeapons);
+            ItemEntire.addAll(itemJoins);
         } catch (IllegalAccessException ex) {
             ex.printStackTrace();
         }
     }
 
-    public static ItemBase FindItemById(String id) {
+    public static IItemBase FindItemById(String id) {
         return ItemEntire.stream().filter(x -> x.getId().equalsIgnoreCase(id)).findAny().orElse(null);
     }
 
@@ -98,7 +97,7 @@ public class ItemManager {
             return;
         }
 
-        ItemBase ib = FindItemById(itemId);
+        IItemBase ib = FindItemById(itemId);
         if (ib == null) {
             sender.sendMessage(Localization.Messages.get("noSuchItem").replace("%item%", itemId));
             return;

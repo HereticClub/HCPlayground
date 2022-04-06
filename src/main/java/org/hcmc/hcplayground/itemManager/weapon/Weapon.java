@@ -11,7 +11,8 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
-import org.hcmc.hcplayground.itemManager.ItemBaseA;
+import org.bukkit.potion.PotionEffect;
+import org.hcmc.hcplayground.itemManager.ItemBase;
 import org.hcmc.hcplayground.model.Global;
 
 import java.util.ArrayList;
@@ -19,7 +20,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
-public class Weapon extends ItemBaseA {
+public class Weapon extends ItemBase {
     /**
      * 攻击伤害
      */
@@ -44,7 +45,12 @@ public class Weapon extends ItemBaseA {
     @Expose
     @SerializedName(value = "crit")
     public float crit = 0.0F;
-
+    /**
+     * 附加在武器上的药水效果
+     */
+    @Expose
+    @SerializedName(value = "potions")
+    public PotionEffect[] potions;
 
     public Weapon() {
 
@@ -63,11 +69,11 @@ public class Weapon extends ItemBaseA {
             */
             SetPersistentData(im);
             /*
-            获取已设置的lores
+            获取已设置的lore
             */
-            List<String> lores = im.getLore();
-            if (lores == null) lores = new ArrayList<>();
-            lores.add("");
+            List<String> lore = im.getLore();
+            if (lore == null) lore = new ArrayList<>();
+            lore.add("");
             /*
             玩家原始攻击伤害: 1.0
             玩家原始攻击速度: 4.0
@@ -78,12 +84,12 @@ public class Weapon extends ItemBaseA {
             float actualAttackDamage = this.attackDamage - 1;
             float actualAttackSpeed = this.attackSpeed - 4;
             float actualCrit = this.crit * 100;
-            lores.add("§7在主手时:");
+            lore.add("§7在主手时:");
             if (this.attackDamage != 0)
-                lores.add(String.format("%s 攻击伤害", setColorString(this.attackDamage, true, false)));
+                lore.add(String.format("%s 攻击伤害", setColorString(this.attackDamage, true, false)));
             if (this.attackSpeed != 0)
-                lores.add(String.format("%s 攻击速度", setColorString(this.attackSpeed, true, false)));
-            if (this.crit != 0) lores.add(String.format("%s 暴击", setColorString(actualCrit, true, true)));
+                lore.add(String.format("%s 攻击速度", setColorString(this.attackSpeed, true, false)));
+            if (this.crit != 0) lore.add(String.format("%s 暴击", setColorString(actualCrit, true, true)));
             /*
             添加AttributeModifier
             GENERIC_ATTACK_REACH 为实验性内容，当前版本暂不支持，临时注释以下代码
@@ -102,7 +108,7 @@ public class Weapon extends ItemBaseA {
                 im.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
             }
 
-            im.setLore(lores);
+            im.setLore(lore);
             is.setItemMeta(im);
         }
 

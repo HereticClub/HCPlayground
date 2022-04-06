@@ -3,7 +3,7 @@ package org.hcmc.hcplayground.dropManager;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import org.bukkit.Material;
-import org.hcmc.hcplayground.itemManager.ItemBaseA;
+import org.hcmc.hcplayground.itemManager.ItemBase;
 
 /**
  * 挖掘采集时概率额外掉落的物品
@@ -20,15 +20,15 @@ public class DropItem {
      * 被挖掘或采集的方块
      */
     @Expose
-    @SerializedName(value = "block")
-    public Material block = Material.STONE;
+    @SerializedName(value = "materials")
+    public Material[] materials;
     /**
      * 额外掉落物品的列表<br>
      * 可以是自定义物品<br>
      */
     @Expose
     @SerializedName(value = "drops")
-    public ItemBaseA[] drops;
+    public ItemBase[] drops;
     /**
      * 如果方块是作物，则可再判断其年龄
      * 比如小麦胡萝卜的成熟时年龄为7
