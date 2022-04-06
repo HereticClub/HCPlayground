@@ -1,4 +1,4 @@
-package org.hcmc.hcplayground.itemManager.weapon;
+package org.hcmc.hcplayground.model;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
@@ -12,15 +12,13 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.potion.PotionEffect;
-import org.hcmc.hcplayground.itemManager.ItemBase;
-import org.hcmc.hcplayground.model.Global;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
-public class Weapon extends ItemBase {
+public class Weapon extends ItemBaseA {
     /**
      * 攻击伤害
      */

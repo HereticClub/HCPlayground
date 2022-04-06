@@ -1,4 +1,4 @@
-package org.hcmc.hcplayground.command;
+package org.hcmc.hcplayground.model;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
@@ -11,9 +11,8 @@ import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.hcmc.hcplayground.HCPlayground;
-import org.hcmc.hcplayground.itemManager.ItemManager;
-import org.hcmc.hcplayground.localization.Localization;
-import org.hcmc.hcplayground.model.Global;
+import org.hcmc.hcplayground.manager.ItemManager;
+import org.hcmc.hcplayground.manager.LocalizationManager;
 import org.hcmc.hcplayground.playerManager.PlayerData;
 import org.jetbrains.annotations.NotNull;
 
@@ -202,7 +201,7 @@ public class CommandItem extends Command {
 
         long b = new Date().getTime();
         long c = b - a;
-        sender.sendMessage(Localization.Messages.get("reload").replace("%time_escaped%", String.valueOf(c)));
+        sender.sendMessage(LocalizationManager.Messages.get("reload").replace("%time_escaped%", String.valueOf(c)));
 
         return true;
     }
@@ -221,16 +220,16 @@ public class CommandItem extends Command {
         for (OfflinePlayer o : offlinePlayers) {
             if (!Objects.requireNonNull(o.getName()).equalsIgnoreCase(args[0])) continue;
 
-            status = Localization.Messages.get(String.format("onlineStatusMessage.%s", o.isOnline()));
+            status = LocalizationManager.Messages.get(String.format("onlineStatusMessage.%s", o.isOnline()));
             lastLogin.setTime(o.getLastPlayed());
             foundPlayer = true;
             break;
         }
 
         if (!foundPlayer) {
-            sender.sendMessage(Localization.Messages.get("playerNotExist").replace("%player%", args[0]));
+            sender.sendMessage(LocalizationManager.Messages.get("playerNotExist").replace("%player%", args[0]));
         } else {
-            String message = Localization.Messages.get("playerLastLoginTime");
+            String message = LocalizationManager.Messages.get("playerLastLoginTime");
             String loginFormat = Global.getDateFormat(lastLogin, DateFormat.FULL, Locale.CHINA);
             sender.sendMessage(message.replace("%onlineStatusMessage%", status).replace("%player%", args[0]).replace("%logintime%", loginFormat));
         }
@@ -268,7 +267,7 @@ public class CommandItem extends Command {
         }
 
         PlayerData playerData = Global.getPlayerData(player);
-        return playerData.DBRemove(args[0]);
+        return playerData.Unregister(args[0]);
     }
 
     private boolean RunLoginCommand(CommandSender sender, String[] args) throws InvalidAlgorithmParameterException, SQLException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException {
@@ -281,14 +280,14 @@ public class CommandItem extends Command {
         }
 
         PlayerData playerData = Global.getPlayerData(player);
-        return playerData.DBLogin(args[0]);
+        return playerData.Login(args[0]);
     }
 
     private boolean RunLogoutCommand(CommandSender sender, String[] args) {
         // 该指令必须玩家执行
         if (!(sender instanceof Player player)) return false;
 
-        player.kickPlayer(Localization.Messages.get("playerLogout").replace("%player%", player.getName()));
+        player.kickPlayer(LocalizationManager.Messages.get("playerLogout").replace("%player%", player.getName()));
         return true;
     }
 
@@ -302,12 +301,12 @@ public class CommandItem extends Command {
         }
         // 检查2个参数(密码)是否一样，不区分大小写
         if (!args[0].equalsIgnoreCase(args[1])) {
-            sender.sendMessage(Localization.Messages.get("playerPasswordNotMatch"));
+            sender.sendMessage(LocalizationManager.Messages.get("playerPasswordNotMatch"));
             return false;
         }
 
         PlayerData playerData = Global.getPlayerData(player);
-        return playerData.DBCreate(args[0]);
+        return playerData.Register(args[0]);
     }
 
     private boolean RunChangePasswordCommand(CommandSender sender, String[] args) throws InvalidAlgorithmParameterException, SQLException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException {
@@ -319,12 +318,12 @@ public class CommandItem extends Command {
             return false;
         }
         if (!args[1].equalsIgnoreCase(args[2])) {
-            sender.sendMessage(Localization.Messages.get("playerPasswordNotMatch"));
+            sender.sendMessage(LocalizationManager.Messages.get("playerPasswordNotMatch"));
             return false;
         }
 
         PlayerData playerData = Global.getPlayerData(player);
-        return playerData.DBChangePassword(args[0], args[1]);
+        return playerData.ChangePassword(args[0], args[1]);
     }
 
     private boolean RunBanPlayerCommand(CommandSender sender, String[] args) throws SQLException {
@@ -342,14 +341,14 @@ public class CommandItem extends Command {
             reason.append(s).append(" ");
         }
         PlayerData playerData = Global.getPlayerData(player);
-        playerData.DBBanPlayer(args[0], reason.toString().trim());
+        playerData.BanPlayer(args[0], reason.toString().trim());
 
         return true;
     }
 
     private boolean RunMenuCommand(Player player) {
         // TODO: 需要实施/menu指令
-        player.sendMessage(Localization.Messages.get("UnderConstruction"));
+        player.sendMessage(LocalizationManager.Messages.get("UnderConstruction"));
         /*
         Inventory inv = TemplateManager.CreateInventory("Template1", null);
         if (inv == null) return false;
@@ -362,7 +361,7 @@ public class CommandItem extends Command {
 
     private boolean RunQMGuiCommand(Player player, String[] args) {
         // TODO: 需要实施/quartermaster gui指令
-        player.sendMessage(Localization.Messages.get("UnderConstruction"));
+        player.sendMessage(LocalizationManager.Messages.get("UnderConstruction"));
         return true;
     }
 
@@ -409,13 +408,13 @@ public class CommandItem extends Command {
         // 如果指令被定义为不能在控制台执行
         // 并且使用了控制台发送当前指令，验证失败
         if (!this.isConsole && sender instanceof ConsoleCommandSender) {
-            sender.sendMessage(Localization.Messages.get("console-message").replace("%command%", id));
+            sender.sendMessage(LocalizationManager.Messages.get("console-message").replace("%command%", id));
             return false;
         }
         // 如果指令被定义为不能通过玩家执行
         // 并且通过了玩家发送当前指令，验证失败
         if (!this.isPlayer && sender instanceof Player) {
-            sender.sendMessage(Localization.Messages.get("player-message").replace("%command%", id));
+            sender.sendMessage(LocalizationManager.Messages.get("player-message").replace("%command%", id));
             return false;
         }
         // 如果指令时可以通过控制台发送，则不验证权限
@@ -427,7 +426,7 @@ public class CommandItem extends Command {
             World world = player.getWorld();
             String worldName = world.getName();
             if (!worlds.contains(worldName) && worlds.size() != 0) {
-                sender.sendMessage(Localization.Messages.get("world-message").replace("%command%", id).replace("%world%", worldName));
+                sender.sendMessage(LocalizationManager.Messages.get("world-message").replace("%command%", id).replace("%world%", worldName));
                 return false;
             }
             // 验证指令的参数的权限
@@ -438,18 +437,18 @@ public class CommandItem extends Command {
                 CommandArgument arg = this.args.stream().filter(x -> x.name.equalsIgnoreCase(s)).findAny().orElse(null);
                 // 如果当前指令参数不在参数集合内，则指令语法错误，提示/<command> usage
                 if (arg == null) {
-                    sender.sendMessage(Localization.Messages.get(String.format("%s.usage", id)));
+                    sender.sendMessage(LocalizationManager.Messages.get(String.format("%s.usage", id)));
                     return false;
                 }
                 // 如果当前指令参数不在参数列表的位置定义，则指令语法错误，提示/<command> usage
                 if (arg.index - 1 != Arrays.asList(args).indexOf(s)) {
-                    sender.sendMessage(Localization.Messages.get(String.format("%s.usage", id)));
+                    sender.sendMessage(LocalizationManager.Messages.get(String.format("%s.usage", id)));
                     return false;
                 }
                 // 如当玩家不拥有前指令参数的权限，提示permission-message
                 if (!player.hasPermission(arg.permission) && !arg.permission.equalsIgnoreCase("")) {
                     //sender.sendMessage(this.permissionMessage);
-                    sender.sendMessage(Localization.Messages.get("permission-message").replace("%permission%", arg.permission));
+                    sender.sendMessage(LocalizationManager.Messages.get("permission-message").replace("%permission%", arg.permission));
                     return false;
                 }
             }
@@ -465,7 +464,7 @@ public class CommandItem extends Command {
 
     private void ShowCommandHelp(CommandSender sender, int argLength) {
         if (argLength >= 1) {
-            sender.sendMessage(Localization.Messages.get("parameterInCorrect").replace("%length%", String.valueOf(argLength)));
+            sender.sendMessage(LocalizationManager.Messages.get("parameterInCorrect").replace("%length%", String.valueOf(argLength)));
         }
         sender.sendMessage(getDescription());
         sender.sendMessage(getUsage().replace("<command>", getName()));
@@ -483,8 +482,8 @@ public class CommandItem extends Command {
 
         if (!this.permission.equalsIgnoreCase("")) this.setPermission(this.permission);
         this.setAliases(this.aliases);
-        this.setPermissionMessage(Localization.Messages.get("permission-message").replace("%permission%", permission));
-        this.setUsage(Localization.Messages.get(String.format("%s.usage", id)));
-        this.setDescription(Localization.Messages.get(String.format("%s.description", id)));
+        this.setPermissionMessage(LocalizationManager.Messages.get("permission-message").replace("%permission%", permission));
+        this.setUsage(LocalizationManager.Messages.get(String.format("%s.usage", id)));
+        this.setDescription(LocalizationManager.Messages.get(String.format("%s.description", id)));
     }
 }

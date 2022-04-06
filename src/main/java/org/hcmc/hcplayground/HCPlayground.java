@@ -3,13 +3,13 @@ package org.hcmc.hcplayground;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
-import org.hcmc.hcplayground.command.CommandManager;
-import org.hcmc.hcplayground.dropManager.DropManager;
-import org.hcmc.hcplayground.itemManager.ItemManager;
-import org.hcmc.hcplayground.level.LevelManager;
+import org.hcmc.hcplayground.manager.CommandManager;
+import org.hcmc.hcplayground.manager.DropManager;
+import org.hcmc.hcplayground.manager.ItemManager;
+import org.hcmc.hcplayground.manager.LevelManager;
 import org.hcmc.hcplayground.listener.PluginListener;
-import org.hcmc.hcplayground.localization.Localization;
-import org.hcmc.hcplayground.mobs.MobManager;
+import org.hcmc.hcplayground.manager.LocalizationManager;
+import org.hcmc.hcplayground.manager.MobManager;
 import org.hcmc.hcplayground.model.Global;
 import org.hcmc.hcplayground.permission.PermissionManager;
 import org.hcmc.hcplayground.playerManager.PlayerData;
@@ -112,7 +112,7 @@ public class HCPlayground extends JavaPlugin {
         Global.LoadConfig();
         // 从yml格式文档加载配置到实例，必须按照指定的加载顺序
         // 1.加载本地化文档
-        Localization.Load(Global.getYamlConfiguration("messages.yml"));
+        LocalizationManager.Load(Global.getYamlConfiguration("messages.yml"));
         // 2.加载权限列表
         PermissionManager.Load(Global.getYamlConfiguration("permission.yml"));
         // 3.加载指令

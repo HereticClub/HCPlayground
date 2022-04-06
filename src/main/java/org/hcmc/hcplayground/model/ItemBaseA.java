@@ -1,4 +1,4 @@
-package org.hcmc.hcplayground.itemManager;
+package org.hcmc.hcplayground.model;
 
 
 import com.google.gson.annotations.Expose;
@@ -12,7 +12,6 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.hcmc.hcplayground.HCPlayground;
-import org.hcmc.hcplayground.model.Global;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -25,7 +24,7 @@ import java.util.List;
  * 则该实例所有属性除了material外都无效<br>
  * 即该实例只是一个普通的Material<br>
  */
-public abstract class ItemBase implements IItemBase {
+public abstract class ItemBaseA implements ItemBase {
     /**
      * 物品的ID，以hccraft为命名空间写入PersistentData
      */

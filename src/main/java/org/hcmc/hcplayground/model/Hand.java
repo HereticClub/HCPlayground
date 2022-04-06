@@ -1,4 +1,4 @@
-package org.hcmc.hcplayground.itemManager.offhand;
+package org.hcmc.hcplayground.model;
 
 import com.google.gson.annotations.Expose;
 import org.bukkit.attribute.Attribute;
@@ -9,15 +9,13 @@ import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffect;
-import org.hcmc.hcplayground.itemManager.ItemBase;
-import org.hcmc.hcplayground.model.Global;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
-public class Hand extends ItemBase {
+public class Hand extends ItemBaseA {
 
     @Expose
     public float luck = 0.0f;

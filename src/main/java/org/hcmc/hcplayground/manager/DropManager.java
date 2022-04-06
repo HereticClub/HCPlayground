@@ -1,6 +1,5 @@
-package org.hcmc.hcplayground.dropManager;
+package org.hcmc.hcplayground.manager;
 
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -12,7 +11,8 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.hcmc.hcplayground.itemManager.ItemBase;
+import org.hcmc.hcplayground.model.ItemBaseA;
+import org.hcmc.hcplayground.model.DropItem;
 import org.hcmc.hcplayground.model.Global;
 import org.hcmc.hcplayground.model.RandomNumber;
 
@@ -58,7 +58,7 @@ public class DropManager {
         boolean checkBingo = RandomNumber.checkBingo(de.rate);
         if (checkBingo) {
             ItemStack is;
-            for (ItemBase ib : de.drops) {
+            for (ItemBaseA ib : de.drops) {
                 is = ib.getId() == null ? new ItemStack(ib.getMaterial()) : ib.toItemStack();
                 player.getInventory().addItem(is);
             }
@@ -79,7 +79,7 @@ public class DropManager {
         if (!checkBingo) return;
 
         ItemStack is;
-        for (ItemBase ib : de.drops) {
+        for (ItemBaseA ib : de.drops) {
             if (ib.getId() == null) {
                 is = new ItemStack(ib.getMaterial());
             } else {
@@ -89,12 +89,12 @@ public class DropManager {
         }
     }
 
-    public static void ExtraDrops(Location location, ItemBase[] itemBases) {
+    public static void ExtraDrops(Location location, ItemBaseA[] itemBases) {
         ItemStack is;
         World world = location.getWorld();
         if (world == null) return;
 
-        for (ItemBase ib : itemBases) {
+        for (ItemBaseA ib : itemBases) {
             if (ib.getId() == null) {
                 is = new ItemStack(ib.getMaterial());
             } else {

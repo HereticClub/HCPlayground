@@ -1,4 +1,4 @@
-package org.hcmc.hcplayground.level;
+package org.hcmc.hcplayground.model;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
@@ -6,7 +6,7 @@ import com.google.gson.annotations.SerializedName;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Level {
+public class LevelInfo {
 
     @Expose
     @SerializedName(value = "name")
@@ -18,7 +18,7 @@ public class Level {
     @Expose(serialize = false, deserialize = false)
     public String id;
 
-    public Level() {
+    public LevelInfo() {
 
     }
 }

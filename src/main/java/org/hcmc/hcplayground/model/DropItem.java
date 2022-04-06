@@ -1,9 +1,8 @@
-package org.hcmc.hcplayground.dropManager;
+package org.hcmc.hcplayground.model;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import org.bukkit.Material;
-import org.hcmc.hcplayground.itemManager.ItemBase;
 
 /**
  * 挖掘采集时概率额外掉落的物品
@@ -28,7 +27,7 @@ public class DropItem {
      */
     @Expose
     @SerializedName(value = "drops")
-    public ItemBase[] drops;
+    public ItemBaseA[] drops;
     /**
      * 如果方块是作物，则可再判断其年龄
      * 比如小麦胡萝卜的成熟时年龄为7

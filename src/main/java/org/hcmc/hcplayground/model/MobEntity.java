@@ -1,9 +1,8 @@
-package org.hcmc.hcplayground.mobs;
+package org.hcmc.hcplayground.model;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import org.bukkit.entity.EntityType;
-import org.hcmc.hcplayground.itemManager.ItemBase;
 
 public class MobEntity {
 
@@ -27,7 +26,7 @@ public class MobEntity {
     public String[] displays;
     @Expose
     @SerializedName(value = "drops")
-    public ItemBase[] drops;
+    public ItemBaseA[] drops;
     @Expose
     @SerializedName(value = "spawnRate")
     public float spawnRate;

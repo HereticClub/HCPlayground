@@ -18,12 +18,11 @@ import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerFishEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.metadata.MetadataValue;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.hcmc.hcplayground.HCPlayground;
-import org.hcmc.hcplayground.dropManager.DropManager;
-import org.hcmc.hcplayground.mobs.MobEntity;
-import org.hcmc.hcplayground.mobs.MobManager;
+import org.hcmc.hcplayground.manager.DropManager;
+import org.hcmc.hcplayground.model.MobEntity;
+import org.hcmc.hcplayground.manager.MobManager;
 import org.hcmc.hcplayground.model.Global;
 import org.hcmc.hcplayground.model.RandomNumber;
 import org.hcmc.hcplayground.playerManager.PlayerData;
@@ -31,8 +30,6 @@ import org.hcmc.hcplayground.playerManager.PlayerData;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Date;
-import java.util.Locale;
-import java.util.Random;
 import java.util.UUID;
 
 /*
@@ -72,9 +69,9 @@ public class PluginListener implements Listener {
         UUID playerUuid = player.getUniqueId();
 
         PlayerData playerData = Global.getPlayerData(player);
-        if (playerData.isDBBanned()) return;
+        if (playerData.isBanned()) return;
 
-        boolean exist = playerData.isDBExist();
+        boolean exist = playerData.Exist();
         playerData.setRegister(exist);
         playerData.setLoginDTTM(new Date());
 

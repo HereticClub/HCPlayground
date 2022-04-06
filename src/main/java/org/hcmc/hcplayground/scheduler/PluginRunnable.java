@@ -10,9 +10,9 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.hcmc.hcplayground.HCPlayground;
-import org.hcmc.hcplayground.itemManager.IItemBase;
-import org.hcmc.hcplayground.itemManager.ItemManager;
-import org.hcmc.hcplayground.localization.Localization;
+import org.hcmc.hcplayground.model.ItemBase;
+import org.hcmc.hcplayground.manager.ItemManager;
+import org.hcmc.hcplayground.manager.LocalizationManager;
 import org.hcmc.hcplayground.model.Global;
 import org.hcmc.hcplayground.playerManager.PlayerData;
 
@@ -83,7 +83,7 @@ public class PluginRunnable extends BukkitRunnable {
             String id = mainContainer.get(mainKey, PersistentDataType.STRING);
             if (id == null) continue;
 
-            IItemBase itemX = ItemManager.FindItemById(id);
+            ItemBase itemX = ItemManager.FindItemById(id);
             if (itemX == null) continue;
 
             Field[] fields = itemX.getClass().getFields();
@@ -113,16 +113,16 @@ public class PluginRunnable extends BukkitRunnable {
         if (interval >= Global.authme.remainInterval) {
             long remain = Global.authme.timeout - (totalSeconds - loginSeconds);
             if (!isRegister) {
-                player.sendMessage(Localization.Messages.get("playerRegisterRemind").replace("%remain%", String.valueOf(remain)));
+                player.sendMessage(LocalizationManager.Messages.get("playerRegisterRemind").replace("%remain%", String.valueOf(remain)));
             } else {
-                player.sendMessage(Localization.Messages.get("playerLoginRemind").replace("%remain%", String.valueOf(remain)));
+                player.sendMessage(LocalizationManager.Messages.get("playerLoginRemind").replace("%remain%", String.valueOf(remain)));
             }
         }
         if (totalSeconds - loginSeconds >= Global.authme.timeout) {
             if (!isRegister) {
-                player.kickPlayer(Localization.Messages.get("playerRegisterTimeout").replace("%player%", player.getName()));
+                player.kickPlayer(LocalizationManager.Messages.get("playerRegisterTimeout").replace("%player%", player.getName()));
             } else {
-                player.kickPlayer(Localization.Messages.get("playerLoginTimeout").replace("%player%", player.getName()));
+                player.kickPlayer(LocalizationManager.Messages.get("playerLoginTimeout").replace("%player%", player.getName()));
             }
         }
 
