@@ -1,4 +1,4 @@
-package org.hcmc.hcplayground.localization;
+package org.hcmc.hcplayground.manager;
 
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -7,11 +7,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-public class Localization {
+public class LocalizationManager {
 
     public static Map<String, String> Messages = new HashMap<>();
 
-    public Localization() {
+    public LocalizationManager() {
 
     }
 

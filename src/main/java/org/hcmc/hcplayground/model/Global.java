@@ -21,7 +21,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
 import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.deserializer.*;
-import org.hcmc.hcplayground.itemManager.ItemBase;
 import org.hcmc.hcplayground.playerManager.PlayerData;
 import org.hcmc.hcplayground.scheduler.PluginRunnable;
 
@@ -90,7 +89,7 @@ public final class Global {
                 .excludeFieldsWithoutExposeAnnotation()
                 .registerTypeAdapter(EquipmentSlot.class, new EquipmentSlotDeserializer())
                 .registerTypeAdapter(InventoryType.class, new InventoryTypeDeserializer())
-                .registerTypeAdapter(ItemBase.class, new ItemBaseDeserializer())
+                .registerTypeAdapter(ItemBaseA.class, new ItemBaseDeserializer())
                 .registerTypeAdapter(ItemFlag.class, new ItemFlagsDeserializer())
                 .registerTypeAdapter(Material.class, new MaterialDeserializer())
                 .registerTypeAdapter(PotionEffect.class, new PotionEffectDeserializer())

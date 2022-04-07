@@ -1,4 +1,4 @@
-package org.hcmc.hcplayground.itemManager;
+package org.hcmc.hcplayground.manager;
 
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -8,11 +8,11 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.hcmc.hcplayground.HCPlayground;
-import org.hcmc.hcplayground.itemManager.armor.Armor;
-import org.hcmc.hcplayground.itemManager.join.Join;
-import org.hcmc.hcplayground.itemManager.offhand.Hand;
-import org.hcmc.hcplayground.itemManager.weapon.Weapon;
-import org.hcmc.hcplayground.localization.Localization;
+import org.hcmc.hcplayground.model.ItemBase;
+import org.hcmc.hcplayground.model.Armor;
+import org.hcmc.hcplayground.model.Join;
+import org.hcmc.hcplayground.model.Hand;
+import org.hcmc.hcplayground.model.Weapon;
 import org.hcmc.hcplayground.model.Global;
 
 import java.util.ArrayList;
@@ -22,7 +22,7 @@ import java.util.List;
 public class ItemManager {
 
     private static final JavaPlugin plugin;
-    private static final List<IItemBase> ItemEntire;
+    private static final List<ItemBase> ItemEntire;
     private static List<Weapon> itemWeapons;
     private static List<Armor> itemArmors;
     private static List<Hand> itemHands;
@@ -46,7 +46,7 @@ public class ItemManager {
         return instance;
     }
 
-    public static List<IItemBase> getItemEntire() {
+    public static List<ItemBase> getItemEntire() {
         return ItemEntire;
     }
 
@@ -79,7 +79,7 @@ public class ItemManager {
         }
     }
 
-    public static IItemBase FindItemById(String id) {
+    public static ItemBase FindItemById(String id) {
         return ItemEntire.stream().filter(x -> x.getId().equalsIgnoreCase(id)).findAny().orElse(null);
     }
 
@@ -88,18 +88,18 @@ public class ItemManager {
         Player player = Arrays.stream(players).filter(x -> x.getName().equalsIgnoreCase(playerName)).findAny().orElse(null);
 
         if (player == null) {
-            sender.sendMessage(Localization.Messages.get("playerNotExist").replace("%player%", playerName));
+            sender.sendMessage(LocalizationManager.Messages.get("playerNotExist").replace("%player%", playerName));
             return;
         }
         // 可能这个判断没有用
         if (!player.isOnline()) {
-            sender.sendMessage(Localization.Messages.get("playerOffLine").replace("%player%", playerName));
+            sender.sendMessage(LocalizationManager.Messages.get("playerOffLine").replace("%player%", playerName));
             return;
         }
 
-        IItemBase ib = FindItemById(itemId);
+        ItemBase ib = FindItemById(itemId);
         if (ib == null) {
-            sender.sendMessage(Localization.Messages.get("noSuchItem").replace("%item%", itemId));
+            sender.sendMessage(LocalizationManager.Messages.get("noSuchItem").replace("%item%", itemId));
             return;
         }
         ItemStack is = ib.toItemStack();

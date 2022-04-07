@@ -4,15 +4,16 @@ import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.reflect.TypeToken;
 import org.bukkit.Material;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.hcmc.hcplayground.HCPlayground;
-import org.hcmc.hcplayground.localization.Localization;
-import org.hcmc.hcplayground.model.AesAlgorithm;
+import org.hcmc.hcplayground.enums.PlayerBannedState;
+import org.hcmc.hcplayground.manager.LocalizationManager;
+import org.hcmc.hcplayground.model.BanPlayerDetail;
 import org.hcmc.hcplayground.model.Global;
+import org.hcmc.hcplayground.sqlite.SqliteManager;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
@@ -24,9 +25,7 @@ import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.text.DateFormat;
 import java.util.*;
 
@@ -123,168 +122,114 @@ public class PlayerData {
         return name;
     }
 
-    public boolean isDBExist() throws SQLException {
-        String commandText = String.format("select * from player where uuid = '%s'", uuid);
-        Statement statement = Global.Sqlite.createStatement();
-        ResultSet resultSet = statement.executeQuery(commandText);
-        boolean exist = resultSet.next();
-
-        statement.close();
-        resultSet.close();
-
-        return exist;
+    public boolean Exist() throws SQLException {
+        return SqliteManager.PlayerExist(player);
     }
 
-    public boolean isDBBanned() throws SQLException {
-        String commandText = String.format("select * from banDetails where playerId = '%s'", uuid);
-        Statement statement = Global.Sqlite.createStatement();
-        ResultSet resultSet = statement.executeQuery(commandText);
+    public boolean isBanned() throws SQLException {
+        BanPlayerDetail detail = SqliteManager.isPlayerBanned(player);
+        if (detail == null) return false;
 
-        boolean exist = resultSet.next();
         DateFormat df = DateFormat.getDateInstance(DateFormat.FULL, Locale.CHINA);
         DateFormat tf = DateFormat.getTimeInstance(DateFormat.FULL, Locale.CHINA);
+        String masterName = detail.masterName;
+        String reason = detail.message;
+        Date banDate = detail.banDate;
+        String banDateTime = String.format("%s %s", df.format(banDate), tf.format(banDate));
+        String bannedMessage = LocalizationManager.Messages.get("playerBannedMessage")
+                .replace("%player%", name)
+                .replace("%master%", masterName)
+                .replace("%reason%", reason)
+                .replace("%banDate%", banDateTime);
+        player.kickPlayer(bannedMessage);
 
-        if (exist) {
-            String masterName = resultSet.getString("masterName");
-            String reason = resultSet.getString("message");
-            Date banDate = resultSet.getDate("banDTTM");
-            String banDateTime = String.format("%s %s", df.format(banDate), tf.format(banDate));
-
-            String bannedMessage = Localization.Messages.get("playerBannedMessage").replace("%player%", name).replace("%master%", masterName).replace("%reason%", reason).replace("%banDate%", banDateTime);
-            player.kickPlayer(bannedMessage);
-        }
-
-        resultSet.close();
-        statement.close();
-
-        return exist;
+        return detail.isBanned;
     }
 
-    public boolean DBCreate(String password) throws SQLException, InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException {
-        String key = uuid.toString().replace("-", "");
-        String aesPassword = AesAlgorithm.Encrypt(key, password);
+    public boolean Register(String password) throws SQLException, InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException {
 
-        String commandText = String.format("insert or ignore into player (uuid,name,password) values ('%s','%s','%s')", uuid, name, aesPassword);
-        Statement statement = Global.Sqlite.createStatement();
-        int count = statement.executeUpdate(commandText);
-        statement.close();
-
-        if (count == 0) {
-            player.sendMessage(Localization.Messages.get("playerRegisterExist").replace("%player%", name));
+        boolean register = SqliteManager.PlayerRegister(player, password);
+        if (!register) {
+            player.sendMessage(LocalizationManager.Messages.get("playerRegisterExist").replace("%player%", name));
         } else {
             isLogin = true;
-            plugin.getServer().broadcastMessage(Localization.Messages.get("playerRegisterWelcome").replace("%player%", name));
-            player.sendMessage(Localization.Messages.get("playerLoginMotd").replace("&", "§").replace("%player%", name));
+            plugin.getServer().broadcastMessage(LocalizationManager.Messages.get("playerRegisterWelcome").replace("%player%", name));
+            //player.sendMessage(LocalizationManager.Messages.get("playerLoginMotd").replace("&", "§").replace("%player%", name));
         }
 
-        return count != 0;
+        return register;
     }
 
-    public boolean DBRemove(String password) throws InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException, SQLException {
-        String key = uuid.toString().replace("-", "");
-        String aesPassword = AesAlgorithm.Encrypt(key, password);
-        String commandText = String.format("delete from player where uuid = '%s' and password = '%s'", uuid, aesPassword);
-        Statement statement = Global.Sqlite.createStatement();
-        int count = statement.executeUpdate(commandText);
-        statement.close();
+    public boolean Unregister(String password) throws InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException, SQLException {
 
-        if (count == 0) {
-            player.sendMessage(Localization.Messages.get("playerURPasswordNotRight").replace("%player%", name));
-            return false;
+        boolean unregister = SqliteManager.PlayerUnregister(player, password);
+        if (!unregister) {
+            player.sendMessage(LocalizationManager.Messages.get("playerURPasswordNotRight").replace("%player%", name));
         } else {
-            player.kickPlayer(Localization.Messages.get("playerUnregistered").replace("%player%", name));
-            return true;
+            player.kickPlayer(LocalizationManager.Messages.get("playerUnregistered").replace("%player%", name));
         }
+
+        return unregister;
     }
 
-    public boolean DBLogin(String password) throws InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException, SQLException {
+    public boolean Login(String password) throws InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException, SQLException {
+
         if (isLogin) {
-            player.sendMessage(Localization.Messages.get("playerHasLogin").replace("%player%", name));
+            player.sendMessage(LocalizationManager.Messages.get("playerHasLogin").replace("%player%", name));
             return false;
         }
-
-        String key = uuid.toString().replace("-", "");
-        String aesPassword = AesAlgorithm.Encrypt(key, password);
-        String commandText = String.format("select * from player where name = '%s' and password = '%s'", name, aesPassword);
-        Statement statement = Global.Sqlite.createStatement();
-        ResultSet resultSet = statement.executeQuery(commandText);
-        isLogin = resultSet.next();
+        isLogin = SqliteManager.PlayerLogin(player, password);
         if (!isLogin) {
-            player.sendMessage(Localization.Messages.get("playerLoginFailed").replace("%player%", name));
-            return false;
+            player.sendMessage(LocalizationManager.Messages.get("playerLoginFailed").replace("%player%", name));
+        } else {
+            player.sendMessage(LocalizationManager.Messages.get("playerRegisterWelcome").replace("&", "§").replace("%player%", name));
         }
-
-        player.sendMessage(Localization.Messages.get("playerLoginMotd").replace("&", "§").replace("%player%", name));
-        resultSet.close();
-        statement.close();
 
         return isLogin;
     }
 
-    public boolean DBChangePassword(String oldPassword, String newPassword) throws InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException, SQLException {
-        String key = uuid.toString().replace("-", "");
-        String aesOldPassword = AesAlgorithm.Encrypt(key, oldPassword);
-        String aesNewPassword = AesAlgorithm.Encrypt(key, newPassword);
+    public boolean ChangePassword(String oldPassword, String newPassword) throws InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException, SQLException {
 
-        String commandText = String.format("select * from player where name = '%s' and password = '%s'", name, aesOldPassword);
-        Statement statement = Global.Sqlite.createStatement();
-        ResultSet resultSet = statement.executeQuery(commandText);
-        boolean exist = resultSet.next();
+        boolean exist = SqliteManager.CheckPassword(player, oldPassword);
         if (!exist) {
-            player.sendMessage(Localization.Messages.get("playerOldPasswordNotRight").replace("%player%", name));
+            player.sendMessage(LocalizationManager.Messages.get("playerOldPasswordNotRight").replace("%player%", name));
             return false;
         }
 
-        commandText = String.format("update player set password = '%s' where uuid = '%s'", aesNewPassword, uuid);
-        statement = Global.Sqlite.createStatement();
-        int count = statement.executeUpdate(commandText);
-        if (count == 0) {
-            player.sendMessage(Localization.Messages.get("playerChangePasswordError").replace("%player%", name));
+        boolean changed = SqliteManager.ChangePassword(player, newPassword);
+        if (!changed) {
+            player.sendMessage(LocalizationManager.Messages.get("playerChangePasswordError").replace("%player%", name));
         } else {
-            player.sendMessage(Localization.Messages.get("playerPasswordChanged").replace("%player%", name));
+            player.sendMessage(LocalizationManager.Messages.get("playerPasswordChanged").replace("%player%", name));
         }
 
-        resultSet.close();
-        statement.close();
-        return count != 0;
+        return changed;
     }
 
-    public void DBBanPlayer(String targetPlayer, String reason) throws SQLException {
-        boolean isBan = !reason.equalsIgnoreCase("u");
-        Date banDate = new Date();
+    public void BanPlayer(String targetPlayer, String reason) throws SQLException {
+        PlayerBannedState state = SqliteManager.BanPlayer(player, targetPlayer, reason);
+        Player[] players = plugin.getServer().getOnlinePlayers().toArray(new Player[0]);
+        Player target = Arrays.stream(players).filter(x->x.getName().equalsIgnoreCase(targetPlayer)).findAny().orElse(null);
+
+        java.util.Date banDate = new Date();
         DateFormat df = DateFormat.getDateInstance(DateFormat.FULL, Locale.CHINA);
         DateFormat tf = DateFormat.getTimeInstance(DateFormat.FULL, Locale.CHINA);
-        Statement statement = Global.Sqlite.createStatement();
         String banDateTime = String.format("%s %s", df.format(banDate), tf.format(banDate));
 
-        String commandText;
-        UUID targetUuid;
-        Player target;
-
-        OfflinePlayer[] offlinePlayers = plugin.getServer().getOfflinePlayers();
-        OfflinePlayer o = Arrays.stream(offlinePlayers).filter(x -> Objects.requireNonNull(x.getName()).equalsIgnoreCase(targetPlayer)).findAny().orElse(null);
-        if (o == null) {
-            player.sendMessage(Localization.Messages.get("playerNotExist").replace("%player%", targetPlayer));
-            return;
-        }
-        target = o.getPlayer();
-        targetUuid = o.getUniqueId();
-
-        if (isBan) {
-            if (target != null && target.isOnline()) {
-                target.kickPlayer(Localization.Messages.get("playerBannedMessage").replace("%player%", targetPlayer).replace("%master%", name).replace("%reason%", reason).replace("%banDate%", banDateTime));
+        switch (state) {
+            case Player_Not_Exist -> player.sendMessage(LocalizationManager.Messages.get("playerNotExist").replace("%player%", targetPlayer));
+            case Player_Banned -> {
+                if (target != null) {
+                    target.kickPlayer(LocalizationManager.Messages.get("playerBannedMessage")
+                            .replace("%player%", targetPlayer)
+                            .replace("%master%", name)
+                            .replace("%reason%", reason)
+                            .replace("%banDate%", banDateTime));
+                }
+                player.sendMessage(LocalizationManager.Messages.get("playerBanned").replace("%player%", targetPlayer));
             }
-            commandText = String.format("insert into banRecord (id,masterId,playerId,message) values ('%s','%s','%s','%s')", UUID.randomUUID(), uuid, targetUuid, reason);
-            statement.executeUpdate(commandText);
-            player.sendMessage(Localization.Messages.get("playerBanned").replace("%player%", targetPlayer));
-        } else {
-            player.sendMessage(Localization.Messages.get("playerUnBanned").replace("%player%", targetPlayer));
+            case Player_Unbanned -> player.sendMessage(LocalizationManager.Messages.get("playerUnBanned").replace("%player%", targetPlayer));
         }
-
-        commandText = String.format("update player set isBanned = '%s' where uuid = '%s'", isBan, targetUuid);
-        statement.executeUpdate(commandText);
-
-        statement.close();
     }
 
     public void LoadConfig() {

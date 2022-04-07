@@ -1,11 +1,11 @@
-package org.hcmc.hcplayground.itemManager;
+package org.hcmc.hcplayground.model;
 
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-public interface IItemBase {
+public interface ItemBase {
 
     int getAmount();
 

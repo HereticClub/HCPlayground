@@ -1,4 +1,4 @@
-package org.hcmc.hcplayground.itemManager.join;
+package org.hcmc.hcplayground.model;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
@@ -7,14 +7,13 @@ import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BookMeta;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.hcmc.hcplayground.itemManager.ItemBase;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
-public class Join extends ItemBase {
+public class Join extends ItemBaseA {
     /**
      * 在主手时左键点击的运行指令列表
      */
