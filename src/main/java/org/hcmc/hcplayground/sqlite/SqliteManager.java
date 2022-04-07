@@ -47,17 +47,6 @@ public class SqliteManager {
         boolean exist = resultSet.next();
         if (!exist) return null;
         detail = ResultSetSerializer(resultSet, BanPlayerDetail.class);
-        /*
-        detail.isBanned = resultSet.getBoolean("isBanned");
-        detail.banDate = resultSet.getDate("banDTTM");
-        detail.playerName = resultSet.getString("playerName");
-        detail.masterName = resultSet.getString("masterName");
-        detail.playerUuid = UUID.fromString(resultSet.getString("playerId"));
-        detail.masterUuid = UUID.fromString(resultSet.getString("masterId"));
-        detail.message = resultSet.getString("message");
-
-         */
-
         resultSet.close();
         statement.close();
 

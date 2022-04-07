@@ -259,7 +259,10 @@ public class CommandItem extends Command {
 
     private boolean RunUnRegisterCommand(CommandSender sender, String[] args) throws InvalidAlgorithmParameterException, SQLException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException {
         // 该指令必须玩家执行
-        if (!(sender instanceof Player player)) return false;
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage(LocalizationManager.Messages.get("console-message").replace("%command%", id));
+            return false;
+        }
         // 检查参数数量，必须至少1个参数
         if (args.length <= 0) {
             ShowCommandHelp(sender, 1);
@@ -272,7 +275,10 @@ public class CommandItem extends Command {
 
     private boolean RunLoginCommand(CommandSender sender, String[] args) throws InvalidAlgorithmParameterException, SQLException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException {
         // 该指令必须玩家执行
-        if (!(sender instanceof Player player)) return false;
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage(LocalizationManager.Messages.get("console-message").replace("%command%", id));
+            return false;
+        }
         // 检查参数数量，必须至少1个参数
         if (args.length <= 0) {
             ShowCommandHelp(sender, 1);
@@ -285,7 +291,10 @@ public class CommandItem extends Command {
 
     private boolean RunLogoutCommand(CommandSender sender, String[] args) {
         // 该指令必须玩家执行
-        if (!(sender instanceof Player player)) return false;
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage(LocalizationManager.Messages.get("console-message").replace("%command%", id));
+            return false;
+        }
 
         player.kickPlayer(LocalizationManager.Messages.get("playerLogout").replace("%player%", player.getName()));
         return true;
@@ -293,7 +302,10 @@ public class CommandItem extends Command {
 
     private boolean RunRegisterCommand(CommandSender sender, String[] args) throws SQLException, InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException {
         // 该指令必须玩家执行
-        if (!(sender instanceof Player player)) return false;
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage(LocalizationManager.Messages.get("console-message").replace("%command%", id));
+            return false;
+        }
         // 检查参数数量，必须至少2个参数
         if (args.length <= 1) {
             ShowCommandHelp(sender, 2);
@@ -311,7 +323,10 @@ public class CommandItem extends Command {
 
     private boolean RunChangePasswordCommand(CommandSender sender, String[] args) throws InvalidAlgorithmParameterException, SQLException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException {
         // 该指令必须玩家执行
-        if (!(sender instanceof Player player)) return false;
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage(LocalizationManager.Messages.get("console-message").replace("%command%", id));
+            return false;
+        }
         // 检查参数数量，必须至少3个参数
         if (args.length <= 2) {
             ShowCommandHelp(sender, 3);
@@ -328,7 +343,10 @@ public class CommandItem extends Command {
 
     private boolean RunBanPlayerCommand(CommandSender sender, String[] args) throws SQLException {
         // 该指令必须玩家执行
-        if (!(sender instanceof Player player)) return false;
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage(LocalizationManager.Messages.get("console-message").replace("%command%", id));
+            return false;
+        }
         // 检查参数数量，必须至少2个参数
         if (args.length <= 1) {
             ShowCommandHelp(sender, 2);

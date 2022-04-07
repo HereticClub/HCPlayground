@@ -10,17 +10,17 @@ messages:
   # 可使用%world%占位符，代表当前执行指令时所在的世界
   world-message: '&cThe command &e%command% &ccan''t be run on the world: &f%world%'
   # 当执行禁止玩家指令，并且玩家不存在时显示，可使用%player%占位符，代表被禁用玩家的名称
-  playerNotExist: 'Player %player% is not found'
+  playerNotExist: '&cPlayer &e%player% &cis not found'
   # 可使用%player%占位符，代表当前执行指令时所指向的玩家名称
-  playerOffLine: '%player% is already offline'
+  playerOffLine: '&e%player% &cis already offline'
   # 运行指令时输入的参数不正确时显示
-  parameterInCorrect: 'Parameters length is not right, %length% argument(s) is required'
+  parameterInCorrect: '&cParameters length is not right, &e%length% &cargument(s) is required'
   # 可使用%item%占位符，运行带有item参数的命令时并且找不到item时显示
-  noSuchItem: 'No such item as %item%'
+  noSuchItem: '&cNo such item as &e%item%'
   # 玩家连接到服务器后，但在指定时间内没有登录时的显示，可使用%player%占位符，代表当前要登录的玩家名称
-  playerLoginTimeout: 'My dear %player%, please login for first before playing game on this server'
+  playerLoginTimeout: '&fMy dear &c%player%&f, please login for first before playing game on this server'
   # 玩家连接到服务器后，但在指定时间内没有注册时的显示，可使用%player%占位符，代表当前要注册的玩家名称
-  playerRegisterTimeout: 'My dear %player%, please register for first before playing game on this server'
+  playerRegisterTimeout: '&fMy dear &c%player%&f, please register for first before playing game on this server'
   # 玩家连接到服务器后，在登陆超时前，仍然没有进行登录时的提醒显示，可使用%remain%占位符，代表登陆超时的剩余时间
   playerLoginRemind: '&7Please use &9/login your-password &7 command to login to server, &cRemain: %remain% seconds'
   # 玩家连接到服务器后，在登陆超时前，仍然没有进行注册时的提醒显示，可使用%remain%占位符，代表注册超时的剩余时间
@@ -31,43 +31,45 @@ messages:
   playerRegisterExist: '&7Player %player% has registered, no need to register again, use &9/changepassword &7command to change your password'
   # 玩家注册成功时发出的公告，可以使用%player%占位符，代表当前注册成功的玩家
   playerRegisterWelcome: '&7[Broadcast] &fWelcome the newbie player %player%'
+  # 玩家成功登陆显示，可以使用%player%占位符，代表当前注册成功的玩家
+  playerLoginWelcome: '&fWelcome back! My dear %player%!'
   # 玩家在登陆失败时显示，可以使用%player%占位符，代表当前正在登录的玩家
   playerLoginFailed: '&7Player %player% login failed, make sure your password is correctly'
   # 玩家登出服务器时显示
-  playerLogout: 'My dear %player%, thank you for your playing, hope you come back soon'
+  playerLogout: '&fMy dear &c%player%&f, thank you for your playing, hope you come back soon'
   # 当前玩家已经成功登录后再次使用登录指令时显示，可以使用%player%占位符，代表执行该指令的玩家
-  playerHasLogin: '%player% has logged in, no need to login again.'
+  playerHasLogin: '&e%player% &fhas logged in, no need to login again.'
   # 当玩家尝试修改密码，并且输入旧密码错误时显示，可以使用%player%占位符，代表执行该指令的玩家
-  playerOldPasswordNotRight: '%player% old password is not right'
+  playerOldPasswordNotRight: '&e%player% &cold password is not right'
   # 当玩家注销账号，并且在输入密码不正确时显示，可以使用%player%占位符，代表执行该指令的玩家
-  playerURPasswordNotRight: '%player% register password is not right'
+  playerURPasswordNotRight: '&e%player% &cregister password is not right'
   # 当玩家成功注销账号时显示，可以使用%player%占位符，代表执行该指令的玩家
   playerUnregistered: |-
     &6My dear %player%, your account has been removed just now
     &6To join this server next time, you must register your account again, thanks!
   # 当玩家修改密码成功时显示，可以使用%player%占位符，代表执行该指令的玩家
-  playerPasswordChanged: '%player%''s password has been changed'
-  # 当玩家修改密码失败时显示，一般情况下只有当系统出错时才会显示此信息，可以使用%player%占位符，代表执行该指令的玩家
-  playerChangePasswordError: 'Oooooooops!!! Something went wrong!'
+  playerPasswordChanged: '&e%player%''s &fpassword has been changed'
+  # 当系统出现错误时显示，一般情况下只有当系统出错时才会显示此信息，可以使用%player%占位符，代表执行该指令的玩家
+  systemError: '&4Oooooooops!!! Something went wrong!'
   # 玩家上一次登录时间，当使用seen指令时显示
   # 可以使用%player%占位符，表示被查看的玩家名称
   # 可以使用%onlineStatusMessage%占位符，表示被查看的玩家的在线状态
   # 可以使用%logintime%占位符，表示被查看的玩家的最后一次登陆时间
   playerLastLoginTime: |-
-    Player %player% status: %onlineStatusMessage%
-    Last login time: %logintime%
+    &fPlayer &e%player% &fstatus: %onlineStatusMessage%
+    &fLast login time: &a%logintime%
   # 当玩家被管理员禁止进入服务器时显示，可以使用%player%占位符，代表被禁止的玩家名称
   playerBanned: '&cPlayer %player% has been banned!'
   # 当玩家被管理员解禁时显示，可以使用%player%占位符，代表被解禁的玩家名称
   playerUnBanned: '&cPlayer %player% has been unbanned!'
   # 重新加载插件配置时显示，可以使用%time_escaped%占位符，表示重新加载插件所使用的时间，单位: 毫秒
-  reload: 'Configuration reload completed, time escaped: %time_escaped% ms'
+  reload: '&aConfiguration reload completed, time escaped: &e%time_escaped% &ams'
   # 玩家在线状态信息
   onlineStatusMessage:
     # 玩家在线时信息提示
-    true: 'Online'
+    true: '&aOnline'
     # 玩家离线时信息提示
-    false: 'Offline'
+    false: '&cOffline'
   # 系统管理员的名字，当使用控制台指令时以此名称代替执行指令的玩家名称
   systemAdminName: '&eSystem Administrator'
   # 当玩法或者功能正在开发中，并且被玩家尝试使用时显示
@@ -82,12 +84,6 @@ messages:
     &cYour account &e%player% &chas been banned by %master%
     &7please contact game master if any question
     &7Reason: &e%reason%
-  # 玩家成功登陆或者注册后显示，可以使用%player%占位符，代表当前注册成功的玩家
-  playerLoginMotd: |-
-    &7Welcome %player%
-    &7
-    &aLine 1
-    &bLine 2
   # 异族游乐场主菜单指令说明，必须与定义的指令名称一致
   menu:
     # 指令说明，当使用/help menu时显示

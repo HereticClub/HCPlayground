@@ -96,6 +96,7 @@ public final class Global {
                 .registerTypeAdapter(PermissionDefault.class, new PermissionDefaultDeserializer())
                 .registerTypeAdapter(EntityType.class, new EntityTypeDeserializer())
                 .serializeNulls()
+                .setDateFormat("yyyy-MM-dd HH:mm:ss")
                 .setPrettyPrinting()
                 .create();
     }
@@ -121,7 +122,7 @@ public final class Global {
     public static void LoadConfig() {
         String value;
         ConfigurationSection section;
-        YamlConfiguration config = (YamlConfiguration) plugin.getConfig();
+        YamlConfiguration config = getYamlConfiguration("config.yml");
 
         section = config.getConfigurationSection(CONFIG_AUTHME);
         if (section != null) {

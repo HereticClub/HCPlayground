@@ -1,4 +1,7 @@
+# 请不要手动修改这个配置文件
+# Permission list
 permissions:
+  # permission id, must be unique
   permission1:
     # name of permission
     name: hc.*

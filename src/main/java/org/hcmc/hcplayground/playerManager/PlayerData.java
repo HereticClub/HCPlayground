@@ -154,7 +154,6 @@ public class PlayerData {
         } else {
             isLogin = true;
             plugin.getServer().broadcastMessage(LocalizationManager.Messages.get("playerRegisterWelcome").replace("%player%", name));
-            //player.sendMessage(LocalizationManager.Messages.get("playerLoginMotd").replace("&", "§").replace("%player%", name));
         }
 
         return register;
@@ -182,7 +181,7 @@ public class PlayerData {
         if (!isLogin) {
             player.sendMessage(LocalizationManager.Messages.get("playerLoginFailed").replace("%player%", name));
         } else {
-            player.sendMessage(LocalizationManager.Messages.get("playerRegisterWelcome").replace("&", "§").replace("%player%", name));
+            player.sendMessage(LocalizationManager.Messages.get("playerLoginWelcome").replace("&", "§").replace("%player%", name));
         }
 
         return isLogin;
@@ -198,7 +197,7 @@ public class PlayerData {
 
         boolean changed = SqliteManager.ChangePassword(player, newPassword);
         if (!changed) {
-            player.sendMessage(LocalizationManager.Messages.get("playerChangePasswordError").replace("%player%", name));
+            player.sendMessage(LocalizationManager.Messages.get("systemError").replace("%player%", name));
         } else {
             player.sendMessage(LocalizationManager.Messages.get("playerPasswordChanged").replace("%player%", name));
         }
