@@ -5,6 +5,8 @@ import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.block.Block;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandMap;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -14,13 +16,11 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.entity.EntitySpawnEvent;
-import org.bukkit.event.player.PlayerDropItemEvent;
-import org.bukkit.event.player.PlayerFishEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.*;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.manager.DropManager;
+import org.hcmc.hcplayground.manager.LocalizationManager;
 import org.hcmc.hcplayground.model.MobEntity;
 import org.hcmc.hcplayground.manager.MobManager;
 import org.hcmc.hcplayground.model.Global;
@@ -50,6 +50,9 @@ InventoryClickEvent只能获取当前任何类型的Inventory是否被点击
 然后在另一个自定义Listener类里面接收这个Event的参数而得知这个ItemStack是何物
 */
 public class PluginListener implements Listener {
+
+    private final static String COMMAND_LOGIN = "login";
+    private final static String COMMAND_REGISTER = "register";
 
     private final JavaPlugin plugin = HCPlayground.getPlugin();
 
@@ -93,6 +96,28 @@ public class PluginListener implements Listener {
         Global.playerMap.remove(playerUuid, playerData);
     }
 
+    @EventHandler
+    public void onPlayerCommandPreprocess(PlayerCommandPreprocessEvent event) {
+        if (event.isCancelled()) return;
+
+        String message = event.getMessage();
+        String[] keys = message.split(" ");
+        String commandText = keys[0].substring(1);
+        CommandMap commandMap = Global.CommandMap;
+        Command command = commandMap.getCommand(commandText);
+        if (command == null) return;
+
+        Player player = event.getPlayer();
+        PlayerData playerData = Global.getPlayerData(player);
+        String playerName = player.getName();
+
+        if (!playerData.getLogin() && !command.getName().equalsIgnoreCase(COMMAND_LOGIN) && !command.getName().equalsIgnoreCase(COMMAND_REGISTER)) {
+            player.sendMessage(LocalizationManager.Messages.get("playerNoLogin").replace("%player%", playerName));
+            Global.LogWarning(String.format("%s try to issue command %s before login", playerName, message));
+            event.setCancelled(true);
+        }
+    }
+
     /**
      * 玩家扔掉物品事件
      *
@@ -114,8 +139,7 @@ public class PluginListener implements Listener {
 
     @EventHandler
     public void onItemPickup(EntityPickupItemEvent event) {
-        if (event.isCancelled()) return;
-        System.out.println(event.getEntity().getType());
+        // TODO: 需要实施EntityPickupItemEvent事件
     }
 
     /**
@@ -209,13 +233,6 @@ public class PluginListener implements Listener {
         if (mob.displays.length >= 1) {
             monster.setCustomName(mob.displays[RandomNumber.getRandomNumber(mob.displays.length)]);
         }
-        /*
-        Player player = plugin.getServer().getPlayer("TerryNG9527");
-        Location location = player.getLocation();
-        location.add(5, 0, 0);
-        monster.teleport(location);
-
-         */
     }
 
     @EventHandler
@@ -247,8 +264,5 @@ public class PluginListener implements Listener {
         if (RandomNumber.checkBingo(mob.spawnRate)) {
             DropManager.ExtraDrops(location, mob.drops);
         }
-
-
-        System.out.println(entity);
     }
 }

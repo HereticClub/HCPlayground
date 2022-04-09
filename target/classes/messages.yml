@@ -35,6 +35,8 @@ messages:
   playerLoginWelcome: '&fWelcome back! My dear %player%!'
   # 玩家在登陆失败时显示，可以使用%player%占位符，代表当前正在登录的玩家
   playerLoginFailed: '&7Player %player% login failed, make sure your password is correctly'
+  # 玩家进入服务器后，在登录成功前使用了任何指令时显示，可以使用%player%占位符，代表当前正在登录的玩家
+  playerNoLogin: '&e%player%, &4You must login for first before doing something'
   # 玩家登出服务器时显示
   playerLogout: '&fMy dear &c%player%&f, thank you for your playing, hope you come back soon'
   # 当前玩家已经成功登录后再次使用登录指令时显示，可以使用%player%占位符，代表执行该指令的玩家

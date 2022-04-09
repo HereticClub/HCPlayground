@@ -7,6 +7,7 @@ import net.milkbowl.vault.chat.Chat;
 import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.permission.Permission;
 import org.bukkit.Material;
+import org.bukkit.command.CommandMap;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.EntityType;
@@ -50,6 +51,7 @@ public final class Global {
     public final static String PERSISTENT_POTIONS_KEY = "potions";
     public final static String CONFIG_AUTHME = "authme";
     public final static String CONFIG_OFFHANDPOTIONEFFECT = "offhandPotionEffect";
+    public final static String FIELD_NAME_COMMANDMAP = "commandMap";
     public final static Pattern patternNumber = Pattern.compile("-?\\d+(\\.\\d+)?");
 
     public static PluginRunnable runnable;
@@ -63,11 +65,12 @@ public final class Global {
     public static Economy EconomyApi = null;
     public static Chat ChatApi = null;
     public static Permission PermissionApi = null;
+    public static CommandMap CommandMap = null;
 
 
     static {
-        runnable = new PluginRunnable();
         plugin = JavaPlugin.getPlugin(HCPlayground.class);
+        runnable = new PluginRunnable();
         yamlMap = new HashMap<>();
         playerMap = new HashMap<>();
         ymlFilenames = new String[]{
@@ -99,6 +102,12 @@ public final class Global {
                 .setDateFormat("yyyy-MM-dd HH:mm:ss")
                 .setPrettyPrinting()
                 .create();
+
+        try {
+            CommandMap = CreateCommandMap();
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -348,5 +357,14 @@ public final class Global {
         }
 
         return yamlPlugin;
+    }
+
+    private static CommandMap CreateCommandMap() throws NoSuchFieldException, IllegalAccessException {
+        // 获取Bukkit.Server.CommandMap字段
+        Field fieldCommandMap = plugin.getServer().getClass().getDeclaredField(FIELD_NAME_COMMANDMAP);
+        // 设置CommandMap字段为可访问
+        fieldCommandMap.setAccessible(true);
+        // 从CommandMap字段获取CommandMap实例
+        return  (CommandMap) fieldCommandMap.get(plugin.getServer());
     }
 }

@@ -1,5 +1,5 @@
 name: HCPlayground
-version: 1.0-SNAPSHOT
+version: 1.0.1-SNAPSHOT
 author: Terry NG
 main: org.hcmc.hcplayground.HCPlayground
 api-version: 1.13

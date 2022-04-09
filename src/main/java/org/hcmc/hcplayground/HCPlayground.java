@@ -1,5 +1,8 @@
 package org.hcmc.hcplayground;
 
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
@@ -15,6 +18,7 @@ import org.hcmc.hcplayground.permission.PermissionManager;
 import org.hcmc.hcplayground.playerManager.PlayerData;
 import org.hcmc.hcplayground.sqlite.SqliteManager;
 import org.hcmc.hcplayground.template.TemplateManager;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
@@ -82,6 +86,13 @@ public class HCPlayground extends JavaPlugin {
         instance = this;
         super.onLoad();
     }
+
+    @Override
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command cmd, @NotNull String label, String[] args){
+        System.out.println(label);
+        return false;
+    }
+
 
     public static HCPlayground getInstance() {
         return instance;
