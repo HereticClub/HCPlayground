@@ -8,12 +8,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.hcmc.hcplayground.HCPlayground;
-import org.hcmc.hcplayground.model.ItemBase;
-import org.hcmc.hcplayground.model.Armor;
-import org.hcmc.hcplayground.model.Join;
-import org.hcmc.hcplayground.model.Hand;
-import org.hcmc.hcplayground.model.Weapon;
-import org.hcmc.hcplayground.model.Global;
+import org.hcmc.hcplayground.model.item.*;
+import org.hcmc.hcplayground.utility.Global;
 
 import java.util.ArrayList;
 import java.util.Arrays;

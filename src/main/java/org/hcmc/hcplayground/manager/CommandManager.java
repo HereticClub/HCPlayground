@@ -4,10 +4,9 @@ import org.bukkit.command.CommandMap;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.hcmc.hcplayground.HCPlayground;
-import org.hcmc.hcplayground.model.CommandItem;
-import org.hcmc.hcplayground.model.Global;
+import org.hcmc.hcplayground.model.command.CommandItem;
+import org.hcmc.hcplayground.utility.Global;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 

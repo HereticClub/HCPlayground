@@ -1,6 +1,8 @@
 package org.hcmc.hcplayground.scheduler;
 
 import org.bukkit.NamespacedKey;
+import org.bukkit.World;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -10,11 +12,13 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.hcmc.hcplayground.HCPlayground;
-import org.hcmc.hcplayground.model.ItemBase;
+import org.hcmc.hcplayground.manager.BroadcastManager;
+import org.hcmc.hcplayground.manager.ClearLagManager;
 import org.hcmc.hcplayground.manager.ItemManager;
 import org.hcmc.hcplayground.manager.LocalizationManager;
-import org.hcmc.hcplayground.model.Global;
-import org.hcmc.hcplayground.playerManager.PlayerData;
+import org.hcmc.hcplayground.model.item.ItemBase;
+import org.hcmc.hcplayground.model.player.PlayerData;
+import org.hcmc.hcplayground.utility.Global;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -27,6 +31,10 @@ public class PluginRunnable extends BukkitRunnable {
     private PotionEffect[] effects;
     private final JavaPlugin plugin;
 
+    // 上一次发送随机公告的时间
+    private Date lastBroadcastTime = new Date();
+    private Date lastClearLagTime = new Date();
+
     // 自1970年1月1日开始，至今的总秒数
     private long totalSeconds;
 
@@ -38,9 +46,47 @@ public class PluginRunnable extends BukkitRunnable {
     @Override
     public void run() {
         try {
+            doBroadcastTask();
             doBukkitTask();
+            doClearLag();
         } catch (NoSuchFieldException | IllegalAccessException e) {
             e.printStackTrace();
+        }
+    }
+
+    private void doClearLag() {
+        long delta = new Date().getTime() / 1000 - lastClearLagTime.getTime() / 1000;
+        int remainSecond = ClearLagManager.Interval - (int) delta;
+        int clearedItem;
+        String msg = ClearLagManager.Remind.get(remainSecond);
+        if (msg != null) {
+            plugin.getServer().broadcastMessage(msg.replace("%remain%", String.valueOf(remainSecond)));
+        }
+
+        if (delta <= ClearLagManager.Interval) return;
+        lastClearLagTime = new Date();
+        clearedItem = 0;
+
+        List<World> worlds = plugin.getServer().getWorlds();
+        for (World w : worlds) {
+            List<Entity> entities = w.getEntities();
+            List<Entity> dropped = entities.stream().filter(x -> ClearLagManager.Types.contains(x.getType())).toList();
+            for (Entity item : dropped) {
+                item.remove();
+                clearedItem++;
+            }
+        }
+        plugin.getServer().broadcastMessage(ClearLagManager.ClearMessage.replace("%removed%", String.valueOf(clearedItem)));
+    }
+
+    private void doBroadcastTask() {
+        long delta = new Date().getTime() / 1000 - lastBroadcastTime.getTime() / 1000;
+        if (delta <= BroadcastManager.Interval) return;
+
+        lastBroadcastTime = new Date();
+        List<String> msg = BroadcastManager.RandomMessage();
+        for (String s : msg) {
+            plugin.getServer().broadcastMessage(s);
         }
     }
 

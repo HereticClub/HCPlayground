@@ -11,10 +11,10 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.hcmc.hcplayground.model.ItemBaseA;
-import org.hcmc.hcplayground.model.DropItem;
-import org.hcmc.hcplayground.model.Global;
-import org.hcmc.hcplayground.model.RandomNumber;
+import org.hcmc.hcplayground.model.item.DropItem;
+import org.hcmc.hcplayground.model.item.ItemBaseA;
+import org.hcmc.hcplayground.utility.Global;
+import org.hcmc.hcplayground.utility.RandomNumber;
 
 import java.util.ArrayList;
 import java.util.Arrays;

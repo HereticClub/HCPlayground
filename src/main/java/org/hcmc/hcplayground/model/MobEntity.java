@@ -3,6 +3,7 @@ package org.hcmc.hcplayground.model;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import org.bukkit.entity.EntityType;
+import org.hcmc.hcplayground.model.item.ItemBaseA;
 
 public class MobEntity {
 
@@ -21,6 +22,9 @@ public class MobEntity {
     @Expose
     @SerializedName(value = "type")
     public EntityType type = EntityType.ZOMBIE;
+    @Expose
+    @SerializedName(value = "prefix")
+    public String[] prefix;
     @Expose
     @SerializedName(value = "displays")
     public String[] displays;

@@ -1,8 +1,8 @@
 package org.hcmc.hcplayground.manager;
 
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.hcmc.hcplayground.model.Global;
 import org.hcmc.hcplayground.model.MobEntity;
+import org.hcmc.hcplayground.utility.Global;
 
 import java.util.ArrayList;
 import java.util.List;

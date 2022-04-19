@@ -8,9 +8,9 @@ import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.ItemStack;
-import org.hcmc.hcplayground.model.ItemBase;
-import org.hcmc.hcplayground.model.ItemBaseA;
 import org.hcmc.hcplayground.manager.ItemManager;
+import org.hcmc.hcplayground.model.item.ItemBase;
+import org.hcmc.hcplayground.model.item.ItemBaseA;
 
 import java.lang.reflect.Type;
 import java.util.Arrays;

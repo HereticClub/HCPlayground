@@ -1,23 +1,18 @@
 package org.hcmc.hcplayground;
 
 import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
-import org.hcmc.hcplayground.manager.CommandManager;
-import org.hcmc.hcplayground.manager.DropManager;
-import org.hcmc.hcplayground.manager.ItemManager;
-import org.hcmc.hcplayground.manager.LevelManager;
+import org.hcmc.hcplayground.filter.ConsoleLog4jFilter;
 import org.hcmc.hcplayground.listener.PluginListener;
-import org.hcmc.hcplayground.manager.LocalizationManager;
-import org.hcmc.hcplayground.manager.MobManager;
-import org.hcmc.hcplayground.model.Global;
-import org.hcmc.hcplayground.permission.PermissionManager;
-import org.hcmc.hcplayground.playerManager.PlayerData;
+import org.hcmc.hcplayground.manager.*;
+import org.hcmc.hcplayground.model.permission.PermissionManager;
+import org.hcmc.hcplayground.model.player.PlayerData;
+import org.hcmc.hcplayground.model.template.TemplateManager;
 import org.hcmc.hcplayground.sqlite.SqliteManager;
-import org.hcmc.hcplayground.template.TemplateManager;
+import org.hcmc.hcplayground.utility.Global;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -42,7 +37,6 @@ public class HCPlayground extends JavaPlugin {
         try {
             // 重新加载所有yml文档
             ReloadConfiguration();
-
             // 以下代码不需要在ReloadPlugin()中执行，只需要在插件启用时执行一次
             // 启动runnable线程，每秒循环执行一次
             task = Global.runnable.runTaskTimer(this, 20, 20);
@@ -56,12 +50,12 @@ public class HCPlayground extends JavaPlugin {
             // 重新加载所有玩家数据
             // 假定每个在线玩家已经注册并且已经登陆
             for (Player p : getServer().getOnlinePlayers()) {
-                PlayerData pd = new PlayerData(p);
-                pd.LoadConfig();
+                PlayerData pd = Global.getPlayerData(p);
                 pd.setRegister(true);
                 pd.setLogin(true);
                 Global.playerMap.put(p.getUniqueId(), pd);
             }
+            ConsoleLog4jFilter.RegisterFilter();
         } catch (IllegalAccessException | NoSuchFieldException | SQLException | NoSuchAlgorithmException | InvalidKeySpecException | IOException e) {
             e.printStackTrace();
         }
@@ -76,7 +70,8 @@ public class HCPlayground extends JavaPlugin {
             task.cancel();
             // 注销插件，保存所有在线玩家数据，断开可Sqlite的连接，清空所有Map对象
             Global.Dispose();
-        } catch (SQLException | IOException e) {
+            Global.LogMessage(String.format("%s has been disabled", this.getName()));
+        } catch (SQLException | IOException | IllegalAccessException e) {
             e.printStackTrace();
         }
     }
@@ -88,7 +83,7 @@ public class HCPlayground extends JavaPlugin {
     }
 
     @Override
-    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command cmd, @NotNull String label, String[] args){
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command cmd, @NotNull String label, String[] args) {
         System.out.println(label);
         return false;
     }
@@ -138,5 +133,9 @@ public class HCPlayground extends JavaPlugin {
         TemplateManager.Load(Global.getYamlConfiguration("inventoryTemplate.yml"));
         // 8.加载各种可生成的生物列表
         MobManager.Load(Global.getYamlConfiguration("mobs.yml"));
+        // 9.加载随机公告消息列表
+        BroadcastManager.Load(Global.getYamlConfiguration("broadcast.yml"));
+        // 10.加载清除垃圾物品设置
+        ClearLagManager.Load(Global.getYamlConfiguration("clearlag.yml"));
     }
 }

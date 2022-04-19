@@ -17,15 +17,18 @@ import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.entity.EntitySpawnEvent;
 import org.bukkit.event.player.*;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scoreboard.Objective;
+import org.bukkit.scoreboard.Scoreboard;
 import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.manager.DropManager;
 import org.hcmc.hcplayground.manager.LocalizationManager;
-import org.hcmc.hcplayground.model.MobEntity;
 import org.hcmc.hcplayground.manager.MobManager;
-import org.hcmc.hcplayground.model.Global;
-import org.hcmc.hcplayground.model.RandomNumber;
-import org.hcmc.hcplayground.playerManager.PlayerData;
+import org.hcmc.hcplayground.model.MobEntity;
+import org.hcmc.hcplayground.model.player.PlayerData;
+import org.hcmc.hcplayground.utility.Global;
+import org.hcmc.hcplayground.utility.RandomNumber;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -53,6 +56,8 @@ public class PluginListener implements Listener {
 
     private final static String COMMAND_LOGIN = "login";
     private final static String COMMAND_REGISTER = "register";
+    private final static String SCOREBOARD_CRITERIA_HEALTH = "health";
+    private final static String SCOREBOARD_CRITERIA_DUMMY = "dummy";
 
     private final JavaPlugin plugin = HCPlayground.getPlugin();
 
@@ -67,7 +72,7 @@ public class PluginListener implements Listener {
      * @throws SQLException 当SQL执行操作时发生异常
      */
     @EventHandler
-    public void onPlayerJoined(final PlayerJoinEvent event) throws SQLException {
+    public void onPlayerJoined(final PlayerJoinEvent event) throws SQLException, IllegalAccessException {
         Player player = event.getPlayer();
         UUID playerUuid = player.getUniqueId();
 
@@ -75,10 +80,21 @@ public class PluginListener implements Listener {
         if (playerData.isBanned()) return;
 
         boolean exist = playerData.Exist();
+        playerData.GameMode = player.getGameMode();
         playerData.setRegister(exist);
         playerData.setLoginDTTM(new Date());
 
         Global.playerMap.put(playerUuid, playerData);
+    }
+
+    @EventHandler
+    public void onPlayerMove(PlayerMoveEvent event) throws IllegalAccessException {
+        if (event.isCancelled()) return;
+        Player player = event.getPlayer();
+
+        PlayerData playerData = Global.getPlayerData(player);
+        if (!playerData.getLogin()) event.setCancelled(true);
+
     }
 
     /**
@@ -88,16 +104,18 @@ public class PluginListener implements Listener {
      * @throws IOException 当IO执行操作时发生异常
      */
     @EventHandler
-    public void onPlayerLeave(PlayerQuitEvent event) throws IOException {
+    public void onPlayerLeave(PlayerQuitEvent event) throws IOException, IllegalAccessException {
         Player player = event.getPlayer();
         UUID playerUuid = player.getUniqueId();
+
         PlayerData playerData = Global.getPlayerData(player);
+        player.setGameMode(playerData.GameMode);
         playerData.SaveConfig();
         Global.playerMap.remove(playerUuid, playerData);
     }
 
     @EventHandler
-    public void onPlayerCommandPreprocess(PlayerCommandPreprocessEvent event) {
+    public void onPlayerCommandPreprocess(PlayerCommandPreprocessEvent event) throws IllegalAccessException {
         if (event.isCancelled()) return;
 
         String message = event.getMessage();
@@ -124,22 +142,41 @@ public class PluginListener implements Listener {
      * @param event 玩家扔掉物品时触发的事件实例
      */
     @EventHandler
-    public void onItemDropped(PlayerDropItemEvent event) {
+    public void onItemDropped(PlayerDropItemEvent event) throws IllegalAccessException {
         if (event.isCancelled()) return;
+        // 获取玩家及UUID
         Player player = event.getPlayer();
         UUID playerUuid = player.getUniqueId();
+        // 获取玩家扔出去的物品及数量
         Item item = event.getItemDrop();
+        ItemStack is = item.getItemStack();
+        int amount = is.getAmount();
         Material material = item.getItemStack().getType();
-
+        // 记录玩家数据
         PlayerData playerData = Global.getPlayerData(player);
         int count = playerData.DropList.getOrDefault(material, 0);
-        playerData.DropList.put(material, count + 1);
+        playerData.DropList.put(material, count + amount);
         Global.playerMap.replace(playerUuid, playerData);
     }
 
     @EventHandler
-    public void onItemPickup(EntityPickupItemEvent event) {
-        // TODO: 需要实施EntityPickupItemEvent事件
+    public void onItemPickup(EntityPickupItemEvent event) throws IllegalAccessException {
+        if (event.isCancelled()) return;
+        // 获取拾取物品的生物
+        LivingEntity entity = event.getEntity();
+        // 获取拾取的物品，类型及数量
+        Item item = event.getItem();
+        ItemStack is = item.getItemStack();
+        Material material = is.getType();
+        int amount = is.getAmount();
+
+        // 记录玩家拾取物品的数据
+        if (!(entity instanceof Player player)) return;
+        UUID playerUuid = player.getUniqueId();
+        PlayerData playerData = Global.getPlayerData(player);
+        int count = playerData.PickupList.getOrDefault(material, 0);
+        playerData.PickupList.put(material, count + amount);
+        Global.playerMap.replace(playerUuid, playerData);
     }
 
     /**
@@ -148,7 +185,7 @@ public class PluginListener implements Listener {
      * @param event 玩家钓鱼时触发的事件实例
      */
     @EventHandler
-    public void onPlayerFished(PlayerFishEvent event) {
+    public void onPlayerFished(PlayerFishEvent event) throws IllegalAccessException {
         if (event.isCancelled()) return;
         // 获取玩家实例
         Player player = event.getPlayer();
@@ -158,11 +195,14 @@ public class PluginListener implements Listener {
         // 仅仅当钓到任何物品时，getCaught()才会返回Item实例
         Item item = (Item) event.getCaught();
         if (item == null) return;
+        // 获取钓到的物品及数量
+        ItemStack is = item.getItemStack();
+        Material material = is.getType();
+        int amount = is.getAmount();
         // 玩家的钓鱼记录
         PlayerData playerData = Global.getPlayerData(player);
-        Material material = item.getItemStack().getType();
         int count = playerData.FishingList.getOrDefault(material, 0);
-        playerData.FishingList.put(material, count + 1);
+        playerData.FishingList.put(material, count + amount);
         Global.playerMap.replace(playerUuid, playerData);
         // 钓鱼时的额外掉落，额外掉落物品直接放入玩家背包
         DropManager.ExtraDrops(item, player);
@@ -174,7 +214,7 @@ public class PluginListener implements Listener {
      * @param event 方块被破坏时触发的事件实例
      */
     @EventHandler
-    public void onBlockBroke(final BlockBreakEvent event) {
+    public void onBlockBroke(final BlockBreakEvent event) throws IllegalAccessException {
         if (event.isCancelled()) return;
 
         Player player = event.getPlayer();
@@ -196,7 +236,7 @@ public class PluginListener implements Listener {
      * @param event 方块被放置时触发的事件实例
      */
     @EventHandler
-    public void onBlockPlaced(final BlockPlaceEvent event) {
+    public void onBlockPlaced(final BlockPlaceEvent event) throws IllegalAccessException {
         if (event.isCancelled()) return;
 
         Player player = event.getPlayer();
@@ -214,25 +254,69 @@ public class PluginListener implements Listener {
     public void onMonsterSpawned(final EntitySpawnEvent event) {
         if (event.isCancelled()) return;
 
+        String display = "";
+        String prefix = "";
         Entity entity = event.getEntity();
         EntityType type = entity.getType();
         if (!(entity instanceof Monster monster)) return;
 
-        MobEntity mob = MobManager.MobEntities.stream().filter(x -> x.type.equals(type)).findAny().orElse(null);
-        if (mob == null) return;
-        if (!RandomNumber.checkBingo(mob.spawnRate)) return;
+        MobEntity mobEntity = MobManager.MobEntities.stream().filter(x -> x.type.equals(type)).findAny().orElse(null);
+        if (mobEntity == null) return;
+        if (!RandomNumber.checkBingo(mobEntity.spawnRate)) return;
 
-        int health = (int) Math.round(RandomNumber.getRandomNumber(mob.minHealth, mob.maxHealth));
-
+        int randomHealth = (int) Math.round(RandomNumber.getRandomNumber(mobEntity.minHealth, mobEntity.maxHealth));
+        int monsterHealth = 0;
         AttributeInstance attributeInstance = monster.getAttribute(Attribute.GENERIC_MAX_HEALTH);
         if (attributeInstance != null) {
             int baseHealth = (int) attributeInstance.getBaseValue();
-            attributeInstance.setBaseValue(baseHealth + health);
-            monster.setHealth(baseHealth + health);
+            monsterHealth = baseHealth + randomHealth;
+            attributeInstance.setBaseValue(monsterHealth);
+            monster.setHealth(baseHealth + randomHealth);
         }
-        if (mob.displays.length >= 1) {
-            monster.setCustomName(mob.displays[RandomNumber.getRandomNumber(mob.displays.length)]);
+
+        if (mobEntity.displays != null && mobEntity.displays.length >= 1) {
+            display = mobEntity.displays[RandomNumber.getRandomNumber(mobEntity.displays.length)];
         }
+        if (mobEntity.prefix != null && mobEntity.prefix.length >= 1) {
+            prefix = mobEntity.prefix[RandomNumber.getRandomNumber(mobEntity.prefix.length)];
+        }
+        if (prefix.length() >= 1 && display.length() >= 1) {
+            String customName = String.format("%s%s", prefix, display);
+            monster.setCustomName(customName);
+        }
+
+
+        /*
+        TODO: 需要实施在生物的名字下方显示生命值
+
+        monster.addScoreboardTag(monster.getUniqueId().toString());
+        Player[] players = plugin.getServer().getOnlinePlayers().toArray(new Player[0]);
+        Scoreboard sb = Global.HealthScoreboard;
+        Objective objective = sb.registerNewObjective(monster.getUniqueId().toString(), SCOREBOARD_CRITERIA_DUMMY, ChatColor.RED + "❤");
+        objective.setDisplaySlot(DisplaySlot.BELOW_NAME);
+        //objective.setRenderType(RenderType.HEARTS);
+        objective.getScore("").setScore(monsterHealth);
+
+        for (Player p : players) {
+            p.setScoreboard(sb);
+        }
+
+        Player player = plugin.getServer().getPlayer("TerryNG9527");
+        if (player == null) return;
+        Location location = player.getLocation();
+        location.setX(location.getX() + 5);
+        monster.teleport(location);
+
+        location.setY(location.getY() + 0.7);
+        ArmorStand armorStand=monster.getWorld().spawn(location, ArmorStand.class);
+        armorStand.setCustomNameVisible(true);
+        armorStand.setCustomName(String.valueOf(monsterHealth));
+        armorStand.setSmall(true);
+        armorStand.setGravity(false);
+
+         */
+
+
     }
 
     @EventHandler
@@ -251,18 +335,28 @@ public class PluginListener implements Listener {
     }
 
     @EventHandler
-    public void onMonsterDeath(EntityDeathEvent event) {
+    public void onEntityDeath(EntityDeathEvent event) throws IllegalAccessException {
+        // 获取死亡的生物实例
         LivingEntity entity = event.getEntity();
-        if (!(entity instanceof Monster)) return;
-
+        // 获取生物的类型及位置
         EntityType type = entity.getType();
         Location location = entity.getLocation();
 
+        Scoreboard sb = Global.HealthScoreboard;
+        Objective objective = sb.getObjective(entity.getUniqueId().toString());
+        if (objective != null) objective.unregister();
+        // 获取生物的额外掉落列表及掉落概率
         MobEntity mob = MobManager.MobEntities.stream().filter(x -> x.type.equals(type)).findAny().orElse(null);
-        if (mob == null) return;
-
-        if (RandomNumber.checkBingo(mob.spawnRate)) {
+        if (mob != null && RandomNumber.checkBingo(mob.spawnRate)) {
             DropManager.ExtraDrops(location, mob.drops);
         }
+        // 记录玩家杀死生物的数量
+        Player player = entity.getKiller();
+        if (player == null) return;
+        PlayerData playerData = Global.getPlayerData(player);
+        UUID playerUuid = player.getUniqueId();
+        int count = playerData.KillMobList.getOrDefault(type, 0);
+        playerData.KillMobList.put(type, count + 1);
+        Global.playerMap.put(playerUuid, playerData);
     }
 }

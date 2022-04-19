@@ -1,0 +1,14 @@
+# 每次执行清除物品的时间间隔，单位: 秒
+interval: 1800
+# 要清除的类型列表，必须是EntityType列表内的名称
+types:
+  - dropped_item
+# 清除掉落物品后显示的公告信息，可以使用%removed%占位符，表示已经清除的物品的数量
+clearMessage: '&d%removed% &fitems removed'
+# 每次执行清除物品前的提醒信息，以半角逗号为分隔符，将列表中的每项字符串拆分为2个属性
+# 第一个为提醒信息，可以使用%remain%占位符，表示X秒后执行当前清除指令
+# 第二个属性必须为正整数，表示在执行清除指令前的第X秒发送提示
+remind:
+  - '&fRemove dropped items after §e%remain% &7seconds,60'
+  - '&fRemove dropped items after §e%remain% &7seconds,30'
+  - '&fRemove dropped items after §e%remain% &7seconds,10'

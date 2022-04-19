@@ -7,9 +7,9 @@ import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.annotation.SqliteColumn;
 import org.hcmc.hcplayground.annotation.SqliteColumnIgnore;
 import org.hcmc.hcplayground.enums.PlayerBannedState;
-import org.hcmc.hcplayground.model.AesAlgorithm;
-import org.hcmc.hcplayground.model.BanPlayerDetail;
-import org.hcmc.hcplayground.model.Global;
+import org.hcmc.hcplayground.sqlite.table.BanPlayerDetail;
+import org.hcmc.hcplayground.utility.AesAlgorithm;
+import org.hcmc.hcplayground.utility.Global;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
@@ -113,8 +113,8 @@ public class SqliteManager {
         return checked;
     }
 
-    public static boolean ChangePassword(Player player, String newPassword ) throws SQLException, InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException {
-        UUID uuid=player.getUniqueId();
+    public static boolean ChangePassword(Player player, String newPassword) throws SQLException, InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException {
+        UUID uuid = player.getUniqueId();
         String key = uuid.toString().replace("-", "");
         String aesNewPassword = AesAlgorithm.Encrypt(key, newPassword);
         Statement statement = connection.createStatement();
@@ -175,7 +175,7 @@ public class SqliteManager {
     private static <T> T ResultSetSerializer(ResultSet resultSet, Class<T> tClass) throws SQLException {
         T result;
         String columnName;
-        Map<String, Object> data =new HashMap<>();
+        Map<String, Object> data = new HashMap<>();
 
         Field[] fields = tClass.getDeclaredFields();
         for (Field f : fields) {
