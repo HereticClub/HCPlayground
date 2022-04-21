@@ -80,7 +80,7 @@ public class Join extends ItemBaseA {
     }
 
     public ItemStack toItemStack() {
-        ItemStack is = new ItemStack(getMaterial(), getAmount());
+        ItemStack is = new ItemStack(getMaterial().value, getAmount());
         ItemMeta im = is.getItemMeta();
         // 判断物品是书本
         if (im instanceof BookMeta bm) {

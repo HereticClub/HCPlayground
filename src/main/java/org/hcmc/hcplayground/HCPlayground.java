@@ -10,7 +10,7 @@ import org.hcmc.hcplayground.listener.PluginListener;
 import org.hcmc.hcplayground.manager.*;
 import org.hcmc.hcplayground.model.permission.PermissionManager;
 import org.hcmc.hcplayground.model.player.PlayerData;
-import org.hcmc.hcplayground.model.template.TemplateManager;
+import org.hcmc.hcplayground.manager.InventoryManager;
 import org.hcmc.hcplayground.sqlite.SqliteManager;
 import org.hcmc.hcplayground.utility.Global;
 import org.jetbrains.annotations.NotNull;
@@ -130,7 +130,7 @@ public class HCPlayground extends JavaPlugin {
         // 6.加载等级设置列表
         LevelManager.Load(Global.getYamlConfiguration("levels.yml"));
         // 7.加载各种菜单(箱子)模板
-        TemplateManager.Load(Global.getYamlConfiguration("inventoryTemplate.yml"));
+        InventoryManager.Load(Global.getYamlConfiguration("inventory.yml"));
         // 8.加载各种可生成的生物列表
         MobManager.Load(Global.getYamlConfiguration("mobs.yml"));
         // 9.加载随机公告消息列表

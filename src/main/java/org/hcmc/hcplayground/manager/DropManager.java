@@ -59,7 +59,7 @@ public class DropManager {
         if (checkBingo) {
             ItemStack is;
             for (ItemBaseA ib : de.drops) {
-                is = ib.getId() == null ? new ItemStack(ib.getMaterial()) : ib.toItemStack();
+                is = ib.getId() == null ? new ItemStack(ib.getMaterial().value) : ib.toItemStack();
                 player.getInventory().addItem(is);
             }
         }
@@ -81,7 +81,7 @@ public class DropManager {
         ItemStack is;
         for (ItemBaseA ib : de.drops) {
             if (ib.getId() == null) {
-                is = new ItemStack(ib.getMaterial());
+                is = new ItemStack(ib.getMaterial().value);
             } else {
                 is = ib.toItemStack();
             }
@@ -96,7 +96,7 @@ public class DropManager {
 
         for (ItemBaseA ib : itemBases) {
             if (ib.getId() == null) {
-                is = new ItemStack(ib.getMaterial());
+                is = new ItemStack(ib.getMaterial().value);
             } else {
                 is = ib.toItemStack();
             }

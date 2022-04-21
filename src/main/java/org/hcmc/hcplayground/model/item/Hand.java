@@ -28,7 +28,7 @@ public class Hand extends ItemBaseA {
     }
 
     public ItemStack toItemStack() {
-        ItemStack is = new ItemStack(this.getMaterial(), 1);
+        ItemStack is = new ItemStack(this.getMaterial().value, 1);
         ItemMeta im = SetBaseItemMeta(is);
 
         if (im != null) {

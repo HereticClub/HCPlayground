@@ -179,6 +179,7 @@ public class PlayerData {
             player.sendMessage(LocalizationManager.Messages.get("playerRegisterExist").replace("%player%", name));
         } else {
             isLogin = true;
+            player.setGameMode(GameMode);
             plugin.getServer().broadcastMessage(LocalizationManager.Messages.get("playerRegisterWelcome").replace("%player%", name));
         }
 
@@ -200,7 +201,6 @@ public class PlayerData {
     public boolean Login(String password) throws InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException, SQLException {
 
         if (isLogin) {
-            player.setGameMode(GameMode);
             player.sendMessage(LocalizationManager.Messages.get("playerHasLogin").replace("%player%", name));
             return false;
         }
@@ -208,6 +208,7 @@ public class PlayerData {
         if (!isLogin) {
             player.sendMessage(LocalizationManager.Messages.get("playerLoginFailed").replace("%player%", name));
         } else {
+            player.setGameMode(GameMode);
             player.sendMessage(LocalizationManager.Messages.get("playerLoginWelcome").replace("&", "§").replace("%player%", name));
         }
 

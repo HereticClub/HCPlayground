@@ -88,7 +88,7 @@ public final class Global {
                 "messages.yml",
                 "levels.yml",
                 "command.yml",
-                "inventoryTemplate.yml",
+                "inventory.yml",
                 "permission.yml",
                 "mobs.yml",
                 "broadcast.yml",
@@ -104,7 +104,7 @@ public final class Global {
                 .registerTypeAdapter(InventoryType.class, new InventoryTypeDeserializer())
                 .registerTypeAdapter(ItemBaseA.class, new ItemBaseDeserializer())
                 .registerTypeAdapter(ItemFlag.class, new ItemFlagsDeserializer())
-                .registerTypeAdapter(Material.class, new MaterialDeserializer())
+                .registerTypeAdapter(MaterialData.class, new MaterialDeserializer())
                 .registerTypeAdapter(PotionEffect.class, new PotionEffectDeserializer())
                 .registerTypeAdapter(PermissionDefault.class, new PermissionDefaultDeserializer())
                 .registerTypeAdapter(EntityType.class, new EntityTypeDeserializer())
@@ -240,6 +240,21 @@ public final class Global {
     }
 
     /**
+     * 推送玩家配置信息到一个缓存列表
+     * @param player Minecraft的玩家实例
+     * @param data 玩家的配置信息实例
+     */
+    public static void setPlayerData(Player player, PlayerData data) {
+        UUID playerUuid = player.getUniqueId();
+        playerMap.put(playerUuid, data);
+    }
+
+    public static void removePlayerData(Player player, PlayerData data) {
+        UUID playerUuid = player.getUniqueId();
+        playerMap.remove(playerUuid, data);
+    }
+
+    /**
      * 验证并且注册WorldGuard插件
      */
     public static void ValidWorldGuardPlugin() {
@@ -280,7 +295,6 @@ public final class Global {
             String ext = s.substring(s.length() - 3);
 
             if (!ext.equalsIgnoreCase("yml")) {
-                InputStream is = plugin.getResource(s);
                 plugin.saveResource(s, false);
             } else {
                 YamlConfiguration yaml = MigrateConfiguration(s);

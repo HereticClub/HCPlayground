@@ -4,6 +4,7 @@ import org.bukkit.Material;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.hcmc.hcplayground.utility.MaterialData;
 
 public interface ItemBase {
 
@@ -13,7 +14,7 @@ public interface ItemBase {
 
     String getName();
 
-    Material getMaterial();
+    MaterialData getMaterial();
 
     boolean getUnbreakable();
 
@@ -29,7 +30,7 @@ public interface ItemBase {
 
     void setName(String value);
 
-    void setMaterial(Material value);
+    void setMaterial(MaterialData value);
 
     void setUnbreakable(boolean value);
 

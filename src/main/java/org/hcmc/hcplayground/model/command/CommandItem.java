@@ -9,10 +9,12 @@ import org.bukkit.command.CommandMap;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.manager.ItemManager;
 import org.hcmc.hcplayground.manager.LocalizationManager;
+import org.hcmc.hcplayground.manager.InventoryManager;
 import org.hcmc.hcplayground.model.player.PlayerData;
 import org.hcmc.hcplayground.utility.Global;
 import org.jetbrains.annotations.NotNull;
@@ -38,7 +40,7 @@ public class CommandItem extends Command {
     public static final String COMMAND_CHANGE_PASSWORD = "changepassword";
     public static final String COMMAND_SEEN = "seen";
     public static final String COMMAND_BAN_PLAYER = "banplayer";
-    public static final String COMMAND_MENU = "menu";
+    public static final String COMMAND_PROFILEMENU = "profilemenu";
     public static final String COMMAND_QUARTERMASTER = "quartermaster";
     public static final String COMMAND_QM_GIVE = "give";
     public static final String COMMAND_QM_HELP = "help";
@@ -140,8 +142,8 @@ public class CommandItem extends Command {
 
         try {
             // 打开菜单指令
-            if (commandText.equalsIgnoreCase(COMMAND_MENU)) {
-                return RunMenuCommand((Player) sender);
+            if (commandText.equalsIgnoreCase(COMMAND_PROFILEMENU)) {
+                return RunProfileMenuCommand((Player) sender);
             }
             // 军需官指令 - /quatermaster
             if (commandText.equalsIgnoreCase(COMMAND_QUARTERMASTER)) {
@@ -365,15 +367,10 @@ public class CommandItem extends Command {
         return true;
     }
 
-    private boolean RunMenuCommand(Player player) {
-        // TODO: 需要实施/menu指令
-        player.sendMessage(LocalizationManager.Messages.get("UnderConstruction"));
-        /*
-        Inventory inv = TemplateManager.CreateInventory("Template1", null);
+    private boolean RunProfileMenuCommand(Player player) {
+        Inventory inv = InventoryManager.CreateInventory("profile", player);
         if (inv == null) return false;
         player.openInventory(inv);
-
-         */
 
         return true;
     }

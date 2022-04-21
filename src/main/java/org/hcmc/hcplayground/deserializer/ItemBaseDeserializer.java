@@ -11,6 +11,7 @@ import org.bukkit.inventory.ItemStack;
 import org.hcmc.hcplayground.manager.ItemManager;
 import org.hcmc.hcplayground.model.item.ItemBase;
 import org.hcmc.hcplayground.model.item.ItemBaseA;
+import org.hcmc.hcplayground.utility.MaterialData;
 
 import java.lang.reflect.Type;
 import java.util.Arrays;
@@ -27,12 +28,14 @@ public class ItemBaseDeserializer implements JsonDeserializer<ItemBase> {
         String jsonValue = jsonElement.getAsString();
         List<Material> materials = Arrays.stream(Material.values()).toList();
         Material m = materials.stream().filter(x -> x.name().equalsIgnoreCase(jsonValue)).findAny().orElse(null);
+        if (m == null) m = Material.STONE;
         ItemBase ib = ItemManager.FindItemById(jsonValue);
 
         if (ib == null) {
             ib = new ItemBaseX();
+            MaterialData md = new MaterialData(m, m.name());
             ib.setId(null);
-            ib.setMaterial(m);
+            ib.setMaterial(md);
         }
         Bukkit.createInventory(null, InventoryType.CHEST);
         return ib;
@@ -42,7 +45,7 @@ public class ItemBaseDeserializer implements JsonDeserializer<ItemBase> {
 
         @Override
         public ItemStack toItemStack() {
-            return new ItemStack(this.getMaterial());
+            return new ItemStack(this.getMaterial().value);
         }
     }
 }

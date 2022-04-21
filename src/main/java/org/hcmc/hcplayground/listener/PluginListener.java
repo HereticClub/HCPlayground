@@ -1,5 +1,6 @@
 package org.hcmc.hcplayground.listener;
 
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
@@ -9,6 +10,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandMap;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
@@ -16,8 +18,12 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.entity.EntitySpawnEvent;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.*;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Scoreboard;
@@ -26,6 +32,8 @@ import org.hcmc.hcplayground.manager.DropManager;
 import org.hcmc.hcplayground.manager.LocalizationManager;
 import org.hcmc.hcplayground.manager.MobManager;
 import org.hcmc.hcplayground.model.MobEntity;
+import org.hcmc.hcplayground.model.inventory.InventoryDetail;
+import org.hcmc.hcplayground.model.inventory.InventorySlot;
 import org.hcmc.hcplayground.model.player.PlayerData;
 import org.hcmc.hcplayground.utility.Global;
 import org.hcmc.hcplayground.utility.RandomNumber;
@@ -33,7 +41,6 @@ import org.hcmc.hcplayground.utility.RandomNumber;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Date;
-import java.util.UUID;
 
 /*
 Java 本身的编程思路就已经足够混乱
@@ -74,17 +81,16 @@ public class PluginListener implements Listener {
     @EventHandler
     public void onPlayerJoined(final PlayerJoinEvent event) throws SQLException, IllegalAccessException {
         Player player = event.getPlayer();
-        UUID playerUuid = player.getUniqueId();
 
         PlayerData playerData = Global.getPlayerData(player);
         if (playerData.isBanned()) return;
 
         boolean exist = playerData.Exist();
-        playerData.GameMode = player.getGameMode();
         playerData.setRegister(exist);
         playerData.setLoginDTTM(new Date());
+        Global.setPlayerData(player, playerData);
 
-        Global.playerMap.put(playerUuid, playerData);
+        player.setGameMode(GameMode.SPECTATOR);
     }
 
     @EventHandler
@@ -106,12 +112,24 @@ public class PluginListener implements Listener {
     @EventHandler
     public void onPlayerLeave(PlayerQuitEvent event) throws IOException, IllegalAccessException {
         Player player = event.getPlayer();
-        UUID playerUuid = player.getUniqueId();
 
         PlayerData playerData = Global.getPlayerData(player);
         player.setGameMode(playerData.GameMode);
         playerData.SaveConfig();
-        Global.playerMap.remove(playerUuid, playerData);
+        Global.removePlayerData(player, playerData);
+    }
+
+    @EventHandler
+    public void onPlayerGameModeChanged(PlayerGameModeChangeEvent event) throws IllegalAccessException {
+        if (event.isCancelled()) return;
+
+        Player player = event.getPlayer();
+        PlayerData playerData = Global.getPlayerData(player);
+        if(!playerData.getLogin()) return;
+
+        playerData.GameMode = event.getNewGameMode();
+
+        Global.setPlayerData(player, playerData);
     }
 
     @EventHandler
@@ -137,6 +155,34 @@ public class PluginListener implements Listener {
     }
 
     /**
+     * 玩家钓鱼事件
+     *
+     * @param event 玩家钓鱼时触发的事件实例
+     */
+    @EventHandler
+    public void onPlayerFished(PlayerFishEvent event) throws IllegalAccessException {
+        if (event.isCancelled()) return;
+        // 获取玩家实例
+        Player player = event.getPlayer();
+        // 扔出鱼饵，无论扔到水里或者地上，或者其他实体身上，getCaught()都会返回null
+        // 钓鱼收竿时没有任何物品被钓上来，getCaught()都会返回null
+        // 仅仅当钓到任何物品时，getCaught()才会返回Item实例
+        Item item = (Item) event.getCaught();
+        if (item == null) return;
+        // 获取钓到的物品及数量
+        ItemStack is = item.getItemStack();
+        Material material = is.getType();
+        int amount = is.getAmount();
+        // 玩家的钓鱼记录
+        PlayerData playerData = Global.getPlayerData(player);
+        int count = playerData.FishingList.getOrDefault(material, 0);
+        playerData.FishingList.put(material, count + amount);
+        Global.setPlayerData(player, playerData);
+        // 钓鱼时的额外掉落，额外掉落物品直接放入玩家背包
+        DropManager.ExtraDrops(item, player);
+    }
+
+    /**
      * 玩家扔掉物品事件
      *
      * @param event 玩家扔掉物品时触发的事件实例
@@ -146,7 +192,6 @@ public class PluginListener implements Listener {
         if (event.isCancelled()) return;
         // 获取玩家及UUID
         Player player = event.getPlayer();
-        UUID playerUuid = player.getUniqueId();
         // 获取玩家扔出去的物品及数量
         Item item = event.getItemDrop();
         ItemStack is = item.getItemStack();
@@ -156,7 +201,7 @@ public class PluginListener implements Listener {
         PlayerData playerData = Global.getPlayerData(player);
         int count = playerData.DropList.getOrDefault(material, 0);
         playerData.DropList.put(material, count + amount);
-        Global.playerMap.replace(playerUuid, playerData);
+        Global.setPlayerData(player, playerData);
     }
 
     @EventHandler
@@ -172,40 +217,10 @@ public class PluginListener implements Listener {
 
         // 记录玩家拾取物品的数据
         if (!(entity instanceof Player player)) return;
-        UUID playerUuid = player.getUniqueId();
         PlayerData playerData = Global.getPlayerData(player);
         int count = playerData.PickupList.getOrDefault(material, 0);
         playerData.PickupList.put(material, count + amount);
-        Global.playerMap.replace(playerUuid, playerData);
-    }
-
-    /**
-     * 玩家钓鱼事件
-     *
-     * @param event 玩家钓鱼时触发的事件实例
-     */
-    @EventHandler
-    public void onPlayerFished(PlayerFishEvent event) throws IllegalAccessException {
-        if (event.isCancelled()) return;
-        // 获取玩家实例
-        Player player = event.getPlayer();
-        UUID playerUuid = player.getUniqueId();
-        // 扔出鱼饵，无论扔到水里或者地上，或者其他实体身上，getCaught()都会返回null
-        // 钓鱼收竿时没有任何物品被钓上来，getCaught()都会返回null
-        // 仅仅当钓到任何物品时，getCaught()才会返回Item实例
-        Item item = (Item) event.getCaught();
-        if (item == null) return;
-        // 获取钓到的物品及数量
-        ItemStack is = item.getItemStack();
-        Material material = is.getType();
-        int amount = is.getAmount();
-        // 玩家的钓鱼记录
-        PlayerData playerData = Global.getPlayerData(player);
-        int count = playerData.FishingList.getOrDefault(material, 0);
-        playerData.FishingList.put(material, count + amount);
-        Global.playerMap.replace(playerUuid, playerData);
-        // 钓鱼时的额外掉落，额外掉落物品直接放入玩家背包
-        DropManager.ExtraDrops(item, player);
+        Global.setPlayerData(player, playerData);
     }
 
     /**
@@ -218,7 +233,6 @@ public class PluginListener implements Listener {
         if (event.isCancelled()) return;
 
         Player player = event.getPlayer();
-        UUID playerUuid = player.getUniqueId();
         Block block = event.getBlock();
         Material material = block.getType();
 
@@ -227,7 +241,7 @@ public class PluginListener implements Listener {
         PlayerData playerData = Global.getPlayerData(player);
         int count = playerData.BreakList.getOrDefault(material, 0);
         playerData.BreakList.put(material, count + 1);
-        Global.playerMap.replace(playerUuid, playerData);
+        Global.setPlayerData(player, playerData);
     }
 
     /**
@@ -242,12 +256,11 @@ public class PluginListener implements Listener {
         Player player = event.getPlayer();
         Block block = event.getBlock();
         Material material = block.getType();
-        UUID playerUuid = player.getUniqueId();
 
         PlayerData playerData = Global.getPlayerData(player);
         int count = playerData.PlaceList.getOrDefault(material, 0);
         playerData.PlaceList.put(material, count + 1);
-        Global.playerMap.replace(playerUuid, playerData);
+        Global.setPlayerData(player, playerData);
     }
 
     @EventHandler
@@ -354,9 +367,52 @@ public class PluginListener implements Listener {
         Player player = entity.getKiller();
         if (player == null) return;
         PlayerData playerData = Global.getPlayerData(player);
-        UUID playerUuid = player.getUniqueId();
         int count = playerData.KillMobList.getOrDefault(type, 0);
         playerData.KillMobList.put(type, count + 1);
-        Global.playerMap.put(playerUuid, playerData);
+        Global.setPlayerData(player, playerData);
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onMenuOpened(InventoryClickEvent event) {
+        if (event.isCancelled()) return;
+        // 获取打开的箱子界面并且当前箱子是否属于InventoryDetail实例
+        Inventory inv = event.getInventory();
+        InventoryHolder holder = inv.getHolder();
+        // 检测是否打开了属于InventoryDetail实例创建的箱子
+        if (!(holder instanceof InventoryDetail detail)) return;
+        // 检测玩家点击的箱子界面是否属于玩家的背包或快捷栏
+        // 如果使用了鼠标单击则忽略事件
+        // 如果使用了SHIFT+鼠标点击则取消事件
+        Inventory pInv = event.getClickedInventory();
+        boolean isPlayerInventory = pInv instanceof PlayerInventory;
+        if(isPlayerInventory) {
+            if (event.isShiftClick()) event.setCancelled(true);
+            return;
+        }
+        // 获得玩家点击箱子中某个格子的InventorySlot实例
+        // 检测当前点击的格子位置是否可放可拿
+        int index = event.getSlot();
+        InventorySlot slot = detail.getSlot(index + 1);
+        // 玩家的背包和快捷栏可以点击和移动，但不能使用SHIFT+点击，因为之前已经被禁用
+        if(slot == null || !slot.draggable || !slot.droppable) {
+            event.setCancelled(true);
+            return;
+        }
+        /*
+        if(event.isShiftClick()) {
+            event.setCancelled(true);
+            return;
+        }
+
+         */
+
+        HumanEntity human = event.getWhoClicked();
+        if(!(human instanceof Player player)) return;
+
+    }
+
+    @EventHandler
+    public void onInventoryClicked1(InventoryClickEvent event) {
+
     }
 }

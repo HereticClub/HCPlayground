@@ -13,6 +13,7 @@ import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.utility.Global;
+import org.hcmc.hcplayground.utility.MaterialData;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -43,7 +44,7 @@ public abstract class ItemBaseA implements ItemBase {
      */
     @Expose
     @SerializedName(value = "material")
-    private Material material = Material.STONE;
+    private MaterialData material;
     /**
      * 物品的叠堆数量，最大值64
      */
@@ -101,7 +102,7 @@ public abstract class ItemBaseA implements ItemBase {
     }
 
     @Override
-    public Material getMaterial() {
+    public MaterialData getMaterial() {
         return material;
     }
 
@@ -141,7 +142,7 @@ public abstract class ItemBaseA implements ItemBase {
     }
 
     @Override
-    public void setMaterial(Material value) {
+    public void setMaterial(MaterialData value) {
         material = value;
     }
 

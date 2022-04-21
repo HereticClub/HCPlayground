@@ -3,6 +3,7 @@ package org.hcmc.hcplayground.model.item;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import org.bukkit.Material;
+import org.hcmc.hcplayground.utility.MaterialData;
 
 /**
  * 挖掘采集时概率额外掉落的物品
@@ -20,7 +21,7 @@ public class DropItem {
      */
     @Expose
     @SerializedName(value = "materials")
-    public Material[] materials;
+    public MaterialData[] materials;
     /**
      * 额外掉落物品的列表<br>
      * 可以是自定义物品<br>

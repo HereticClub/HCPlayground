@@ -59,7 +59,7 @@ public class Weapon extends ItemBaseA {
         /*
         将Item Model转换为ItemStack对象，并且为ItemStack添加的新命名空间和新的物品ID
         */
-        ItemStack is = new ItemStack(this.getMaterial(), 1);
+        ItemStack is = new ItemStack(this.getMaterial().value, 1);
         ItemMeta im = SetBaseItemMeta(is);
 
         if (im != null) {
