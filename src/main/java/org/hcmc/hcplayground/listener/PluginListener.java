@@ -398,13 +398,6 @@ public class PluginListener implements Listener {
             event.setCancelled(true);
             return;
         }
-        /*
-        if(event.isShiftClick()) {
-            event.setCancelled(true);
-            return;
-        }
-
-         */
 
         HumanEntity human = event.getWhoClicked();
         if(!(human instanceof Player player)) return;
