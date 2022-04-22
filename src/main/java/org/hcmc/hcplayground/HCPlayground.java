@@ -10,7 +10,8 @@ import org.hcmc.hcplayground.listener.PluginListener;
 import org.hcmc.hcplayground.manager.*;
 import org.hcmc.hcplayground.model.permission.PermissionManager;
 import org.hcmc.hcplayground.model.player.PlayerData;
-import org.hcmc.hcplayground.manager.InventoryManager;
+import org.hcmc.hcplayground.manager.MenuManager;
+import org.hcmc.hcplayground.expansion.HCPluginExpansion;
 import org.hcmc.hcplayground.sqlite.SqliteManager;
 import org.hcmc.hcplayground.utility.Global;
 import org.jetbrains.annotations.NotNull;
@@ -56,6 +57,7 @@ public class HCPlayground extends JavaPlugin {
                 Global.playerMap.put(p.getUniqueId(), pd);
             }
             ConsoleLog4jFilter.RegisterFilter();
+            HCPluginExpansion.RegisterExpansion();
         } catch (IllegalAccessException | NoSuchFieldException | SQLException | NoSuchAlgorithmException | InvalidKeySpecException | IOException e) {
             e.printStackTrace();
         }
@@ -70,7 +72,8 @@ public class HCPlayground extends JavaPlugin {
             task.cancel();
             // 注销插件，保存所有在线玩家数据，断开可Sqlite的连接，清空所有Map对象
             Global.Dispose();
-            Global.LogMessage(String.format("%s has been disabled", this.getName()));
+            HCPluginExpansion.UnregisterExpansion();
+            Global.LogMessage(String.format("%s has been disabled.", this.getName()));
         } catch (SQLException | IOException | IllegalAccessException e) {
             e.printStackTrace();
         }
@@ -130,7 +133,7 @@ public class HCPlayground extends JavaPlugin {
         // 6.加载等级设置列表
         LevelManager.Load(Global.getYamlConfiguration("levels.yml"));
         // 7.加载各种菜单(箱子)模板
-        InventoryManager.Load(Global.getYamlConfiguration("inventory.yml"));
+        MenuManager.Load(Global.getYamlConfiguration("menu.yml"));
         // 8.加载各种可生成的生物列表
         MobManager.Load(Global.getYamlConfiguration("mobs.yml"));
         // 9.加载随机公告消息列表

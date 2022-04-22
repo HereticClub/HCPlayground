@@ -57,6 +57,8 @@ armors:
     material: iron_chestplate
     # 物品的额外信息
     lore: []
+    # 生命数值
+    health: 10
     # 盔甲数值，玩家最大总值20
     armor: 2
     # 盔甲韧性，可以无穷大，理论最大值30

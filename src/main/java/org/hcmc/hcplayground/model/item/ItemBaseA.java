@@ -3,7 +3,6 @@ package org.hcmc.hcplayground.model.item;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
-import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
@@ -174,9 +173,9 @@ public abstract class ItemBaseA implements ItemBase {
         PersistentDataContainer mainContainer = im.getPersistentDataContainer();
         mainContainer.set(mainKey, PersistentDataType.STRING, id);
 
-        List<String> lores = new ArrayList<>(Arrays.stream(lore).toList());
+        List<String> lore = new ArrayList<>(Arrays.stream(this.lore).toList());
         im.setDisplayName(name);
-        im.setLore(lores);
+        im.setLore(lore);
         im.setUnbreakable(unbreakable);
         im.addItemFlags(flags);
         is.setItemMeta(im);

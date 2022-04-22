@@ -84,18 +84,18 @@ public class ItemManager {
         Player player = Arrays.stream(players).filter(x -> x.getName().equalsIgnoreCase(playerName)).findAny().orElse(null);
 
         if (player == null) {
-            sender.sendMessage(LocalizationManager.Messages.get("playerNotExist").replace("%player%", playerName));
+            sender.sendMessage(LocalizationManager.getMessage("playerNotExist", null).replace("%player%", playerName));
             return;
         }
         // 可能这个判断没有用
         if (!player.isOnline()) {
-            sender.sendMessage(LocalizationManager.Messages.get("playerOffLine").replace("%player%", playerName));
+            sender.sendMessage(LocalizationManager.getMessage("playerOffLine", player).replace("%player%", playerName));
             return;
         }
 
         ItemBase ib = FindItemById(itemId);
         if (ib == null) {
-            sender.sendMessage(LocalizationManager.Messages.get("noSuchItem").replace("%item%", itemId));
+            sender.sendMessage(LocalizationManager.getMessage("noSuchItem", player).replace("%item%", itemId));
             return;
         }
         ItemStack is = ib.toItemStack();

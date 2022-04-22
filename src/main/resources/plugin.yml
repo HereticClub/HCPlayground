@@ -1,8 +1,11 @@
 name: HCPlayground
 version: 1.1.2-SNAPSHOT
-author: Terry NG
+authors:
+  - Terry NG
 main: org.hcmc.hcplayground.HCPlayground
 api-version: 1.13
+depend:
+  - PlaceholderAPI
 softdepend:
   - Vault
   - WorldGuard

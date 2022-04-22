@@ -22,6 +22,9 @@ public class Armor extends ItemBaseA {
     @SerializedName(value = "armor")
     public float armor = 0.0f;
     @Expose
+    @SerializedName(value = "health")
+    public float health = 0.0f;
+    @Expose
     @SerializedName(value = "armorToughness")
     public float armorToughness = 0.0f;
     @Expose
@@ -49,34 +52,37 @@ public class Armor extends ItemBaseA {
         ItemMeta im = SetBaseItemMeta(is);
 
         if (im != null) {
-            List<String> lores = im.getLore();
-            if (lores == null) lores = new ArrayList<>();
-            lores.add("");
+            List<String> lore = im.getLore();
+            if (lore == null) lore = new ArrayList<>();
+            lore.add("");
             /*
             添加装备属性说明
             */
             switch (this.equipmentSlot) {
-                case CHEST -> lores.add("§7穿在身上时:");
-                case HAND -> lores.add("§7戴在头上时:");
-                case LEGS -> lores.add("§7穿在腿上时:");
-                case FEET -> lores.add("§7穿在脚上时:");
+                case CHEST -> lore.add("§7穿在身上时:");
+                case HAND -> lore.add("§7戴在头上时:");
+                case LEGS -> lore.add("§7穿在腿上时:");
+                case FEET -> lore.add("§7穿在脚上时:");
             }
             float actualKnockbackResistance = this.knockbackResistance * 100;
             float actualMovementSpeed = this.movementSpeed * 100;
-            if (this.armor != 0) lores.add(String.format("%s 盔甲", setColorString(this.armor, false, false)));
+            //if (this.health != 0) lore.add(String.format("%s 生命", setColorString(this.health, false, false)));
+            if (this.armor != 0) lore.add(String.format("%s 盔甲", setColorString(this.armor, false, false)));
             if (this.armorToughness != 0)
-                lores.add(String.format("%s 盔甲韧性", setColorString(this.armorToughness, false, false)));
+                lore.add(String.format("%s 盔甲韧性", setColorString(this.armorToughness, false, false)));
             if (this.knockbackResistance != 0)
-                lores.add(String.format("%s 击退抗性", setColorString(actualKnockbackResistance, false, true)));
+                lore.add(String.format("%s 击退抗性", setColorString(actualKnockbackResistance, false, true)));
             if (this.movementSpeed != 0)
-                lores.add(String.format("%s 速度", setColorString(actualMovementSpeed, false, true)));
+                lore.add(String.format("%s 速度", setColorString(actualMovementSpeed, false, true)));
             /*
             添加AttributeModifier
             */
+            //.AttributeModifier amHealth = new AttributeModifier(UUID.randomUUID(), Global.PluginName(), this.health, AttributeModifier.Operation.ADD_NUMBER, this.equipmentSlot);
             AttributeModifier amArmor = new AttributeModifier(UUID.randomUUID(), Global.PluginName(), this.armor, AttributeModifier.Operation.ADD_NUMBER, this.equipmentSlot);
             AttributeModifier amArmorToughness = new AttributeModifier(UUID.randomUUID(), Global.PluginName(), this.armorToughness, AttributeModifier.Operation.ADD_NUMBER, this.equipmentSlot);
             AttributeModifier amKnockbackResistance = new AttributeModifier(UUID.randomUUID(), Global.PluginName(), this.knockbackResistance, AttributeModifier.Operation.ADD_SCALAR, this.equipmentSlot);
             AttributeModifier amMovementSpeed = new AttributeModifier(UUID.randomUUID(), Global.PluginName(), this.movementSpeed, AttributeModifier.Operation.ADD_SCALAR, this.equipmentSlot);
+            //im.addAttributeModifier(Attribute.GENERIC_MAX_HEALTH, amHealth);
             im.addAttributeModifier(Attribute.GENERIC_ARMOR, amArmor);
             im.addAttributeModifier(Attribute.GENERIC_ARMOR_TOUGHNESS, amArmorToughness);
             im.addAttributeModifier(Attribute.GENERIC_KNOCKBACK_RESISTANCE, amKnockbackResistance);
@@ -88,7 +94,7 @@ public class Armor extends ItemBaseA {
                 im.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
             }
 
-            im.setLore(lores);
+            im.setLore(lore);
             is.setItemMeta(im);
         }
 

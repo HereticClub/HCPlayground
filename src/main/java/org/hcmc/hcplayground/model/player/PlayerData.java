@@ -1,12 +1,14 @@
 package org.hcmc.hcplayground.model.player;
 
 import com.google.gson.reflect.TypeToken;
+import org.bukkit.Color;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
+import org.bukkit.event.player.PlayerGameModeChangeEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.enums.PlayerBannedState;
@@ -75,7 +77,7 @@ public class PlayerData {
      * 玩家在runnable线程的时间检查点，初始化为登陆时间
      * 通常不会更改这个属性的值
      */
-    public long CheckpointTime = 0;
+    public long LoginTime = 0;
     /**
      * 记录玩家登陆时的游戏模式
      */
@@ -162,7 +164,7 @@ public class PlayerData {
         String reason = detail.message;
         Date banDate = detail.banDate;
         String banDateTime = String.format("%s %s", df.format(banDate), tf.format(banDate));
-        String bannedMessage = LocalizationManager.Messages.get("playerBannedMessage")
+        String bannedMessage = LocalizationManager.getMessage("playerBannedMessage", player)
                 .replace("%player%", name)
                 .replace("%master%", masterName)
                 .replace("%reason%", reason)
@@ -176,11 +178,14 @@ public class PlayerData {
 
         boolean register = SqliteManager.PlayerRegister(player, password);
         if (!register) {
-            player.sendMessage(LocalizationManager.Messages.get("playerRegisterExist").replace("%player%", name));
+            player.sendMessage(LocalizationManager.getMessage("playerRegisterExist", player)
+                    .replace("%player%", name));
         } else {
             isLogin = true;
+            Global.LogMessage(String.format("\033[1;35mPlayer register GameMode: \033[1;33m%s\033[0m", GameMode));
             player.setGameMode(GameMode);
-            plugin.getServer().broadcastMessage(LocalizationManager.Messages.get("playerRegisterWelcome").replace("%player%", name));
+            plugin.getServer().broadcastMessage(LocalizationManager.getMessage("playerRegisterWelcome", player)
+                    .replace("%player%", name));
         }
 
         return register;
@@ -190,9 +195,9 @@ public class PlayerData {
 
         boolean unregister = SqliteManager.PlayerUnregister(player, password);
         if (!unregister) {
-            player.sendMessage(LocalizationManager.Messages.get("playerURPasswordNotRight").replace("%player%", name));
+            player.sendMessage(LocalizationManager.getMessage("playerURPasswordNotRight", player).replace("%player%", name));
         } else {
-            player.kickPlayer(LocalizationManager.Messages.get("playerUnregistered").replace("%player%", name));
+            player.kickPlayer(LocalizationManager.getMessage("playerUnregistered", player).replace("%player%", name));
         }
 
         return unregister;
@@ -201,15 +206,16 @@ public class PlayerData {
     public boolean Login(String password) throws InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException, SQLException {
 
         if (isLogin) {
-            player.sendMessage(LocalizationManager.Messages.get("playerHasLogin").replace("%player%", name));
+            player.sendMessage(LocalizationManager.getMessage("playerHasLogin", player).replace("%player%", name));
             return false;
         }
         isLogin = SqliteManager.PlayerLogin(player, password);
         if (!isLogin) {
-            player.sendMessage(LocalizationManager.Messages.get("playerLoginFailed").replace("%player%", name));
+            player.sendMessage(LocalizationManager.getMessage("playerLoginFailed", player).replace("%player%", name));
         } else {
+            Global.LogMessage(String.format("\033[1;35mPlayer Login GameMode: \033[1;33m%s\033[0m", GameMode));
             player.setGameMode(GameMode);
-            player.sendMessage(LocalizationManager.Messages.get("playerLoginWelcome").replace("&", "§").replace("%player%", name));
+            player.sendMessage(LocalizationManager.getMessage("playerLoginWelcome", player).replace("&", "§").replace("%player%", name));
         }
 
         return isLogin;
@@ -219,15 +225,15 @@ public class PlayerData {
 
         boolean exist = SqliteManager.CheckPassword(player, oldPassword);
         if (!exist) {
-            player.sendMessage(LocalizationManager.Messages.get("playerOldPasswordNotRight").replace("%player%", name));
+            player.sendMessage(LocalizationManager.getMessage("playerOldPasswordNotRight", player).replace("%player%", name));
             return false;
         }
 
         boolean changed = SqliteManager.ChangePassword(player, newPassword);
         if (!changed) {
-            player.sendMessage(LocalizationManager.Messages.get("systemError").replace("%player%", name));
+            player.sendMessage(LocalizationManager.getMessage("systemError", player).replace("%player%", name));
         } else {
-            player.sendMessage(LocalizationManager.Messages.get("playerPasswordChanged").replace("%player%", name));
+            player.sendMessage(LocalizationManager.getMessage("playerPasswordChanged", player).replace("%player%", name));
         }
 
         return changed;
@@ -244,18 +250,18 @@ public class PlayerData {
         String banDateTime = String.format("%s %s", df.format(banDate), tf.format(banDate));
 
         switch (state) {
-            case Player_Not_Exist -> player.sendMessage(LocalizationManager.Messages.get("playerNotExist").replace("%player%", targetPlayer));
+            case Player_Not_Exist -> player.sendMessage(LocalizationManager.getMessage("playerNotExist", player).replace("%player%", targetPlayer));
             case Player_Banned -> {
                 if (target != null) {
-                    target.kickPlayer(LocalizationManager.Messages.get("playerBannedMessage")
+                    target.kickPlayer(LocalizationManager.getMessage("playerBannedMessage", player)
                             .replace("%player%", targetPlayer)
                             .replace("%master%", name)
                             .replace("%reason%", reason)
                             .replace("%banDate%", banDateTime));
                 }
-                player.sendMessage(LocalizationManager.Messages.get("playerBanned").replace("%player%", targetPlayer));
+                player.sendMessage(LocalizationManager.getMessage("playerBanned", player).replace("%player%", targetPlayer));
             }
-            case Player_Unbanned -> player.sendMessage(LocalizationManager.Messages.get("playerUnBanned").replace("%player%", targetPlayer));
+            case Player_Unbanned -> player.sendMessage(LocalizationManager.getMessage("playerUnBanned", player).replace("%player%", targetPlayer));
         }
     }
 

@@ -30,17 +30,6 @@ hcplayground:
   # 指令的别名
   aliases:
     - hc
-
-profileMenu:
-  permission: ''
-  runOnConsole: false
-  runOnPlayer: true
-  args: []
-  worlds:
-    - world
-  aliases:
-    - menu
-    - profile
 quartermaster:
   permission: hc.quartermaster.*
   runOnConsole: false
@@ -58,6 +47,18 @@ quartermaster:
     - quarter
     - master
     - qm
+menu:
+  permission: ''
+  runOnConsole: false
+  runOnPlayer: true
+  args: []
+  worlds: []
+profile:
+  permission: ''
+  runOnConsole: false
+  runOnPlayer: true
+  args: []
+  worlds: []
 login:
   runOnConsole: false
   runOnPlayer: true

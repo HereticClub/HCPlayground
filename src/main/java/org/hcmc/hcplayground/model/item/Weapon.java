@@ -92,7 +92,7 @@ public class Weapon extends ItemBaseA {
             /*
             添加AttributeModifier
             GENERIC_ATTACK_REACH 为实验性内容，当前版本暂不支持，临时注释以下代码
-            if (weapon.attackReach != 0) lores.add(String.format("%s 攻击距离", setColorString(weapon.attackReach, true)));
+            if (weapon.attackReach != 0) lore.add(String.format("%s 攻击距离", setColorString(weapon.attackReach, true)));
             AttributeModifier amAttackReach = new AttributeModifier(UUID.randomUUID(), Global.PluginName(), actualAttackSpeed, AttributeModifier.Operation.ADD_SCALAR, EquipmentSlot.HAND);
             im.addAttributeModifier(Attribute.GENERIC_ATTACK_REACH, amAttackReach);
             */

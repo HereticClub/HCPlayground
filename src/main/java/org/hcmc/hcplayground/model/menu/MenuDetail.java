@@ -1,4 +1,4 @@
-package org.hcmc.hcplayground.model.inventory;
+package org.hcmc.hcplayground.model.menu;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
@@ -10,14 +10,8 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
-public class InventoryDetail implements InventoryHolder {
+public class MenuDetail implements InventoryHolder {
 
-    @Expose
-    @SerializedName(value = "canDrag")
-    public boolean draggable = false;
-    @Expose
-    @SerializedName(value = "canDrop")
-    public boolean droppable = false;
     @Expose
     @SerializedName(value = "title")
     public String title;
@@ -29,7 +23,10 @@ public class InventoryDetail implements InventoryHolder {
     public int size = 54;
     @Expose
     @SerializedName(value = "decorates")
-    public List<InventorySlot> decorates = new ArrayList<>();
+    public List<MenuSlot> decorates = new ArrayList<>();
+    @Expose
+    @SerializedName(value = "worlds")
+    public List<String> enableWorlds = new ArrayList<>();
 
     @Expose(serialize = false, deserialize = false)
     public String id;
@@ -46,7 +43,7 @@ public class InventoryDetail implements InventoryHolder {
         return inventory;
     }
 
-    public InventorySlot getSlot(int slot) {
+    public MenuSlot getSlot(int slot) {
         return decorates.stream().filter(x -> x.number == slot).findAny().orElse(null);
     }
 }

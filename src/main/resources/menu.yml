@@ -1,11 +1,11 @@
 # 箱子界面的Id，必须唯一
-example:
-  # 箱子界面的显示标题，可以使用颜色代码
-  title: '&6异族游乐场 &8- &f主菜单'
-  # 表示当前箱子界面是否可以被放入物品，默认值: false
-  canDrop: true
-  # 表示是否可以从当前箱子界面拿出物品，默认值: false
-  canDrag: true
+menu:
+  # 箱子界面的显示标题，可以使用颜色代码，可以使用%player%占位符，表示打开箱子界面的玩家名称
+  title: '&f主菜单 &8- &b异族游乐场'
+  # 当前菜单可用的世界列表，如果不设置则所有世界都可用，但作为op身份的玩家忽略这个属性的设置
+  worlds:
+    - world1
+    - world2
   # 箱子界面的大小，最多填写54
   size: 54
   # 箱子界面的类型，必须是以下列表中的一种， 默认值: CHEST
@@ -40,19 +40,29 @@ example:
   # 物品栏的填充内容
   # slot: 物品插槽位置，基于1为开始的序列号，最大值54
   # displayText: 要显示的标题
+  # amount: 物品的数量，最大值: 64
   # material: 要显示的材质，如果该名称以字符串"head_"作为前缀，则材质表示为玩家头，后缀必须以玩家名称结尾，可以使用%player%占位符作为当前玩家
   # 例子: head_TerryNG9527，当前材质会显示名称为TerryNG9527的玩家头
-  # 如果设置了customSkull属性，则忽略玩家名称，以customSkull属性值作为玩家头材质
-  # customSkull: 自定义玩家头材质，如果该属性值不为空，则取代material属性以玩家作为玩家头的材质
+  # 例子: head_%player%，当前材质会显示为当前打开这个箱子界面的玩家的玩家头
+  # 如果设置了customSkull属性，则忽略material属性的玩家名称，但必须仍然以"head_"前缀为开头，以customSkull属性值作为玩家头材质
+  # customSkull: 自定义玩家头材质，必须是BASE64格式字符串，如果该属性值不为空，则取代material属性以玩家作为玩家头的材质，但material属性必须仍然以"head_"前缀为开头
   # LEFT_CLICK和RIGHT_CLICK: 玩家点击当前物品可以执行命令
   # LEFT_CLICK: 代表使用鼠标左键点击以执行命令
   # RIGHT_CLICK: 代表使用鼠标右键点击以执行命令
-  # 中括号内可使用以下关键字: CONSOLE, PLAYER, OP
-  # PLAYER: 表示以当前玩家身份和权限执行命令，如果没有设置中括号的值则作为默认值
-  # CONSOLE: 表示以控制台为角色执行命令
-  # OP: 表示当前玩家以OP角色执行命令
+  # 中括号内可使用以下关键字: CONSOLE, PLAYER
+  # PLAYER: 表示以当前玩家身份和权限执行命令
+  # CONSOLE: 表示以控制台为角色执行命令，如果没有设置中括号的值则作为默认值
   # 可以使用%player%占位符，表示当前执行命令的玩家名称
   # 例子: '[CONSOLE] give %player% stone 1' - 以控制台身份执行give命令，给予%player%玩家1个石头
+  # flags: 物品的标签，必须取以下值之一，如果设置了glowing属性值为true，则HIDE_ENCHANTS标签被强制加上
+  # HIDE_ATTRIBUTES - 设置显示/隐藏该Item的属性,例如伤害.
+  # HIDE_DESTROYS - 设置显示/隐藏哪些ItemStack可以被破坏.
+  # HIDE_DYE - 设置显示/隐藏彩色皮革盔甲的染料.
+  # HIDE_ENCHANTS - 设置显示/隐藏附魔.
+  # HIDE_PLACED_ON - 设置显示/隐藏哪些ItemStack可以被放置.
+  # HIDE_POTION_EFFECTS - 设置显示/隐藏ItemStack的药水效果.
+  # HIDE_UNBREAKABLE - 设置显示/隐藏不可破坏属性.
+  # glowing: 如果设置为true，物品会带有附魔效果，默认值: false
   # canDrop: 表示当前位置是否可以被放入物品，默认值: false
   # canDrag: 表示是否可以从当前位置拿出物品，默认值: false
   # lore: 要显示的说明，一般不会设置该属性
@@ -74,67 +84,82 @@ example:
   # RED_STAINED_GLASS_PANE - 红色染色玻璃板
   # BLACK_STAINED_GLASS_PANE - 黑色染色玻璃板
   decorates:
-    - slot: 46
-      displayText: '&8[御用装饰]'
-      material: yellow_stained_glass_pane
+    - slot: 5
+      displayText: '&f欢迎 &b%player%'
+      amount: 1
+      material: head_%player%
       customSkull: ''
       left_click:
-        - '[console] give %player% stone 1'
-      right_click:
-        - '[player] money %player%'
+        - '[player] profile'
+      right_click: []
+      glowing: true
       canDrop: false
       canDrag: false
+      flags: []
       lore: []
-    - slot: 47
-      displayText: '&8[御用装饰]'
-      material: yellow_stained_glass_pane
-      canDrop: false
-      canDrag: false
-      lore: []
-    - slot: 48
-      displayText: '&8[御用装饰]'
-      material: yellow_stained_glass_pane
-      lore: []
-    - slot: 49
-      displayText: '&8[御用装饰]'
-      material: yellow_stained_glass_pane
-      lore: []
-    - slot: 50
-      displayText: '&8[御用装饰]'
-      material: yellow_stained_glass_pane
-      lore: []
-    - slot: 51
-      displayText: '&8[御用装饰]'
-      material: yellow_stained_glass_pane
-      lore: []
-    - slot: 52
-      displayText: '&8[御用装饰]'
-      material: yellow_stained_glass_pane
-      lore: []
-    - slot: 53
-      displayText: '&8[御用装饰]'
-      material: yellow_stained_glass_pane
-      lore: []
-    - slot: 54
-      displayText: '&8[御用装饰]'
-      material: yellow_stained_glass_pane
-      lore: []
-      canDrop: true
-      canDrag: true
 profile:
-  title: '&6档案'
-  canDrop: false
-  canDrag: false
+  title: '&8玩家档案 &7- &b&l%player%'
   size: 54
   type: chest
   decorates:
     - slot: 5
       displayText: '&f玩家档案'
-      material: head_TerryNG9527
+      amount: 1
+      material: head_%player%
       canDrop: false
       canDrag: false
+      glowing: true
       left_click:
-        - '[console] give %player% stone 1'
-      right_click:
-        - '[player] hc reload'
-      lore: []
+        - '[player] menu'
+      right_click: []
+      lore:
+        - '&7这里展示了玩家的所有属性'
+    - slot: 21
+      displayText: 生命
+      material: apple
+      lore:
+        - '%hcplayground_health%'
+    - slot: 22
+      displayText: 攻击
+      material: diamond_sword
+      lore:
+        - '%hcplayground_damage%'
+    - slot: 23
+      displayText: 防御
+      material: diamond_chestplate
+      flags:
+        - HIDE_ATTRIBUTES
+      lore:
+        - '%hcplayground_armor%'
+    - slot: 24
+      displayText: 攻速
+      material: tipped_arrow
+      flags:
+        - HIDE_POTION_EFFECTS
+      lore:
+        - '%hcplayground_attackspeed%'
+    - slot: 25
+      displayText: 速度
+      material: diamond_boots
+      lore:
+        - '%hcplayground_workspeed%'
+    - slot: 30
+      displayText: 暴击
+      material: tnt
+      lore:
+        - '%hcplayground_critical%'
+    - slot: 31
+      displayText: 爆伤
+      material: lectern
+      lore:
+        - '%hcplayground_criticaldamage%'
+    - slot: 32
+      displayText: 智力
+      material: enchanted_book
+      lore:
+        - '%hcplayground_intelligence%'
+    - slot: 33
+      displayText: 掘速
+      material: diamond_pickaxe
+      lore:
+        - '%hcplayground_diggingspeed%'

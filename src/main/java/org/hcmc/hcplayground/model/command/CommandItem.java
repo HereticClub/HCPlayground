@@ -14,7 +14,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.manager.ItemManager;
 import org.hcmc.hcplayground.manager.LocalizationManager;
-import org.hcmc.hcplayground.manager.InventoryManager;
+import org.hcmc.hcplayground.manager.MenuManager;
 import org.hcmc.hcplayground.model.player.PlayerData;
 import org.hcmc.hcplayground.utility.Global;
 import org.jetbrains.annotations.NotNull;
@@ -40,7 +40,8 @@ public class CommandItem extends Command {
     public static final String COMMAND_CHANGE_PASSWORD = "changepassword";
     public static final String COMMAND_SEEN = "seen";
     public static final String COMMAND_BAN_PLAYER = "banplayer";
-    public static final String COMMAND_PROFILEMENU = "profilemenu";
+    public static final String COMMAND_PROFILE = "profile";
+    public static final String COMMAND_MENU = "menu";
     public static final String COMMAND_QUARTERMASTER = "quartermaster";
     public static final String COMMAND_QM_GIVE = "give";
     public static final String COMMAND_QM_HELP = "help";
@@ -98,6 +99,16 @@ public class CommandItem extends Command {
         super(name);
     }
 
+    /**
+     * 向Bukkit核心注册命令
+     */
+    public void Enroll(@NotNull CommandMap commandMap) {
+        if (plugin == null) plugin = HCPlayground.getPlugin();
+
+        setCommandMessage();
+        commandMap.register(plugin.getName(), this);
+    }
+
     @NotNull
     @Override
     public List<String> tabComplete(@NotNull CommandSender sender, @NotNull String alias, @NotNull String[] args) throws IllegalArgumentException {
@@ -141,9 +152,13 @@ public class CommandItem extends Command {
         if (!ValidateCommand(sender, args)) return false;
 
         try {
-            // 打开菜单指令
-            if (commandText.equalsIgnoreCase(COMMAND_PROFILEMENU)) {
-                return RunProfileMenuCommand((Player) sender);
+            // 打开主菜单指令 - /menu
+            if (commandText.equalsIgnoreCase(COMMAND_MENU)) {
+                return RunOpenChestMenuCommand((Player) sender, "menu");
+            }
+            // 打开玩家档案菜单指令 - /profile
+            if (commandText.equalsIgnoreCase(COMMAND_PROFILE)) {
+                return RunOpenChestMenuCommand((Player) sender, "profile");
             }
             // 军需官指令 - /quatermaster
             if (commandText.equalsIgnoreCase(COMMAND_QUARTERMASTER)) {
@@ -188,15 +203,59 @@ public class CommandItem extends Command {
         return false;
     }
 
-    /**
-     * 向Bukkit核心注册命令
-     */
-    public void Enroll(@NotNull CommandMap commandMap) {
-        if (plugin == null) plugin = HCPlayground.getPlugin();
+    // 执行hcplayground指令
+    private boolean RunHCPlaygroundCommand(CommandSender sender, String[] args) throws SQLException, NoSuchAlgorithmException, InvalidKeySpecException, NoSuchFieldException, IllegalAccessException, IOException {
+        // 当前hc指令需要至少1个参数
+        if (args.length <= 0) {
+            return ShowCommandHelp(sender, 0);
+        }
+        // /hc reload
+        if (args[0].equalsIgnoreCase(COMMAND_HC_RELOAD)) {
+            return RunHCReloadCommand(sender);
+        }
 
-        setCommandMessage();
-        commandMap.register(plugin.getName(), this);
+        // /hc help
+        if (args[0].equalsIgnoreCase(COMMAND_HC_HELP)) {
+            return ShowCommandHelp(sender, 0);
+        }
+
+        return false;
     }
+
+    private boolean RunQuartermasterCommand(CommandSender sender, String[] args) {
+        int amount = 1;
+
+        if (args.length <= 0) {
+            return ShowCommandHelp(sender, 1);
+        }
+
+        if (args.length >= 4 && args[3] != null && Global.patternNumber.matcher(args[3]).matches()) {
+            amount = Integer.parseInt(args[3]);
+        }
+
+        if (args[0].equalsIgnoreCase(COMMAND_QM_HELP)) {
+            return ShowCommandHelp(sender, 0);
+        }
+
+        if (args[0].equalsIgnoreCase(COMMAND_QM_GIVE)) {
+            return RunQMGiveCommand(sender, args, amount);
+        }
+
+        if (args[0].equalsIgnoreCase(COMMAND_QM_GUI)) {
+            return RunQMGuiCommand((Player) sender, args);
+        }
+
+        return false;
+    }
+
+    private boolean RunOpenChestMenuCommand(Player player, String menuId) {
+        Inventory inv = MenuManager.CreateMenu(menuId, player);
+        if (inv == null) return false;
+        player.openInventory(inv);
+
+        return true;
+    }
+
 
     private boolean RunHCReloadCommand(CommandSender sender) throws SQLException, NoSuchAlgorithmException, InvalidKeySpecException, NoSuchFieldException, IllegalAccessException, IOException {
         long a = new Date().getTime();
@@ -204,7 +263,7 @@ public class CommandItem extends Command {
 
         long b = new Date().getTime();
         long c = b - a;
-        sender.sendMessage(LocalizationManager.Messages.get("reload").replace("%time_escaped%", String.valueOf(c)));
+        sender.sendMessage(LocalizationManager.getMessage("reload", sender).replace("%time_escaped%", String.valueOf(c)));
 
         return true;
     }
@@ -223,47 +282,26 @@ public class CommandItem extends Command {
         for (OfflinePlayer o : offlinePlayers) {
             if (!Objects.requireNonNull(o.getName()).equalsIgnoreCase(args[0])) continue;
 
-            status = LocalizationManager.Messages.get(String.format("onlineStatusMessage.%s", o.isOnline()));
+            status = LocalizationManager.getMessage(String.format("onlineStatusMessage.%s", o.isOnline()), o.getPlayer());
             lastLogin.setTime(o.getLastPlayed());
             foundPlayer = true;
             break;
         }
 
         if (!foundPlayer) {
-            sender.sendMessage(LocalizationManager.Messages.get("playerNotExist").replace("%player%", args[0]));
+            sender.sendMessage(LocalizationManager.getMessage("playerNotExist", sender).replace("%player%", args[0]));
         } else {
-            String message = LocalizationManager.Messages.get("playerLastLoginTime");
+            String message = LocalizationManager.getMessage("playerLastLoginTime", sender);
             String loginFormat = Global.getDateFormat(lastLogin, DateFormat.FULL, Locale.CHINA);
             sender.sendMessage(message.replace("%onlineStatusMessage%", status).replace("%player%", args[0]).replace("%logintime%", loginFormat));
         }
         return true;
     }
 
-    // 执行hc指令
-    private boolean RunHCPlaygroundCommand(CommandSender sender, String[] args) throws SQLException, NoSuchAlgorithmException, InvalidKeySpecException, NoSuchFieldException, IllegalAccessException, IOException {
-        // 当前hc指令需要至少1个参数
-        if (args.length <= 0) {
-            ShowCommandHelp(sender, 0);
-            return false;
-        }
-        // /hc reload
-        if (args[0].equalsIgnoreCase(COMMAND_HC_RELOAD)) {
-            return RunHCReloadCommand(sender);
-        }
-
-        // /hc help
-        if (args[0].equalsIgnoreCase(COMMAND_HC_HELP)) {
-            ShowCommandHelp(sender, 0);
-            return true;
-        }
-
-        return false;
-    }
-
     private boolean RunUnRegisterCommand(CommandSender sender, String[] args) throws InvalidAlgorithmParameterException, SQLException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException, IllegalAccessException {
         // 该指令必须玩家执行
         if (!(sender instanceof Player player)) {
-            sender.sendMessage(LocalizationManager.Messages.get("console-message").replace("%command%", id));
+            sender.sendMessage(LocalizationManager.getMessage("console-message", sender).replace("%command%", id));
             return false;
         }
         // 检查参数数量，必须至少1个参数
@@ -279,7 +317,7 @@ public class CommandItem extends Command {
     private boolean RunLoginCommand(CommandSender sender, String[] args) throws InvalidAlgorithmParameterException, SQLException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException, IllegalAccessException {
         // 该指令必须玩家执行
         if (!(sender instanceof Player player)) {
-            sender.sendMessage(LocalizationManager.Messages.get("console-message").replace("%command%", id));
+            sender.sendMessage(LocalizationManager.getMessage("console-message", sender).replace("%command%", id));
             return false;
         }
         // 检查参数数量，必须至少1个参数
@@ -295,18 +333,18 @@ public class CommandItem extends Command {
     private boolean RunLogoutCommand(CommandSender sender, String[] args) {
         // 该指令必须玩家执行
         if (!(sender instanceof Player player)) {
-            sender.sendMessage(LocalizationManager.Messages.get("console-message").replace("%command%", id));
+            sender.sendMessage(LocalizationManager.getMessage("console-message", sender).replace("%command%", id));
             return false;
         }
 
-        player.kickPlayer(LocalizationManager.Messages.get("playerLogout").replace("%player%", player.getName()));
+        player.kickPlayer(LocalizationManager.getMessage("playerLogout", sender).replace("%player%", player.getName()));
         return true;
     }
 
     private boolean RunRegisterCommand(CommandSender sender, String[] args) throws SQLException, InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException, IllegalAccessException {
         // 该指令必须玩家执行
         if (!(sender instanceof Player player)) {
-            sender.sendMessage(LocalizationManager.Messages.get("console-message").replace("%command%", id));
+            sender.sendMessage(LocalizationManager.getMessage("console-message", sender).replace("%command%", id));
             return false;
         }
         // 检查参数数量，必须至少2个参数
@@ -316,7 +354,7 @@ public class CommandItem extends Command {
         }
         // 检查2个参数(密码)是否一样，不区分大小写
         if (!args[0].equalsIgnoreCase(args[1])) {
-            sender.sendMessage(LocalizationManager.Messages.get("playerPasswordNotMatch"));
+            sender.sendMessage(LocalizationManager.getMessage("playerPasswordNotMatch", sender));
             return false;
         }
 
@@ -327,7 +365,7 @@ public class CommandItem extends Command {
     private boolean RunChangePasswordCommand(CommandSender sender, String[] args) throws InvalidAlgorithmParameterException, SQLException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException, IllegalAccessException {
         // 该指令必须玩家执行
         if (!(sender instanceof Player player)) {
-            sender.sendMessage(LocalizationManager.Messages.get("console-message").replace("%command%", id));
+            sender.sendMessage(LocalizationManager.getMessage("console-message", sender).replace("%command%", id));
             return false;
         }
         // 检查参数数量，必须至少3个参数
@@ -336,7 +374,7 @@ public class CommandItem extends Command {
             return false;
         }
         if (!args[1].equalsIgnoreCase(args[2])) {
-            sender.sendMessage(LocalizationManager.Messages.get("playerPasswordNotMatch"));
+            sender.sendMessage(LocalizationManager.getMessage("playerPasswordNotMatch", sender));
             return false;
         }
 
@@ -347,7 +385,7 @@ public class CommandItem extends Command {
     private boolean RunBanPlayerCommand(CommandSender sender, String[] args) throws SQLException, IllegalAccessException {
         // 该指令必须玩家执行
         if (!(sender instanceof Player player)) {
-            sender.sendMessage(LocalizationManager.Messages.get("console-message").replace("%command%", id));
+            sender.sendMessage(LocalizationManager.getMessage("console-message", sender).replace("%command%", id));
             return false;
         }
         // 检查参数数量，必须至少2个参数
@@ -367,17 +405,9 @@ public class CommandItem extends Command {
         return true;
     }
 
-    private boolean RunProfileMenuCommand(Player player) {
-        Inventory inv = InventoryManager.CreateInventory("profile", player);
-        if (inv == null) return false;
-        player.openInventory(inv);
-
-        return true;
-    }
-
     private boolean RunQMGuiCommand(Player player, String[] args) {
         // TODO: 需要实施/quartermaster gui指令
-        player.sendMessage(LocalizationManager.Messages.get("UnderConstruction"));
+        player.sendMessage(LocalizationManager.getMessage("UnderConstruction", player));
         return true;
     }
 
@@ -391,46 +421,17 @@ public class CommandItem extends Command {
         return true;
     }
 
-    private boolean RunQuartermasterCommand(CommandSender sender, String[] args) {
-        int amount = 1;
-
-        if (args.length <= 0) {
-            ShowCommandHelp(sender, 1);
-            return false;
-        }
-
-        if (args.length >= 4 && args[3] != null && Global.patternNumber.matcher(args[3]).matches()) {
-            amount = Integer.parseInt(args[3]);
-        }
-
-        if (args[0].equalsIgnoreCase(COMMAND_QM_HELP)) {
-            ShowCommandHelp(sender, 0);
-            return true;
-        }
-
-        if (args[0].equalsIgnoreCase(COMMAND_QM_GIVE)) {
-            return RunQMGiveCommand(sender, args, amount);
-        }
-
-        if (args[0].equalsIgnoreCase(COMMAND_QM_GUI)) {
-
-            return RunQMGuiCommand((Player) sender, args);
-        }
-
-        return true;
-    }
-
     private boolean ValidateCommand(CommandSender sender, String[] args) {
         // 如果指令被定义为不能在控制台执行
         // 并且使用了控制台发送当前指令，验证失败
         if (!this.isConsole && sender instanceof ConsoleCommandSender) {
-            sender.sendMessage(LocalizationManager.Messages.get("console-message").replace("%command%", id));
+            sender.sendMessage(LocalizationManager.getMessage("console-message", sender).replace("%command%", id));
             return false;
         }
         // 如果指令被定义为不能通过玩家执行
         // 并且通过了玩家发送当前指令，验证失败
         if (!this.isPlayer && sender instanceof Player) {
-            sender.sendMessage(LocalizationManager.Messages.get("player-message").replace("%command%", id));
+            sender.sendMessage(LocalizationManager.getMessage("player-message", sender).replace("%command%", id));
             return false;
         }
         // 如果指令时可以通过控制台发送，则不验证权限
@@ -442,7 +443,7 @@ public class CommandItem extends Command {
             World world = player.getWorld();
             String worldName = world.getName();
             if (!worlds.contains(worldName) && worlds.size() != 0) {
-                sender.sendMessage(LocalizationManager.Messages.get("world-message").replace("%command%", id).replace("%world%", worldName));
+                sender.sendMessage(LocalizationManager.getMessage("world-message", sender).replace("%command%", id).replace("%world%", worldName));
                 return false;
             }
             // 验证指令的参数的权限
@@ -453,18 +454,18 @@ public class CommandItem extends Command {
                 CommandArgument arg = this.args.stream().filter(x -> x.name.equalsIgnoreCase(s)).findAny().orElse(null);
                 // 如果当前指令参数不在参数集合内，则指令语法错误，提示/<command> usage
                 if (arg == null) {
-                    sender.sendMessage(LocalizationManager.Messages.get(String.format("%s.usage", id)));
+                    sender.sendMessage(LocalizationManager.getMessage(String.format("%s.usage", id), sender));
                     return false;
                 }
                 // 如果当前指令参数不在参数列表的位置定义，则指令语法错误，提示/<command> usage
                 if (arg.index - 1 != Arrays.asList(args).indexOf(s)) {
-                    sender.sendMessage(LocalizationManager.Messages.get(String.format("%s.usage", id)));
+                    sender.sendMessage(LocalizationManager.getMessage(String.format("%s.usage", id), sender));
                     return false;
                 }
                 // 如当玩家不拥有前指令参数的权限，提示permission-message
                 if (!player.hasPermission(arg.permission) && !arg.permission.equalsIgnoreCase("")) {
                     //sender.sendMessage(this.permissionMessage);
-                    sender.sendMessage(LocalizationManager.Messages.get("permission-message").replace("%permission%", arg.permission));
+                    sender.sendMessage(LocalizationManager.getMessage("permission-message", sender).replace("%permission%", arg.permission));
                     return false;
                 }
             }
@@ -478,12 +479,14 @@ public class CommandItem extends Command {
         return true;
     }
 
-    private void ShowCommandHelp(CommandSender sender, int argLength) {
+    private boolean ShowCommandHelp(CommandSender sender, int argLength) {
         if (argLength >= 1) {
-            sender.sendMessage(LocalizationManager.Messages.get("parameterInCorrect").replace("%length%", String.valueOf(argLength)));
+            sender.sendMessage(LocalizationManager.getMessage("parameterInCorrect", sender).replace("%length%", String.valueOf(argLength)));
         }
         sender.sendMessage(getDescription());
         sender.sendMessage(getUsage().replace("<command>", getName()));
+
+        return true;
     }
 
     private void setCommandMessage() {
@@ -498,8 +501,8 @@ public class CommandItem extends Command {
 
         if (!this.permission.equalsIgnoreCase("")) this.setPermission(this.permission);
         this.setAliases(this.aliases);
-        this.setPermissionMessage(LocalizationManager.Messages.get("permission-message").replace("%permission%", permission));
-        this.setUsage(LocalizationManager.Messages.get(String.format("%s.usage", id)));
-        this.setDescription(LocalizationManager.Messages.get(String.format("%s.description", id)));
+        this.setPermissionMessage(LocalizationManager.getMessage("permission-message", null).replace("%permission%", permission));
+        this.setUsage(LocalizationManager.getMessage(String.format("%s.usage", id), null));
+        this.setDescription(LocalizationManager.getMessage(String.format("%s.description", id), null));
     }
 }

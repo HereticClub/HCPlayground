@@ -1,5 +1,6 @@
 package org.hcmc.hcplayground.listener;
 
+import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -8,6 +9,7 @@ import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.block.Block;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandMap;
+import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -18,6 +20,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.entity.EntitySpawnEvent;
+import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.Inventory;
@@ -32,15 +35,17 @@ import org.hcmc.hcplayground.manager.DropManager;
 import org.hcmc.hcplayground.manager.LocalizationManager;
 import org.hcmc.hcplayground.manager.MobManager;
 import org.hcmc.hcplayground.model.MobEntity;
-import org.hcmc.hcplayground.model.inventory.InventoryDetail;
-import org.hcmc.hcplayground.model.inventory.InventorySlot;
+import org.hcmc.hcplayground.model.menu.MenuDetail;
+import org.hcmc.hcplayground.model.menu.MenuSlot;
 import org.hcmc.hcplayground.model.player.PlayerData;
 import org.hcmc.hcplayground.utility.Global;
 import org.hcmc.hcplayground.utility.RandomNumber;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 /*
 Java 本身的编程思路就已经足够混乱
@@ -82,7 +87,13 @@ public class PluginListener implements Listener {
     public void onPlayerJoined(final PlayerJoinEvent event) throws SQLException, IllegalAccessException {
         Player player = event.getPlayer();
 
+        double a = player.getHealthScale();
+        player.setHealthScale(10);
+
         PlayerData playerData = Global.getPlayerData(player);
+        Global.LogMessage(String.format("\033[1;35mPlayerJoinEvent GameMode: \033[1;33m%s\033[0m", playerData.GameMode));
+        // 获取玩家的登陆时间
+        playerData.LoginTime = new Date().getTime() / 1000;
         if (playerData.isBanned()) return;
 
         boolean exist = playerData.Exist();
@@ -100,7 +111,6 @@ public class PluginListener implements Listener {
 
         PlayerData playerData = Global.getPlayerData(player);
         if (!playerData.getLogin()) event.setCancelled(true);
-
     }
 
     /**
@@ -114,6 +124,7 @@ public class PluginListener implements Listener {
         Player player = event.getPlayer();
 
         PlayerData playerData = Global.getPlayerData(player);
+        Global.LogMessage(String.format("\033[1;35mPlayerQuitEvent GameMode: \033[1;33m%s\033[0m", playerData.GameMode));
         player.setGameMode(playerData.GameMode);
         playerData.SaveConfig();
         Global.removePlayerData(player, playerData);
@@ -125,9 +136,10 @@ public class PluginListener implements Listener {
 
         Player player = event.getPlayer();
         PlayerData playerData = Global.getPlayerData(player);
-        if(!playerData.getLogin()) return;
+        if (!playerData.getLogin()) return;
 
         playerData.GameMode = event.getNewGameMode();
+        Global.LogMessage(String.format("\033[1;35mPlayerGameModeChangeEvent GameMode: \033[1;33m%s\033[0m", playerData.GameMode));
 
         Global.setPlayerData(player, playerData);
     }
@@ -148,8 +160,8 @@ public class PluginListener implements Listener {
         String playerName = player.getName();
 
         if (!playerData.getLogin() && !command.getName().equalsIgnoreCase(COMMAND_LOGIN) && !command.getName().equalsIgnoreCase(COMMAND_REGISTER)) {
-            player.sendMessage(LocalizationManager.Messages.get("playerNoLogin").replace("%player%", playerName));
-            Global.LogWarning(String.format("%s try to issue command %s before login", playerName, message));
+            player.sendMessage(LocalizationManager.getMessage("playerNoLogin", player).replace("%player%", playerName));
+            Global.LogWarning(String.format("%s tries to issue command %s before login", playerName, message));
             event.setCancelled(true);
         }
     }
@@ -378,34 +390,65 @@ public class PluginListener implements Listener {
         // 获取打开的箱子界面并且当前箱子是否属于InventoryDetail实例
         Inventory inv = event.getInventory();
         InventoryHolder holder = inv.getHolder();
+        HumanEntity human = event.getWhoClicked();
         // 检测是否打开了属于InventoryDetail实例创建的箱子
-        if (!(holder instanceof InventoryDetail detail)) return;
+        if (!(holder instanceof MenuDetail detail)) return;
+        // 检测点击箱子界面的实体是否为玩家
+        if (!(human instanceof Player player)) return;
         // 检测玩家点击的箱子界面是否属于玩家的背包或快捷栏
         // 如果使用了鼠标单击则忽略事件
         // 如果使用了SHIFT+鼠标点击则取消事件
         Inventory pInv = event.getClickedInventory();
         boolean isPlayerInventory = pInv instanceof PlayerInventory;
-        if(isPlayerInventory) {
+        if (isPlayerInventory) {
             if (event.isShiftClick()) event.setCancelled(true);
             return;
         }
         // 获得玩家点击箱子中某个格子的InventorySlot实例
         // 检测当前点击的格子位置是否可放可拿
         int index = event.getSlot();
-        InventorySlot slot = detail.getSlot(index + 1);
-        // 玩家的背包和快捷栏可以点击和移动，但不能使用SHIFT+点击，因为之前已经被禁用
-        if(slot == null || !slot.draggable || !slot.droppable) {
+        MenuSlot slot = detail.getSlot(index + 1);
+        if (slot == null) {
             event.setCancelled(true);
             return;
         }
 
-        HumanEntity human = event.getWhoClicked();
-        if(!(human instanceof Player player)) return;
+        List<String> commands = new ArrayList<>();
+        ClickType clickType = event.getClick();
+        if (clickType.equals(ClickType.LEFT)) commands = slot.leftCommands;
+        if (clickType.equals(ClickType.RIGHT)) commands = slot.rightCommands;
 
+        for (String s : commands) {
+            int firstSpace = s.indexOf(" ");
+            String key = firstSpace >= 1 ? s.substring(0, firstSpace) : s;
+            String command = firstSpace >= 1 ? s.substring(firstSpace + 1) : s;
+            command = command.replace("%player%", player.getName()).trim();
+            if (key.contains("[console]") || !key.contains("[") || !key.contains("]")) {
+                runConsoleCommand(command, player);
+            }
+            if (key.contains("[player]")) {
+                runPlayerCommand(command, player);
+            }
+        }
+
+
+        if (!slot.draggable || !slot.droppable) event.setCancelled(true);
     }
 
     @EventHandler
     public void onInventoryClicked1(InventoryClickEvent event) {
 
+    }
+
+    private void runConsoleCommand(String command, Player player) {
+        ConsoleCommandSender sender = Bukkit.getConsoleSender();
+        Bukkit.dispatchCommand(sender, command);
+
+        Global.LogMessage(String.format("%s issued a console command: %s", player.getName(), command));
+    }
+
+    private void runPlayerCommand(String command, Player player) {
+        player.performCommand(command);
+        Global.LogMessage(String.format("%s issued a player command: %s", player.getName(), command));
     }
 }

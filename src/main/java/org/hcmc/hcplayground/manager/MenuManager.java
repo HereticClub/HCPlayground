@@ -3,71 +3,103 @@ package org.hcmc.hcplayground.manager;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import com.mojang.authlib.properties.PropertyMap;
+import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.plugin.Plugin;
 import org.hcmc.hcplayground.HCPlayground;
-import org.hcmc.hcplayground.model.inventory.InventoryDetail;
-import org.hcmc.hcplayground.model.inventory.InventorySlot;
+import org.hcmc.hcplayground.model.menu.MenuDetail;
+import org.hcmc.hcplayground.model.menu.MenuSlot;
 import org.hcmc.hcplayground.utility.Global;
 import org.hcmc.hcplayground.utility.MaterialData;
 
 import java.lang.reflect.Field;
 import java.util.*;
 
-public class InventoryManager {
+public class MenuManager {
 
-    public static List<InventoryDetail> Items = new ArrayList<>();
+    public static List<MenuDetail> Items = new ArrayList<>();
     public static Plugin plugin = HCPlayground.getPlugin();
     private static Player player;
 
     private final static String GAMEPROFILE_PROPERTY_NAME_TEXTURES = "textures";
     private final static String SKULLMETA_FIELD_NAME_PROFILE = "profile";
 
-    public InventoryManager() {
+    public MenuManager() {
 
     }
 
     public static void Load(YamlConfiguration yaml) throws IllegalAccessException {
-        Items = Global.SetItemList(yaml, InventoryDetail.class);
+        Items = Global.SetItemList(yaml, MenuDetail.class);
     }
 
-    public static Inventory CreateInventory(String TemplateId, Player sender) {
-        InventoryDetail item = Items.stream().filter(x -> x.id.equalsIgnoreCase(TemplateId)).findAny().orElse(null);
-        if (item == null) return Bukkit.createInventory(null, InventoryType.CHEST, "Error Inventory");
-
+    public static Inventory CreateMenu(String MenuId, Player sender) {
         player = sender;
+        MenuDetail item = Items.stream().filter(x -> x.id.equalsIgnoreCase(MenuId)).findAny().orElse(null);
+        if (item == null) return null;
+        String value = Global.GsonObject.toJson(item, MenuDetail.class);
+        value = PlaceholderAPI.setPlaceholders(player, value);
+        MenuDetail detail = Global.GsonObject.fromJson(value, MenuDetail.class);
 
-        return switch (item.type) {
-            case ANVIL -> createAnvilInventory(item);
-            case CHEST -> createChestInventory(item);
-            default -> Bukkit.createInventory(item, item.type, item.title);
+        String title = detail.title.replace("%player%", player.getName());
+        String worldName = player.getWorld().getName();
+        boolean isCurentWorld = detail.enableWorlds.stream().anyMatch(x -> x.equalsIgnoreCase(worldName));
+        if (detail.enableWorlds.size() >= 1 && !isCurentWorld && !player.isOp()) {
+            player.sendMessage(LocalizationManager.getMessage("menuWorldProhibited", player)
+                    .replace("%world%", worldName)
+                    .replace("%menu%", title)
+            );
+            return null;
+        }
+
+        return switch (detail.type) {
+            case ANVIL -> createAnvilInventory(detail, title);
+            case CHEST -> createChestInventory(detail, title);
+            default -> Bukkit.createInventory(detail, detail.type, title);
         };
     }
 
-    private static Inventory createAnvilInventory(InventoryDetail item) {
-        return Bukkit.createInventory(item, item.type, item.title);
+    private static Inventory createAnvilInventory(MenuDetail item, String title) {
+        return Bukkit.createInventory(item, item.type, title);
     }
 
-    private static Inventory createChestInventory(InventoryDetail item) {
-        Inventory inv = Bukkit.createInventory(item, item.size, item.title);
-        for (InventorySlot d : item.decorates) {
-            ItemStack is = d.material.value.equals(Material.PLAYER_HEAD) && d.customSkull.isEmpty() ? ResolvePlayerHead(d.material) : ResolveCustomHead(d.customSkull);
+    private static Inventory createChestInventory(MenuDetail item, String title) {
+        Inventory inv = Bukkit.createInventory(item, item.size, title);
+
+        for (MenuSlot d : item.decorates) {
+            ItemStack is;
+
+            if (!d.material.value.equals(Material.PLAYER_HEAD)) {
+                is = new ItemStack(d.material.value, d.amount);
+            } else {
+                is = d.customSkull.isEmpty() ? ResolvePlayerHead(d.material) : ResolveCustomHead(d.customSkull);
+            }
+
             ItemMeta im = is.getItemMeta();
             if (im == null) continue;
 
+            im.addItemFlags(d.flags.toArray(new ItemFlag[0]));
             im.setLore(d.lore);
-            im.setDisplayName(d.text);
-            is.setItemMeta(im);
+            im.setDisplayName(d.text.replace("%player%", player.getName()));
 
+            if (d.glowing) {
+                im.addEnchant(Enchantment.MENDING, 1, true);
+                Set<ItemFlag> flags = im.getItemFlags();
+                if (!flags.contains(ItemFlag.HIDE_ENCHANTS)) {
+                    im.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+                }
+            }
+
+            is.setItemMeta(im);
             inv.setItem(d.number - 1, is);
         }
 

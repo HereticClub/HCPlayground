@@ -33,7 +33,8 @@ public class ItemBaseDeserializer implements JsonDeserializer<ItemBase> {
 
         if (ib == null) {
             ib = new ItemBaseX();
-            MaterialData md = new MaterialData(m, m.name());
+            MaterialData md = new MaterialData();
+            md.setData(m, m.name());
             ib.setId(null);
             ib.setMaterial(md);
         }

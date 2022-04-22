@@ -21,10 +21,7 @@ import org.hcmc.hcplayground.model.player.PlayerData;
 import org.hcmc.hcplayground.utility.Global;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 public class PluginRunnable extends BukkitRunnable {
 
@@ -46,8 +43,8 @@ public class PluginRunnable extends BukkitRunnable {
     @Override
     public void run() {
         try {
+            doOnlinePlayerTask();
             doBroadcastTask();
-            doBukkitTask();
             doClearLag();
         } catch (NoSuchFieldException | IllegalAccessException e) {
             e.printStackTrace();
@@ -90,12 +87,13 @@ public class PluginRunnable extends BukkitRunnable {
         }
     }
 
-    private void doBukkitTask() throws NoSuchFieldException, IllegalAccessException {
-        for (PlayerData pd : Global.playerMap.values()) {
-            // 每秒更新自1970年1月1日开始至今的总秒数
-            totalSeconds = new Date().getTime() / 1000;
-            // 初始化每玩家的检查点时间
-            if (pd.CheckpointTime == 0) pd.CheckpointTime = totalSeconds;
+    private void doOnlinePlayerTask() throws NoSuchFieldException, IllegalAccessException {
+        // 获取所有在线玩家实例
+        Player[] players = plugin.getServer().getOnlinePlayers().toArray(new Player[0]);
+        // 每秒更新自1970年1月1日开始至今的总秒数
+        totalSeconds = new Date().getTime() / 1000;
+        for (Player player : players) {
+            PlayerData pd = Global.getPlayerData(player);
 
             doRemindLogin(pd);
             doPotionEffect(pd);
@@ -109,8 +107,8 @@ public class PluginRunnable extends BukkitRunnable {
      * @throws IllegalAccessException
      */
     private void doPotionEffect(PlayerData pd) throws IllegalAccessException {
-        int interval = (int) (totalSeconds - pd.CheckpointTime) % Global.offhandPotionEffect.refreshInterval + 1;
-        if (interval < Global.offhandPotionEffect.refreshInterval) return;
+        int interval = (int) (totalSeconds - pd.LoginTime) % Global.potion.refreshInterval + 1;
+        if (interval < Global.potion.refreshInterval) return;
 
         Player player = plugin.getServer().getPlayer(pd.getUuid());
         if (player == null) return;
@@ -155,23 +153,21 @@ public class PluginRunnable extends BukkitRunnable {
         Player player = plugin.getServer().getPlayer(pd.getUuid());
         if (player == null) return;
 
-        int interval = (int) (totalSeconds - pd.CheckpointTime) % Global.authme.remainInterval + 1;
+        int interval = (int) (totalSeconds - pd.LoginTime) % Global.authme.remainInterval + 1;
         if (interval >= Global.authme.remainInterval) {
             long remain = Global.authme.timeout - (totalSeconds - loginSeconds);
             if (!isRegister) {
-                player.sendMessage(LocalizationManager.Messages.get("playerRegisterRemind").replace("%remain%", String.valueOf(remain)));
+                player.sendMessage(LocalizationManager.getMessage("playerRegisterRemind", player).replace("%remain%", String.valueOf(remain)));
             } else {
-                player.sendMessage(LocalizationManager.Messages.get("playerLoginRemind").replace("%remain%", String.valueOf(remain)));
+                player.sendMessage(LocalizationManager.getMessage("playerLoginRemind", player).replace("%remain%", String.valueOf(remain)));
             }
         }
         if (totalSeconds - loginSeconds >= Global.authme.timeout) {
             if (!isRegister) {
-                player.kickPlayer(LocalizationManager.Messages.get("playerRegisterTimeout").replace("%player%", player.getName()));
+                player.kickPlayer(LocalizationManager.getMessage("playerRegisterTimeout", player).replace("%player%", player.getName()));
             } else {
-                player.kickPlayer(LocalizationManager.Messages.get("playerLoginTimeout").replace("%player%", player.getName()));
+                player.kickPlayer(LocalizationManager.getMessage("playerLoginTimeout", player).replace("%player%", player.getName()));
             }
         }
-
-        Global.playerMap.put(pd.getUuid(), pd);
     }
 }

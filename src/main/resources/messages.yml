@@ -86,13 +86,24 @@ messages:
     &cYour account &e%player% &chas been banned by %master%
     &7please contact game master if any question
     &7Reason: &e%reason%
+  # 当菜单不能在某个世界打开时显示
+  # 可以使用%world%占位符，表示禁止打开菜单的世界名称
+  # 可以使用%menu%占位符，表示正在打开的菜单标题
+  menuWorldProhibited: '&c不能在&e%world%&c世界打开%menu%&c菜单'
   # 异族游乐场主菜单指令说明，必须与定义的指令名称一致
   menu:
     # 指令说明，当使用/help menu时显示
-    description: Open the main menu of HCPlayground for player
+    description: Open the main menu for a player
     # 指令的帮助提示，当使用/help menu时显示
     usage: |-
-      §9/<command> §7- §fOpen the main menu of HCPlayground for player(chest box style)
+      §9/<command> §7- §fOpen the main menu for a player
+  # 异族游乐场主菜单指令说明，必须与定义的指令名称一致
+  profile:
+    # 指令说明，当使用/help profile时显示
+    description: Open the player profile menu
+    # 指令的帮助提示，当使用/help profile时显示
+    usage: |-
+      §9/<command> §7- §fOpen the player profile menu
   # 军需官指令说明，必须与定义的指令名称一致
   quartermaster:
     description: The quartermaster, who manages weapons, off-hand items, armor, accessories

@@ -4,7 +4,7 @@ authme:
   remainInterval: 5
   # 在时间段内仍然没有注册或者登录，则被踢出服务器，单位: 秒
   timeout: 60
-# 副手物品药水效果设置
-offhandPotionEffect:
+# 物品药水效果设置
+potion:
   # 药水效果刷新时间，单位: 秒
   refreshInterval: 5

@@ -6,7 +6,6 @@ import com.sk89q.worldguard.WorldGuard;
 import net.milkbowl.vault.chat.Chat;
 import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.permission.Permission;
-import org.bukkit.Material;
 import org.bukkit.command.CommandMap;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -26,7 +25,7 @@ import org.bukkit.scoreboard.ScoreboardManager;
 import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.deserializer.*;
 import org.hcmc.hcplayground.model.config.Authme;
-import org.hcmc.hcplayground.model.config.OffhandPotionEffect;
+import org.hcmc.hcplayground.model.config.Potion;
 import org.hcmc.hcplayground.model.item.ItemBaseA;
 import org.hcmc.hcplayground.model.player.PlayerData;
 import org.hcmc.hcplayground.scheduler.PluginRunnable;
@@ -56,7 +55,7 @@ public final class Global {
     public final static String PERSISTENT_CRIT_KEY = "crit";
     public final static String PERSISTENT_POTIONS_KEY = "potions";
     public final static String CONFIG_AUTHME = "authme";
-    public final static String CONFIG_OFFHANDPOTIONEFFECT = "offhandPotionEffect";
+    public final static String CONFIG_POTION = "potion";
     public final static String FIELD_NAME_COMMANDMAP = "commandMap";
     public final static Pattern patternNumber = Pattern.compile("-?\\d+(\\.\\d+)?");
 
@@ -66,7 +65,7 @@ public final class Global {
     public static Gson GsonObject;
     public static Scoreboard HealthScoreboard;
     public static Authme authme = null;
-    public static OffhandPotionEffect offhandPotionEffect = null;
+    public static Potion potion = null;
     public static Connection Sqlite = null;
     public static WorldGuard WorldGuardApi = null;
     public static Economy EconomyApi = null;
@@ -88,7 +87,7 @@ public final class Global {
                 "messages.yml",
                 "levels.yml",
                 "command.yml",
-                "inventory.yml",
+                "menu.yml",
                 "permission.yml",
                 "mobs.yml",
                 "broadcast.yml",
@@ -148,10 +147,10 @@ public final class Global {
             value = GsonObject.toJson(section.getValues(false));
             authme = GsonObject.fromJson(value, Authme.class);
         }
-        section = config.getConfigurationSection(CONFIG_OFFHANDPOTIONEFFECT);
+        section = config.getConfigurationSection(CONFIG_POTION);
         if (section != null) {
             value = GsonObject.toJson(section.getValues(false));
-            offhandPotionEffect = GsonObject.fromJson(value, OffhandPotionEffect.class);
+            potion = GsonObject.fromJson(value, Potion.class);
         }
     }
 
@@ -232,6 +231,7 @@ public final class Global {
 
         if (pd == null) {
             pd = new PlayerData(player);
+            Global.LogMessage(String.format("\033[1;35mgetPlayerData GameMode: \033[1;33m%s\033[0m", player.getGameMode()));
             pd.GameMode = player.getGameMode();
             pd.LoadConfig();
         }
@@ -246,11 +246,13 @@ public final class Global {
      */
     public static void setPlayerData(Player player, PlayerData data) {
         UUID playerUuid = player.getUniqueId();
+        Global.LogMessage(String.format("\033[1;35msetPlayerData GameMode: \033[1;33m%s\033[0m", data.GameMode));
         playerMap.put(playerUuid, data);
     }
 
     public static void removePlayerData(Player player, PlayerData data) {
         UUID playerUuid = player.getUniqueId();
+        Global.LogMessage(String.format("\033[1;35mremovePlayerData GameMode: \033[1;33m%s\033[0m", data.GameMode));
         playerMap.remove(playerUuid, data);
     }
 

@@ -1,8 +1,14 @@
 package org.hcmc.hcplayground.manager;
 
+import me.clip.placeholderapi.PlaceholderAPI;
+import org.bukkit.OfflinePlayer;
+import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -28,5 +34,11 @@ public class LocalizationManager {
 
             Messages.put(s, value.replace('&', '§'));
         }
+    }
+
+    public static String getMessage(String key, CommandSender sender) {
+        String value = Messages.get(key);
+        if (sender instanceof Player player) value = PlaceholderAPI.setPlaceholders(player, value);
+        return value;
     }
 }

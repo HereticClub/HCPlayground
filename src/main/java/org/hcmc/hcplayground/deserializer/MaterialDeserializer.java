@@ -1,17 +1,15 @@
 package org.hcmc.hcplayground.deserializer;
 
-import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonDeserializer;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParseException;
+import com.google.gson.*;
 import org.bukkit.Material;
+import org.hcmc.hcplayground.utility.Global;
 import org.hcmc.hcplayground.utility.MaterialData;
 
 import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.List;
 
-public class MaterialDeserializer implements JsonDeserializer<MaterialData> {
+public class MaterialDeserializer implements JsonDeserializer<MaterialData>, JsonSerializer<MaterialData> {
 
     public MaterialDeserializer() {
 
@@ -35,6 +33,11 @@ public class MaterialDeserializer implements JsonDeserializer<MaterialData> {
         data.name = element;
 
         return data;
+    }
+
+    @Override
+    public JsonElement serialize(MaterialData data, Type type, JsonSerializationContext jsonSerializationContext) {
+        return new JsonPrimitive(data.name);
     }
 }
 
