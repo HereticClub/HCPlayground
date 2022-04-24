@@ -1,6 +1,7 @@
 package org.hcmc.hcplayground.model.item;
 
 import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.enchantments.Enchantment;
@@ -17,10 +18,13 @@ import java.util.List;
 import java.util.UUID;
 
 public class Hand extends ItemBaseA {
-
+    // 幸运值
     @Expose
+    @SerializedName(value = PERSISTENT_LUCK_KEY)
     public float luck = 0.0f;
+    // 药水效果
     @Expose
+    @SerializedName(value = PERSISTENT_POTIONS_KEY)
     public PotionEffect[] potions;
 
     public Hand() {
@@ -29,11 +33,11 @@ public class Hand extends ItemBaseA {
 
     public ItemStack toItemStack() {
         ItemStack is = new ItemStack(this.getMaterial().value, 1);
-        ItemMeta im = SetBaseItemMeta(is);
+        ItemMeta im = this.setBaseItemMeta(is);
 
         if (im != null) {
             /*
-            获取已设置的lores
+            获取已设置的lore
             */
             List<String> lore = im.getLore();
             if (lore == null) lore = new ArrayList<>();

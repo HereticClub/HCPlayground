@@ -90,7 +90,7 @@ public class Join extends ItemBaseA {
         }
         // 判断物品只是简单的物品，即没有额外的Meta类型的数据
         // 设置基本的ItemMeta
-        im = SetBaseItemMeta(is);
+        im = this.setBaseItemMeta(is);
         // 添加附魔效果
         if (this.getGlowing()) {
             im.addEnchant(Enchantment.MENDING, 1, true);

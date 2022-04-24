@@ -105,7 +105,7 @@ public class HCPluginExpansion extends PlaceholderExpansion {
         Player player = offlinePlayer.getPlayer();
         if (player == null) return "Health Unknown";
 
-        double health = player.getHealth();
+        double health = player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue();
 
         return String.valueOf(health);
     }

@@ -50,10 +50,6 @@ public final class Global {
     private final static String[] ymlFilenames;
     private final static JavaPlugin plugin;
 
-    public final static String PERSISTENT_MAIN_KEY = "hccraft";
-    public final static String PERSISTENT_SUB_KEY = "content";
-    public final static String PERSISTENT_CRIT_KEY = "crit";
-    public final static String PERSISTENT_POTIONS_KEY = "potions";
     public final static String CONFIG_AUTHME = "authme";
     public final static String CONFIG_POTION = "potion";
     public final static String FIELD_NAME_COMMANDMAP = "commandMap";

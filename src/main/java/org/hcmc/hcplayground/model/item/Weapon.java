@@ -24,31 +24,49 @@ public class Weapon extends ItemBaseA {
      * 攻击伤害
      */
     @Expose
-    @SerializedName(value = "attackDamage")
+    @SerializedName(value = PERSISTENT_ATTACK_DAMAGE_KEY)
     public float attackDamage = 0.0F;
     /**
      * 攻击距离，实验性内容，该版本暂不支持，保留属性
      */
     @Expose
-    @SerializedName(value = "attackReach")
+    @SerializedName(value = ItemBase.PERSISTENT_ATTACK_REACH_KEY)
     public float attackReach = 0;
     /**
      * 攻击速度
      */
     @Expose
-    @SerializedName(value = "attackSpeed")
+    @SerializedName(value = ItemBase.PERSISTENT_ATTACK_SPEED_KEY)
     public float attackSpeed = 0.0F;
     /**
      * 暴击
      */
     @Expose
-    @SerializedName(value = "crit")
-    public float crit = 0.0F;
+    @SerializedName(value = ItemBase.PERSISTENT_CRITICAL_KEY)
+    public float critical = 0.0F;
+    /**
+     * 爆伤
+     */
+    @Expose
+    @SerializedName(value = ItemBase.PERSISTENT_CRITICAL_DAMAGE_KEY)
+    public float criticalDamage = 1.50F;
+    /**
+     * 吸血
+     */
+    @Expose
+    @SerializedName(value = ItemBase.PERSISTENT_BLOOD_SUCKING_KEY)
+    public float bloodSucking = 0.0F;
+    /**
+     * 生命值
+     */
+    @Expose
+    @SerializedName(value = ItemBase.PERSISTENT_HEALTH_KEY)
+    public float health = 0.0F;
     /**
      * 附加在武器上的药水效果
      */
     @Expose
-    @SerializedName(value = "potions")
+    @SerializedName(value = ItemBase.PERSISTENT_POTIONS_KEY)
     public PotionEffect[] potions;
 
     public Weapon() {
@@ -60,16 +78,10 @@ public class Weapon extends ItemBaseA {
         将Item Model转换为ItemStack对象，并且为ItemStack添加的新命名空间和新的物品ID
         */
         ItemStack is = new ItemStack(this.getMaterial().value, 1);
-        ItemMeta im = SetBaseItemMeta(is);
+        ItemMeta im = this.setBaseItemMeta(is);
 
         if (im != null) {
-            /*
-            为物品添加额外特性信息，比如暴击等MC本身没有的特性
-            */
-            SetPersistentData(im);
-            /*
-            获取已设置的lore
-            */
+            // 获取已设置的lore
             List<String> lore = im.getLore();
             if (lore == null) lore = new ArrayList<>();
             lore.add("");
@@ -80,15 +92,23 @@ public class Weapon extends ItemBaseA {
             actualAttackSpeed - 武器的实际攻击速度，需要减去玩家默认攻击伤害值4
             actualCrit - 武器暴击率，MC本身没有的特性，但需要按百分比显示
             */
+
             float actualAttackDamage = this.attackDamage - 1;
             float actualAttackSpeed = this.attackSpeed - 4;
-            float actualCrit = this.crit * 100;
+            this.attackReach = 3 * (1 + this.attackReach);
+
             lore.add("§7在主手时:");
             if (this.attackDamage != 0)
-                lore.add(String.format("%s 攻击伤害", setColorString(this.attackDamage, true, false)));
+                lore.add(String.format("%s 攻击伤害", setLoreString(this.attackDamage, true, false)));
             if (this.attackSpeed != 0)
-                lore.add(String.format("%s 攻击速度", setColorString(this.attackSpeed, true, false)));
-            if (this.crit != 0) lore.add(String.format("%s 暴击", setColorString(actualCrit, true, true)));
+                lore.add(String.format("%s 攻击速度", setLoreString(this.attackSpeed, true, false)));
+            if (this.attackReach != 0)
+                lore.add(String.format("%s 攻击距离", setLoreString(this.attackReach, true, false)));
+            if (this.critical != 0) lore.add(String.format("%s 暴击", setLoreString(this.critical, true, true)));
+            if (this.criticalDamage != 0)
+                lore.add(String.format("%s 爆伤", setLoreString(this.criticalDamage, true, true)));
+            if (this.health != 0) lore.add(String.format("%s 生命", setLoreString(this.health, true, false)));
+            if (this.bloodSucking != 0) lore.add(String.format("%s 吸血", setLoreString(this.bloodSucking, true, true)));
             /*
             添加AttributeModifier
             GENERIC_ATTACK_REACH 为实验性内容，当前版本暂不支持，临时注释以下代码
@@ -107,6 +127,8 @@ public class Weapon extends ItemBaseA {
                 im.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
             }
 
+            // 为物品添加额外特性信息，比如暴击等MC本身没有的特性
+            SetPersistentData(im);
             im.setLore(lore);
             is.setItemMeta(im);
         }
@@ -118,13 +140,22 @@ public class Weapon extends ItemBaseA {
         /*
         设置NamespaceKey，比如暴击等MC没有的特性的命名空间名称
         */
-        NamespacedKey subKey = new NamespacedKey(plugin, Global.PERSISTENT_SUB_KEY);
-        NamespacedKey critKey = new NamespacedKey(plugin, Global.PERSISTENT_CRIT_KEY);
+        NamespacedKey subKey = new NamespacedKey(plugin, PERSISTENT_SUB_KEY);
+        NamespacedKey criticalKey = new NamespacedKey(plugin, PERSISTENT_CRITICAL_KEY);
+        NamespacedKey healthKey = new NamespacedKey(plugin, PERSISTENT_HEALTH_KEY);
+        NamespacedKey reachKey = new NamespacedKey(plugin, PERSISTENT_ATTACK_REACH_KEY);
+        NamespacedKey bloodSuckingKey = new NamespacedKey(plugin, PERSISTENT_BLOOD_SUCKING_KEY);
+        NamespacedKey criticalDamageKey = new NamespacedKey(plugin, PERSISTENT_CRITICAL_DAMAGE_KEY);
 
         PersistentDataContainer mainContainer = im.getPersistentDataContainer();
         PersistentDataContainer subContainer = mainContainer.getAdapterContext().newPersistentDataContainer();
 
-        subContainer.set(critKey, PersistentDataType.FLOAT, this.crit);
+        subContainer.set(criticalKey, PersistentDataType.FLOAT, this.critical);
+        subContainer.set(criticalDamageKey, PersistentDataType.FLOAT, this.criticalDamage);
+        subContainer.set(healthKey, PersistentDataType.FLOAT, this.health);
+        subContainer.set(bloodSuckingKey, PersistentDataType.FLOAT, this.bloodSucking);
+        subContainer.set(reachKey, PersistentDataType.FLOAT, this.attackReach);
+
         mainContainer.set(subKey, PersistentDataType.TAG_CONTAINER, subContainer);
     }
 }

@@ -8,17 +8,11 @@ import org.hcmc.hcplayground.utility.MaterialData;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MenuSlot {
+public class MenuItem {
 
     private final static String COMMAND_PERFORM_CONSOLE = "[console]";
     private final static String COMMAND_PERFORM_PLAYER = "[player]";
     private final static String COMMAND_PERFORM_OP = "[op]";
-
-    private final static String[] CommandPerformTypes = new String[]{
-            COMMAND_PERFORM_CONSOLE,
-            COMMAND_PERFORM_PLAYER,
-            COMMAND_PERFORM_OP,
-    };
 
     @Expose
     @SerializedName(value = "canDrag")
@@ -57,7 +51,7 @@ public class MenuSlot {
     @SerializedName(value = "glowing")
     public boolean glowing = false;
 
-    public MenuSlot() {
+    public MenuItem() {
 
     }
 }

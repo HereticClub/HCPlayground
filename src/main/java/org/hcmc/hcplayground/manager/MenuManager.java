@@ -18,7 +18,7 @@ import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.plugin.Plugin;
 import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.model.menu.MenuDetail;
-import org.hcmc.hcplayground.model.menu.MenuSlot;
+import org.hcmc.hcplayground.model.menu.MenuItem;
 import org.hcmc.hcplayground.utility.Global;
 import org.hcmc.hcplayground.utility.MaterialData;
 
@@ -75,7 +75,7 @@ public class MenuManager {
     private static Inventory createChestInventory(MenuDetail item, String title) {
         Inventory inv = Bukkit.createInventory(item, item.size, title);
 
-        for (MenuSlot d : item.decorates) {
+        for (MenuItem d : item.decorates) {
             ItemStack is;
 
             if (!d.material.value.equals(Material.PLAYER_HEAD)) {

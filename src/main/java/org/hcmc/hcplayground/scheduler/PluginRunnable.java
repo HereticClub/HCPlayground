@@ -123,7 +123,7 @@ public class PluginRunnable extends BukkitRunnable {
             if (im == null) continue;
 
             PersistentDataContainer mainContainer = im.getPersistentDataContainer();
-            NamespacedKey mainKey = new NamespacedKey(plugin, Global.PERSISTENT_MAIN_KEY);
+            NamespacedKey mainKey = new NamespacedKey(plugin, ItemBase.PERSISTENT_MAIN_KEY);
             String id = mainContainer.get(mainKey, PersistentDataType.STRING);
             if (id == null) continue;
 

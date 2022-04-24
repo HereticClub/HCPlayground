@@ -3,19 +3,28 @@ weapons:
   # 物品Id，值必须唯一，用于give指令
   item1:
     # 物品的显示名称
-    name: '&6开山斧'
+    name: '&6玄铁剑'
     # 物品的显示材质
-    material: IRON_AXE
+    material: IRON_SWORD
+    # 增加的生命数值
+    health: 5
+    # 吸血，武器类物品特有属性，最大设置值: 1(100%)
+    blood_sucking: 0.08
+    # 暴击，武器类物品特有属性，最大设置值: 1(100%)
+    critical: 0.1
+    # 暴击伤害，武器类物品特有属性，普通攻击伤害的加权
+    # 爆伤 = 攻击伤害 * critical_damage
+    critical_damage: 1.50
     # 攻击伤害，玩家默认值1，玩家攻击伤害总值=1+当前设置值
-    attackDamage: 15.2
-    # 攻击速度，玩家默认值4，理论最大值20，玩家攻击速度总值=4+当前设置值
-    attackSpeed: 1.8
+    attack_damage: 15.2
+    # 攻击速度
+    # 玩家默认值4，理论最大值20，玩家攻击速度总值=4+当前设置值
+    attack_speed: 1.8
     # /!\实验性功能，当前版本不支持攻击距离，作为保留特性
-    # 攻击距离，该设置按百分比算，玩家默认值3，取值范围：0.0 - 6.0
+    # 攻击距离，最大设置值: 1(100%)
+    # 玩家默认值3，取值范围：0.0 - 6.0
     # 玩家攻击距离总值=3.0*(1+当前设置值)
-    attackReach: 0.0
-    # 玩家暴击，最大总值1(100%)，MC本身没有该项设定
-    crit: 0.1
+    attack_reach: 0.3
     # Potions: 药水效果，放在主手，副手，装备时会起作用
     # 第一个参数表示药水效果类型
     # 第二个参数表示药水效果的生效时间，时间单位: Tick(50毫秒)
@@ -38,12 +47,12 @@ weapons:
       - '&f诸神黄昏'
       - '&f见神杀神'
   item2:
-    name: 天残剑
-    material: iron_sword
-    attackDamage: 20
-    attackSpeed: 1.2
-    attackReach: 3
-    crit: 0.0
+    name: 天残斧
+    material: iron_axe
+    attack_damage: 20
+    attack_speed: 1.2
+    attack_reach: 3
+    critical: 0.0
     unbreakable: true
     lore:
       - '天大地大我最大'
@@ -57,20 +66,22 @@ armors:
     material: iron_chestplate
     # 物品的额外信息
     lore: []
-    # 生命数值
+    # 增加的生命数值
     health: 10
+    # 非战斗时每5秒恢复生命值，盔甲类物品特有属性
+    recover: 5
     # 盔甲数值，玩家最大总值20
     armor: 2
     # 盔甲韧性，可以无穷大，理论最大值30
-    armorToughness: 1
+    armor_toughness: 1
     # 击退抗性，值必须在0 - 1之间，1 = 完全抗击退
-    knockbackResistance: 0.1
+    knockback_resistance: 0.1
     # 移动速度，该设置按百分比算，玩家移动默认值0.10，跑步默认值0.15
     # 玩家移动速度总值=0.10*(1+当前设置值)
     # 玩家跑步速度总值=0.15*(1+当前设置值)
-    movementSpeed: 0
+    movement_speed: 0
     # EquipmentSlot: 必须是以下值之一：HEAD, CHEST, LEGS, FEET
-    equipmentSlot: CHEST
+    equipment_slot: CHEST
     # 物品标签
     # HIDE_ATTRIBUTES - 设置显示/隐藏该Item的属性,例如伤害.
     # HIDE_DESTROYS - 设置显示/隐藏哪些ItemStack可以被破坏.
@@ -80,12 +91,17 @@ armors:
     # HIDE_POTION_EFFECTS - 设置显示/隐藏ItemStack的药水效果.
     # HIDE_UNBREAKABLE - 设置显示/隐藏不可破坏属性.
     flags: []
+    # Potions: 药水效果，放在主手，副手，装备时会起作用
+    # 第一个参数表示药水效果类型
+    # 第二个参数表示药水效果的生效时间，时间单位: Tick(50毫秒)
+    # 第三个参数表示药水效果的增加倍数，0表示不增加倍数
+    potions: []
   item2:
     name: '&a疾行靴'
     material: iron_boots
     armor: 3
-    movementSpeed: 0.3
-    equipmentSlot: FEET
+    movement_speed: 0.3
+    equipment_slot: FEET
     flags: []
 
 # 饰品物品定义，带有光环效果Buff
@@ -104,7 +120,8 @@ hands:
     # 物品的额外信息
     lore:
       - '&7副手物品'
-    # 幸运值，可以和幸运附魔叠加，取值范围：-1024 - 1024
+    # 幸运值，副手类物品特有属性
+    # 可以和幸运附魔叠加，取值范围：-1024 - 1024
     luck: 10
     # Potions: 药水效果，放在副手时会起作用
     # 第一个参数表示药水效果类型

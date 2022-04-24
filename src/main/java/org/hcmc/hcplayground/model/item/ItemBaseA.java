@@ -165,11 +165,11 @@ public abstract class ItemBaseA implements ItemBase {
         flags = value;
     }
 
-    public ItemMeta SetBaseItemMeta(ItemStack is) {
+    public ItemMeta setBaseItemMeta(ItemStack is) {
         ItemMeta im = is.getItemMeta();
         if (im == null) return null;
 
-        NamespacedKey mainKey = new NamespacedKey(plugin, Global.PERSISTENT_MAIN_KEY);
+        NamespacedKey mainKey = new NamespacedKey(plugin, PERSISTENT_MAIN_KEY);
         PersistentDataContainer mainContainer = im.getPersistentDataContainer();
         mainContainer.set(mainKey, PersistentDataType.STRING, id);
 
@@ -183,7 +183,7 @@ public abstract class ItemBaseA implements ItemBase {
         return im;
     }
 
-    public String setColorString(float value, boolean isWeapon, boolean isPercentage) {
+    public String setLoreString(float value, boolean isWeapon, boolean isPercentage) {
         String result;
         String colorCode;
         String sign;
@@ -192,8 +192,10 @@ public abstract class ItemBaseA implements ItemBase {
         colorCode = isWeapon ? "§2" : "§9";
         sign = isWeapon ? "" : "+";
         percentage = isPercentage ? "%" : "";
-        result = String.format("%s%s%.1f%s", colorCode, sign, value, percentage);
+        float v = isPercentage ? value * 100 : value;
+        result = String.format("%s%s%.2f%s", colorCode, sign, v, percentage);
 
         return result;
     }
 }
+

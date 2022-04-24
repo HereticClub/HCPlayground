@@ -1,14 +1,14 @@
 package org.hcmc.hcplayground.model.player;
 
 import com.google.gson.reflect.TypeToken;
-import org.bukkit.Color;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
-import org.bukkit.event.player.PlayerGameModeChangeEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.enums.PlayerBannedState;
@@ -50,6 +50,7 @@ public class PlayerData {
     private static final String Section_Key_KillMobList = "killMobList";
 
     private static final String TYPE_JAVA_UTIL_MAP = "java.util.Map";
+    private static final float BASE_HEALTH = 20.0F;
     /**
      * 玩家档案文档的各种记录名称列表
      */
@@ -73,6 +74,7 @@ public class PlayerData {
     public Map<Material, Integer> PickupList = new HashMap<>();
     // 杀掉生物记录
     public Map<EntityType, Integer> KillMobList = new HashMap<>();
+
     /**
      * 玩家在runnable线程的时间检查点，初始化为登陆时间
      * 通常不会更改这个属性的值
@@ -111,11 +113,73 @@ public class PlayerData {
      */
     private final JavaPlugin plugin = HCPlayground.getPlugin();
 
+    private float totalHealth;
+    private float totalArmor;
+    private float totalRecover;
+    private float totalArmorToughness;
+    private float totalKnockBackResistance;
+    private float totalMovementSpeed;
+
     public PlayerData(Player player) {
         this.player = player;
 
         name = player.getName();
         uuid = player.getUniqueId();
+    }
+
+    public float getTotalHealth() {
+        return totalHealth;
+    }
+
+    public float getTotalArmor() {
+        return totalArmor;
+    }
+
+    public float getTotalRecover() {
+        return totalRecover;
+    }
+
+    public float getTotalArmorToughness() {
+        return totalArmorToughness;
+    }
+
+    public float getTotalKnockBackResistance() {
+        return totalKnockBackResistance;
+    }
+
+    public float getTotalMovementSpeed() {
+        return totalMovementSpeed;
+    }
+
+    public void setTotalMovementSpeed(float value) {
+        totalMovementSpeed = value;
+    }
+
+    public void setTotalKnockBackResistance(float value) {
+        totalKnockBackResistance = value;
+    }
+
+    public void setTotalArmorToughness(float value) {
+        totalArmorToughness = value;
+    }
+
+    public void setTotalRecover(float value) {
+        totalRecover = value;
+    }
+
+    public void setTotalArmor(float value) {
+        totalArmor = value;
+    }
+
+    public void setTotalHealth(float value) {
+        totalHealth = value + BASE_HEALTH;
+        AttributeInstance instance = player.getAttribute(Attribute.GENERIC_MAX_HEALTH);
+        if (instance == null) return;
+        instance.setBaseValue(totalHealth);
+        player.setHealth(totalHealth);
+
+        double scale = (totalHealth) / 5;
+        player.setHealthScale(scale);
     }
 
     public boolean getLogin() {

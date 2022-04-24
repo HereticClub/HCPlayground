@@ -1,9 +1,6 @@
 package org.hcmc.hcplayground.listener;
 
-import org.bukkit.Bukkit;
-import org.bukkit.GameMode;
-import org.bukkit.Location;
-import org.bukkit.Material;
+import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.block.Block;
@@ -12,7 +9,6 @@ import org.bukkit.command.CommandMap;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
@@ -22,30 +18,31 @@ import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.entity.EntitySpawnEvent;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.*;
-import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.InventoryHolder;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.inventory.*;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Scoreboard;
 import org.hcmc.hcplayground.HCPlayground;
+import org.hcmc.hcplayground.event.PlayerEquipmentChangedEvent;
 import org.hcmc.hcplayground.manager.DropManager;
 import org.hcmc.hcplayground.manager.LocalizationManager;
 import org.hcmc.hcplayground.manager.MobManager;
 import org.hcmc.hcplayground.model.MobEntity;
+import org.hcmc.hcplayground.model.item.ItemBase;
 import org.hcmc.hcplayground.model.menu.MenuDetail;
-import org.hcmc.hcplayground.model.menu.MenuSlot;
+import org.hcmc.hcplayground.model.menu.MenuItem;
 import org.hcmc.hcplayground.model.player.PlayerData;
+import org.hcmc.hcplayground.scheduler.PlayerSlotRunnable;
 import org.hcmc.hcplayground.utility.Global;
+import org.hcmc.hcplayground.utility.NameBinaryTagResolver;
 import org.hcmc.hcplayground.utility.RandomNumber;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 /*
 Java 本身的编程思路就已经足够混乱
@@ -86,10 +83,6 @@ public class PluginListener implements Listener {
     @EventHandler
     public void onPlayerJoined(final PlayerJoinEvent event) throws SQLException, IllegalAccessException {
         Player player = event.getPlayer();
-
-        double a = player.getHealthScale();
-        player.setHealthScale(10);
-
         PlayerData playerData = Global.getPlayerData(player);
         Global.LogMessage(String.format("\033[1;35mPlayerJoinEvent GameMode: \033[1;33m%s\033[0m", playerData.GameMode));
         // 获取玩家的登陆时间
@@ -192,6 +185,46 @@ public class PluginListener implements Listener {
         Global.setPlayerData(player, playerData);
         // 钓鱼时的额外掉落，额外掉落物品直接放入玩家背包
         DropManager.ExtraDrops(item, player);
+    }
+
+    @EventHandler
+    private void onPlayerEquipmentChanged(PlayerEquipmentChangedEvent event) throws IllegalAccessException {
+        Map<EquipmentSlot, ItemStack> equipments = event.getEquipments();
+        Player player = event.getPlayer();
+        Set<EquipmentSlot> slots = equipments.keySet();
+
+        float health = 0;
+        float armor = 0;
+        float recover = 0;
+        float armorToughness = 0;
+        float knockBackResistance = 0;
+        float movementSpeed = 0;
+        // 检查玩家的装备栏和副手物品
+        for (EquipmentSlot e : slots) {
+            // 忽略没装备的物品
+            ItemStack is = equipments.get(e);
+            if (is == null) continue;
+            // 忽略没有ItemMeta的物品
+            ItemMeta im = is.getItemMeta();
+            if (im == null) continue;
+            // 获取玩家身上所有装备和副手物品的额外数值
+            NameBinaryTagResolver nbt = new NameBinaryTagResolver(is);
+            health += nbt.getFloatValue(ItemBase.PERSISTENT_HEALTH_KEY);
+            armor += nbt.getFloatValue(ItemBase.PERSISTENT_ARMOR_KEY);
+            recover += nbt.getFloatValue(ItemBase.PERSISTENT_RECOVER_KEY);
+            armorToughness += nbt.getFloatValue(ItemBase.PERSISTENT_ARMOR_TOUGHNESS_KEY);
+            knockBackResistance += nbt.getFloatValue(ItemBase.PERSISTENT_KNOCKBACK_RESISTANCE_KEY);
+            movementSpeed += nbt.getFloatValue(ItemBase.PERSISTENT_MOVEMENT_SPEED_KEY);
+        }
+
+        PlayerData data = Global.getPlayerData(player);
+        data.setTotalHealth(health);
+        data.setTotalArmor(armor);
+        data.setTotalRecover(recover);
+        data.setTotalArmorToughness(armorToughness);
+        data.setTotalKnockBackResistance(knockBackResistance);
+        data.setTotalMovementSpeed(movementSpeed);
+        Global.setPlayerData(player, data);
     }
 
     /**
@@ -384,8 +417,25 @@ public class PluginListener implements Listener {
         Global.setPlayerData(player, playerData);
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST)
-    public void onMenuOpened(InventoryClickEvent event) {
+    @EventHandler
+    public void onEquipmentSlotClicked(InventoryClickEvent event) {
+        if (event.isCancelled()) return;
+        InventoryHolder holder = event.getInventory().getHolder();
+        if (!(holder instanceof Player player)) return;
+        InventoryType.SlotType slotType = event.getSlotType();
+        int slot = event.getSlot();
+        if(slotType.equals(InventoryType.SlotType.CONTAINER)) return;
+        if(slotType.equals(InventoryType.SlotType.RESULT)) return;
+        if(slotType.equals(InventoryType.SlotType.CRAFTING)) return;
+        // Slot number 40 on Quick bar is offhand
+        if(slotType.equals(InventoryType.SlotType.QUICKBAR) && slot != 40) return;
+
+        PlayerSlotRunnable runnable = new PlayerSlotRunnable(player);
+        runnable.runTask(plugin);
+    }
+
+    @EventHandler
+    public void onMenuClicked(InventoryClickEvent event) {
         if (event.isCancelled()) return;
         // 获取打开的箱子界面并且当前箱子是否属于InventoryDetail实例
         Inventory inv = event.getInventory();
@@ -407,7 +457,7 @@ public class PluginListener implements Listener {
         // 获得玩家点击箱子中某个格子的InventorySlot实例
         // 检测当前点击的格子位置是否可放可拿
         int index = event.getSlot();
-        MenuSlot slot = detail.getSlot(index + 1);
+        MenuItem slot = detail.getSlot(index + 1);
         if (slot == null) {
             event.setCancelled(true);
             return;
@@ -433,11 +483,6 @@ public class PluginListener implements Listener {
 
 
         if (!slot.draggable || !slot.droppable) event.setCancelled(true);
-    }
-
-    @EventHandler
-    public void onInventoryClicked1(InventoryClickEvent event) {
-
     }
 
     private void runConsoleCommand(String command, Player player) {

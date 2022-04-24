@@ -23,7 +23,7 @@ public class MenuDetail implements InventoryHolder {
     public int size = 54;
     @Expose
     @SerializedName(value = "decorates")
-    public List<MenuSlot> decorates = new ArrayList<>();
+    public List<MenuItem> decorates = new ArrayList<>();
     @Expose
     @SerializedName(value = "worlds")
     public List<String> enableWorlds = new ArrayList<>();
@@ -43,7 +43,7 @@ public class MenuDetail implements InventoryHolder {
         return inventory;
     }
 
-    public MenuSlot getSlot(int slot) {
+    public MenuItem getSlot(int slot) {
         return decorates.stream().filter(x -> x.number == slot).findAny().orElse(null);
     }
 }
