@@ -1,37 +1,22 @@
 package org.hcmc.hcplayground.expansion;
 
-import me.clip.placeholderapi.PlaceholderAPI;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.hcmc.hcplayground.HCPlayground;
+import org.hcmc.hcplayground.model.item.ItemBase;
+import org.hcmc.hcplayground.model.player.PlayerData;
+import org.hcmc.hcplayground.model.player.PlayerManager;
 import org.hcmc.hcplayground.utility.Global;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class HCPluginExpansion extends PlaceholderExpansion {
     private final PluginDescriptionFile pluginDescription;
-
-
-    private final static String HC_PLACEHOLDER_HEALTH = "health";
-    private final static String HC_PLACEHOLDER_DAMAGE = "damage";
-    private final static String HC_PLACEHOLDER_ARMOR = "armor";
-    private final static String HC_PLACEHOLDER_ATTACK_SPEED = "attackSpeed";
-    private final static String HC_PLACEHOLDER_WORK_SPEED = "workSpeed";
-    private final static String HC_PLACEHOLDER_CRITICAL = "critical";
-    private final static String HC_PLACEHOLDER_CRITICAL_DAMAGE = "criticalDamage";
-    private final static String HC_PLACEHOLDER_INTELLIGENCE = "intelligence";
-    private final static String HC_PLACEHOLDER_DIGGING_SPEED = "diggingSpeed";
-
 
     public HCPluginExpansion() {
         Plugin plugin = HCPlayground.getPlugin();
@@ -91,29 +76,40 @@ public class HCPluginExpansion extends PlaceholderExpansion {
     }
 
     @Override
-    public String onRequest(OfflinePlayer player, @NotNull String params) {
-        if (params.equalsIgnoreCase(HC_PLACEHOLDER_HEALTH)) {
-            return getPlayerHealth(player);
-        }
-        if (params.equalsIgnoreCase(HC_PLACEHOLDER_ARMOR)) {
-            return getPlayerArmor(player);
-        }
-        return null;
-    }
-
-    private String getPlayerHealth(OfflinePlayer offlinePlayer) {
+    public String onRequest(OfflinePlayer offlinePlayer, @NotNull String params) {
         Player player = offlinePlayer.getPlayer();
         if (player == null) return "Health Unknown";
 
-        double health = player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue();
+        try {
+            PlayerData data = PlayerManager.getPlayerData(player);
 
-        return String.valueOf(health);
-    }
+            if (params.equalsIgnoreCase(ItemBase.PERSISTENT_ARMOR_KEY)) return String.valueOf(data.getTotalArmor());
+            if (params.equalsIgnoreCase(ItemBase.PERSISTENT_ARMOR_TOUGHNESS_KEY))
+                return String.valueOf(data.getTotalArmorToughness());
+            if (params.equalsIgnoreCase(ItemBase.PERSISTENT_ATTACK_DAMAGE_KEY))
+                return String.valueOf(data.getTotalAttackDamage());
+            if (params.equalsIgnoreCase(ItemBase.PERSISTENT_ATTACK_REACH_KEY))
+                return String.valueOf(data.getTotalAttackReach());
+            if (params.equalsIgnoreCase(ItemBase.PERSISTENT_ATTACK_SPEED_KEY))
+                return String.valueOf(data.getTotalAttackSpeed());
+            if (params.equalsIgnoreCase(ItemBase.PERSISTENT_BLOOD_SUCKING_KEY))
+                return String.valueOf(data.getTotalBloodSucking());
+            if (params.equalsIgnoreCase(ItemBase.PERSISTENT_CRITICAL_KEY))
+                return String.valueOf(data.getTotalCritical());
+            if (params.equalsIgnoreCase(ItemBase.PERSISTENT_CRITICAL_DAMAGE_KEY))
+                return String.valueOf(data.getTotalCriticalDamage());
+            if (params.equalsIgnoreCase(ItemBase.PERSISTENT_HEALTH_KEY)) return String.valueOf(data.getMaxHealth());
+            if (params.equalsIgnoreCase(ItemBase.PERSISTENT_KNOCKBACK_RESISTANCE_KEY))
+                return String.valueOf(data.getTotalKnockBackResistance());
+            if (params.equalsIgnoreCase(ItemBase.PERSISTENT_LUCK_KEY)) return String.valueOf(data.getTotalLuck());
+            if (params.equalsIgnoreCase(ItemBase.PERSISTENT_MOVEMENT_SPEED_KEY))
+                return String.valueOf(data.getTotalMovementSpeed());
+            if (params.equalsIgnoreCase(ItemBase.PERSISTENT_RECOVER_KEY)) return String.valueOf(data.getTotalRecover());
 
-    private String getPlayerArmor(OfflinePlayer offlinePlayer){
-        Player player = offlinePlayer.getPlayer();
-        if (player == null) return "Health Armor";
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
 
-        return "";
+        return null;
     }
 }

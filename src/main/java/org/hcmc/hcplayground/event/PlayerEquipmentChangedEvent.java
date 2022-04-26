@@ -49,5 +49,6 @@ public class PlayerEquipmentChangedEvent extends Event {
         equipments.put(EquipmentSlot.LEGS, inv.getLeggings());
         equipments.put(EquipmentSlot.FEET, inv.getBoots());
         equipments.put(EquipmentSlot.OFF_HAND, inv.getItemInOffHand());
+        equipments.put(EquipmentSlot.HAND, inv.getItemInMainHand());
     }
 }

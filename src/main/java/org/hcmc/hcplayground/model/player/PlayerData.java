@@ -16,6 +16,7 @@ import org.hcmc.hcplayground.manager.LocalizationManager;
 import org.hcmc.hcplayground.sqlite.SqliteManager;
 import org.hcmc.hcplayground.sqlite.table.BanPlayerDetail;
 import org.hcmc.hcplayground.utility.Global;
+import org.jetbrains.annotations.NotNull;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
@@ -79,7 +80,7 @@ public class PlayerData {
      * 玩家在runnable线程的时间检查点，初始化为登陆时间
      * 通常不会更改这个属性的值
      */
-    public long LoginTime = 0;
+    public long loginTimeStamp = 0;
     /**
      * 记录玩家登陆时的游戏模式
      */
@@ -107,18 +108,26 @@ public class PlayerData {
     /**
      * 玩家最近的登陆时间
      */
-    private Date loginDTTM = new Date();
+    private Date loginTime = new Date();
     /**
      * 本插件的实例
      */
     private final JavaPlugin plugin = HCPlayground.getPlugin();
 
-    private float totalHealth;
-    private float totalArmor;
-    private float totalRecover;
-    private float totalArmorToughness;
-    private float totalKnockBackResistance;
-    private float totalMovementSpeed;
+    private double totalArmor;
+    private double totalArmorToughness;
+    private double totalAttackDamage;
+    private double totalAttackReach;
+    private double totalAttackSpeed;
+    private double totalBloodSucking;
+    private double totalCritical;
+    private double totalCriticalDamage;
+    private double maxHealth;
+    private double currentHealth;
+    private double totalKnockBackResistance;
+    private double totalLuck;
+    private double totalMovementSpeed;
+    private double totalRecover;
 
     public PlayerData(Player player) {
         this.player = player;
@@ -127,59 +136,130 @@ public class PlayerData {
         uuid = player.getUniqueId();
     }
 
-    public float getTotalHealth() {
-        return totalHealth;
+    public double getCurrentHealth() {
+        currentHealth = (float) player.getHealth();
+        if (currentHealth >= maxHealth) player.setHealth(maxHealth);
+        return currentHealth;
     }
 
-    public float getTotalArmor() {
+    // 获取玩家当前生命值
+    public double getMaxHealth() {
+        maxHealth = getGenericAttribute(Attribute.GENERIC_MAX_HEALTH, BASE_HEALTH);
+        return maxHealth;
+    }
+
+    // 获取玩家当前护甲值
+    public double getTotalArmor() {
+        //totalArmor = getGenericAttribute(Attribute.GENERIC_ARMOR, 0);
         return totalArmor;
     }
 
-    public float getTotalRecover() {
-        return totalRecover;
-    }
-
-    public float getTotalArmorToughness() {
-        return totalArmorToughness;
-    }
-
-    public float getTotalKnockBackResistance() {
-        return totalKnockBackResistance;
-    }
-
-    public float getTotalMovementSpeed() {
+    // 获取玩家当前移动速度
+    public double getTotalMovementSpeed() {
+        totalMovementSpeed = getGenericAttribute(Attribute.GENERIC_MOVEMENT_SPEED, 0);
         return totalMovementSpeed;
     }
 
-    public void setTotalMovementSpeed(float value) {
-        totalMovementSpeed = value;
+    public double getTotalArmorToughness() {
+        totalArmorToughness = getGenericAttribute(Attribute.GENERIC_ARMOR_TOUGHNESS, 0);
+        return totalArmorToughness;
+    }
+
+    public double getTotalKnockBackResistance() {
+        totalKnockBackResistance = getGenericAttribute(Attribute.GENERIC_KNOCKBACK_RESISTANCE, 0);
+        return totalKnockBackResistance;
+    }
+
+    public double getTotalLuck() {
+        totalLuck = getGenericAttribute(Attribute.GENERIC_LUCK, 0);
+        return totalLuck;
+    }
+
+    public double getTotalAttackDamage() {
+        totalAttackDamage = getGenericAttribute(Attribute.GENERIC_ATTACK_DAMAGE, 0);
+        return totalAttackDamage;
+    }
+
+    public double getTotalAttackSpeed() {
+        totalAttackSpeed = getGenericAttribute(Attribute.GENERIC_ATTACK_SPEED, 0);
+        return totalAttackSpeed;
+    }
+
+    public double getTotalRecover() {
+        return totalRecover;
+    }
+
+    public double getTotalBloodSucking() {
+        return totalBloodSucking;
+    }
+
+    public double getTotalCritical() {
+        return totalCritical;
+    }
+
+    public double getTotalCriticalDamage() {
+        return totalCriticalDamage;
+    }
+
+    public double getTotalAttackReach() {
+        return totalAttackReach;
+    }
+
+    public void setTotalArmor(float value) {
+        totalArmor = value;
+    }
+    /*
+    public void setTotalArmorToughness(float value) {
+        totalArmorToughness = value;
+    }
+
+    public void setTotalAttackDamage(float value) {
+        totalAttackDamage = value;
+    }
+
+    public void setTotalAttackSpeed(float value) {
+        totalAttackSpeed = value;
+    }
+
+    public void setMaxHealth(float deltaHealth) {
+        maxHealth = deltaHealth + PlayerManager.BASE_PLAYER_HEALTH;
+        AttributeInstance instance = player.getAttribute(Attribute.GENERIC_MAX_HEALTH);
+        if (instance == null) return;
+        instance.setBaseValue(maxHealth);
+        player.setHealth(maxHealth);
     }
 
     public void setTotalKnockBackResistance(float value) {
         totalKnockBackResistance = value;
     }
 
-    public void setTotalArmorToughness(float value) {
-        totalArmorToughness = value;
+    public void setTotalLuck(float value) {
+        totalLuck = value;
+    }
+
+    public void setTotalMovementSpeed(float value) {
+        totalMovementSpeed = value;
+    }
+    */
+
+    public void setTotalCriticalDamage(float value) {
+        totalCriticalDamage = value;
+    }
+
+    public void setTotalAttackReach(float value) {
+        totalAttackReach = value;
+    }
+
+    public void setTotalCritical(float value) {
+        totalCritical = value;
+    }
+
+    public void setTotalBloodSucking(float value) {
+        totalBloodSucking = value;
     }
 
     public void setTotalRecover(float value) {
         totalRecover = value;
-    }
-
-    public void setTotalArmor(float value) {
-        totalArmor = value;
-    }
-
-    public void setTotalHealth(float value) {
-        totalHealth = value + BASE_HEALTH;
-        AttributeInstance instance = player.getAttribute(Attribute.GENERIC_MAX_HEALTH);
-        if (instance == null) return;
-        instance.setBaseValue(totalHealth);
-        player.setHealth(totalHealth);
-
-        double scale = (totalHealth) / 5;
-        player.setHealthScale(scale);
     }
 
     public boolean getLogin() {
@@ -190,12 +270,12 @@ public class PlayerData {
         isLogin = value;
     }
 
-    public Date getLoginDTTM() {
-        return loginDTTM;
+    public Date getLoginTime() {
+        return loginTime;
     }
 
-    public void setLoginDTTM(Date value) {
-        loginDTTM = value;
+    public void setLoginTime(Date value) {
+        loginTime = value;
     }
 
     public boolean getRegister() {
@@ -212,6 +292,11 @@ public class PlayerData {
 
     public String getName() {
         return name;
+    }
+
+    @NotNull
+    public Player getPlayer() {
+        return player;
     }
 
     public boolean Exist() throws SQLException {
@@ -246,7 +331,7 @@ public class PlayerData {
                     .replace("%player%", name));
         } else {
             isLogin = true;
-            Global.LogMessage(String.format("\033[1;35mPlayer register GameMode: \033[1;33m%s\033[0m", GameMode));
+            //Global.LogMessage(String.format("\033[1;35mPlayer register GameMode: \033[1;33m%s\033[0m", GameMode));
             player.setGameMode(GameMode);
             plugin.getServer().broadcastMessage(LocalizationManager.getMessage("playerRegisterWelcome", player)
                     .replace("%player%", name));
@@ -277,7 +362,7 @@ public class PlayerData {
         if (!isLogin) {
             player.sendMessage(LocalizationManager.getMessage("playerLoginFailed", player).replace("%player%", name));
         } else {
-            Global.LogMessage(String.format("\033[1;35mPlayer Login GameMode: \033[1;33m%s\033[0m", GameMode));
+            //Global.LogMessage(String.format("\033[1;35mPlayer Login GameMode: \033[1;33m%s\033[0m", GameMode));
             player.setGameMode(GameMode);
             player.sendMessage(LocalizationManager.getMessage("playerLoginWelcome", player).replace("&", "§").replace("%player%", name));
         }
@@ -396,5 +481,12 @@ public class PlayerData {
         }
 
         return yaml;
+    }
+
+    private double getGenericAttribute(Attribute attribute, double defaultValue) {
+        AttributeInstance instance = player.getAttribute(attribute);
+        if (instance == null) return defaultValue;
+
+        return instance.getValue();
     }
 }

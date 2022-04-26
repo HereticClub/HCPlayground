@@ -16,6 +16,7 @@ import org.hcmc.hcplayground.manager.ItemManager;
 import org.hcmc.hcplayground.manager.LocalizationManager;
 import org.hcmc.hcplayground.manager.MenuManager;
 import org.hcmc.hcplayground.model.player.PlayerData;
+import org.hcmc.hcplayground.model.player.PlayerManager;
 import org.hcmc.hcplayground.utility.Global;
 import org.jetbrains.annotations.NotNull;
 
@@ -310,7 +311,7 @@ public class CommandItem extends Command {
             return false;
         }
 
-        PlayerData playerData = Global.getPlayerData(player);
+        PlayerData playerData = PlayerManager.getPlayerData(player);
         return playerData.Unregister(args[0]);
     }
 
@@ -326,7 +327,7 @@ public class CommandItem extends Command {
             return false;
         }
 
-        PlayerData playerData = Global.getPlayerData(player);
+        PlayerData playerData = PlayerManager.getPlayerData(player);
         return playerData.Login(args[0]);
     }
 
@@ -358,7 +359,7 @@ public class CommandItem extends Command {
             return false;
         }
 
-        PlayerData playerData = Global.getPlayerData(player);
+        PlayerData playerData = PlayerManager.getPlayerData(player);
         return playerData.Register(args[0]);
     }
 
@@ -378,7 +379,7 @@ public class CommandItem extends Command {
             return false;
         }
 
-        PlayerData playerData = Global.getPlayerData(player);
+        PlayerData playerData = PlayerManager.getPlayerData(player);
         return playerData.ChangePassword(args[0], args[1]);
     }
 
@@ -399,7 +400,7 @@ public class CommandItem extends Command {
             if (Arrays.asList(args).indexOf(s) == 0) continue;
             reason.append(s).append(" ");
         }
-        PlayerData playerData = Global.getPlayerData(player);
+        PlayerData playerData = PlayerManager.getPlayerData(player);
         playerData.BanPlayer(args[0], reason.toString().trim());
 
         return true;

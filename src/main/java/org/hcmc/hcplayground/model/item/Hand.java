@@ -2,6 +2,7 @@ package org.hcmc.hcplayground.model.item;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+import org.bukkit.NamespacedKey;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.enchantments.Enchantment;
@@ -9,6 +10,8 @@ import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataContainer;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.potion.PotionEffect;
 import org.hcmc.hcplayground.utility.Global;
 
@@ -62,9 +65,24 @@ public class Hand extends ItemBaseA {
             }
 
             im.setLore(lore);
+            SetPersistentData(im);
             is.setItemMeta(im);
         }
 
         return is;
+    }
+
+    private void SetPersistentData(ItemMeta im) {
+        /*
+        设置NamespaceKey，比如暴击等MC没有的特性的命名空间名称
+        */
+        NamespacedKey subKey = new NamespacedKey(plugin, PERSISTENT_SUB_KEY);
+        NamespacedKey luckKey = new NamespacedKey(plugin, PERSISTENT_LUCK_KEY);
+
+        PersistentDataContainer mainContainer = im.getPersistentDataContainer();
+        PersistentDataContainer subContainer = mainContainer.getAdapterContext().newPersistentDataContainer();
+
+        subContainer.set(luckKey, PersistentDataType.FLOAT, this.luck);
+        mainContainer.set(subKey, PersistentDataType.TAG_CONTAINER, subContainer);
     }
 }

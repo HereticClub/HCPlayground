@@ -8,6 +8,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandMap;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.*;
+import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
@@ -21,7 +22,6 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.*;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Scoreboard;
@@ -31,18 +31,18 @@ import org.hcmc.hcplayground.manager.DropManager;
 import org.hcmc.hcplayground.manager.LocalizationManager;
 import org.hcmc.hcplayground.manager.MobManager;
 import org.hcmc.hcplayground.model.MobEntity;
-import org.hcmc.hcplayground.model.item.ItemBase;
 import org.hcmc.hcplayground.model.menu.MenuDetail;
 import org.hcmc.hcplayground.model.menu.MenuItem;
 import org.hcmc.hcplayground.model.player.PlayerData;
-import org.hcmc.hcplayground.scheduler.PlayerSlotRunnable;
+import org.hcmc.hcplayground.model.player.PlayerManager;
+import org.hcmc.hcplayground.scheduler.EquipmentMonitorRunnable;
 import org.hcmc.hcplayground.utility.Global;
-import org.hcmc.hcplayground.utility.NameBinaryTagResolver;
 import org.hcmc.hcplayground.utility.RandomNumber;
 
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.List;
 
 /*
 Java 本身的编程思路就已经足够混乱
@@ -68,6 +68,9 @@ public class PluginListener implements Listener {
     private final static String SCOREBOARD_CRITERIA_HEALTH = "health";
     private final static String SCOREBOARD_CRITERIA_DUMMY = "dummy";
 
+    private final static int EQUIPMENT_SLOT_OFFHAND = 40;
+    private final static int EQUIPMENT_SLOT_HELMET = 39;
+
     private final JavaPlugin plugin = HCPlayground.getPlugin();
 
     public PluginListener() {
@@ -82,27 +85,38 @@ public class PluginListener implements Listener {
      */
     @EventHandler
     public void onPlayerJoined(final PlayerJoinEvent event) throws SQLException, IllegalAccessException {
+        // 获取登陆玩家实例
         Player player = event.getPlayer();
-        PlayerData playerData = Global.getPlayerData(player);
-        Global.LogMessage(String.format("\033[1;35mPlayerJoinEvent GameMode: \033[1;33m%s\033[0m", playerData.GameMode));
-        // 获取玩家的登陆时间
-        playerData.LoginTime = new Date().getTime() / 1000;
+        // 获取玩家实例的附加数据
+        PlayerData playerData = PlayerManager.getPlayerData(player);
+        // 判断玩家是否被禁止进入服务器
         if (playerData.isBanned()) return;
-
+        // 获取玩家是否已经注册到服务器
+        // 用于显示提醒登陆或者提醒注册
         boolean exist = playerData.Exist();
         playerData.setRegister(exist);
-        playerData.setLoginDTTM(new Date());
-        Global.setPlayerData(player, playerData);
-
+        // 获取并记录玩家的登陆时间
+        playerData.loginTimeStamp = new Date().getTime() / 1000;
+        playerData.setLoginTime(new Date());
+        // 获取玩家身上的附加属性
+        // 任务new EquipmentMonitorRunnable(player).runTask(plugin)
+        // 已经执行了一次PlayerManager.setPlayerData(player, playerData)
+        // 所以不需要在这里再次执行
+        new EquipmentMonitorRunnable(player).runTask(plugin);
+        // 在成功登陆前，把玩家的游戏模式设置为SPECTATOR，防止被怪物攻击
+        // 在成功登陆后，把玩家的游戏模式设置为上次退出服务器时的游戏模式
+        //Global.LogMessage(String.format("\033[1;35mPlayerJoinEvent GameMode: \033[1;33m%s\033[0m", playerData.GameMode));
         player.setGameMode(GameMode.SPECTATOR);
     }
 
     @EventHandler
     public void onPlayerMove(PlayerMoveEvent event) throws IllegalAccessException {
         if (event.isCancelled()) return;
+        // 获取玩家实例
         Player player = event.getPlayer();
-
-        PlayerData playerData = Global.getPlayerData(player);
+        // 获取玩家附加数据实例
+        PlayerData playerData = PlayerManager.getPlayerData(player);
+        // 在玩家成功登陆前，禁止玩家移动
         if (!playerData.getLogin()) event.setCancelled(true);
     }
 
@@ -116,11 +130,11 @@ public class PluginListener implements Listener {
     public void onPlayerLeave(PlayerQuitEvent event) throws IOException, IllegalAccessException {
         Player player = event.getPlayer();
 
-        PlayerData playerData = Global.getPlayerData(player);
-        Global.LogMessage(String.format("\033[1;35mPlayerQuitEvent GameMode: \033[1;33m%s\033[0m", playerData.GameMode));
+        PlayerData playerData = PlayerManager.getPlayerData(player);
+        //Global.LogMessage(String.format("\033[1;35mPlayerQuitEvent GameMode: \033[1;33m%s\033[0m", playerData.GameMode));
         player.setGameMode(playerData.GameMode);
         playerData.SaveConfig();
-        Global.removePlayerData(player, playerData);
+        PlayerManager.removePlayerData(player, playerData);
     }
 
     @EventHandler
@@ -128,13 +142,13 @@ public class PluginListener implements Listener {
         if (event.isCancelled()) return;
 
         Player player = event.getPlayer();
-        PlayerData playerData = Global.getPlayerData(player);
+        PlayerData playerData = PlayerManager.getPlayerData(player);
         if (!playerData.getLogin()) return;
 
         playerData.GameMode = event.getNewGameMode();
-        Global.LogMessage(String.format("\033[1;35mPlayerGameModeChangeEvent GameMode: \033[1;33m%s\033[0m", playerData.GameMode));
+        //Global.LogMessage(String.format("\033[1;35mPlayerGameModeChangeEvent GameMode: \033[1;33m%s\033[0m", playerData.GameMode));
 
-        Global.setPlayerData(player, playerData);
+        PlayerManager.setPlayerData(player, playerData);
     }
 
     @EventHandler
@@ -149,7 +163,7 @@ public class PluginListener implements Listener {
         if (command == null) return;
 
         Player player = event.getPlayer();
-        PlayerData playerData = Global.getPlayerData(player);
+        PlayerData playerData = PlayerManager.getPlayerData(player);
         String playerName = player.getName();
 
         if (!playerData.getLogin() && !command.getName().equalsIgnoreCase(COMMAND_LOGIN) && !command.getName().equalsIgnoreCase(COMMAND_REGISTER)) {
@@ -179,52 +193,30 @@ public class PluginListener implements Listener {
         Material material = is.getType();
         int amount = is.getAmount();
         // 玩家的钓鱼记录
-        PlayerData playerData = Global.getPlayerData(player);
+        PlayerData playerData = PlayerManager.getPlayerData(player);
         int count = playerData.FishingList.getOrDefault(material, 0);
         playerData.FishingList.put(material, count + amount);
-        Global.setPlayerData(player, playerData);
+        PlayerManager.setPlayerData(player, playerData);
         // 钓鱼时的额外掉落，额外掉落物品直接放入玩家背包
         DropManager.ExtraDrops(item, player);
+    }
+
+    @EventHandler
+    private void onPlayerHandItemChanged(PlayerItemHeldEvent event) {
+        if (event.isCancelled()) return;
+        Player player = event.getPlayer();
+
+        EquipmentMonitorRunnable runnable = new EquipmentMonitorRunnable(player);
+        runnable.runTask(plugin);
     }
 
     @EventHandler
     private void onPlayerEquipmentChanged(PlayerEquipmentChangedEvent event) throws IllegalAccessException {
         Map<EquipmentSlot, ItemStack> equipments = event.getEquipments();
         Player player = event.getPlayer();
-        Set<EquipmentSlot> slots = equipments.keySet();
 
-        float health = 0;
-        float armor = 0;
-        float recover = 0;
-        float armorToughness = 0;
-        float knockBackResistance = 0;
-        float movementSpeed = 0;
-        // 检查玩家的装备栏和副手物品
-        for (EquipmentSlot e : slots) {
-            // 忽略没装备的物品
-            ItemStack is = equipments.get(e);
-            if (is == null) continue;
-            // 忽略没有ItemMeta的物品
-            ItemMeta im = is.getItemMeta();
-            if (im == null) continue;
-            // 获取玩家身上所有装备和副手物品的额外数值
-            NameBinaryTagResolver nbt = new NameBinaryTagResolver(is);
-            health += nbt.getFloatValue(ItemBase.PERSISTENT_HEALTH_KEY);
-            armor += nbt.getFloatValue(ItemBase.PERSISTENT_ARMOR_KEY);
-            recover += nbt.getFloatValue(ItemBase.PERSISTENT_RECOVER_KEY);
-            armorToughness += nbt.getFloatValue(ItemBase.PERSISTENT_ARMOR_TOUGHNESS_KEY);
-            knockBackResistance += nbt.getFloatValue(ItemBase.PERSISTENT_KNOCKBACK_RESISTANCE_KEY);
-            movementSpeed += nbt.getFloatValue(ItemBase.PERSISTENT_MOVEMENT_SPEED_KEY);
-        }
-
-        PlayerData data = Global.getPlayerData(player);
-        data.setTotalHealth(health);
-        data.setTotalArmor(armor);
-        data.setTotalRecover(recover);
-        data.setTotalArmorToughness(armorToughness);
-        data.setTotalKnockBackResistance(knockBackResistance);
-        data.setTotalMovementSpeed(movementSpeed);
-        Global.setPlayerData(player, data);
+        List<ItemStack> itemStacks = new ArrayList<>(equipments.values().stream().toList());
+        PlayerManager.getEquipmentData(player, itemStacks.toArray(new ItemStack[0]));
     }
 
     /**
@@ -243,10 +235,10 @@ public class PluginListener implements Listener {
         int amount = is.getAmount();
         Material material = item.getItemStack().getType();
         // 记录玩家数据
-        PlayerData playerData = Global.getPlayerData(player);
+        PlayerData playerData = PlayerManager.getPlayerData(player);
         int count = playerData.DropList.getOrDefault(material, 0);
         playerData.DropList.put(material, count + amount);
-        Global.setPlayerData(player, playerData);
+        PlayerManager.setPlayerData(player, playerData);
     }
 
     @EventHandler
@@ -262,10 +254,10 @@ public class PluginListener implements Listener {
 
         // 记录玩家拾取物品的数据
         if (!(entity instanceof Player player)) return;
-        PlayerData playerData = Global.getPlayerData(player);
+        PlayerData playerData = PlayerManager.getPlayerData(player);
         int count = playerData.PickupList.getOrDefault(material, 0);
         playerData.PickupList.put(material, count + amount);
-        Global.setPlayerData(player, playerData);
+        PlayerManager.setPlayerData(player, playerData);
     }
 
     /**
@@ -283,10 +275,10 @@ public class PluginListener implements Listener {
 
         DropManager.ExtraDrops(block);
 
-        PlayerData playerData = Global.getPlayerData(player);
+        PlayerData playerData = PlayerManager.getPlayerData(player);
         int count = playerData.BreakList.getOrDefault(material, 0);
         playerData.BreakList.put(material, count + 1);
-        Global.setPlayerData(player, playerData);
+        PlayerManager.setPlayerData(player, playerData);
     }
 
     /**
@@ -302,10 +294,10 @@ public class PluginListener implements Listener {
         Block block = event.getBlock();
         Material material = block.getType();
 
-        PlayerData playerData = Global.getPlayerData(player);
+        PlayerData playerData = PlayerManager.getPlayerData(player);
         int count = playerData.PlaceList.getOrDefault(material, 0);
         playerData.PlaceList.put(material, count + 1);
-        Global.setPlayerData(player, playerData);
+        PlayerManager.setPlayerData(player, playerData);
     }
 
     @EventHandler
@@ -323,11 +315,10 @@ public class PluginListener implements Listener {
         if (!RandomNumber.checkBingo(mobEntity.spawnRate)) return;
 
         int randomHealth = (int) Math.round(RandomNumber.getRandomNumber(mobEntity.minHealth, mobEntity.maxHealth));
-        int monsterHealth = 0;
         AttributeInstance attributeInstance = monster.getAttribute(Attribute.GENERIC_MAX_HEALTH);
         if (attributeInstance != null) {
             int baseHealth = (int) attributeInstance.getBaseValue();
-            monsterHealth = baseHealth + randomHealth;
+            int monsterHealth = baseHealth + randomHealth;
             attributeInstance.setBaseValue(monsterHealth);
             monster.setHealth(baseHealth + randomHealth);
         }
@@ -411,26 +402,43 @@ public class PluginListener implements Listener {
         // 记录玩家杀死生物的数量
         Player player = entity.getKiller();
         if (player == null) return;
-        PlayerData playerData = Global.getPlayerData(player);
+        PlayerData playerData = PlayerManager.getPlayerData(player);
         int count = playerData.KillMobList.getOrDefault(type, 0);
         playerData.KillMobList.put(type, count + 1);
-        Global.setPlayerData(player, playerData);
+        PlayerManager.setPlayerData(player, playerData);
     }
 
     @EventHandler
     public void onEquipmentSlotClicked(InventoryClickEvent event) {
+        /*
+         slot number
+         40 - offhand
+         39 - helmet
+         38 - chest
+         37 - leggings
+         36 - boots
+        */
         if (event.isCancelled()) return;
         InventoryHolder holder = event.getInventory().getHolder();
         if (!(holder instanceof Player player)) return;
         InventoryType.SlotType slotType = event.getSlotType();
         int slot = event.getSlot();
-        if(slotType.equals(InventoryType.SlotType.CONTAINER)) return;
-        if(slotType.equals(InventoryType.SlotType.RESULT)) return;
-        if(slotType.equals(InventoryType.SlotType.CRAFTING)) return;
+        if (slotType.equals(InventoryType.SlotType.CONTAINER)) return;
+        if (slotType.equals(InventoryType.SlotType.RESULT)) return;
+        if (slotType.equals(InventoryType.SlotType.CRAFTING)) return;
         // Slot number 40 on Quick bar is offhand
-        if(slotType.equals(InventoryType.SlotType.QUICKBAR) && slot != 40) return;
+        if (slotType.equals(InventoryType.SlotType.QUICKBAR) && slot != EQUIPMENT_SLOT_OFFHAND) return;
 
-        PlayerSlotRunnable runnable = new PlayerSlotRunnable(player);
+        ItemStack isCursor = event.getCursor();
+        ItemStack isCurrent = event.getCurrentItem();
+        // Slot number 39 on Quick bar is helmet
+        if (slot == EQUIPMENT_SLOT_HELMET) {
+            player.getInventory().setItem(slot, isCursor);
+            event.setResult(Event.Result.DENY);
+            player.setItemOnCursor(isCurrent);
+        }
+
+        EquipmentMonitorRunnable runnable = new EquipmentMonitorRunnable(player);
         runnable.runTask(plugin);
     }
 

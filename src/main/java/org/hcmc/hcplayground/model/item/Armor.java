@@ -13,7 +13,6 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.potion.PotionEffect;
 import org.hcmc.hcplayground.utility.Global;
-import org.hcmc.hcplayground.utility.NameBinaryTagResolver;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -59,7 +58,6 @@ public class Armor extends ItemBaseA {
         ItemMeta im = this.setBaseItemMeta(is);
 
         if (im != null) {
-            SetPersistentData(im);
             List<String> lore = im.getLore();
             if (lore == null) lore = new ArrayList<>();
             lore.add("");
@@ -68,7 +66,7 @@ public class Armor extends ItemBaseA {
             */
             switch (this.equipmentSlot) {
                 case CHEST -> lore.add("§7穿在身上时:");
-                case HAND -> lore.add("§7戴在头上时:");
+                case HEAD -> lore.add("§7戴在头上时:");
                 case LEGS -> lore.add("§7穿在腿上时:");
                 case FEET -> lore.add("§7穿在脚上时:");
             }
@@ -89,13 +87,15 @@ public class Armor extends ItemBaseA {
             /*
             添加AttributeModifier
             */
+            AttributeModifier amHealth = new AttributeModifier(UUID.randomUUID(), Global.PluginName(), this.health, AttributeModifier.Operation.ADD_NUMBER, this.equipmentSlot);
             AttributeModifier amArmor = new AttributeModifier(UUID.randomUUID(), Global.PluginName(), this.armor, AttributeModifier.Operation.ADD_NUMBER, this.equipmentSlot);
             AttributeModifier amArmorToughness = new AttributeModifier(UUID.randomUUID(), Global.PluginName(), this.armorToughness, AttributeModifier.Operation.ADD_NUMBER, this.equipmentSlot);
-            AttributeModifier amKnockbackResistance = new AttributeModifier(UUID.randomUUID(), Global.PluginName(), this.knockBackResistance, AttributeModifier.Operation.ADD_SCALAR, this.equipmentSlot);
+            AttributeModifier amKnockBackResistance = new AttributeModifier(UUID.randomUUID(), Global.PluginName(), this.knockBackResistance, AttributeModifier.Operation.ADD_SCALAR, this.equipmentSlot);
             AttributeModifier amMovementSpeed = new AttributeModifier(UUID.randomUUID(), Global.PluginName(), this.movementSpeed, AttributeModifier.Operation.ADD_SCALAR, this.equipmentSlot);
+            im.addAttributeModifier(Attribute.GENERIC_MAX_HEALTH, amHealth);
             im.addAttributeModifier(Attribute.GENERIC_ARMOR, amArmor);
             im.addAttributeModifier(Attribute.GENERIC_ARMOR_TOUGHNESS, amArmorToughness);
-            im.addAttributeModifier(Attribute.GENERIC_KNOCKBACK_RESISTANCE, amKnockbackResistance);
+            im.addAttributeModifier(Attribute.GENERIC_KNOCKBACK_RESISTANCE, amKnockBackResistance);
             im.addAttributeModifier(Attribute.GENERIC_MOVEMENT_SPEED, amMovementSpeed);
             /*
             强制添加隐藏属性标记
@@ -105,6 +105,7 @@ public class Armor extends ItemBaseA {
             }
 
             im.setLore(lore);
+            SetPersistentData(im);
             is.setItemMeta(im);
         }
 

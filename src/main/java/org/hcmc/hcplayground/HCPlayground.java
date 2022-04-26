@@ -5,13 +5,14 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
+import org.hcmc.hcplayground.expansion.HCPluginExpansion;
 import org.hcmc.hcplayground.filter.ConsoleLog4jFilter;
 import org.hcmc.hcplayground.listener.PluginListener;
 import org.hcmc.hcplayground.manager.*;
 import org.hcmc.hcplayground.model.permission.PermissionManager;
 import org.hcmc.hcplayground.model.player.PlayerData;
-import org.hcmc.hcplayground.manager.MenuManager;
-import org.hcmc.hcplayground.expansion.HCPluginExpansion;
+import org.hcmc.hcplayground.model.player.PlayerManager;
+import org.hcmc.hcplayground.scheduler.EquipmentMonitorRunnable;
 import org.hcmc.hcplayground.sqlite.SqliteManager;
 import org.hcmc.hcplayground.utility.Global;
 import org.jetbrains.annotations.NotNull;
@@ -48,13 +49,18 @@ public class HCPlayground extends JavaPlugin {
             // 验证并且注册所依赖的Plugin
             Global.ValidWorldGuardPlugin();
             Global.ValidVaultPlugin();
-            // 重新加载所有玩家数据
+            // 执行/reload指令后，重新加载所有玩家数据
             // 假定每个在线玩家已经注册并且已经登陆
             for (Player p : getServer().getOnlinePlayers()) {
-                PlayerData pd = Global.getPlayerData(p);
+                PlayerData pd = PlayerManager.getPlayerData(p);
+                // 强制设置在线玩家已经注册并且已经登陆
                 pd.setRegister(true);
                 pd.setLogin(true);
-                Global.playerMap.put(p.getUniqueId(), pd);
+                // 获取玩家身上的附加属性
+                // 任务new EquipmentMonitorRunnable(player).runTask(plugin)
+                // 已经执行了一次PlayerManager.setPlayerData(player, playerData)
+                // 所以不需要在这里再次执行
+                new EquipmentMonitorRunnable(p).runTask(getPlugin());
             }
             ConsoleLog4jFilter.RegisterFilter();
             HCPluginExpansion.RegisterExpansion();

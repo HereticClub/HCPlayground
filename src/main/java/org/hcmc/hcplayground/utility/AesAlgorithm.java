@@ -18,24 +18,24 @@ import java.util.Base64;
 public class AesAlgorithm {
 
     /**
-    这个常量用于生成AES加密及解密的IV参数
-    字符串常量，长度必须16位
-    该常量一旦定义便不能再次改动
-    否则因此而生成的加密数据都不能被解密
-    */
+     * 这个常量用于生成AES加密及解密的IV参数
+     * 字符串常量，长度必须16位
+     * 该常量一旦定义便不能再次改动
+     * 否则因此而生成的加密数据都不能被解密
+     */
     private static final String AES_IV_VALUE = "$*HCPlayground#&";
     /**
-    加密时使用的混肴数据
-    */
+     * 加密时使用的混肴数据
+     */
     private static final String AES_KEY_SALT = "0123456789abcdef";
     /**
-    AES加密算法名称
-    */
+     * AES加密算法名称
+     */
     private static final String AES_ALGORITHM = "PBKDF2WithHmacSHA256";
     private static final String CIPHER_ALGORITHM = "AES/CBC/PKCS5Padding";
     /**
-    用于AES加密及解密的IV参数
-    */
+     * 用于AES加密及解密的IV参数
+     */
     private static final IvParameterSpec iv = new IvParameterSpec(AES_IV_VALUE.getBytes(StandardCharsets.UTF_8));
 
     public AesAlgorithm() {

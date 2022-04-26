@@ -2,7 +2,6 @@ package org.hcmc.hcplayground.deserializer;
 
 import com.google.gson.*;
 import org.bukkit.Material;
-import org.hcmc.hcplayground.utility.Global;
 import org.hcmc.hcplayground.utility.MaterialData;
 
 import java.lang.reflect.Type;

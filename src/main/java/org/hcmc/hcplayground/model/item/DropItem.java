@@ -2,7 +2,6 @@ package org.hcmc.hcplayground.model.item;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
-import org.bukkit.Material;
 import org.hcmc.hcplayground.utility.MaterialData;
 
 /**

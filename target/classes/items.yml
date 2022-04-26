@@ -14,7 +14,7 @@ weapons:
     critical: 0.1
     # 暴击伤害，武器类物品特有属性，普通攻击伤害的加权
     # 爆伤 = 攻击伤害 * critical_damage
-    critical_damage: 1.50
+    critical_damage: 1.5
     # 攻击伤害，玩家默认值1，玩家攻击伤害总值=1+当前设置值
     attack_damage: 15.2
     # 攻击速度
@@ -30,8 +30,8 @@ weapons:
     # 第二个参数表示药水效果的生效时间，时间单位: Tick(50毫秒)
     # 第三个参数表示药水效果的增加倍数，0表示不增加倍数
     potions:
-      - 'jump, 300, 2'
-      - 'ABSORPTION, 300, 1'    # 物品是否可被破坏
+      - jump, 300, 2
+      - ABSORPTION, 300, 1
     unbreakable: false
     # 物品标签
     # HIDE_ATTRIBUTES - 设置显示/隐藏该Item的属性,例如伤害.
@@ -55,7 +55,7 @@ weapons:
     critical: 0.0
     unbreakable: true
     lore:
-      - '天大地大我最大'
+      - 天大地大我最大
 # 盔甲物品定义
 armors:
   # 物品Id，值必须唯一，用于give指令
@@ -71,7 +71,7 @@ armors:
     # 非战斗时每5秒恢复生命值，盔甲类物品特有属性
     recover: 5
     # 盔甲数值，玩家最大总值20
-    armor: 2
+    armor: 40
     # 盔甲韧性，可以无穷大，理论最大值30
     armor_toughness: 1
     # 击退抗性，值必须在0 - 1之间，1 = 完全抗击退
@@ -97,11 +97,21 @@ armors:
     # 第三个参数表示药水效果的增加倍数，0表示不增加倍数
     potions: []
   item2:
-    name: '&a疾行靴'
-    material: iron_boots
+    name: '&a草花头'
+    material: oak_leaves
     armor: 3
+    health: 8
     movement_speed: 0.3
-    equipment_slot: FEET
+    equipment_slot: HEAD
+    flags: []
+  item3:
+    name: '&a抱大腿'
+    material: golden_leggings
+    recover: 3
+    armor: 21.3
+    health: 12
+    movement_speed: 0.1
+    equipment_slot: LEGS
     flags: []
 
 # 饰品物品定义，带有光环效果Buff
@@ -128,8 +138,8 @@ hands:
     # 第二个参数表示药水效果的生效时间，时间单位: Tick(50毫秒)
     # 第三个参数表示药水效果的增加倍数，0表示不增加倍数
     potions:
-      - 'jump, 300, 2'
-      - 'ABSORPTION, 300, 1'
+      - jump, 300, 2
+      - ABSORPTION, 300, 1
     # 物品标签
     # HIDE_ATTRIBUTES - 设置显示/隐藏该Item的属性,例如伤害.
     # HIDE_DESTROYS - 设置显示/隐藏哪些ItemStack可以被破坏.
@@ -159,8 +169,8 @@ hands:
       - '&7副手物品'
     luck: 5
     potions:
-      - 'DAMAGE_RESISTANCE, 300, 0'
-      - 'DOLPHINS_GRACE, 300, 0'
+      - DAMAGE_RESISTANCE, 300, 0
+      - DOLPHINS_GRACE, 300, 0
     flags:
       - HIDE_ATTRIBUTES
       - HIDE_ENCHANTS
@@ -297,7 +307,7 @@ joins:
           - ''
           - '&0若&a阁下&0对于玩法满意，请进群&c捐赠&0服主'
           - ''
-          - '服主承诺：'
+          - 服主承诺：
           - '&0·&9所有捐赠不会带有任何返还'
           - '&0·&9所有捐赠全部用于服务器扩展'
           - ''

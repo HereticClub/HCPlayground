@@ -123,7 +123,7 @@ profile:
       displayText: 攻击
       material: diamond_sword
       lore:
-        - '%hcplayground_damage%'
+        - '%hcplayground_attack_damage%'
     - slot: 23
       displayText: 防御
       material: diamond_chestplate
@@ -137,12 +137,12 @@ profile:
       flags:
         - HIDE_POTION_EFFECTS
       lore:
-        - '%hcplayground_attackspeed%'
+        - '%hcplayground_attack_speed%'
     - slot: 25
       displayText: 速度
       material: diamond_boots
       lore:
-        - '%hcplayground_workspeed%'
+        - '%hcplayground_movement_speed%'
     - slot: 30
       displayText: 暴击
       material: tnt
@@ -152,7 +152,7 @@ profile:
       displayText: 爆伤
       material: lectern
       lore:
-        - '%hcplayground_criticaldamage%'
+        - '%hcplayground_critical_damage%'
     - slot: 32
       displayText: 智力
       material: enchanted_book
@@ -162,4 +162,4 @@ profile:
       displayText: 掘速
       material: diamond_pickaxe
       lore:
-        - '%hcplayground_diggingspeed%'
+        - '%hcplayground_digging_speed%'

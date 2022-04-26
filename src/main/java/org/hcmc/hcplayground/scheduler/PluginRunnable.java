@@ -1,5 +1,8 @@
 package org.hcmc.hcplayground.scheduler;
 
+import net.md_5.bungee.api.ChatMessageType;
+import net.md_5.bungee.api.chat.BaseComponent;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
@@ -18,10 +21,14 @@ import org.hcmc.hcplayground.manager.ItemManager;
 import org.hcmc.hcplayground.manager.LocalizationManager;
 import org.hcmc.hcplayground.model.item.ItemBase;
 import org.hcmc.hcplayground.model.player.PlayerData;
+import org.hcmc.hcplayground.model.player.PlayerManager;
 import org.hcmc.hcplayground.utility.Global;
 
 import java.lang.reflect.Field;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
 
 public class PluginRunnable extends BukkitRunnable {
 
@@ -93,11 +100,29 @@ public class PluginRunnable extends BukkitRunnable {
         // 每秒更新自1970年1月1日开始至今的总秒数
         totalSeconds = new Date().getTime() / 1000;
         for (Player player : players) {
-            PlayerData pd = Global.getPlayerData(player);
+            PlayerData pd = PlayerManager.getPlayerData(player);
 
             doRemindLogin(pd);
             doPotionEffect(pd);
+            doShowActionBar(pd);
         }
+    }
+
+    private void doShowActionBar(PlayerData pd) {
+        int interval = (int) (totalSeconds - pd.loginTimeStamp) % Global.potion.refreshInterval + 1;
+        if (interval < 2) return;
+
+        double maxHealth = pd.getMaxHealth();
+        double currentHealth = pd.getCurrentHealth();
+        double totalArmor = pd.getTotalArmor();
+        double totalAttackDamage = pd.getTotalAttackDamage();
+        double totalCritical = pd.getTotalCritical();
+        double totalCriticalDamage = pd.getTotalCriticalDamage();
+
+        String value = String.format("§c生命: §e%.1f§7/§e%.1f §b护甲: §e%.1f §a攻击: §e%.1f §6暴击: §e%.1f%% §5爆伤: §e%.1f%%", currentHealth, maxHealth, totalArmor, totalAttackDamage, totalCritical * 100, totalCriticalDamage * 100);
+        BaseComponent baseComponent = new TextComponent(value);
+        Player player = pd.getPlayer();
+        player.spigot().sendMessage(ChatMessageType.ACTION_BAR, baseComponent);
     }
 
     /**
@@ -107,7 +132,7 @@ public class PluginRunnable extends BukkitRunnable {
      * @throws IllegalAccessException
      */
     private void doPotionEffect(PlayerData pd) throws IllegalAccessException {
-        int interval = (int) (totalSeconds - pd.LoginTime) % Global.potion.refreshInterval + 1;
+        int interval = (int) (totalSeconds - pd.loginTimeStamp) % Global.potion.refreshInterval + 1;
         if (interval < Global.potion.refreshInterval) return;
 
         Player player = plugin.getServer().getPlayer(pd.getUuid());
@@ -142,7 +167,7 @@ public class PluginRunnable extends BukkitRunnable {
 
     private void doRemindLogin(PlayerData pd) {
         // 自玩家登录时间开始，至今的总秒数
-        long loginSeconds = pd.getLoginDTTM().getTime() / 1000;
+        long loginSeconds = pd.getLoginTime().getTime() / 1000;
         // 获取玩家是否已经登录
         boolean isLogin = pd.getLogin();
         // 获取玩家是否已经注册
@@ -153,7 +178,7 @@ public class PluginRunnable extends BukkitRunnable {
         Player player = plugin.getServer().getPlayer(pd.getUuid());
         if (player == null) return;
 
-        int interval = (int) (totalSeconds - pd.LoginTime) % Global.authme.remainInterval + 1;
+        int interval = (int) (totalSeconds - pd.loginTimeStamp) % Global.authme.remainInterval + 1;
         if (interval >= Global.authme.remainInterval) {
             long remain = Global.authme.timeout - (totalSeconds - loginSeconds);
             if (!isRegister) {

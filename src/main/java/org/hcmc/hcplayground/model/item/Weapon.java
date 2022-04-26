@@ -13,6 +13,7 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.potion.PotionEffect;
 import org.hcmc.hcplayground.utility.Global;
+import org.w3c.dom.Attr;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -116,8 +117,10 @@ public class Weapon extends ItemBaseA {
             AttributeModifier amAttackReach = new AttributeModifier(UUID.randomUUID(), Global.PluginName(), actualAttackSpeed, AttributeModifier.Operation.ADD_SCALAR, EquipmentSlot.HAND);
             im.addAttributeModifier(Attribute.GENERIC_ATTACK_REACH, amAttackReach);
             */
+            AttributeModifier amHealth = new AttributeModifier(UUID.randomUUID(), Global.PluginName(), this.health, AttributeModifier.Operation.ADD_NUMBER, EquipmentSlot.HAND);
             AttributeModifier amAttackDamage = new AttributeModifier(UUID.randomUUID(), Global.PluginName(), actualAttackDamage, AttributeModifier.Operation.ADD_NUMBER, EquipmentSlot.HAND);
             AttributeModifier amAttackSpeed = new AttributeModifier(UUID.randomUUID(), Global.PluginName(), actualAttackSpeed, AttributeModifier.Operation.ADD_NUMBER, EquipmentSlot.HAND);
+            im.addAttributeModifier(Attribute.GENERIC_MAX_HEALTH, amHealth);
             im.addAttributeModifier(Attribute.GENERIC_ATTACK_DAMAGE, amAttackDamage);
             im.addAttributeModifier(Attribute.GENERIC_ATTACK_SPEED, amAttackSpeed);
             /*
@@ -127,9 +130,9 @@ public class Weapon extends ItemBaseA {
                 im.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
             }
 
+            im.setLore(lore);
             // 为物品添加额外特性信息，比如暴击等MC本身没有的特性
             SetPersistentData(im);
-            im.setLore(lore);
             is.setItemMeta(im);
         }
 
@@ -141,20 +144,24 @@ public class Weapon extends ItemBaseA {
         设置NamespaceKey，比如暴击等MC没有的特性的命名空间名称
         */
         NamespacedKey subKey = new NamespacedKey(plugin, PERSISTENT_SUB_KEY);
-        NamespacedKey criticalKey = new NamespacedKey(plugin, PERSISTENT_CRITICAL_KEY);
         NamespacedKey healthKey = new NamespacedKey(plugin, PERSISTENT_HEALTH_KEY);
-        NamespacedKey reachKey = new NamespacedKey(plugin, PERSISTENT_ATTACK_REACH_KEY);
         NamespacedKey bloodSuckingKey = new NamespacedKey(plugin, PERSISTENT_BLOOD_SUCKING_KEY);
+        NamespacedKey criticalKey = new NamespacedKey(plugin, PERSISTENT_CRITICAL_KEY);
         NamespacedKey criticalDamageKey = new NamespacedKey(plugin, PERSISTENT_CRITICAL_DAMAGE_KEY);
+        NamespacedKey attackReachKey = new NamespacedKey(plugin, PERSISTENT_ATTACK_REACH_KEY);
+        NamespacedKey attackDamageKey = new NamespacedKey(plugin, PERSISTENT_ATTACK_DAMAGE_KEY);
+        NamespacedKey attackSpeedKey = new NamespacedKey(plugin, PERSISTENT_ATTACK_SPEED_KEY);
 
         PersistentDataContainer mainContainer = im.getPersistentDataContainer();
         PersistentDataContainer subContainer = mainContainer.getAdapterContext().newPersistentDataContainer();
 
-        subContainer.set(criticalKey, PersistentDataType.FLOAT, this.critical);
-        subContainer.set(criticalDamageKey, PersistentDataType.FLOAT, this.criticalDamage);
         subContainer.set(healthKey, PersistentDataType.FLOAT, this.health);
         subContainer.set(bloodSuckingKey, PersistentDataType.FLOAT, this.bloodSucking);
-        subContainer.set(reachKey, PersistentDataType.FLOAT, this.attackReach);
+        subContainer.set(criticalKey, PersistentDataType.FLOAT, this.critical);
+        subContainer.set(criticalDamageKey, PersistentDataType.FLOAT, this.criticalDamage);
+        subContainer.set(attackReachKey, PersistentDataType.FLOAT, this.attackReach);
+        subContainer.set(attackDamageKey, PersistentDataType.FLOAT, this.attackDamage);
+        subContainer.set(attackSpeedKey, PersistentDataType.FLOAT, this.attackSpeed);
 
         mainContainer.set(subKey, PersistentDataType.TAG_CONTAINER, subContainer);
     }

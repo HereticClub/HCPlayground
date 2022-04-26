@@ -27,6 +27,7 @@ public class NameBinaryTagResolver {
         if (subContainer == null) return 0.0F;
         NamespacedKey subKey = new NamespacedKey(plugin, key);
         Float value = subContainer.get(subKey, PersistentDataType.FLOAT);
+
         if (value == null) return 0;
         return value;
     }

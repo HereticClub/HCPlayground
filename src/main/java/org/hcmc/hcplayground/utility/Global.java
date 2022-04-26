@@ -28,6 +28,7 @@ import org.hcmc.hcplayground.model.config.Authme;
 import org.hcmc.hcplayground.model.config.Potion;
 import org.hcmc.hcplayground.model.item.ItemBaseA;
 import org.hcmc.hcplayground.model.player.PlayerData;
+import org.hcmc.hcplayground.model.player.PlayerManager;
 import org.hcmc.hcplayground.scheduler.PluginRunnable;
 
 import java.io.File;
@@ -57,7 +58,6 @@ public final class Global {
 
     public static PluginRunnable runnable;
     public static Map<String, YamlConfiguration> yamlMap;
-    public static Map<UUID, PlayerData> playerMap;
     public static Gson GsonObject;
     public static Scoreboard HealthScoreboard;
     public static Authme authme = null;
@@ -74,7 +74,6 @@ public final class Global {
         plugin = JavaPlugin.getPlugin(HCPlayground.class);
         runnable = new PluginRunnable();
         yamlMap = new HashMap<>();
-        playerMap = new HashMap<>();
         HealthScoreboard = CreateScoreboard();
         ymlFilenames = new String[]{
                 "config.yml",
@@ -121,11 +120,11 @@ public final class Global {
      */
     public static void Dispose() throws SQLException, IOException, IllegalAccessException {
         for (Player player : plugin.getServer().getOnlinePlayers()) {
-            PlayerData pd = getPlayerData(player);
+            PlayerData pd = PlayerManager.getPlayerData(player);
             pd.SaveConfig();
         }
         runnable.cancel();
-        playerMap.clear();
+        PlayerManager.clearAllPlayerData();
         yamlMap.clear();
         if (!Sqlite.isClosed()) Sqlite.close();
     }
@@ -214,42 +213,6 @@ public final class Global {
      */
     public static YamlConfiguration getYamlConfiguration(String filename) {
         return yamlMap.get(filename);
-    }
-
-    /**
-     * 获取实体玩家的所有配置信息
-     *
-     * @param player 实体玩家实例
-     * @return 该实体玩家的配置信息实例
-     */
-    public static PlayerData getPlayerData(Player player) throws IllegalAccessException {
-        PlayerData pd = playerMap.get(player.getUniqueId());
-
-        if (pd == null) {
-            pd = new PlayerData(player);
-            Global.LogMessage(String.format("\033[1;35mgetPlayerData GameMode: \033[1;33m%s\033[0m", player.getGameMode()));
-            pd.GameMode = player.getGameMode();
-            pd.LoadConfig();
-        }
-
-        return pd;
-    }
-
-    /**
-     * 推送玩家配置信息到一个缓存列表
-     * @param player Minecraft的玩家实例
-     * @param data 玩家的配置信息实例
-     */
-    public static void setPlayerData(Player player, PlayerData data) {
-        UUID playerUuid = player.getUniqueId();
-        Global.LogMessage(String.format("\033[1;35msetPlayerData GameMode: \033[1;33m%s\033[0m", data.GameMode));
-        playerMap.put(playerUuid, data);
-    }
-
-    public static void removePlayerData(Player player, PlayerData data) {
-        UUID playerUuid = player.getUniqueId();
-        Global.LogMessage(String.format("\033[1;35mremovePlayerData GameMode: \033[1;33m%s\033[0m", data.GameMode));
-        playerMap.remove(playerUuid, data);
     }
 
     /**
