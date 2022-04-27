@@ -3,25 +3,34 @@ package org.hcmc.hcplayground.filter;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Marker;
+import org.apache.logging.log4j.core.Filter;
 import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.Logger;
+import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.filter.AbstractFilter;
+import org.apache.logging.log4j.core.filter.MarkerFilter;
 import org.apache.logging.log4j.message.Message;
 import org.bukkit.command.Command;
 import org.hcmc.hcplayground.model.command.CommandItem;
 import org.hcmc.hcplayground.utility.Global;
 
 import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 public class ConsoleLog4jFilter extends AbstractFilter {
+
+    private static final long serialVersionUID = -5594073755007974254L;
 
     public ConsoleLog4jFilter() {
 
     }
 
     public static void RegisterFilter() {
-        Logger logger = (Logger) LogManager.getRootLogger();
         ConsoleLog4jFilter filter = new ConsoleLog4jFilter();
+
+        Logger logger = (Logger) LogManager.getRootLogger();
         logger.addFilter(filter);
     }
 
@@ -57,9 +66,9 @@ public class ConsoleLog4jFilter extends AbstractFilter {
 
     private Result ValidateMessage(String message) {
         if (message == null) return Result.NEUTRAL;
-        String[] keys = message.split(" ");
+        List<String> keys = Arrays.stream(message.split(" ")).toList();
 
-        String commandText = Arrays.stream(keys).filter(x -> x.substring(0, 1).equalsIgnoreCase("/")).findAny().orElse(null);
+        String commandText = keys.stream().filter(x -> x.length() >= 1 && x.substring(0, 1).equalsIgnoreCase("/")).findAny().orElse(null);
         if (commandText == null) return Result.NEUTRAL;
 
         commandText = commandText.substring(1);

@@ -9,7 +9,7 @@ import org.bukkit.plugin.PluginDescriptionFile;
 import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.model.item.ItemBase;
 import org.hcmc.hcplayground.model.player.PlayerData;
-import org.hcmc.hcplayground.model.player.PlayerManager;
+import org.hcmc.hcplayground.manager.PlayerManager;
 import org.hcmc.hcplayground.utility.Global;
 import org.jetbrains.annotations.NotNull;
 
@@ -78,34 +78,49 @@ public class HCPluginExpansion extends PlaceholderExpansion {
     @Override
     public String onRequest(OfflinePlayer offlinePlayer, @NotNull String params) {
         Player player = offlinePlayer.getPlayer();
-        if (player == null) return "Health Unknown";
+        if (player == null) return "Unknown Player";
 
         try {
             PlayerData data = PlayerManager.getPlayerData(player);
 
-            if (params.equalsIgnoreCase(ItemBase.PERSISTENT_ARMOR_KEY)) return String.valueOf(data.getTotalArmor());
+            if (params.equalsIgnoreCase(ItemBase.PERSISTENT_ARMOR_KEY))
+                return String.format("%.1f", data.getTotalArmor());
             if (params.equalsIgnoreCase(ItemBase.PERSISTENT_ARMOR_TOUGHNESS_KEY))
-                return String.valueOf(data.getTotalArmorToughness());
+                return String.format("%.1f", data.getTotalArmorToughness());
             if (params.equalsIgnoreCase(ItemBase.PERSISTENT_ATTACK_DAMAGE_KEY))
-                return String.valueOf(data.getTotalAttackDamage());
+                return String.format("%.1f", data.getTotalAttackDamage());
             if (params.equalsIgnoreCase(ItemBase.PERSISTENT_ATTACK_REACH_KEY))
-                return String.valueOf(data.getTotalAttackReach());
+                return String.format("%.1f", data.getTotalAttackReach());
             if (params.equalsIgnoreCase(ItemBase.PERSISTENT_ATTACK_SPEED_KEY))
-                return String.valueOf(data.getTotalAttackSpeed());
+                return String.format("%.1f", data.getTotalAttackSpeed());
             if (params.equalsIgnoreCase(ItemBase.PERSISTENT_BLOOD_SUCKING_KEY))
-                return String.valueOf(data.getTotalBloodSucking());
+                return String.format("%.1f", data.getTotalBloodSucking());
             if (params.equalsIgnoreCase(ItemBase.PERSISTENT_CRITICAL_KEY))
-                return String.valueOf(data.getTotalCritical());
+                return String.format("%.1f", data.getTotalCritical());
+            if (params.equalsIgnoreCase(ItemBase.PERSISTENT_CRITICAL_PERCENTAGE_KEY))
+                return String.format("%.1f%%", data.getTotalCritical() * 100);
             if (params.equalsIgnoreCase(ItemBase.PERSISTENT_CRITICAL_DAMAGE_KEY))
-                return String.valueOf(data.getTotalCriticalDamage());
-            if (params.equalsIgnoreCase(ItemBase.PERSISTENT_HEALTH_KEY)) return String.valueOf(data.getMaxHealth());
+                return String.format("%.1f", data.getTotalCriticalDamage());
+            if (params.equalsIgnoreCase(ItemBase.PERSISTENT_CRITICAL_DAMAGE_PERCENTAGE_KEY))
+                return String.format("%.1f%%", data.getTotalCriticalDamage() * 100);
+            if (params.equalsIgnoreCase(ItemBase.PERSISTENT_HEALTH_KEY))
+                return String.format("%.1f", data.getCurrentHealth());
+            if (params.equalsIgnoreCase(ItemBase.PERSISTENT_MAX_HEALTH_KEY))
+                return String.format("%.1f", data.getMaxHealth());
             if (params.equalsIgnoreCase(ItemBase.PERSISTENT_KNOCKBACK_RESISTANCE_KEY))
-                return String.valueOf(data.getTotalKnockBackResistance());
-            if (params.equalsIgnoreCase(ItemBase.PERSISTENT_LUCK_KEY)) return String.valueOf(data.getTotalLuck());
+                return String.format("%.1f", data.getTotalKnockBackResistance());
+            if (params.equalsIgnoreCase(ItemBase.PERSISTENT_LUCK_KEY))
+                return String.format("%.1f", data.getTotalLuck());
             if (params.equalsIgnoreCase(ItemBase.PERSISTENT_MOVEMENT_SPEED_KEY))
-                return String.valueOf(data.getTotalMovementSpeed());
-            if (params.equalsIgnoreCase(ItemBase.PERSISTENT_RECOVER_KEY)) return String.valueOf(data.getTotalRecover());
-
+                return String.format("%.1f", data.getTotalMovementSpeed());
+            if (params.equalsIgnoreCase(ItemBase.PERSISTENT_RECOVER_KEY))
+                return String.format("%.1f", data.getTotalRecover());
+            if (params.equalsIgnoreCase(ItemBase.PERSISTENT_INTELLIGENCE))
+                return String.format("%.1f", data.getTotalIntelligence());
+            if (params.equalsIgnoreCase(ItemBase.PERSISTENT_DIGGING_SPEED))
+                return String.format("%.1f", data.getTotalDiggingSpeed());
+            if (params.equalsIgnoreCase(ItemBase.PERSISTENT_LOGGING_SPEED))
+                return String.format("%.1f", data.getTotalLoggingSpeed());
         } catch (IllegalAccessException e) {
             e.printStackTrace();
         }

@@ -147,19 +147,24 @@ profile:
       displayText: 暴击
       material: tnt
       lore:
-        - '%hcplayground_critical%'
+        - '%hcplayground_critical_percentage%'
     - slot: 31
       displayText: 爆伤
       material: lectern
       lore:
-        - '%hcplayground_critical_damage%'
+        - '%hcplayground_critical_damage_percentage%'
     - slot: 32
       displayText: 智力
       material: enchanted_book
       lore:
         - '%hcplayground_intelligence%'
     - slot: 33
-      displayText: 掘速
+      displayText: 挖掘速度
       material: diamond_pickaxe
       lore:
         - '%hcplayground_digging_speed%'
+    - slot: 34
+      displayText: 伐木速度
+      material: diamond_pickaxe
+      lore:
+        - '%hcplayground_logging_speed%'

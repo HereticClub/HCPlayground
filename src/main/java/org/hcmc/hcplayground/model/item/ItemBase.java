@@ -12,8 +12,10 @@ public interface ItemBase {
     // 次键
     String PERSISTENT_SUB_KEY = "content";
     // 当前Minecraft版本直接支持的玩家基本属性，数值可直接添加和提取
-    // 生命
+    // 当前生命值
     String PERSISTENT_HEALTH_KEY = "health";
+    // 最大生命值
+    String PERSISTENT_MAX_HEALTH_KEY = "max_health";
     // 盔甲
     String PERSISTENT_ARMOR_KEY = "armor";
     // 韧性
@@ -33,8 +35,12 @@ public interface ItemBase {
     // 当前Minecraft版本没有的玩家属性，需要用代码来实施和运算
     // 暴击
     String PERSISTENT_CRITICAL_KEY = "critical";
-    // 暴击
+    // 暴击的百分比格式
+    String PERSISTENT_CRITICAL_PERCENTAGE_KEY = "critical_percentage";
+    // 暴击伤害
     String PERSISTENT_CRITICAL_DAMAGE_KEY = "critical_damage";
+    // 暴击伤害的百分比格式
+    String PERSISTENT_CRITICAL_DAMAGE_PERCENTAGE_KEY = "critical_damage_percentage";
     // 吸血
     String PERSISTENT_BLOOD_SUCKING_KEY = "blood_sucking";
     // 恢复

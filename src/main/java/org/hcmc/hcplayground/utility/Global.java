@@ -28,7 +28,7 @@ import org.hcmc.hcplayground.model.config.Authme;
 import org.hcmc.hcplayground.model.config.Potion;
 import org.hcmc.hcplayground.model.item.ItemBaseA;
 import org.hcmc.hcplayground.model.player.PlayerData;
-import org.hcmc.hcplayground.model.player.PlayerManager;
+import org.hcmc.hcplayground.manager.PlayerManager;
 import org.hcmc.hcplayground.scheduler.PluginRunnable;
 
 import java.io.File;
@@ -221,10 +221,10 @@ public final class Global {
     public static void ValidWorldGuardPlugin() {
         Plugin p = plugin.getServer().getPluginManager().getPlugin("WorldGuard");
         if (p == null) {
-            plugin.getLogger().log(Level.WARNING, "WorldGuard not found :(");
+            LogWarning("WorldGuard not found :(");
         } else {
             WorldGuardApi = WorldGuard.getInstance();
-            plugin.getLogger().info(String.format("Found WorldGuard, version: %s", p.getDescription().getVersion()));
+            LogMessage(String.format("Found WorldGuard, version: %s", p.getDescription().getVersion()));
         }
     }
 
@@ -234,12 +234,12 @@ public final class Global {
     public static void ValidVaultPlugin() {
         Plugin p = plugin.getServer().getPluginManager().getPlugin("Vault");
         if (p == null) {
-            plugin.getLogger().log(Level.WARNING, "Vault not found :(");
+            LogWarning("Vault not found :(");
         } else {
             SetVaultChat();
             SetVaultEconomy();
             SetVaultPermission();
-            plugin.getLogger().info(String.format("Found Vault, version: %s", p.getDescription().getVersion()));
+            LogMessage(String.format("Found Vault, version: %s", p.getDescription().getVersion()));
         }
     }
 

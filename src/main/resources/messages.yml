@@ -1,3 +1,23 @@
+# 本插件当前版本提供以下Placeholders
+# %hcplayground_health%: 获得玩家当前生命值
+# %hcplayground_max_health%: 获得玩家最大生命值
+# %hcplayground_armor%: 获得玩家当前盔甲值
+# %hcplayground_armor_toughness%: 获得玩家当前盔甲韧性值
+# %hcplayground_knockback_resistance%: 获得玩家击退抗性值
+# %hcplayground_luck%: 获得玩家幸运值
+# %hcplayground_movement_speed%: 获得玩家移动速度值
+# %hcplayground_attack_damage%: 获得玩家攻击伤害值
+# %hcplayground_attack_speed%: 获得玩家攻击速度值
+# %hcplayground_attack_reach%: 获得玩家攻击距离值
+# %hcplayground_critical%: 获得玩家暴击率
+# %hcplayground_critical_percentage%: 获得玩家暴击率的百分比格式
+# %hcplayground_critical_damage%: 获得玩家暴击伤害
+# %hcplayground_critical_damage_percentage%: 获得玩家暴击伤害的百分比格式
+# %hcplayground_blood_sucking%: 获得玩家吸血值
+# %hcplayground_recover%: 获得玩家每5秒恢复生命值
+# %hcplayground_intelligence%: 获得玩家智力值
+# %hcplayground_digging_speed%: 获得玩家挖掘速度值
+# %hcplayground_logging_speed%: 获得玩家伐木速度值
 messages:
   # 没有权限运行该指令时的提示，可使用%permission%占位符，代表当前需要的权限
   permission-message: '&4You need &e%permission% &4to run this command.'
@@ -64,6 +84,8 @@ messages:
   playerBanned: '&cPlayer %player% has been banned!'
   # 当玩家被管理员解禁时显示，可以使用%player%占位符，代表被解禁的玩家名称
   playerUnBanned: '&cPlayer %player% has been unbanned!'
+  # 玩家的ActionBar显示信息
+  playerActionBar: '&cHealth: &e%hcplayground_health%&7/&e%hcplayground_health% &1Armor: &e%hcplayground_armor% &4Damage: &e%hcplayground_attack_damage% &5Critical: &e%hcplayground_critical_percentage% &5Critical Damage: &e%hcplayground_critical_damage_percentage%'
   # 重新加载插件配置时显示，可以使用%time_escaped%占位符，表示重新加载插件所使用的时间，单位: 毫秒
   reload: '&aConfiguration reload completed, time escaped: &e%time_escaped% &ams'
   # 玩家在线状态信息

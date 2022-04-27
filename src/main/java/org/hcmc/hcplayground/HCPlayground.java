@@ -11,7 +11,7 @@ import org.hcmc.hcplayground.listener.PluginListener;
 import org.hcmc.hcplayground.manager.*;
 import org.hcmc.hcplayground.model.permission.PermissionManager;
 import org.hcmc.hcplayground.model.player.PlayerData;
-import org.hcmc.hcplayground.model.player.PlayerManager;
+import org.hcmc.hcplayground.manager.PlayerManager;
 import org.hcmc.hcplayground.scheduler.EquipmentMonitorRunnable;
 import org.hcmc.hcplayground.sqlite.SqliteManager;
 import org.hcmc.hcplayground.utility.Global;
@@ -37,6 +37,9 @@ public class HCPlayground extends JavaPlugin {
         super.onEnable();
 
         try {
+            //ConsoleLegacyFilter.RegisterFilter(getLogger());
+            ConsoleLog4jFilter.RegisterFilter();
+            HCPluginExpansion.RegisterExpansion();
             // 重新加载所有yml文档
             ReloadConfiguration();
             // 以下代码不需要在ReloadPlugin()中执行，只需要在插件启用时执行一次
@@ -62,8 +65,6 @@ public class HCPlayground extends JavaPlugin {
                 // 所以不需要在这里再次执行
                 new EquipmentMonitorRunnable(p).runTask(getPlugin());
             }
-            ConsoleLog4jFilter.RegisterFilter();
-            HCPluginExpansion.RegisterExpansion();
         } catch (IllegalAccessException | NoSuchFieldException | SQLException | NoSuchAlgorithmException | InvalidKeySpecException | IOException e) {
             e.printStackTrace();
         }
@@ -93,7 +94,7 @@ public class HCPlayground extends JavaPlugin {
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command cmd, @NotNull String label, String[] args) {
-        System.out.println(label);
+        //System.out.println(label);
         return false;
     }
 

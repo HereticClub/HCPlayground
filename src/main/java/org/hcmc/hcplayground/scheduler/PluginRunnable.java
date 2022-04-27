@@ -21,7 +21,7 @@ import org.hcmc.hcplayground.manager.ItemManager;
 import org.hcmc.hcplayground.manager.LocalizationManager;
 import org.hcmc.hcplayground.model.item.ItemBase;
 import org.hcmc.hcplayground.model.player.PlayerData;
-import org.hcmc.hcplayground.model.player.PlayerManager;
+import org.hcmc.hcplayground.manager.PlayerManager;
 import org.hcmc.hcplayground.utility.Global;
 
 import java.lang.reflect.Field;
@@ -119,9 +119,12 @@ public class PluginRunnable extends BukkitRunnable {
         double totalCritical = pd.getTotalCritical();
         double totalCriticalDamage = pd.getTotalCriticalDamage();
 
-        String value = String.format("§c生命: §e%.1f§7/§e%.1f §b护甲: §e%.1f §a攻击: §e%.1f §6暴击: §e%.1f%% §5爆伤: §e%.1f%%", currentHealth, maxHealth, totalArmor, totalAttackDamage, totalCritical * 100, totalCriticalDamage * 100);
-        BaseComponent baseComponent = new TextComponent(value);
+
+        //String value = String.format("§c生命: §e%.1f§7/§e%.1f §b护甲: §e%.1f §a攻击: §e%.1f §6暴击: §e%.1f%% §5爆伤: §e%.1f%%", currentHealth, maxHealth, totalArmor, totalAttackDamage, totalCritical * 100, totalCriticalDamage * 100);
+
         Player player = pd.getPlayer();
+        String value = LocalizationManager.getMessage("playerActionBar", player);
+        BaseComponent baseComponent = new TextComponent(value);
         player.spigot().sendMessage(ChatMessageType.ACTION_BAR, baseComponent);
     }
 

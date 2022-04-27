@@ -51,7 +51,17 @@ public class PlayerData {
     private static final String Section_Key_KillMobList = "killMobList";
 
     private static final String TYPE_JAVA_UTIL_MAP = "java.util.Map";
-    private static final float BASE_HEALTH = 20.0F;
+    public static final double BASE_HEALTH = 20.0F;
+    public static final double BASE_MAX_HEALTH = 20.0F;
+    public static final double BASE_CRITICAL = 0.05F;
+    public static final double BASE_CRITICAL_DAMAGE = 1.5F;
+    public static final double BASE_ARMOR = 0;
+    public static final double BASE_ATTACK_REACH = 0;
+    public static final double BASE_BLOOD_SUCKING = 0;
+    public static final double BASE_RECOVER = 0;
+    public static final double BASE_INTELLIGENCE = 0;
+    public static final double BASE_DIGGING_SPEED = 0;
+    public static final double BASE_LOGGING_SPEED = 0;
     /**
      * 玩家档案文档的各种记录名称列表
      */
@@ -114,20 +124,16 @@ public class PlayerData {
      */
     private final JavaPlugin plugin = HCPlayground.getPlugin();
 
-    private double totalArmor;
-    private double totalArmorToughness;
-    private double totalAttackDamage;
-    private double totalAttackReach;
-    private double totalAttackSpeed;
-    private double totalBloodSucking;
-    private double totalCritical;
-    private double totalCriticalDamage;
-    private double maxHealth;
-    private double currentHealth;
-    private double totalKnockBackResistance;
-    private double totalLuck;
-    private double totalMovementSpeed;
-    private double totalRecover;
+    private double totalArmor = BASE_ARMOR;
+    private double totalAttackReach = BASE_ATTACK_REACH;
+    private double totalBloodSucking = BASE_BLOOD_SUCKING;
+    private double totalCritical = BASE_CRITICAL;
+    private double totalCriticalDamage = BASE_CRITICAL_DAMAGE;
+    private double maxHealth = BASE_MAX_HEALTH;
+    private double totalRecover = BASE_RECOVER;
+    private double totalIntelligence = BASE_INTELLIGENCE;
+    private double totalDiggingSpeed = BASE_DIGGING_SPEED;
+    private double totalLoggingSpeed = BASE_LOGGING_SPEED;
 
     public PlayerData(Player player) {
         this.player = player;
@@ -137,7 +143,7 @@ public class PlayerData {
     }
 
     public double getCurrentHealth() {
-        currentHealth = (float) player.getHealth();
+        double currentHealth = (float) player.getHealth();
         if (currentHealth >= maxHealth) player.setHealth(maxHealth);
         return currentHealth;
     }
@@ -150,39 +156,32 @@ public class PlayerData {
 
     // 获取玩家当前护甲值
     public double getTotalArmor() {
-        //totalArmor = getGenericAttribute(Attribute.GENERIC_ARMOR, 0);
         return totalArmor;
     }
 
     // 获取玩家当前移动速度
     public double getTotalMovementSpeed() {
-        totalMovementSpeed = getGenericAttribute(Attribute.GENERIC_MOVEMENT_SPEED, 0);
-        return totalMovementSpeed;
+        return getGenericAttribute(Attribute.GENERIC_MOVEMENT_SPEED, 0);
     }
 
     public double getTotalArmorToughness() {
-        totalArmorToughness = getGenericAttribute(Attribute.GENERIC_ARMOR_TOUGHNESS, 0);
-        return totalArmorToughness;
+        return getGenericAttribute(Attribute.GENERIC_ARMOR_TOUGHNESS, 0);
     }
 
     public double getTotalKnockBackResistance() {
-        totalKnockBackResistance = getGenericAttribute(Attribute.GENERIC_KNOCKBACK_RESISTANCE, 0);
-        return totalKnockBackResistance;
+        return getGenericAttribute(Attribute.GENERIC_KNOCKBACK_RESISTANCE, 0);
     }
 
     public double getTotalLuck() {
-        totalLuck = getGenericAttribute(Attribute.GENERIC_LUCK, 0);
-        return totalLuck;
+        return getGenericAttribute(Attribute.GENERIC_LUCK, 0);
     }
 
     public double getTotalAttackDamage() {
-        totalAttackDamage = getGenericAttribute(Attribute.GENERIC_ATTACK_DAMAGE, 0);
-        return totalAttackDamage;
+        return getGenericAttribute(Attribute.GENERIC_ATTACK_DAMAGE, 0);
     }
 
     public double getTotalAttackSpeed() {
-        totalAttackSpeed = getGenericAttribute(Attribute.GENERIC_ATTACK_SPEED, 0);
-        return totalAttackSpeed;
+        return getGenericAttribute(Attribute.GENERIC_ATTACK_SPEED, 0);
     }
 
     public double getTotalRecover() {
@@ -205,60 +204,51 @@ public class PlayerData {
         return totalAttackReach;
     }
 
-    public void setTotalArmor(float value) {
+    public double getTotalIntelligence() {
+        return totalIntelligence;
+    }
+
+    public double getTotalDiggingSpeed() {
+        return totalDiggingSpeed;
+    }
+
+    public double getTotalLoggingSpeed() {
+        return totalLoggingSpeed;
+    }
+
+    public void setTotalLoggingSpeed(double value) {
+        totalLoggingSpeed = value;
+    }
+
+    public void setTotalDiggingSpeed(double value) {
+        totalDiggingSpeed = value;
+    }
+
+    public void setTotalIntelligence(double value) {
+        totalIntelligence = value;
+    }
+
+    public void setTotalArmor(double value) {
         totalArmor = value;
     }
-    /*
-    public void setTotalArmorToughness(float value) {
-        totalArmorToughness = value;
-    }
 
-    public void setTotalAttackDamage(float value) {
-        totalAttackDamage = value;
-    }
-
-    public void setTotalAttackSpeed(float value) {
-        totalAttackSpeed = value;
-    }
-
-    public void setMaxHealth(float deltaHealth) {
-        maxHealth = deltaHealth + PlayerManager.BASE_PLAYER_HEALTH;
-        AttributeInstance instance = player.getAttribute(Attribute.GENERIC_MAX_HEALTH);
-        if (instance == null) return;
-        instance.setBaseValue(maxHealth);
-        player.setHealth(maxHealth);
-    }
-
-    public void setTotalKnockBackResistance(float value) {
-        totalKnockBackResistance = value;
-    }
-
-    public void setTotalLuck(float value) {
-        totalLuck = value;
-    }
-
-    public void setTotalMovementSpeed(float value) {
-        totalMovementSpeed = value;
-    }
-    */
-
-    public void setTotalCriticalDamage(float value) {
+    public void setTotalCriticalDamage(double value) {
         totalCriticalDamage = value;
     }
 
-    public void setTotalAttackReach(float value) {
+    public void setTotalAttackReach(double value) {
         totalAttackReach = value;
     }
 
-    public void setTotalCritical(float value) {
+    public void setTotalCritical(double value) {
         totalCritical = value;
     }
 
-    public void setTotalBloodSucking(float value) {
+    public void setTotalBloodSucking(double value) {
         totalBloodSucking = value;
     }
 
-    public void setTotalRecover(float value) {
+    public void setTotalRecover(double value) {
         totalRecover = value;
     }
 

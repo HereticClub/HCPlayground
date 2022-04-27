@@ -1,11 +1,10 @@
-package org.hcmc.hcplayground.model.player;
+package org.hcmc.hcplayground.manager;
 
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.hcmc.hcplayground.model.item.ItemBase;
-import org.hcmc.hcplayground.utility.Global;
+import org.hcmc.hcplayground.model.player.PlayerData;
 import org.hcmc.hcplayground.utility.NameBinaryTagResolver;
 import org.jetbrains.annotations.NotNull;
 
@@ -70,19 +69,15 @@ public class PlayerManager {
     }
 
     public static void getEquipmentData(Player player, ItemStack[] itemStacks) throws IllegalAccessException {
-        float armor = 0;
-        float armorToughness = 0;
-        float attackDamage = 0;
-        float attackSpeed = 0;
-        float health = 0;
-        float knockBackResistance = 0;
-        float luck = 0;
-        float movementSpeed = 0;
-        float attackReach = 0;
-        float bloodSucking = 0;
-        float critical = 0;
-        float criticalDamage = 0;
-        float recover = 0;
+        double armor = PlayerData.BASE_ARMOR;
+        double attackReach = PlayerData.BASE_ATTACK_REACH;
+        double bloodSucking = PlayerData.BASE_BLOOD_SUCKING;
+        double critical = PlayerData.BASE_CRITICAL;
+        double criticalDamage = PlayerData.BASE_CRITICAL_DAMAGE;
+        double recover = PlayerData.BASE_RECOVER;
+        double intelligence = PlayerData.BASE_INTELLIGENCE;
+        double diggingSpeed = PlayerData.BASE_DIGGING_SPEED;
+        double loggingSpeed = PlayerData.BASE_LOGGING_SPEED;
 
         // 检查玩家的装备栏和副手物品
         for (ItemStack is : itemStacks) {
@@ -95,13 +90,6 @@ public class PlayerManager {
             NameBinaryTagResolver nbt = new NameBinaryTagResolver(is);
             // Minecraft直接支持的玩家基本属性
             armor += nbt.getFloatValue(ItemBase.PERSISTENT_ARMOR_KEY);
-            armorToughness += nbt.getFloatValue(ItemBase.PERSISTENT_ARMOR_TOUGHNESS_KEY);
-            attackDamage += nbt.getFloatValue(ItemBase.PERSISTENT_ATTACK_DAMAGE_KEY);
-            attackSpeed += nbt.getFloatValue(ItemBase.PERSISTENT_ATTACK_SPEED_KEY);
-            health += nbt.getFloatValue(ItemBase.PERSISTENT_HEALTH_KEY);
-            knockBackResistance += nbt.getFloatValue(ItemBase.PERSISTENT_KNOCKBACK_RESISTANCE_KEY);
-            luck += nbt.getFloatValue(ItemBase.PERSISTENT_LUCK_KEY);
-            movementSpeed += nbt.getFloatValue(ItemBase.PERSISTENT_MOVEMENT_SPEED_KEY);
             // Minecraft不支持的玩家基本属性
             recover += nbt.getFloatValue(ItemBase.PERSISTENT_RECOVER_KEY);
             bloodSucking += nbt.getFloatValue(ItemBase.PERSISTENT_BLOOD_SUCKING_KEY);
@@ -109,25 +97,20 @@ public class PlayerManager {
             criticalDamage += nbt.getFloatValue(ItemBase.PERSISTENT_CRITICAL_DAMAGE_KEY);
             // Minecraft实验性玩家基本属性，当前版本还不支持
             attackReach += nbt.getFloatValue(ItemBase.PERSISTENT_ATTACK_REACH_KEY);
+            intelligence += nbt.getFloatValue(ItemBase.PERSISTENT_INTELLIGENCE);
+            diggingSpeed += nbt.getFloatValue(ItemBase.PERSISTENT_DIGGING_SPEED);
+            loggingSpeed += nbt.getFloatValue(ItemBase.PERSISTENT_LOGGING_SPEED);
         }
-
         PlayerData data = getPlayerData(player);
-        /*
-        data.setTotalArmorToughness(armorToughness);
-        data.setTotalAttackDamage(attackDamage);
-        data.setTotalAttackSpeed(attackSpeed);
-        data.setMaxHealth(health);
-        data.setTotalKnockBackResistance(knockBackResistance);
-        data.setTotalLuck(luck);
-        data.setTotalMovementSpeed(movementSpeed);
-        */
         data.setTotalArmor(armor);
         data.setTotalAttackReach(attackReach);
         data.setTotalBloodSucking(bloodSucking);
         data.setTotalCritical(critical);
         data.setTotalCriticalDamage(criticalDamage);
         data.setTotalRecover(recover);
-
+        data.setTotalIntelligence(intelligence);
+        data.setTotalDiggingSpeed(diggingSpeed);
+        data.setTotalLoggingSpeed(loggingSpeed);
         setPlayerData(player, data);
         /* TODO: 在后续的版本需要实施血量压缩显示
         float totalHealth = health + PlayerManager.BASE_PLAYER_HEALTH;
