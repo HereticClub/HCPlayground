@@ -3,7 +3,7 @@ package org.hcmc.hcplayground.model.config;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-public class Authme {
+public class AuthmeConfiguration {
 
     @Expose
     @SerializedName(value = "remainInterval")
@@ -12,7 +12,7 @@ public class Authme {
     @SerializedName(value = "timeout")
     public int timeout = 120;
 
-    public Authme() {
+    public AuthmeConfiguration() {
 
     }
 }

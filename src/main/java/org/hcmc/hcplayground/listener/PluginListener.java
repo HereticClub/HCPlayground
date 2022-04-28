@@ -17,24 +17,21 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.entity.EntitySpawnEvent;
-import org.bukkit.event.inventory.ClickType;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.event.inventory.*;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.*;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Scoreboard;
 import org.hcmc.hcplayground.HCPlayground;
+import org.hcmc.hcplayground.enums.RecipeType;
 import org.hcmc.hcplayground.event.PlayerEquipmentChangedEvent;
-import org.hcmc.hcplayground.manager.DropManager;
-import org.hcmc.hcplayground.manager.LocalizationManager;
-import org.hcmc.hcplayground.manager.MobManager;
+import org.hcmc.hcplayground.manager.*;
 import org.hcmc.hcplayground.model.MobEntity;
+import org.hcmc.hcplayground.model.config.BanConfiguration;
 import org.hcmc.hcplayground.model.menu.MenuDetail;
 import org.hcmc.hcplayground.model.menu.MenuItem;
 import org.hcmc.hcplayground.model.player.PlayerData;
-import org.hcmc.hcplayground.manager.PlayerManager;
 import org.hcmc.hcplayground.scheduler.EquipmentMonitorRunnable;
 import org.hcmc.hcplayground.utility.Global;
 import org.hcmc.hcplayground.utility.RandomNumber;
@@ -84,7 +81,7 @@ public class PluginListener implements Listener {
      * @throws SQLException 当SQL执行操作时发生异常
      */
     @EventHandler
-    public void onPlayerJoined(final PlayerJoinEvent event) throws SQLException, IllegalAccessException {
+    private void onPlayerJoined(final PlayerJoinEvent event) throws SQLException, IllegalAccessException {
         // 获取登陆玩家实例
         Player player = event.getPlayer();
         // 获取玩家实例的附加数据
@@ -110,7 +107,7 @@ public class PluginListener implements Listener {
     }
 
     @EventHandler
-    public void onPlayerMove(PlayerMoveEvent event) throws IllegalAccessException {
+    private void onPlayerMove(PlayerMoveEvent event) throws IllegalAccessException {
         if (event.isCancelled()) return;
         // 获取玩家实例
         Player player = event.getPlayer();
@@ -127,7 +124,7 @@ public class PluginListener implements Listener {
      * @throws IOException 当IO执行操作时发生异常
      */
     @EventHandler
-    public void onPlayerLeave(PlayerQuitEvent event) throws IOException, IllegalAccessException {
+    private void onPlayerLeave(PlayerQuitEvent event) throws IOException, IllegalAccessException {
         Player player = event.getPlayer();
 
         PlayerData playerData = PlayerManager.getPlayerData(player);
@@ -138,7 +135,7 @@ public class PluginListener implements Listener {
     }
 
     @EventHandler
-    public void onPlayerGameModeChanged(PlayerGameModeChangeEvent event) throws IllegalAccessException {
+    private void onPlayerGameModeChanged(PlayerGameModeChangeEvent event) throws IllegalAccessException {
         if (event.isCancelled()) return;
 
         Player player = event.getPlayer();
@@ -152,7 +149,7 @@ public class PluginListener implements Listener {
     }
 
     @EventHandler
-    public void onPlayerCommandPreprocess(PlayerCommandPreprocessEvent event) throws IllegalAccessException {
+    private void onPlayerCommandPreprocess(PlayerCommandPreprocessEvent event) throws IllegalAccessException {
         if (event.isCancelled()) return;
 
         String message = event.getMessage();
@@ -179,7 +176,7 @@ public class PluginListener implements Listener {
      * @param event 玩家钓鱼时触发的事件实例
      */
     @EventHandler
-    public void onPlayerFished(PlayerFishEvent event) throws IllegalAccessException {
+    private void onPlayerFished(PlayerFishEvent event) throws IllegalAccessException {
         if (event.isCancelled()) return;
         // 获取玩家实例
         Player player = event.getPlayer();
@@ -211,6 +208,24 @@ public class PluginListener implements Listener {
     }
 
     @EventHandler
+    private void onPlayerEnchanting(PrepareAnvilEvent event) {
+        AnvilInventory inv = event.getInventory();
+        BanConfiguration banItem = BanItemManager.getBanItem(RecipeType.ANVIL);
+
+        ItemStack item1 = inv.getItem(0);
+        boolean hasEnchant1 = BanItemManager.checkEnchantments(item1, banItem.getEnchantments());
+        ItemStack item2 = inv.getItem(1);
+        boolean hasEnchant2 = BanItemManager.checkEnchantments(item2, banItem.getEnchantments());
+
+        if (hasEnchant1 || hasEnchant2) {
+            inv.setRepairCost((int) Math.pow(2, 31) - 1);
+            ItemStack is = banItem.toBarrierItem();
+            event.setResult(is);
+        }
+        //inv.setMaximumRepairCost(maxPoint);
+    }
+
+    @EventHandler
     private void onPlayerEquipmentChanged(PlayerEquipmentChangedEvent event) throws IllegalAccessException {
         Map<EquipmentSlot, ItemStack> equipments = event.getEquipments();
         Player player = event.getPlayer();
@@ -225,7 +240,7 @@ public class PluginListener implements Listener {
      * @param event 玩家扔掉物品时触发的事件实例
      */
     @EventHandler
-    public void onItemDropped(PlayerDropItemEvent event) throws IllegalAccessException {
+    private void onItemDropped(PlayerDropItemEvent event) throws IllegalAccessException {
         if (event.isCancelled()) return;
         // 获取玩家及UUID
         Player player = event.getPlayer();
@@ -242,7 +257,7 @@ public class PluginListener implements Listener {
     }
 
     @EventHandler
-    public void onItemPickup(EntityPickupItemEvent event) throws IllegalAccessException {
+    private void onItemPickup(EntityPickupItemEvent event) throws IllegalAccessException {
         if (event.isCancelled()) return;
         // 获取拾取物品的生物
         LivingEntity entity = event.getEntity();
@@ -266,7 +281,7 @@ public class PluginListener implements Listener {
      * @param event 方块被破坏时触发的事件实例
      */
     @EventHandler
-    public void onBlockBroke(final BlockBreakEvent event) throws IllegalAccessException {
+    private void onBlockBroke(final BlockBreakEvent event) throws IllegalAccessException {
         if (event.isCancelled()) return;
 
         Player player = event.getPlayer();
@@ -287,7 +302,7 @@ public class PluginListener implements Listener {
      * @param event 方块被放置时触发的事件实例
      */
     @EventHandler
-    public void onBlockPlaced(final BlockPlaceEvent event) throws IllegalAccessException {
+    private void onBlockPlaced(final BlockPlaceEvent event) throws IllegalAccessException {
         if (event.isCancelled()) return;
 
         Player player = event.getPlayer();
@@ -301,7 +316,7 @@ public class PluginListener implements Listener {
     }
 
     @EventHandler
-    public void onMonsterSpawned(final EntitySpawnEvent event) {
+    private void onMonsterSpawned(final EntitySpawnEvent event) {
         if (event.isCancelled()) return;
 
         String display = "";
@@ -369,7 +384,7 @@ public class PluginListener implements Listener {
     }
 
     @EventHandler
-    public void onMonsterAttacked(EntityDamageByEntityEvent event) {
+    private void onMonsterAttacked(EntityDamageByEntityEvent event) {
         if (event.isCancelled()) return;
 
         Entity entity = event.getDamager();
@@ -384,7 +399,7 @@ public class PluginListener implements Listener {
     }
 
     @EventHandler
-    public void onEntityDeath(EntityDeathEvent event) throws IllegalAccessException {
+    private void onEntityDeath(EntityDeathEvent event) throws IllegalAccessException {
         // 获取死亡的生物实例
         LivingEntity entity = event.getEntity();
         // 获取生物的类型及位置
@@ -409,7 +424,7 @@ public class PluginListener implements Listener {
     }
 
     @EventHandler
-    public void onEquipmentSlotClicked(InventoryClickEvent event) {
+    private void onEquipmentSlotClicked(InventoryClickEvent event) {
         /*
          slot number
          40 - offhand
@@ -443,7 +458,7 @@ public class PluginListener implements Listener {
     }
 
     @EventHandler
-    public void onMenuClicked(InventoryClickEvent event) {
+    private void onMenuClicked(InventoryClickEvent event) {
         if (event.isCancelled()) return;
         // 获取打开的箱子界面并且当前箱子是否属于InventoryDetail实例
         Inventory inv = event.getInventory();
@@ -488,7 +503,6 @@ public class PluginListener implements Listener {
                 runPlayerCommand(command, player);
             }
         }
-
 
         if (!slot.draggable || !slot.droppable) event.setCancelled(true);
     }

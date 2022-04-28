@@ -9,6 +9,7 @@ import net.milkbowl.vault.permission.Permission;
 import org.bukkit.command.CommandMap;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryType;
@@ -24,8 +25,10 @@ import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.ScoreboardManager;
 import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.deserializer.*;
-import org.hcmc.hcplayground.model.config.Authme;
-import org.hcmc.hcplayground.model.config.Potion;
+import org.hcmc.hcplayground.enums.RecipeType;
+import org.hcmc.hcplayground.manager.BanItemManager;
+import org.hcmc.hcplayground.model.config.AuthmeConfiguration;
+import org.hcmc.hcplayground.model.config.PotionConfiguration;
 import org.hcmc.hcplayground.model.item.ItemBaseA;
 import org.hcmc.hcplayground.model.player.PlayerData;
 import org.hcmc.hcplayground.manager.PlayerManager;
@@ -53,6 +56,7 @@ public final class Global {
 
     public final static String CONFIG_AUTHME = "authme";
     public final static String CONFIG_POTION = "potion";
+    public final static String CONFIG_BAN_ITEM = "banitem";
     public final static String FIELD_NAME_COMMANDMAP = "commandMap";
     public final static Pattern patternNumber = Pattern.compile("-?\\d+(\\.\\d+)?");
 
@@ -60,8 +64,8 @@ public final class Global {
     public static Map<String, YamlConfiguration> yamlMap;
     public static Gson GsonObject;
     public static Scoreboard HealthScoreboard;
-    public static Authme authme = null;
-    public static Potion potion = null;
+    public static AuthmeConfiguration authme = null;
+    public static PotionConfiguration potion = null;
     public static Connection Sqlite = null;
     public static WorldGuard WorldGuardApi = null;
     public static Economy EconomyApi = null;
@@ -94,6 +98,9 @@ public final class Global {
                 .disableHtmlEscaping()
                 .enableComplexMapKeySerialization()
                 .excludeFieldsWithoutExposeAnnotation()
+                .registerTypeAdapter(RecipeType.class, new BanItemTypeDeserializer())
+                .registerTypeAdapter(Enchantment.class, new EnchantmentDeserializer())
+                .registerTypeAdapter(EntityType.class, new EntityTypeDeserializer())
                 .registerTypeAdapter(EquipmentSlot.class, new EquipmentSlotDeserializer())
                 .registerTypeAdapter(InventoryType.class, new InventoryTypeDeserializer())
                 .registerTypeAdapter(ItemBaseA.class, new ItemBaseDeserializer())
@@ -101,7 +108,6 @@ public final class Global {
                 .registerTypeAdapter(MaterialData.class, new MaterialDeserializer())
                 .registerTypeAdapter(PotionEffect.class, new PotionEffectDeserializer())
                 .registerTypeAdapter(PermissionDefault.class, new PermissionDefaultDeserializer())
-                .registerTypeAdapter(EntityType.class, new EntityTypeDeserializer())
                 .serializeNulls()
                 .setDateFormat("yyyy-MM-dd HH:mm:ss")
                 .setPrettyPrinting()
@@ -132,7 +138,7 @@ public final class Global {
     /**
      * 从config.yml加载插件的基本设置
      */
-    public static void LoadConfig() {
+    public static void LoadConfig() throws IllegalAccessException {
         String value;
         ConfigurationSection section;
         YamlConfiguration config = getYamlConfiguration("config.yml");
@@ -140,13 +146,16 @@ public final class Global {
         section = config.getConfigurationSection(CONFIG_AUTHME);
         if (section != null) {
             value = GsonObject.toJson(section.getValues(false));
-            authme = GsonObject.fromJson(value, Authme.class);
+            authme = GsonObject.fromJson(value, AuthmeConfiguration.class);
         }
         section = config.getConfigurationSection(CONFIG_POTION);
         if (section != null) {
             value = GsonObject.toJson(section.getValues(false));
-            potion = GsonObject.fromJson(value, Potion.class);
+            potion = GsonObject.fromJson(value, PotionConfiguration.class);
         }
+
+        section = config.getConfigurationSection(CONFIG_BAN_ITEM);
+        BanItemManager.Load(section);
     }
 
     /**
@@ -342,7 +351,6 @@ public final class Global {
                 yamlPlugin.setComments(key, comments);
             }
         }
-
         return yamlPlugin;
     }
 

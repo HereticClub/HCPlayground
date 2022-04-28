@@ -37,9 +37,6 @@ public class HCPlayground extends JavaPlugin {
         super.onEnable();
 
         try {
-            //ConsoleLegacyFilter.RegisterFilter(getLogger());
-            ConsoleLog4jFilter.RegisterFilter();
-            HCPluginExpansion.RegisterExpansion();
             // 重新加载所有yml文档
             ReloadConfiguration();
             // 以下代码不需要在ReloadPlugin()中执行，只需要在插件启用时执行一次
@@ -65,6 +62,9 @@ public class HCPlayground extends JavaPlugin {
                 // 所以不需要在这里再次执行
                 new EquipmentMonitorRunnable(p).runTask(getPlugin());
             }
+            //ConsoleLegacyFilter.RegisterFilter(getLogger());
+            ConsoleLog4jFilter.RegisterFilter();
+            HCPluginExpansion.RegisterExpansion();
         } catch (IllegalAccessException | NoSuchFieldException | SQLException | NoSuchAlgorithmException | InvalidKeySpecException | IOException e) {
             e.printStackTrace();
         }

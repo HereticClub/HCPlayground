@@ -8,3 +8,27 @@ authme:
 potion:
   # 药水效果刷新时间，单位: 秒
   refreshInterval: 5
+# 禁止使用的物品，附魔，药水
+banitem:
+  # 名称，必须唯一
+  anvil:
+    # 禁止使用的附魔
+    enchantments:
+      - mending
+    # 禁止使用的药水效果(开发中)
+    potions: []
+    # 禁止使用的物品类型(开发中)
+    materials: []
+    # 配方的检测类型，必须为下列值之一: ANVIL，CRAFTING，POTION，默认值: ANVIL
+    # 配方的检测类型为CRAFTING，POTION的功能在开发中
+    type: ANVIL
+    # 物品被禁止使用后显示的物品
+    material: BARRIER
+    # 物品被禁止使用后显示的名称
+    display_name: '&4Prohibited item'
+    # 物品被禁止使用后显示的说明
+    lore:
+      - '&cThis is the prohibited item'
+      - '&cCan''t be used here!'
+  crafting: {}
+  potion: {}
