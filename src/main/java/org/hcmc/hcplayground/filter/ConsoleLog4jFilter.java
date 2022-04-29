@@ -3,21 +3,16 @@ package org.hcmc.hcplayground.filter;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Marker;
-import org.apache.logging.log4j.core.Filter;
 import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.Logger;
-import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.filter.AbstractFilter;
-import org.apache.logging.log4j.core.filter.MarkerFilter;
 import org.apache.logging.log4j.message.Message;
 import org.bukkit.command.Command;
 import org.hcmc.hcplayground.model.command.CommandItem;
 import org.hcmc.hcplayground.utility.Global;
 
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 public class ConsoleLog4jFilter extends AbstractFilter {
 

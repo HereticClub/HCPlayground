@@ -1,6 +1,9 @@
 package org.hcmc.hcplayground.listener;
 
-import org.bukkit.*;
+import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
+import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.block.Block;
@@ -38,8 +41,10 @@ import org.hcmc.hcplayground.utility.RandomNumber;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 /*
 Java 本身的编程思路就已经足够混乱
@@ -75,9 +80,11 @@ public class PluginListener implements Listener {
     }
 
     /**
-     * 玩家进入服务器事件
+     * 玩家进入服务器事件<br>
+     * 当玩家第一次进入服务器，需要执行/register password password以注册<br>
+     * 后续的进入服务器，需要执行/login password以登陆
      *
-     * @param event 玩家进入服务器时触发的事件实例
+     * @param event 玩家进入服务器事件
      * @throws SQLException 当SQL执行操作时发生异常
      */
     @EventHandler
@@ -106,6 +113,13 @@ public class PluginListener implements Listener {
         player.setGameMode(GameMode.SPECTATOR);
     }
 
+    /**
+     * 玩家移动事件<br>
+     * 当玩家没有正式登陆前，禁止移动
+     *
+     * @param event 玩家移动事件
+     * @throws IllegalAccessException IllegalAccessException
+     */
     @EventHandler
     private void onPlayerMove(PlayerMoveEvent event) throws IllegalAccessException {
         if (event.isCancelled()) return;
@@ -118,15 +132,16 @@ public class PluginListener implements Listener {
     }
 
     /**
-     * 玩家离开服务器事件
+     * 玩家离开服务器事件<br>
+     * 保存玩家所有数据
      *
-     * @param event 玩家离开服务器时触发的事件实例
+     * @param event 玩家离开服务器事件
      * @throws IOException 当IO执行操作时发生异常
      */
     @EventHandler
     private void onPlayerLeave(PlayerQuitEvent event) throws IOException, IllegalAccessException {
+        // 获得玩家实例
         Player player = event.getPlayer();
-
         PlayerData playerData = PlayerManager.getPlayerData(player);
         //Global.LogMessage(String.format("\033[1;35mPlayerQuitEvent GameMode: \033[1;33m%s\033[0m", playerData.GameMode));
         player.setGameMode(playerData.GameMode);
@@ -144,7 +159,6 @@ public class PluginListener implements Listener {
 
         playerData.GameMode = event.getNewGameMode();
         //Global.LogMessage(String.format("\033[1;35mPlayerGameModeChangeEvent GameMode: \033[1;33m%s\033[0m", playerData.GameMode));
-
         PlayerManager.setPlayerData(player, playerData);
     }
 
@@ -171,7 +185,8 @@ public class PluginListener implements Listener {
     }
 
     /**
-     * 玩家钓鱼事件
+     * 玩家钓鱼事件<br>
+     * 记录玩家的钓鱼数量
      *
      * @param event 玩家钓鱼时触发的事件实例
      */
@@ -210,7 +225,7 @@ public class PluginListener implements Listener {
     @EventHandler
     private void onPlayerEnchanting(PrepareAnvilEvent event) {
         AnvilInventory inv = event.getInventory();
-        BanConfiguration banItem = BanItemManager.getBanItem(RecipeType.ANVIL);
+        BanConfiguration banItem = BanItemManager.getBanItem(RecipeType.SMITHING);
 
         ItemStack item1 = inv.getItem(0);
         boolean hasEnchant1 = BanItemManager.checkEnchantments(item1, banItem.getEnchantments());
@@ -222,8 +237,26 @@ public class PluginListener implements Listener {
             ItemStack is = banItem.toBarrierItem();
             event.setResult(is);
         }
-        //inv.setMaximumRepairCost(maxPoint);
     }
+
+
+    @EventHandler
+    private void onPlayerAnvilEnchanted(InventoryClickEvent event) {
+        if (event.isCancelled()) return;
+        Inventory inv = event.getInventory();
+        if (!(inv instanceof AnvilInventory anvil)) return;
+        HumanEntity human = event.getWhoClicked();
+        if (!(human instanceof Player player)) return;
+        InventoryType.SlotType slotType = event.getSlotType();
+        if (!slotType.equals(InventoryType.SlotType.RESULT)) return;
+
+        String name = player.getName();
+        /*
+         TODO: 需要实施以下功能
+          当玩家尝试使用铁砧附魔经验修补时，显示附魔失败信息，并且发出声音
+        */
+    }
+
 
     @EventHandler
     private void onPlayerEquipmentChanged(PlayerEquipmentChangedEvent event) throws IllegalAccessException {
@@ -281,7 +314,7 @@ public class PluginListener implements Listener {
      * @param event 方块被破坏时触发的事件实例
      */
     @EventHandler
-    private void onBlockBroke(final BlockBreakEvent event) throws IllegalAccessException {
+    private void onBlockBroken(final BlockBreakEvent event) throws IllegalAccessException {
         if (event.isCancelled()) return;
 
         Player player = event.getPlayer();
@@ -505,6 +538,12 @@ public class PluginListener implements Listener {
         }
 
         if (!slot.draggable || !slot.droppable) event.setCancelled(true);
+    }
+
+    private void onItemCrafting(PrepareItemCraftEvent event) {
+
+        Recipe recipe = event.getRecipe();
+
     }
 
     private void runConsoleCommand(String command, Player player) {

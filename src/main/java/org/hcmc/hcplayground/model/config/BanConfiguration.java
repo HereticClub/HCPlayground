@@ -34,7 +34,7 @@ public class BanConfiguration {
     private final List<String> lore = new ArrayList<>();
     @Expose
     @SerializedName(value = "type")
-    private final RecipeType type = RecipeType.ANVIL;
+    private final RecipeType type = RecipeType.SMITHING;
 
 
     @Expose(serialize = false, deserialize = false)

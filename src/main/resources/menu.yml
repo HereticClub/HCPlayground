@@ -10,7 +10,7 @@ menu:
   size: 54
   # 箱子界面的类型，必须是以下列表中的一种， 默认值: CHEST
   # 如果设置了CHEST以外的值，则忽略size属性
-  # ANVIL - An anvil inventory, with 2 CRAFTING slots and 1 RESULT slot
+  # SMITHING - An anvil inventory, with 2 CRAFTING slots and 1 RESULT slot
   # BARREL - A barrel box inventory, with 27 slots of type CONTAINER.
   # BEACON - A beacon inventory, with 1 CRAFTING slot
   # BLAST_FURNACE - A blast furnace inventory, with a RESULT slot, a CRAFTING slot, and a FUEL slot.
@@ -97,6 +97,39 @@ menu:
       canDrag: false
       flags: []
       lore: []
+    - slot: 21
+      displayText: '&eSkills'
+      material: diamond_sword
+      canDrop: false
+      canDrag: false
+      left_click:
+        - '[player] skills'
+      flags:
+        - HIDE_ATTRIBUTES
+      lore:
+        - '&7View your skills progression'
+        - '&7and rewards'
+    - slot: 22
+      displayText: '&eCollections'
+      material: painting
+      canDrop: false
+      canDrag: false
+      left_click:
+        - '[player] /collections'
+      lore:
+        - '&7View all of the special items'
+        - '&7you collected'
+    - slot: 23
+      displayText: '&eRecipe Book'
+      material: book
+      canDrop: false
+      canDrag: false
+      left_click:
+        - '[player] recipebook'
+      lore:
+        - '&7View all unlocked recipes'
+        - '&7for special items'
+
 profile:
   title: '&8玩家档案 &7- &b&l%player%'
   size: 54
@@ -168,3 +201,36 @@ profile:
       material: diamond_pickaxe
       lore:
         - '%hcplayground_logging_speed%'
+recipebook:
+  title: '&9Recipe Book'
+  size: 54
+  type: chest
+  decorates:
+    - slot: 5
+      displayText: '&fRecipe Book'
+      material: book
+      canDrop: false
+      canDrag: false
+      glowing: true
+      left_click:
+        - '[player] menu'
+      right_click: []
+      lore:
+        - '&7View all unlocked recipes'
+        - '&7for special items'
+    - slot: 53
+      displayText: '&fPrevious page'
+      material: arrow
+      canDrop: false
+      canDrag: false
+      left_click:
+        - '[player] recipebook'
+      lore: []
+    - slot: 54
+      displayText: '&fNext page'
+      material: spectral_arrow
+      canDrop: false
+      canDrag: false
+      left_click:
+        - '[player] recipebook 2'
+      lore: []

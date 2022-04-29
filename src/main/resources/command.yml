@@ -59,6 +59,11 @@ profile:
   runOnPlayer: true
   args: []
   worlds: []
+recipebook:
+  runOnConsole: false
+  runOnPlayer: true
+  aliases:
+    - book
 login:
   runOnConsole: false
   runOnPlayer: true

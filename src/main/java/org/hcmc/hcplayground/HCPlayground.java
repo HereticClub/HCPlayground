@@ -11,7 +11,6 @@ import org.hcmc.hcplayground.listener.PluginListener;
 import org.hcmc.hcplayground.manager.*;
 import org.hcmc.hcplayground.model.permission.PermissionManager;
 import org.hcmc.hcplayground.model.player.PlayerData;
-import org.hcmc.hcplayground.manager.PlayerManager;
 import org.hcmc.hcplayground.scheduler.EquipmentMonitorRunnable;
 import org.hcmc.hcplayground.sqlite.SqliteManager;
 import org.hcmc.hcplayground.utility.Global;

@@ -2,8 +2,6 @@ package org.hcmc.hcplayground.filter;
 
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
-import org.flywaydb.core.internal.util.logging.Log;
-import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.model.command.CommandItem;
 import org.hcmc.hcplayground.utility.Global;
 
@@ -18,7 +16,7 @@ public class ConsoleLegacyFilter implements Filter {
 
     }
 
-    public static void RegisterFilter(Logger logger){
+    public static void RegisterFilter(Logger logger) {
         ConsoleLegacyFilter filter = new ConsoleLegacyFilter();
         Filter ff = logger.getFilter();
         //System.out.println(("\033[1;31mRegister: " + logger.getName() + "\033[0m"));

@@ -27,11 +27,11 @@ import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.deserializer.*;
 import org.hcmc.hcplayground.enums.RecipeType;
 import org.hcmc.hcplayground.manager.BanItemManager;
+import org.hcmc.hcplayground.manager.PlayerManager;
 import org.hcmc.hcplayground.model.config.AuthmeConfiguration;
 import org.hcmc.hcplayground.model.config.PotionConfiguration;
 import org.hcmc.hcplayground.model.item.ItemBaseA;
 import org.hcmc.hcplayground.model.player.PlayerData;
-import org.hcmc.hcplayground.manager.PlayerManager;
 import org.hcmc.hcplayground.scheduler.PluginRunnable;
 
 import java.io.File;

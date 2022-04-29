@@ -13,7 +13,6 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.potion.PotionEffect;
 import org.hcmc.hcplayground.utility.Global;
-import org.w3c.dom.Attr;
 
 import java.util.ArrayList;
 import java.util.Arrays;

@@ -2,21 +2,25 @@ package org.hcmc.hcplayground.model.command;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
-import org.bukkit.OfflinePlayer;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandMap;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.Recipe;
+import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.manager.ItemManager;
 import org.hcmc.hcplayground.manager.LocalizationManager;
 import org.hcmc.hcplayground.manager.MenuManager;
-import org.hcmc.hcplayground.model.player.PlayerData;
 import org.hcmc.hcplayground.manager.PlayerManager;
+import org.hcmc.hcplayground.model.item.ItemBase;
+import org.hcmc.hcplayground.model.player.PlayerData;
+import org.hcmc.hcplayground.model.recipe.Shaped6x6Recipe;
 import org.hcmc.hcplayground.utility.Global;
 import org.jetbrains.annotations.NotNull;
 
@@ -43,6 +47,7 @@ public class CommandItem extends Command {
     public static final String COMMAND_BAN_PLAYER = "banplayer";
     public static final String COMMAND_PROFILE = "profile";
     public static final String COMMAND_MENU = "menu";
+    public static final String COMMAND_RECIPE_BOOK = "recipebook";
     public static final String COMMAND_QUARTERMASTER = "quartermaster";
     public static final String COMMAND_QM_GIVE = "give";
     public static final String COMMAND_QM_HELP = "help";
@@ -155,11 +160,29 @@ public class CommandItem extends Command {
         try {
             // 打开主菜单指令 - /menu
             if (commandText.equalsIgnoreCase(COMMAND_MENU)) {
-                return RunOpenChestMenuCommand((Player) sender, "menu");
+                return RunOpenChestMenuCommand((Player) sender, COMMAND_MENU);
             }
             // 打开玩家档案菜单指令 - /profile
             if (commandText.equalsIgnoreCase(COMMAND_PROFILE)) {
-                return RunOpenChestMenuCommand((Player) sender, "profile");
+                return RunOpenChestMenuCommand((Player) sender, COMMAND_PROFILE);
+            }
+            // 打开玩家档案菜单指令 - /profile
+            if (commandText.equalsIgnoreCase(COMMAND_RECIPE_BOOK)) {
+                ItemBase itemBase = ItemManager.FindItemById("weapon.item1");
+                ItemStack is = itemBase.toItemStack();
+
+                
+
+                Shaped6x6Recipe recipe = new Shaped6x6Recipe(NamespacedKey.randomKey(), new ItemStack(Material.CHEST));
+                recipe.shape("A", "A", "A");
+                recipe.setIngredient('A', Material.STICK);
+
+                boolean a = Bukkit.addRecipe(recipe);
+                System.out.println(a);
+                return true;
+
+                // TODO: don't delete !!!
+                //return RunOpenChestMenuCommand((Player) sender, COMMAND_RECIPE_BOOK);
             }
             // 军需官指令 - /quatermaster
             if (commandText.equalsIgnoreCase(COMMAND_QUARTERMASTER)) {
