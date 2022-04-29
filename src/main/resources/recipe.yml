@@ -1,0 +1,17 @@
+recipe1:
+  name: name
+  shape:
+    - 'A    B'
+    - ' A  B '
+    - '  AB  '
+    - '  BA  '
+    - ' B  A '
+    - 'B    A'
+  ingredients:
+    A: stick
+    B: stone
+  amount:
+    A: 4
+    B: 5
+  result: chest
+  group: abc

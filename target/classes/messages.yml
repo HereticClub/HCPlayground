@@ -188,3 +188,10 @@ messages:
       §aFor example:
       §a/<command> {player} You have been banned! &7- ban player, he/she can connect to server no longer and get message &f"You have been banned!"
       §a/<command> {player} u &7- unban player, he/she can connect to server again
+  scale:
+    description: Sets player scale health
+    usage: |-
+      &7 <command> command usage:
+      &9/<command> scale maxHealth
+      &9scale &7- &fThe player health scaled to
+      &9maxHealth &7- &fThe player max health

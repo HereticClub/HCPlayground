@@ -13,6 +13,7 @@ import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.*;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
@@ -23,6 +24,7 @@ import org.bukkit.event.entity.EntitySpawnEvent;
 import org.bukkit.event.inventory.*;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.*;
+import org.bukkit.plugin.RegisteredListener;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Scoreboard;
@@ -538,12 +540,6 @@ public class PluginListener implements Listener {
         }
 
         if (!slot.draggable || !slot.droppable) event.setCancelled(true);
-    }
-
-    private void onItemCrafting(PrepareItemCraftEvent event) {
-
-        Recipe recipe = event.getRecipe();
-
     }
 
     private void runConsoleCommand(String command, Player player) {

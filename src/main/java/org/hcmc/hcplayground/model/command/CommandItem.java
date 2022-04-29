@@ -2,25 +2,23 @@ package org.hcmc.hcplayground.model.command;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+import org.apache.commons.lang.StringUtils;
 import org.bukkit.*;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandMap;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.Recipe;
-import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.manager.ItemManager;
 import org.hcmc.hcplayground.manager.LocalizationManager;
 import org.hcmc.hcplayground.manager.MenuManager;
 import org.hcmc.hcplayground.manager.PlayerManager;
-import org.hcmc.hcplayground.model.item.ItemBase;
 import org.hcmc.hcplayground.model.player.PlayerData;
-import org.hcmc.hcplayground.model.recipe.Shaped6x6Recipe;
 import org.hcmc.hcplayground.utility.Global;
 import org.jetbrains.annotations.NotNull;
 
@@ -55,6 +53,7 @@ public class CommandItem extends Command {
     public static final String COMMAND_HCPLAYGROUND = "hcplayground";
     public static final String COMMAND_HC_RELOAD = "reload";
     public static final String COMMAND_HC_HELP = "help";
+    public static final String COMMAND_SCALE = "scale";
 
     /**
      * 当前指令的使用权限，设置为null或者空字符串，表示当前命令不需要权限
@@ -168,21 +167,7 @@ public class CommandItem extends Command {
             }
             // 打开玩家档案菜单指令 - /profile
             if (commandText.equalsIgnoreCase(COMMAND_RECIPE_BOOK)) {
-                ItemBase itemBase = ItemManager.FindItemById("weapon.item1");
-                ItemStack is = itemBase.toItemStack();
-
-                
-
-                Shaped6x6Recipe recipe = new Shaped6x6Recipe(NamespacedKey.randomKey(), new ItemStack(Material.CHEST));
-                recipe.shape("A", "A", "A");
-                recipe.setIngredient('A', Material.STICK);
-
-                boolean a = Bukkit.addRecipe(recipe);
-                System.out.println(a);
-                return true;
-
-                // TODO: don't delete !!!
-                //return RunOpenChestMenuCommand((Player) sender, COMMAND_RECIPE_BOOK);
+                return RunOpenChestMenuCommand((Player) sender, COMMAND_RECIPE_BOOK);
             }
             // 军需官指令 - /quatermaster
             if (commandText.equalsIgnoreCase(COMMAND_QUARTERMASTER)) {
@@ -220,11 +205,40 @@ public class CommandItem extends Command {
             if (commandText.equalsIgnoreCase(COMMAND_HCPLAYGROUND)) {
                 return RunHCPlaygroundCommand(sender, args);
             }
+            if (commandText.equalsIgnoreCase(COMMAND_SCALE)) {
+                return RunScaleCommand(sender, args);
+            }
         } catch (SQLException | InvalidAlgorithmParameterException | NoSuchPaddingException | IllegalBlockSizeException | NoSuchAlgorithmException | InvalidKeySpecException | BadPaddingException | InvalidKeyException | NoSuchFieldException | IllegalAccessException | IOException e) {
             e.printStackTrace();
         }
 
         return false;
+    }
+
+    private boolean RunScaleCommand(CommandSender sender, String[] args) {
+        // 当前hc指令需要至少1个参数
+        if (args.length <= 1) {
+            return ShowCommandHelp(sender, 2);
+        }
+
+        Player player = (Player) sender;
+        if (!StringUtils.isNumeric(args[0]) || !StringUtils.isNumeric(args[1])) {
+            player.sendMessage("§c请输入数字");
+            return false;
+        }
+        int scale = Integer.parseInt(args[0]);
+        int maxHealth = Integer.parseInt(args[1]);
+        if (scale <= 0 || maxHealth <= 0) {
+            player.sendMessage("§c不要乱来！");
+            return false;
+        }
+
+        player.setHealthScale(scale);
+        AttributeInstance instance = player.getAttribute(Attribute.GENERIC_MAX_HEALTH);
+        if (instance == null) return false;
+        instance.setBaseValue(maxHealth);
+
+        return true;
     }
 
     // 执行hcplayground指令

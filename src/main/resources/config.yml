@@ -19,7 +19,7 @@ banitem:
     potions: []
     # 禁止使用的物品类型(开发中)
     materials: []
-    # 配方的检测类型，必须为下列值之一: SMITHING，CRAFTING，POTION，默认值: SMITHING
+    # 配方的检测类型，必须为下列值之一: BLASTING, CAMPFIRE, COOKING, FURNACE, MERCHANT, POTION, SHAPE, SHAPELESS, SMITHING, SMOKING, STONECUTTING，默认值: SMITHING
     # 配方的检测类型为CRAFTING，POTION的功能在开发中
     type: SMITHING
     # 物品被禁止使用后显示的物品

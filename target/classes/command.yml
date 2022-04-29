@@ -119,3 +119,8 @@ banplayer:
     - name: u
       permission: hc.banplayer.unban
       index: 2
+scale:
+  permission: hc.scale
+  runOnConsole: false
+  runOnPlayer: true
+  worlds: []

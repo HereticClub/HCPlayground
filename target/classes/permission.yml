@@ -2,7 +2,7 @@
 # Permission list
 permissions:
   # permission id, must be unique
-  permission1:
+  permissionAll:
     # name of permission
     name: hc.*
     # default, one of value as op, not op, true, false
@@ -16,10 +16,11 @@ permissions:
     # permission include the sub-permissions as below
     children:
       - hc.reload
+      - hc.scale
       - hc.quartermaster.*
       - hc.banplayer.*
 
-  permission2:
+  permissionQuartermaster:
     name: hc.quartermaster.*
     default: op
     description: Grant permission to player as quartermaster, to manage all items include weapons, off-hand items, armor, accessories
@@ -28,28 +29,42 @@ permissions:
       - hc.quartermaster.take
       - hc.quartermaster.gui
 
-  permission3:
+  permissionReload:
     name: hc.reload
     description: Permission to reload this plugin
     default: op
 
-  permission4:
+  permissionQuartermaster1:
     name: hc.quartermaster.gui
     description: Grant permission to player to use
     default: true
-  permission5:
+  permissionQuartermaster2:
     name: hc.quartermaster.help
     description: Grant permission to player to manage weapon
     default: op
-  permission6:
+  permissionQuartermaster3:
     name: hc.quartermaster.give
     description: Grant permission to player to manage armor
     default: op
 
-  permission7:
+  permissionBanplayer:
     name: hc.banplayer.*
     description: Grant permission to the player to ban or unban other players
     default: op
     children:
       - hc.banplayer.ban
       - hc.banplayer.unban
+
+  permissionBanplayer1:
+    name: hc.banplayer.ban
+    description: Grant permission to the player to ban other players
+    default: op
+  permissionBanplayer2:
+    name: hc.banplayer.unban
+    description: Grant permission to the player to unban other players
+    default: op
+
+  permissionScale:
+    name: hc.scale
+    description: Set player health scale
+    default: op
