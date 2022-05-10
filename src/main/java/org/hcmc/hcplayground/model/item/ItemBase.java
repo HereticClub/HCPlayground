@@ -56,6 +56,8 @@ public interface ItemBase {
     String PERSISTENT_POTIONS_KEY = "potions";
     // 装备位置
     String PERSISTENT_EQUIPMENT_SLOT_KEY = "equipment_slot";
+    // 自定义方块类型键
+    String PERSISTENT_CRAZY_TYPE = "crazy_type";
 
     int getAmount();
 

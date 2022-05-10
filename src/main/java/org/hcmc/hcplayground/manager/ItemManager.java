@@ -1,15 +1,21 @@
 package org.hcmc.hcplayground.manager;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataContainer;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.model.item.*;
 import org.hcmc.hcplayground.utility.Global;
+import org.hcmc.hcplayground.utility.MaterialData;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -23,6 +29,7 @@ public class ItemManager {
     private static List<Armor> itemArmors;
     private static List<Hand> itemHands;
     private static List<Join> itemJoins;
+    private static List<Crazy> itemCrazies;
     private static ItemManager instance = null;
 
     static {
@@ -30,6 +37,7 @@ public class ItemManager {
         itemArmors = new ArrayList<>();
         itemHands = new ArrayList<>();
         itemJoins = new ArrayList<>();
+        itemCrazies = new ArrayList<>();
         ItemEntire = new ArrayList<>();
         plugin = HCPlayground.getPlugin();
     }
@@ -64,19 +72,42 @@ public class ItemManager {
             if (section != null) itemHands = Global.SetItemList(section, Hand.class);
             section = yaml.getConfigurationSection("joins");
             if (section != null) itemJoins = Global.SetItemList(section, Join.class);
+            section = yaml.getConfigurationSection("crazies");
+            if (section != null) itemCrazies = Global.SetItemList(section, Crazy.class);
 
             ItemEntire.clear();
             ItemEntire.addAll(itemArmors);
             ItemEntire.addAll(itemHands);
             ItemEntire.addAll(itemWeapons);
             ItemEntire.addAll(itemJoins);
+            ItemEntire.addAll(itemCrazies);
         } catch (IllegalAccessException ex) {
             ex.printStackTrace();
         }
     }
 
+    public static ItemBase Create(Material material) {
+        ItemBaseX x = new ItemBaseX();
+        MaterialData md =new MaterialData();
+        md.setData(material, null);
+        x.setId(null);
+        x.setMaterial(md);
+        return x;
+    }
+
     public static ItemBase FindItemById(String id) {
         return ItemEntire.stream().filter(x -> x.getId().equalsIgnoreCase(id)).findAny().orElse(null);
+    }
+
+    public static ItemBase getItemBase(ItemStack is) {
+        ItemMeta im = is.getItemMeta();
+        if (im == null) return null;
+
+        NamespacedKey mainKey = new NamespacedKey(plugin, ItemBase.PERSISTENT_MAIN_KEY);
+        PersistentDataContainer mainContainer = im.getPersistentDataContainer();
+        String id = mainContainer.get(mainKey, PersistentDataType.STRING);
+
+        return FindItemById(id);
     }
 
     public static void Give(CommandSender sender, String playerName, String itemId, int amount) {
@@ -101,6 +132,14 @@ public class ItemManager {
         ItemStack is = ib.toItemStack();
         is.setAmount(amount);
         player.getInventory().setItem(player.getInventory().firstEmpty(), is);
+    }
+
+    private static class ItemBaseX extends ItemBaseA {
+
+        @Override
+        public ItemStack toItemStack() {
+            return new ItemStack(this.getMaterial().value);
+        }
     }
 }
 

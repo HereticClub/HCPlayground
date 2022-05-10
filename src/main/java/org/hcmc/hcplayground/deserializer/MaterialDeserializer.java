@@ -36,7 +36,8 @@ public class MaterialDeserializer implements JsonDeserializer<MaterialData>, Jso
 
     @Override
     public JsonElement serialize(MaterialData data, Type type, JsonSerializationContext jsonSerializationContext) {
-        return new JsonPrimitive(data.name);
+        String value = data.name == null ? data.value.name() : data.name;
+        return new JsonPrimitive(value);
     }
 }
 

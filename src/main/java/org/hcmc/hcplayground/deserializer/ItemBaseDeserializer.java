@@ -38,7 +38,7 @@ public class ItemBaseDeserializer implements JsonDeserializer<ItemBase> {
             ib.setId(null);
             ib.setMaterial(md);
         }
-        Bukkit.createInventory(null, InventoryType.CHEST);
+        //Bukkit.createInventory(null, InventoryType.CHEST);
         return ib;
     }
 

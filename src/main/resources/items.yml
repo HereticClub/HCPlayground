@@ -351,10 +351,43 @@ joins:
     name: '&6飞行咒语碎片(之四)'
     material: paper
     glowing: true
-    amount: 1
     lore:
       - '&7某天你在钓鱼的时候发现了这个'
     worlds: []
+    flags:
+      - HIDE_ATTRIBUTES
+      - HIDE_ENCHANTS
+# 可放置的自定义物品列表，当物品放置后，根据type属性可能会触发一些特定功能
+# 当方块被破坏后，会掉落这个方块被放置前的物品
+crazies:
+  # Id，必须唯一
+  crafting_table1:
+    # 物品的名称
+    name: '&6疯狂工作台'
+    # 物品被拿在手上时的材质
+    material: crafting_table
+    # 物品被放置后的材质
+    block: crafting_table
+    # 物品被放置后的自定义类型，必须是CrazyBlockType的值之一
+    # CRAZY_CRAFTING_TABLE - 一个特定的工作台，当玩家用右键点击该方块后，会出现一个容量为54的箱子界面，特别功能是作为一个6x6的合成工作台
+    # CRAZY_ANVIL - 一个特定的铁砧(开发中)
+    # CRAZY_ENCHANTING_TABLE - 一个特定的附魔台(开发中)
+    type: CRAZY_CRAFTING_TABLE
+    # 物品是否带有附魔效果
+    glowing: true
+    # 物品的说明
+    lore:
+      - '&7普通的工作台已经不能满足你的需求'
+    # 物品的可用世界列表，没有设置则表示任何世界可用
+    worlds: []
+    # 物品标签
+    # HIDE_ATTRIBUTES - 设置显示/隐藏该Item的属性,例如伤害.
+    # HIDE_DESTROYS - 设置显示/隐藏哪些ItemStack可以被破坏.
+    # HIDE_DYE - 设置显示/隐藏彩色皮革盔甲的染料.
+    # HIDE_ENCHANTS - 设置显示/隐藏附魔.
+    # HIDE_PLACED_ON - 设置显示/隐藏哪些ItemStack可以被放置.
+    # HIDE_POTION_EFFECTS - 设置显示/隐藏ItemStack的药水效果.
+    # HIDE_UNBREAKABLE - 设置显示/隐藏不可破坏属性.
     flags:
       - HIDE_ATTRIBUTES
       - HIDE_ENCHANTS

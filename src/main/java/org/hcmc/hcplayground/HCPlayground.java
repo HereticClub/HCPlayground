@@ -146,5 +146,7 @@ public class HCPlayground extends JavaPlugin {
         BroadcastManager.Load(Global.getYamlConfiguration("broadcast.yml"));
         // 10.加载清除垃圾物品设置
         ClearLagManager.Load(Global.getYamlConfiguration("clearlag.yml"));
+        // 11.加载配方列表
+        RecipeManager.Load(Global.getYamlConfiguration("recipe.yml"));
     }
 }

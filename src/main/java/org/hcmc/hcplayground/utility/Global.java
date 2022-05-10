@@ -2,13 +2,17 @@ package org.hcmc.hcplayground.utility;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.TypeAdapter;
+import com.google.gson.reflect.TypeToken;
 import com.sk89q.worldguard.WorldGuard;
 import net.milkbowl.vault.chat.Chat;
 import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.permission.Permission;
+import org.bukkit.NamespacedKey;
 import org.bukkit.command.CommandMap;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.configuration.serialization.ConfigurationSerializable;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
@@ -25,20 +29,24 @@ import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.ScoreboardManager;
 import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.deserializer.*;
+import org.hcmc.hcplayground.enums.CrazyBlockType;
 import org.hcmc.hcplayground.enums.RecipeType;
 import org.hcmc.hcplayground.manager.BanItemManager;
 import org.hcmc.hcplayground.manager.PlayerManager;
 import org.hcmc.hcplayground.model.config.AuthmeConfiguration;
 import org.hcmc.hcplayground.model.config.PotionConfiguration;
 import org.hcmc.hcplayground.model.item.ItemBaseA;
+import org.hcmc.hcplayground.model.player.CrazyBlockRecord;
 import org.hcmc.hcplayground.model.player.PlayerData;
 import org.hcmc.hcplayground.scheduler.PluginRunnable;
+import org.hcmc.hcplayground.serializer.UniversalSerializable;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.Field;
+import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -53,6 +61,7 @@ import java.util.regex.Pattern;
 public final class Global {
     private final static String[] ymlFilenames;
     private final static JavaPlugin plugin;
+    private final static Type mapType = new TypeToken<Map<?, ?>>() {}.getType();
 
     public final static String CONFIG_AUTHME = "authme";
     public final static String CONFIG_POTION = "potion";
@@ -73,7 +82,6 @@ public final class Global {
     public static Permission PermissionApi = null;
     public static CommandMap CommandMap = null;
 
-
     static {
         plugin = JavaPlugin.getPlugin(HCPlayground.class);
         runnable = new PluginRunnable();
@@ -91,6 +99,7 @@ public final class Global {
                 "mobs.yml",
                 "broadcast.yml",
                 "clearlag.yml",
+                "recipe.yml",
                 "database/hcdb.db",
         };
 
@@ -98,6 +107,7 @@ public final class Global {
                 .disableHtmlEscaping()
                 .enableComplexMapKeySerialization()
                 .excludeFieldsWithoutExposeAnnotation()
+                .registerTypeAdapter(CrazyBlockType.class, new CrazyTypeDeserializer())
                 .registerTypeAdapter(RecipeType.class, new BanItemTypeDeserializer())
                 .registerTypeAdapter(Enchantment.class, new EnchantmentDeserializer())
                 .registerTypeAdapter(EntityType.class, new EntityTypeDeserializer())
@@ -106,8 +116,11 @@ public final class Global {
                 .registerTypeAdapter(ItemBaseA.class, new ItemBaseDeserializer())
                 .registerTypeAdapter(ItemFlag.class, new ItemFlagsDeserializer())
                 .registerTypeAdapter(MaterialData.class, new MaterialDeserializer())
+                //.registerTypeAdapter(mapType, new MapObjectDeserializer())
+                .registerTypeAdapter(NamespacedKey.class, new NamespacedKeyDeserializer())
                 .registerTypeAdapter(PotionEffect.class, new PotionEffectDeserializer())
                 .registerTypeAdapter(PermissionDefault.class, new PermissionDefaultDeserializer())
+                .registerTypeAdapter(ConfigurationSerializable.class, new UniversalDeserializer())
                 .serializeNulls()
                 .setDateFormat("yyyy-MM-dd HH:mm:ss")
                 .setPrettyPrinting()
@@ -125,13 +138,17 @@ public final class Global {
      * 在执行/reload指令或者插件退出时都需要执行该方法
      */
     public static void Dispose() throws SQLException, IOException, IllegalAccessException {
+        // 停止所有runnable线程
+        runnable.cancel();
+        // 保存所有在线玩家的数据
         for (Player player : plugin.getServer().getOnlinePlayers()) {
             PlayerData pd = PlayerManager.getPlayerData(player);
             pd.SaveConfig();
         }
-        runnable.cancel();
+        // 清除内存
         PlayerManager.clearAllPlayerData();
         yamlMap.clear();
+        // 关闭sqlite数据库
         if (!Sqlite.isClosed()) Sqlite.close();
     }
 

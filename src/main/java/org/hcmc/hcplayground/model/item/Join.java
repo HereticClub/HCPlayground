@@ -45,7 +45,7 @@ public class Join extends ItemBaseA {
     @SerializedName(value = "worlds")
     public List<String> Worlds = new ArrayList<>();
     /**
-     * 表明该物品是一本书，以及页数和每页内容的列表
+     * 表示该物品是一本书，以及页数和每页内容的列表
      * 当物品被识别为书本时，属性MainHandLeftClick, MainHandRightClick, MouseLeftClick, MouseRightClick将会被忽略
      * 并且禁止这些动作
      */
@@ -53,13 +53,13 @@ public class Join extends ItemBaseA {
     @SerializedName(value = "pages")
     public List<Page> Pages = new ArrayList<>();
     /**
-     * 表明该物品是一本书，以及该书本的作者
+     * 表示该物品是一本书，以及该书本的作者
      */
     @Expose
     @SerializedName(value = "author")
     public String Author = "";
     /**
-     * 表明该物品是一本书，以及该书本的标题
+     * 表示该物品是一本书，以及该书本的标题
      */
     @Expose
     @SerializedName(value = "title")
@@ -97,6 +97,7 @@ public class Join extends ItemBaseA {
             if (!Arrays.asList(this.getFlags()).contains(ItemFlag.HIDE_ENCHANTS))
                 im.addItemFlags(ItemFlag.HIDE_ENCHANTS);
         }
+        is.setItemMeta(im);
         return is;
     }
 

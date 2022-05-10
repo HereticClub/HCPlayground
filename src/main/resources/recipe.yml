@@ -1,5 +1,5 @@
 recipe1:
-  name: name
+  name: name1
   shape:
     - 'A    B'
     - ' A  B '
@@ -14,4 +14,4 @@ recipe1:
     A: 4
     B: 5
   result: chest
-  group: abc
+  group: group1

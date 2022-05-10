@@ -8,23 +8,27 @@ import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.Recipe;
+import org.hcmc.hcplayground.HCPlayground;
+import org.hcmc.hcplayground.manager.ItemManager;
 import org.hcmc.hcplayground.model.item.ItemBase;
+import org.hcmc.hcplayground.model.item.ItemBaseA;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 public class ShapedRecipe6x6 implements Recipe {
 
     @Expose
     @SerializedName(value = "result")
-    private final ItemBase result;
+    private ItemBaseA result;
     @Expose
     @SerializedName(value = "name")
     private final NamespacedKey key;
     @Expose
     @SerializedName(value = "ingredients")
-    private Map<Character, ItemStack> ingredients = new HashMap<>();
+    private Map<Character, String> ingredients = new HashMap<>();
     @Expose
     @SerializedName(value = "amount")
     private Map<Character, Integer> ingredientAmount = new HashMap<>();
@@ -38,12 +42,22 @@ public class ShapedRecipe6x6 implements Recipe {
     @Expose(serialize = false, deserialize = false)
     private String id;
 
+    public ShapedRecipe6x6() {
+        // TODO:
+        String uuid = UUID.randomUUID().toString();
+        key = new NamespacedKey(HCPlayground.getPlugin(), uuid);
+        result = (ItemBaseA) ItemManager.Create(Material.STONE);
+
+    }
+    /*
     public ShapedRecipe6x6(@NotNull NamespacedKey key, @NotNull ItemBase result) {
         Preconditions.checkArgument(result.toItemStack().getType() != Material.AIR, "Recipe must have non-AIR result.");
 
         this.key = key;
         this.result = result;
     }
+
+     */
 
     @NotNull
     public NamespacedKey getKey() {
@@ -56,7 +70,7 @@ public class ShapedRecipe6x6 implements Recipe {
     }
 
     @NotNull
-    public Map<Character, ItemStack> getIngredients() {
+    public Map<Character, String> getIngredients() {
         return ingredients;
     }
 
@@ -80,13 +94,21 @@ public class ShapedRecipe6x6 implements Recipe {
 
         this.shape = shape;
         int lastLen = -1;
-        HashMap<Character, ItemStack> newIngredients = new HashMap<>();
+        HashMap<Character, String> newIngredients = new HashMap<>();
 
         for (String row : shape) {
             Validate.notNull(row, "Shape cannot have null rows");
             Validate.isTrue(row.length() >= 1 && row.length() <= 6, "Crafting rows should be 1, 2, 3, 4, 5, 6 characters, not ", row.length());
             Validate.isTrue(lastLen == -1 || lastLen == row.length(), "Crafting recipes must be rectangular");
             lastLen = row.length();
+
+            /*
+            for (int i = 0; i < row.length(); i++) {
+                String subStr = row.substring(i, i + 1);
+                newIngredients.put(subStr, this.ingredients.get(subStr));
+            }
+
+             */
 
             char[] symbols = row.toCharArray();
             for (char c : symbols) {
@@ -101,28 +123,22 @@ public class ShapedRecipe6x6 implements Recipe {
         this.ingredientAmount = ingredientAmount;
     }
 
-    public void setAmount(char key, int amount) {
+    public void setIngredientAmount(char key, int amount) {
         Validate.isTrue(this.ingredients.containsKey(key), "Symbol does not appear in the shape:", key);
         this.ingredientAmount.put(key, amount);
     }
 
-    public void setIngredients(Map<Character, ItemStack> value) {
+    public void setIngredients(Map<Character, String> value) {
         this.ingredients = value;
     }
 
-    public void setIngredient(char key, @NotNull Material ingredient, int amount) {
-        Validate.isTrue(this.ingredients.containsKey(key), "Symbol does not appear in the shape:", key);
-        this.ingredients.put(key, new ItemStack(ingredient, amount));
-    }
-
-    public void setIngredients(char key, ItemStack ingredient) {
+    public void setIngredients(Character key, String ingredient) {
         Validate.isTrue(this.ingredients.containsKey(key), "Symbol does not appear in the shape:", key);
         this.ingredients.put(key, ingredient);
     }
 
-    public void setIngredients(char key, ItemBase ingredient) {
-        Validate.isTrue(this.ingredients.containsKey(key), "Symbol does not appear in the shape:", key);
-        this.ingredients.put(key, ingredient.toItemStack());
+    public void setResult(ItemBaseA item) {
+        result = item;
     }
 
     @NotNull

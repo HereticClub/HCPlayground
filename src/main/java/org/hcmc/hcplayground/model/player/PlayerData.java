@@ -86,6 +86,7 @@ public class PlayerData {
     // 杀掉生物记录
     public Map<EntityType, Integer> KillMobList = new HashMap<>();
 
+    private Map<UUID, CrazyBlockRecord> crazyRecords = new HashMap<>();
     /**
      * 玩家在runnable线程的时间检查点，初始化为登陆时间
      * 通常不会更改这个属性的值
@@ -140,6 +141,10 @@ public class PlayerData {
 
         name = player.getName();
         uuid = player.getUniqueId();
+    }
+
+    public Map<UUID, CrazyBlockRecord> getCrazyRecords() {
+        return crazyRecords;
     }
 
     public double getCurrentHealth() {
@@ -402,6 +407,11 @@ public class PlayerData {
             }
             case Player_Unbanned -> player.sendMessage(LocalizationManager.getMessage("playerUnBanned", player).replace("%player%", targetPlayer));
         }
+    }
+
+    public void addPlacedRecord(@NotNull CrazyBlockRecord record) {
+        UUID uuid = UUID.randomUUID();
+        crazyRecords.put(uuid, record);
     }
 
     public void LoadConfig() throws IllegalAccessException {
