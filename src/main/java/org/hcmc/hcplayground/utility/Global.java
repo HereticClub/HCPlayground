@@ -2,7 +2,6 @@ package org.hcmc.hcplayground.utility;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.TypeAdapter;
 import com.google.gson.reflect.TypeToken;
 import com.sk89q.worldguard.WorldGuard;
 import net.milkbowl.vault.chat.Chat;
@@ -11,8 +10,8 @@ import net.milkbowl.vault.permission.Permission;
 import org.bukkit.NamespacedKey;
 import org.bukkit.command.CommandMap;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.configuration.serialization.ConfigurationSerializable;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
@@ -28,7 +27,8 @@ import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.ScoreboardManager;
 import org.hcmc.hcplayground.HCPlayground;
-import org.hcmc.hcplayground.deserializer.*;
+import org.hcmc.hcplayground.model.item.ItemBase;
+import org.hcmc.hcplayground.serialization.*;
 import org.hcmc.hcplayground.enums.CrazyBlockType;
 import org.hcmc.hcplayground.enums.RecipeType;
 import org.hcmc.hcplayground.manager.BanItemManager;
@@ -36,10 +36,9 @@ import org.hcmc.hcplayground.manager.PlayerManager;
 import org.hcmc.hcplayground.model.config.AuthmeConfiguration;
 import org.hcmc.hcplayground.model.config.PotionConfiguration;
 import org.hcmc.hcplayground.model.item.ItemBaseA;
-import org.hcmc.hcplayground.model.player.CrazyBlockRecord;
 import org.hcmc.hcplayground.model.player.PlayerData;
 import org.hcmc.hcplayground.scheduler.PluginRunnable;
-import org.hcmc.hcplayground.serializer.UniversalSerializable;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
@@ -61,7 +60,8 @@ import java.util.regex.Pattern;
 public final class Global {
     private final static String[] ymlFilenames;
     private final static JavaPlugin plugin;
-    private final static Type mapType = new TypeToken<Map<?, ?>>() {}.getType();
+    private final static Type mapType = new TypeToken<Map<?, ?>>() {
+    }.getType();
 
     public final static String CONFIG_AUTHME = "authme";
     public final static String CONFIG_POTION = "potion";
@@ -100,6 +100,7 @@ public final class Global {
                 "broadcast.yml",
                 "clearlag.yml",
                 "recipe.yml",
+                "record/record.yml",
                 "database/hcdb.db",
         };
 
@@ -107,20 +108,18 @@ public final class Global {
                 .disableHtmlEscaping()
                 .enableComplexMapKeySerialization()
                 .excludeFieldsWithoutExposeAnnotation()
-                .registerTypeAdapter(CrazyBlockType.class, new CrazyTypeDeserializer())
-                .registerTypeAdapter(RecipeType.class, new BanItemTypeDeserializer())
-                .registerTypeAdapter(Enchantment.class, new EnchantmentDeserializer())
-                .registerTypeAdapter(EntityType.class, new EntityTypeDeserializer())
-                .registerTypeAdapter(EquipmentSlot.class, new EquipmentSlotDeserializer())
-                .registerTypeAdapter(InventoryType.class, new InventoryTypeDeserializer())
-                .registerTypeAdapter(ItemBaseA.class, new ItemBaseDeserializer())
-                .registerTypeAdapter(ItemFlag.class, new ItemFlagsDeserializer())
-                .registerTypeAdapter(MaterialData.class, new MaterialDeserializer())
-                //.registerTypeAdapter(mapType, new MapObjectDeserializer())
-                .registerTypeAdapter(NamespacedKey.class, new NamespacedKeyDeserializer())
-                .registerTypeAdapter(PotionEffect.class, new PotionEffectDeserializer())
-                .registerTypeAdapter(PermissionDefault.class, new PermissionDefaultDeserializer())
-                .registerTypeAdapter(ConfigurationSerializable.class, new UniversalDeserializer())
+                .registerTypeAdapter(CrazyBlockType.class, new CrazyTypeSerialization())
+                .registerTypeAdapter(Enchantment.class, new EnchantmentSerialization())
+                .registerTypeAdapter(EntityType.class, new EntityTypeSerialization())
+                .registerTypeAdapter(EquipmentSlot.class, new EquipmentSlotSerialization())
+                .registerTypeAdapter(InventoryType.class, new InventoryTypeSerialization())
+                .registerTypeAdapter(ItemBaseA.class, new ItemBaseSerialization())
+                .registerTypeAdapter(ItemFlag.class, new ItemFlagsSerialization())
+                .registerTypeAdapter(MaterialData.class, new MaterialSerialization())
+                .registerTypeAdapter(NamespacedKey.class, new NamespacedKeySerialization())
+                .registerTypeAdapter(PotionEffect.class, new PotionEffectSerialization())
+                .registerTypeAdapter(PermissionDefault.class, new PermissionDefaultSerialization())
+                .registerTypeAdapter(RecipeType.class, new RecipeTypeSerialization())
                 .serializeNulls()
                 .setDateFormat("yyyy-MM-dd HH:mm:ss")
                 .setPrettyPrinting()
@@ -137,7 +136,7 @@ public final class Global {
      * 清理所有正在执行的对象，特别是所有继承于BukkitRunnable的对象<br>
      * 在执行/reload指令或者插件退出时都需要执行该方法
      */
-    public static void Dispose() throws SQLException, IOException, IllegalAccessException {
+    public static void Dispose() throws SQLException, IOException, IllegalAccessException, InvalidConfigurationException {
         // 停止所有runnable线程
         runnable.cancel();
         // 保存所有在线玩家的数据
@@ -178,6 +177,7 @@ public final class Global {
     /**
      * 获取section内所有子节段，利用Gson反序列到每一个T对象，然后返回List&lt;T&gt;数组
      */
+    @NotNull
     public static <T> List<T> SetItemList(ConfigurationSection section, Class<T> tClass) throws IllegalAccessException {
         Set<String> keys = section.getKeys(false);
         String ClassName = tClass.getSimpleName();
@@ -212,6 +212,7 @@ public final class Global {
     /**
      * 获取yml文档内所有子节段，利用Gson反序列到每一个T对象，然后返回List&lt;T&gt;数组
      */
+    @NotNull
     public static <T> List<T> SetItemList(YamlConfiguration yaml, Class<T> tClass) throws IllegalAccessException {
         Set<String> keys = yaml.getKeys(false);
         List<T> list = new ArrayList<>();
@@ -224,7 +225,10 @@ public final class Global {
 
             T item = GsonObject.fromJson(value, tClass);
             Field fieldId = Arrays.stream(tClass.getFields()).filter(x -> x.getName().equalsIgnoreCase("id")).findAny().orElse(null);
-            if (fieldId != null) fieldId.set(item, s);
+            if (fieldId != null) {
+                fieldId.setAccessible(true);
+                fieldId.set(item, s);
+            }
             list.add(item);
         }
 
@@ -285,8 +289,6 @@ public final class Global {
                 plugin.saveResource(s, false);
             } else {
                 YamlConfiguration yaml = MigrateConfiguration(s);
-                if (yaml == null) continue;
-
                 yaml.save(String.format("%s/%s", plugin.getDataFolder(), s));
                 yamlMap.put(s, yaml);
             }
@@ -344,13 +346,17 @@ public final class Global {
         PermissionApi = rsp.getProvider();
     }
 
+    @NotNull
     private static YamlConfiguration MigrateConfiguration(String filename) {
         YamlConfiguration yamlResource, yamlPlugin;
 
         InputStream stream = plugin.getResource(filename);
-        if (stream == null) return null;
-        InputStreamReader reader = new InputStreamReader(stream, StandardCharsets.UTF_8);
-        yamlResource = YamlConfiguration.loadConfiguration(reader);
+        if (stream == null) {
+            yamlResource = new YamlConfiguration();
+        } else {
+            InputStreamReader reader = new InputStreamReader(stream, StandardCharsets.UTF_8);
+            yamlResource = YamlConfiguration.loadConfiguration(reader);
+        }
 
         File f = new File(String.format("%s/%s", plugin.getDataFolder(), filename));
         yamlPlugin = YamlConfiguration.loadConfiguration(f);

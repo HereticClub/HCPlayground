@@ -1,6 +1,5 @@
 package org.hcmc.hcplayground.listener;
 
-import com.google.gson.reflect.TypeToken;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -11,9 +10,7 @@ import org.bukkit.block.Block;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandMap;
 import org.bukkit.command.ConsoleCommandSender;
-import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.MemoryConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.entity.*;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
@@ -25,7 +22,10 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.entity.EntitySpawnEvent;
-import org.bukkit.event.inventory.*;
+import org.bukkit.event.inventory.ClickType;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.event.inventory.PrepareAnvilEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.*;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -35,23 +35,24 @@ import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.enums.RecipeType;
 import org.hcmc.hcplayground.event.PlayerEquipmentChangedEvent;
 import org.hcmc.hcplayground.manager.*;
+import org.hcmc.hcplayground.model.CrazyRecord;
 import org.hcmc.hcplayground.model.MobEntity;
 import org.hcmc.hcplayground.model.config.BanConfiguration;
 import org.hcmc.hcplayground.model.item.Crazy;
 import org.hcmc.hcplayground.model.item.ItemBase;
 import org.hcmc.hcplayground.model.menu.MenuDetail;
 import org.hcmc.hcplayground.model.menu.MenuItem;
-import org.hcmc.hcplayground.model.player.CrazyBlockRecord;
 import org.hcmc.hcplayground.model.player.PlayerData;
 import org.hcmc.hcplayground.scheduler.EquipmentMonitorRunnable;
 import org.hcmc.hcplayground.utility.Global;
 import org.hcmc.hcplayground.utility.RandomNumber;
-import org.yaml.snakeyaml.Yaml;
 
 import java.io.IOException;
-import java.lang.reflect.Type;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 /*
 Java 本身的编程思路就已经足够混乱
@@ -95,7 +96,7 @@ public class PluginListener implements Listener {
      * @throws SQLException 当SQL执行操作时发生异常
      */
     @EventHandler
-    private void onPlayerJoined(final PlayerJoinEvent event) throws SQLException, IllegalAccessException {
+    private void onPlayerJoined(final PlayerJoinEvent event) throws SQLException, IllegalAccessException, IOException, InvalidConfigurationException {
         // 获取登陆玩家实例
         Player player = event.getPlayer();
         // 获取玩家实例的附加数据
@@ -128,7 +129,7 @@ public class PluginListener implements Listener {
      * @throws IllegalAccessException IllegalAccessException
      */
     @EventHandler
-    private void onPlayerMove(PlayerMoveEvent event) throws IllegalAccessException {
+    private void onPlayerMove(PlayerMoveEvent event) throws IllegalAccessException, IOException, InvalidConfigurationException {
         if (event.isCancelled()) return;
         // 获取玩家实例
         Player player = event.getPlayer();
@@ -146,7 +147,7 @@ public class PluginListener implements Listener {
      * @throws IOException 当IO执行操作时发生异常
      */
     @EventHandler
-    private void onPlayerLeave(PlayerQuitEvent event) throws IOException, IllegalAccessException {
+    private void onPlayerLeave(PlayerQuitEvent event) throws IOException, IllegalAccessException, InvalidConfigurationException {
         // 获得玩家实例
         Player player = event.getPlayer();
         PlayerData playerData = PlayerManager.getPlayerData(player);
@@ -169,11 +170,12 @@ public class PluginListener implements Listener {
 
     /**
      * 玩家的游戏模式被改变事件
+     *
      * @param event
      * @throws IllegalAccessException
      */
     @EventHandler
-    private void onPlayerGameModeChanged(PlayerGameModeChangeEvent event) throws IllegalAccessException {
+    private void onPlayerGameModeChanged(PlayerGameModeChangeEvent event) throws IllegalAccessException, IOException, InvalidConfigurationException {
         if (event.isCancelled()) return;
 
         Player player = event.getPlayer();
@@ -188,11 +190,12 @@ public class PluginListener implements Listener {
     /**
      * 玩家发出的指令的预处理事件<br>
      * 在玩家成功登陆到游戏前，禁止执行除了/login, /register之外的任何指令
+     *
      * @param event
      * @throws IllegalAccessException
      */
     @EventHandler
-    private void onPlayerCommandPreprocess(PlayerCommandPreprocessEvent event) throws IllegalAccessException {
+    private void onPlayerCommandPreprocess(PlayerCommandPreprocessEvent event) throws IllegalAccessException, IOException, InvalidConfigurationException {
         if (event.isCancelled()) return;
 
         String message = event.getMessage();
@@ -220,7 +223,7 @@ public class PluginListener implements Listener {
      * @param event 玩家钓鱼时触发的事件实例
      */
     @EventHandler
-    private void onPlayerFished(PlayerFishEvent event) throws IllegalAccessException {
+    private void onPlayerFished(PlayerFishEvent event) throws IllegalAccessException, IOException, InvalidConfigurationException {
         if (event.isCancelled()) return;
         // 获取玩家实例
         Player player = event.getPlayer();
@@ -244,6 +247,7 @@ public class PluginListener implements Listener {
 
     /**
      * 玩家主副手的物品改变后的事件
+     *
      * @param event
      */
     @EventHandler
@@ -258,6 +262,7 @@ public class PluginListener implements Listener {
     /**
      * 玩家在使用铁砧为物品(武器或盔甲)附魔时的预处理事件<br>
      * 禁止玩家使用普通铁砧为物品(武器或盔甲)附魔经验修复
+     *
      * @param event
      */
     @EventHandler
@@ -297,11 +302,12 @@ public class PluginListener implements Listener {
 
     /**
      * 玩家的盔甲栏物品被改变后的事件
+     *
      * @param event
      * @throws IllegalAccessException
      */
     @EventHandler
-    private void onPlayerEquipmentChanged(PlayerEquipmentChangedEvent event) throws IllegalAccessException {
+    private void onPlayerEquipmentChanged(PlayerEquipmentChangedEvent event) throws IllegalAccessException, IOException, InvalidConfigurationException {
         Map<EquipmentSlot, ItemStack> equipments = event.getEquipments();
         Player player = event.getPlayer();
 
@@ -315,7 +321,7 @@ public class PluginListener implements Listener {
      * @param event 玩家扔掉物品时触发的事件实例
      */
     @EventHandler
-    private void onItemDropped(PlayerDropItemEvent event) throws IllegalAccessException {
+    private void onItemDropped(PlayerDropItemEvent event) throws IllegalAccessException, IOException, InvalidConfigurationException {
         if (event.isCancelled()) return;
         // 获取玩家及UUID
         Player player = event.getPlayer();
@@ -333,11 +339,12 @@ public class PluginListener implements Listener {
 
     /**
      * 生物(包括玩家)拾起物品事件
+     *
      * @param event
      * @throws IllegalAccessException
      */
     @EventHandler
-    private void onItemPickup(EntityPickupItemEvent event) throws IllegalAccessException {
+    private void onItemPickup(EntityPickupItemEvent event) throws IllegalAccessException, IOException, InvalidConfigurationException {
         if (event.isCancelled()) return;
         // 获取拾取物品的生物
         LivingEntity entity = event.getEntity();
@@ -361,7 +368,7 @@ public class PluginListener implements Listener {
      * @param event 方块被破坏时触发的事件实例
      */
     @EventHandler
-    private void onBlockBroken(final BlockBreakEvent event) throws IllegalAccessException {
+    private void onBlockBroken(final BlockBreakEvent event) throws IllegalAccessException, IOException, InvalidConfigurationException {
         if (event.isCancelled()) return;
 
         Player player = event.getPlayer();
@@ -374,6 +381,15 @@ public class PluginListener implements Listener {
         int count = playerData.BreakList.getOrDefault(material, 0);
         playerData.BreakList.put(material, count + 1);
         PlayerManager.setPlayerData(player, playerData);
+
+        CrazyRecord record = RecordManager.findCrazyRecord(block.getLocation());
+        if (record == null) return;
+        Crazy ib = (Crazy) ItemManager.FindItemById(record.getName());
+        if (ib == null) return;
+
+        event.setDropItems(false);
+        block.getWorld().dropItemNaturally(block.getLocation(), ib.toItemStack());
+        RecordManager.removeCrazyRecord(record);
     }
 
     /**
@@ -382,7 +398,7 @@ public class PluginListener implements Listener {
      * @param event 方块被放置时触发的事件实例
      */
     @EventHandler
-    private void onBlockPlaced(final BlockPlaceEvent event) throws IllegalAccessException, IOException {
+    private void onBlockPlaced(final BlockPlaceEvent event) throws IllegalAccessException, IOException, InvalidConfigurationException {
         if (event.isCancelled()) return;
 
         Player player = event.getPlayer();
@@ -394,28 +410,19 @@ public class PluginListener implements Listener {
         playerData.PlaceList.put(material, count + 1);
         PlayerManager.setPlayerData(player, playerData);
 
+        // 自定义可放置方块的摆放记录
         ItemStack is = event.getItemInHand();
         ItemBase ib = ItemManager.getItemBase(is);
         if (!(ib instanceof Crazy crazy)) return;
 
-        CrazyBlockRecord record = new CrazyBlockRecord(ib.getId(), block.getLocation());
-        playerData.addPlacedRecord(record);
-
-        Map<?, ?> records = playerData.getCrazyRecords();
-        String v1 = Global.GsonObject.toJson(records);
-
-
-        YamlConfiguration yaml = new YamlConfiguration();
-        yaml.createSection("crazy", records);
-        ConfigurationSection section = yaml.getConfigurationSection("crazy");
-        String v2 = yaml.saveToString();
-
-        System.out.println(v1);
-        System.out.println(v2);
+        CrazyRecord record = new CrazyRecord(ib.getId(), block.getLocation());
+        RecordManager.addCrazyRecord(record);
+        RecordManager.saveCrazyRecord();
     }
 
     /**
      * 实体生物生成后事件
+     *
      * @param event
      */
     @EventHandler
@@ -488,6 +495,7 @@ public class PluginListener implements Listener {
 
     /**
      * 实体攻击另一个实体事件
+     *
      * @param event
      */
     @EventHandler
@@ -507,11 +515,12 @@ public class PluginListener implements Listener {
 
     /**
      * 实体死亡事件
+     *
      * @param event
      * @throws IllegalAccessException
      */
     @EventHandler
-    private void onEntityDeath(EntityDeathEvent event) throws IllegalAccessException {
+    private void onEntityDeath(EntityDeathEvent event) throws IllegalAccessException, IOException, InvalidConfigurationException {
         // 获取死亡的生物实例
         LivingEntity entity = event.getEntity();
         // 获取生物的类型及位置

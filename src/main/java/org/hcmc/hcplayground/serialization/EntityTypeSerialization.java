@@ -1,4 +1,4 @@
-package org.hcmc.hcplayground.deserializer;
+package org.hcmc.hcplayground.serialization;
 
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
@@ -9,7 +9,7 @@ import org.bukkit.entity.EntityType;
 import java.lang.reflect.Type;
 import java.util.Arrays;
 
-public class EntityTypeDeserializer implements JsonDeserializer<EntityType> {
+public class EntityTypeSerialization implements JsonDeserializer<EntityType> {
 
     @Override
     public EntityType deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {

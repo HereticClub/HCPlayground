@@ -1,17 +1,14 @@
-package org.hcmc.hcplayground.deserializer;
+package org.hcmc.hcplayground.serialization;
 
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
-import org.hcmc.hcplayground.model.player.CrazyBlockRecord;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
-public class MapObjectDeserializer extends TypeAdapter<Map<?, ?>> {
+public class MapObjectSerialization extends TypeAdapter<Map<?, ?>> {
     @Override
     public void write(JsonWriter jsonWriter, Map<?, ?> map) throws IOException {
 
@@ -23,7 +20,7 @@ public class MapObjectDeserializer extends TypeAdapter<Map<?, ?>> {
 
         jsonReader.beginObject();
 
-        while(jsonReader.hasNext()){
+        while (jsonReader.hasNext()) {
             var name = jsonReader.nextName();
             var value = jsonReader.nextString();
             System.out.println(name + ": " + value);

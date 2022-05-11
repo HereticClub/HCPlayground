@@ -2,6 +2,7 @@ package org.hcmc.hcplayground;
 
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
@@ -64,7 +65,7 @@ public class HCPlayground extends JavaPlugin {
             //ConsoleLegacyFilter.RegisterFilter(getLogger());
             ConsoleLog4jFilter.RegisterFilter();
             HCPluginExpansion.RegisterExpansion();
-        } catch (IllegalAccessException | NoSuchFieldException | SQLException | NoSuchAlgorithmException | InvalidKeySpecException | IOException e) {
+        } catch (IllegalAccessException | NoSuchFieldException | SQLException | NoSuchAlgorithmException | InvalidKeySpecException | IOException | InvalidConfigurationException e) {
             e.printStackTrace();
         }
     }
@@ -75,12 +76,12 @@ public class HCPlayground extends JavaPlugin {
 
         try {
             // 停止runnable线程
-            task.cancel();
+            if (task != null) task.cancel();
             // 注销插件，保存所有在线玩家数据，断开可Sqlite的连接，清空所有Map对象
             Global.Dispose();
             HCPluginExpansion.UnregisterExpansion();
             Global.LogMessage(String.format("%s has been disabled.", this.getName()));
-        } catch (SQLException | IOException | IllegalAccessException e) {
+        } catch (SQLException | IOException | IllegalAccessException | InvalidConfigurationException e) {
             e.printStackTrace();
         }
     }
@@ -107,9 +108,11 @@ public class HCPlayground extends JavaPlugin {
     }
 
     private void InitialChildrenFolders() {
-        String[] childrenFolders = new String[]{"profile", "database"};
+        String[] childrenFolders = new String[]{"profile", "database", "record"};
 
-        if (!getDataFolder().exists()) getDataFolder().mkdir();
+        if (!getDataFolder().exists()) {
+            boolean flag = getDataFolder().mkdir();
+        }
 
         for (String s : childrenFolders) {
             File f = new File(String.format("%s/%s", getDataFolder(), s));
@@ -148,5 +151,7 @@ public class HCPlayground extends JavaPlugin {
         ClearLagManager.Load(Global.getYamlConfiguration("clearlag.yml"));
         // 11.加载配方列表
         RecipeManager.Load(Global.getYamlConfiguration("recipe.yml"));
+        // 12.加载自定义可放置方块的摆放记录
+        RecordManager.Load(Global.getYamlConfiguration("record/record.yml"));
     }
 }

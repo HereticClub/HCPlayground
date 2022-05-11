@@ -1,11 +1,9 @@
-package org.hcmc.hcplayground.deserializer;
+package org.hcmc.hcplayground.serialization;
 
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 import org.bukkit.configuration.serialization.ConfigurationSerializable;
 import org.bukkit.configuration.serialization.ConfigurationSerialization;
-import org.hcmc.hcplayground.model.player.CrazyBlockRecord;
-import org.hcmc.hcplayground.serializer.UniversalSerializable;
 
 import java.lang.reflect.Type;
 import java.util.LinkedHashMap;
@@ -33,7 +31,8 @@ public class UniversalDeserializer implements JsonDeserializer<ConfigurationSeri
 
     @Override
     public JsonElement serialize(ConfigurationSerializable source, Type type, JsonSerializationContext context) {
-        final Type objectStringMapType = new TypeToken<Map<String, Object>>() {}.getType();
+        final Type objectStringMapType = new TypeToken<Map<String, Object>>() {
+        }.getType();
         final Map<String, Object> map = new LinkedHashMap<>();
 
         map.put(ConfigurationSerialization.SERIALIZED_TYPE_KEY, ConfigurationSerialization.getAlias(source.getClass()));

@@ -1,4 +1,4 @@
-package org.hcmc.hcplayground.deserializer;
+package org.hcmc.hcplayground.serialization;
 
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
@@ -9,7 +9,7 @@ import org.bukkit.potion.PotionEffectType;
 
 import java.lang.reflect.Type;
 
-public class PotionEffectDeserializer implements JsonDeserializer<PotionEffect> {
+public class PotionEffectSerialization implements JsonDeserializer<PotionEffect> {
     @Override
     public PotionEffect deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
         String[] keys = jsonElement.getAsString().split(",");

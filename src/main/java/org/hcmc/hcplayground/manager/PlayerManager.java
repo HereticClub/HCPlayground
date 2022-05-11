@@ -1,5 +1,6 @@
 package org.hcmc.hcplayground.manager;
 
+import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -8,6 +9,7 @@ import org.hcmc.hcplayground.model.player.PlayerData;
 import org.hcmc.hcplayground.utility.NameBinaryTagResolver;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -31,7 +33,7 @@ public class PlayerManager {
      * @param player 实体玩家实例
      * @return 该实体玩家的配置信息实例
      */
-    public static PlayerData getPlayerData(@NotNull Player player) throws IllegalAccessException {
+    public static PlayerData getPlayerData(@NotNull Player player) throws IllegalAccessException, IOException, InvalidConfigurationException {
         UUID playerUuid = player.getUniqueId();
         PlayerData pd = PlayerDataMap.get(playerUuid);
 
@@ -68,7 +70,7 @@ public class PlayerManager {
         PlayerDataMap.clear();
     }
 
-    public static void getEquipmentData(Player player, ItemStack[] itemStacks) throws IllegalAccessException {
+    public static void getEquipmentData(Player player, ItemStack[] itemStacks) throws IllegalAccessException, IOException, InvalidConfigurationException {
         double armor = PlayerData.BASE_ARMOR;
         double attackReach = PlayerData.BASE_ATTACK_REACH;
         double bloodSucking = PlayerData.BASE_BLOOD_SUCKING;

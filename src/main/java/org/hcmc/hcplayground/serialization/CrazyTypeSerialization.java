@@ -1,4 +1,4 @@
-package org.hcmc.hcplayground.deserializer;
+package org.hcmc.hcplayground.serialization;
 
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
@@ -9,9 +9,9 @@ import org.hcmc.hcplayground.enums.CrazyBlockType;
 import java.lang.reflect.Type;
 import java.util.Arrays;
 
-public class CrazyTypeDeserializer implements JsonDeserializer<CrazyBlockType> {
+public class CrazyTypeSerialization implements JsonDeserializer<CrazyBlockType> {
 
-    public CrazyTypeDeserializer() {
+    public CrazyTypeSerialization() {
 
     }
 

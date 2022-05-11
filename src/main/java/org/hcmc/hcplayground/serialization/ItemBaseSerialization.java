@@ -1,12 +1,10 @@
-package org.hcmc.hcplayground.deserializer;
+package org.hcmc.hcplayground.serialization;
 
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.ItemStack;
 import org.hcmc.hcplayground.manager.ItemManager;
 import org.hcmc.hcplayground.model.item.ItemBase;
@@ -17,9 +15,9 @@ import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.List;
 
-public class ItemBaseDeserializer implements JsonDeserializer<ItemBase> {
+public class ItemBaseSerialization implements JsonDeserializer<ItemBase> {
 
-    public ItemBaseDeserializer() {
+    public ItemBaseSerialization() {
 
     }
 

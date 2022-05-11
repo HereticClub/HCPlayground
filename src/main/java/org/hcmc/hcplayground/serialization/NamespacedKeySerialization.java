@@ -1,4 +1,4 @@
-package org.hcmc.hcplayground.deserializer;
+package org.hcmc.hcplayground.serialization;
 
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
@@ -10,9 +10,9 @@ import org.hcmc.hcplayground.HCPlayground;
 
 import java.lang.reflect.Type;
 
-public class NamespacedKeyDeserializer implements JsonDeserializer<NamespacedKey> {
+public class NamespacedKeySerialization implements JsonDeserializer<NamespacedKey> {
 
-    public NamespacedKeyDeserializer(){
+    public NamespacedKeySerialization() {
 
     }
 

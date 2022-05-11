@@ -1,4 +1,4 @@
-package org.hcmc.hcplayground.deserializer;
+package org.hcmc.hcplayground.serialization;
 
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
@@ -9,9 +9,9 @@ import org.hcmc.hcplayground.enums.RecipeType;
 import java.lang.reflect.Type;
 import java.util.Arrays;
 
-public class BanItemTypeDeserializer implements JsonDeserializer<RecipeType> {
+public class RecipeTypeSerialization implements JsonDeserializer<RecipeType> {
 
-    public BanItemTypeDeserializer() {
+    public RecipeTypeSerialization() {
 
     }
 

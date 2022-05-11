@@ -1,17 +1,11 @@
 package org.hcmc.hcplayground.manager;
 
-import org.bukkit.Material;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.hcmc.hcplayground.model.item.ItemBase;
-import org.hcmc.hcplayground.model.item.ItemBaseA;
 import org.hcmc.hcplayground.model.recipe.ShapedRecipe6x6;
 import org.hcmc.hcplayground.utility.Global;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class RecipeManager {
 

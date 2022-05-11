@@ -1,12 +1,13 @@
-package org.hcmc.hcplayground.model.player;
+package org.hcmc.hcplayground.model;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
-import org.hcmc.hcplayground.serializer.UniversalSerializable;
 
-public class CrazyBlockRecord extends UniversalSerializable {
+// 自定义可放置方块的摆放记录类
+public class CrazyRecord {
 
     @Expose
     @SerializedName(value = "name")
@@ -25,10 +26,21 @@ public class CrazyBlockRecord extends UniversalSerializable {
     private double z;
     @Expose
     @SerializedName(value = "pitch")
-    private double pitch;
+    private float pitch;
     @Expose
     @SerializedName(value = "yaw")
-    private double yaw;
+    private float yaw;
+
+    @Expose(serialize = false, deserialize = false)
+    private String id;
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
 
     public double getZ() {
         return z;
@@ -62,19 +74,19 @@ public class CrazyBlockRecord extends UniversalSerializable {
         this.world = world;
     }
 
-    public double getYaw() {
+    public float getYaw() {
         return yaw;
     }
 
-    public void setYaw(double yaw) {
+    public void setYaw(float yaw) {
         this.yaw = yaw;
     }
 
-    public double getPitch() {
+    public float getPitch() {
         return pitch;
     }
 
-    public void setPitch(double pitch) {
+    public void setPitch(float pitch) {
         this.pitch = pitch;
     }
 
@@ -86,12 +98,11 @@ public class CrazyBlockRecord extends UniversalSerializable {
         this.name = name;
     }
 
-
-    public CrazyBlockRecord() {
+    public CrazyRecord() {
 
     }
 
-    public CrazyBlockRecord(String name, Location location) {
+    public CrazyRecord(String name, Location location) {
         this.name = name;
 
         x = location.getX();
@@ -103,5 +114,10 @@ public class CrazyBlockRecord extends UniversalSerializable {
         World w = location.getWorld();
         if (w == null) return;
         world = w.getName();
+    }
+
+    public Location toLocation() {
+        World w = Bukkit.getWorld(world);
+        return new Location(w, x, y, z, yaw, pitch);
     }
 }

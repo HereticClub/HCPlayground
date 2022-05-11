@@ -1,4 +1,4 @@
-package org.hcmc.hcplayground.deserializer;
+package org.hcmc.hcplayground.serialization;
 
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
@@ -8,7 +8,7 @@ import org.bukkit.inventory.ItemFlag;
 
 import java.lang.reflect.Type;
 
-public class ItemFlagsDeserializer implements JsonDeserializer<ItemFlag> {
+public class ItemFlagsSerialization implements JsonDeserializer<ItemFlag> {
 
     @Override
     public ItemFlag deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {

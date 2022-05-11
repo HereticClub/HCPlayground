@@ -88,7 +88,7 @@ public class ItemManager {
 
     public static ItemBase Create(Material material) {
         ItemBaseX x = new ItemBaseX();
-        MaterialData md =new MaterialData();
+        MaterialData md = new MaterialData();
         md.setData(material, null);
         x.setId(null);
         x.setMaterial(md);

@@ -6,6 +6,7 @@ import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
@@ -85,8 +86,6 @@ public class PlayerData {
     public Map<Material, Integer> PickupList = new HashMap<>();
     // 杀掉生物记录
     public Map<EntityType, Integer> KillMobList = new HashMap<>();
-
-    private Map<UUID, CrazyBlockRecord> crazyRecords = new HashMap<>();
     /**
      * 玩家在runnable线程的时间检查点，初始化为登陆时间
      * 通常不会更改这个属性的值
@@ -141,10 +140,6 @@ public class PlayerData {
 
         name = player.getName();
         uuid = player.getUniqueId();
-    }
-
-    public Map<UUID, CrazyBlockRecord> getCrazyRecords() {
-        return crazyRecords;
     }
 
     public double getCurrentHealth() {
@@ -409,15 +404,10 @@ public class PlayerData {
         }
     }
 
-    public void addPlacedRecord(@NotNull CrazyBlockRecord record) {
-        UUID uuid = UUID.randomUUID();
-        crazyRecords.put(uuid, record);
-    }
-
-    public void LoadConfig() throws IllegalAccessException {
+    public void LoadConfig() throws IllegalAccessException, IOException, InvalidConfigurationException {
         UUID playerUuid = player.getUniqueId();
         File f = new File(plugin.getDataFolder(), String.format("profile/%s.yml", playerUuid));
-
+        // TODO:
         YamlConfiguration yaml = YamlConfiguration.loadConfiguration(f);
         Yaml2Map(yaml);
     }

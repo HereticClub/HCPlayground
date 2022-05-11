@@ -391,3 +391,14 @@ crazies:
     flags:
       - HIDE_ATTRIBUTES
       - HIDE_ENCHANTS
+  crazy_stone:
+    name: '&d疯狂的石头'
+    material: stone
+    type: CRAZY_CRAFTING_TABLE
+    glowing: true
+    lore:
+      - '&7一块疯狂的石头'
+    worlds: []
+    flags:
+      - HIDE_ATTRIBUTES
+      - HIDE_ENCHANTS

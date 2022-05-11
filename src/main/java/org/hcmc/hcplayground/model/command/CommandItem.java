@@ -3,13 +3,15 @@ package org.hcmc.hcplayground.model.command;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import org.apache.commons.lang.StringUtils;
-import org.bukkit.*;
+import org.bukkit.OfflinePlayer;
+import org.bukkit.World;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandMap;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
+import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -208,7 +210,7 @@ public class CommandItem extends Command {
             if (commandText.equalsIgnoreCase(COMMAND_SCALE)) {
                 return RunScaleCommand(sender, args);
             }
-        } catch (SQLException | InvalidAlgorithmParameterException | NoSuchPaddingException | IllegalBlockSizeException | NoSuchAlgorithmException | InvalidKeySpecException | BadPaddingException | InvalidKeyException | NoSuchFieldException | IllegalAccessException | IOException e) {
+        } catch (SQLException | InvalidAlgorithmParameterException | NoSuchPaddingException | IllegalBlockSizeException | NoSuchAlgorithmException | InvalidKeySpecException | BadPaddingException | InvalidKeyException | NoSuchFieldException | IllegalAccessException | IOException | InvalidConfigurationException e) {
             e.printStackTrace();
         }
 
@@ -336,7 +338,7 @@ public class CommandItem extends Command {
         return true;
     }
 
-    private boolean RunUnRegisterCommand(CommandSender sender, String[] args) throws InvalidAlgorithmParameterException, SQLException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException, IllegalAccessException {
+    private boolean RunUnRegisterCommand(CommandSender sender, String[] args) throws InvalidAlgorithmParameterException, SQLException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException, IllegalAccessException, IOException, InvalidConfigurationException {
         // 该指令必须玩家执行
         if (!(sender instanceof Player player)) {
             sender.sendMessage(LocalizationManager.getMessage("console-message", sender).replace("%command%", id));
@@ -352,7 +354,7 @@ public class CommandItem extends Command {
         return playerData.Unregister(args[0]);
     }
 
-    private boolean RunLoginCommand(CommandSender sender, String[] args) throws InvalidAlgorithmParameterException, SQLException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException, IllegalAccessException {
+    private boolean RunLoginCommand(CommandSender sender, String[] args) throws InvalidAlgorithmParameterException, SQLException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException, IllegalAccessException, IOException, InvalidConfigurationException {
         // 该指令必须玩家执行
         if (!(sender instanceof Player player)) {
             sender.sendMessage(LocalizationManager.getMessage("console-message", sender).replace("%command%", id));
@@ -379,7 +381,7 @@ public class CommandItem extends Command {
         return true;
     }
 
-    private boolean RunRegisterCommand(CommandSender sender, String[] args) throws SQLException, InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException, IllegalAccessException {
+    private boolean RunRegisterCommand(CommandSender sender, String[] args) throws SQLException, InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException, IllegalAccessException, IOException, InvalidConfigurationException {
         // 该指令必须玩家执行
         if (!(sender instanceof Player player)) {
             sender.sendMessage(LocalizationManager.getMessage("console-message", sender).replace("%command%", id));
@@ -400,7 +402,7 @@ public class CommandItem extends Command {
         return playerData.Register(args[0]);
     }
 
-    private boolean RunChangePasswordCommand(CommandSender sender, String[] args) throws InvalidAlgorithmParameterException, SQLException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException, IllegalAccessException {
+    private boolean RunChangePasswordCommand(CommandSender sender, String[] args) throws InvalidAlgorithmParameterException, SQLException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException, IllegalAccessException, IOException, InvalidConfigurationException {
         // 该指令必须玩家执行
         if (!(sender instanceof Player player)) {
             sender.sendMessage(LocalizationManager.getMessage("console-message", sender).replace("%command%", id));
@@ -420,7 +422,7 @@ public class CommandItem extends Command {
         return playerData.ChangePassword(args[0], args[1]);
     }
 
-    private boolean RunBanPlayerCommand(CommandSender sender, String[] args) throws SQLException, IllegalAccessException {
+    private boolean RunBanPlayerCommand(CommandSender sender, String[] args) throws SQLException, IllegalAccessException, IOException, InvalidConfigurationException {
         // 该指令必须玩家执行
         if (!(sender instanceof Player player)) {
             sender.sendMessage(LocalizationManager.getMessage("console-message", sender).replace("%command%", id));

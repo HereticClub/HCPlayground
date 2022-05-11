@@ -1,4 +1,4 @@
-package org.hcmc.hcplayground.deserializer;
+package org.hcmc.hcplayground.serialization;
 
 import com.google.gson.*;
 import org.bukkit.Material;
@@ -8,9 +8,9 @@ import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.List;
 
-public class MaterialDeserializer implements JsonDeserializer<MaterialData>, JsonSerializer<MaterialData> {
+public class MaterialSerialization implements JsonDeserializer<MaterialData>, JsonSerializer<MaterialData> {
 
-    public MaterialDeserializer() {
+    public MaterialSerialization() {
 
     }
 

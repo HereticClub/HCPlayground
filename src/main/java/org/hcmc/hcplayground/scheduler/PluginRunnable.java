@@ -5,6 +5,7 @@ import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
+import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -20,6 +21,7 @@ import org.hcmc.hcplayground.model.item.ItemBase;
 import org.hcmc.hcplayground.model.player.PlayerData;
 import org.hcmc.hcplayground.utility.Global;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -49,7 +51,7 @@ public class PluginRunnable extends BukkitRunnable {
             doOnlinePlayerTask();
             doBroadcastTask();
             doClearLag();
-        } catch (NoSuchFieldException | IllegalAccessException e) {
+        } catch (NoSuchFieldException | IllegalAccessException | InvalidConfigurationException | IOException e) {
             e.printStackTrace();
         }
     }
@@ -90,7 +92,7 @@ public class PluginRunnable extends BukkitRunnable {
         }
     }
 
-    private void doOnlinePlayerTask() throws NoSuchFieldException, IllegalAccessException {
+    private void doOnlinePlayerTask() throws NoSuchFieldException, IllegalAccessException, IOException, InvalidConfigurationException {
         // 获取所有在线玩家实例
         Player[] players = plugin.getServer().getOnlinePlayers().toArray(new Player[0]);
         // 每秒更新自1970年1月1日开始至今的总秒数

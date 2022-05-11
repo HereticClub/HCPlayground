@@ -1,4 +1,4 @@
-package org.hcmc.hcplayground.deserializer;
+package org.hcmc.hcplayground.serialization;
 
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
@@ -10,9 +10,9 @@ import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.List;
 
-public class InventoryTypeDeserializer implements JsonDeserializer<InventoryType> {
+public class InventoryTypeSerialization implements JsonDeserializer<InventoryType> {
 
-    public InventoryTypeDeserializer() {
+    public InventoryTypeSerialization() {
 
     }
 

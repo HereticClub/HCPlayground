@@ -3,6 +3,7 @@ package org.hcmc.hcplayground.expansion;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginDescriptionFile;
@@ -13,6 +14,7 @@ import org.hcmc.hcplayground.model.player.PlayerData;
 import org.hcmc.hcplayground.utility.Global;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
 import java.util.List;
 
 public class HCPluginExpansion extends PlaceholderExpansion {
@@ -121,7 +123,7 @@ public class HCPluginExpansion extends PlaceholderExpansion {
                 return String.format("%.1f", data.getTotalDiggingSpeed());
             if (params.equalsIgnoreCase(ItemBase.PERSISTENT_LOGGING_SPEED))
                 return String.format("%.1f", data.getTotalLoggingSpeed());
-        } catch (IllegalAccessException e) {
+        } catch (IllegalAccessException | InvalidConfigurationException | IOException e) {
             e.printStackTrace();
         }
 
