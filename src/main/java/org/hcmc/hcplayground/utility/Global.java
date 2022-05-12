@@ -27,7 +27,7 @@ import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.ScoreboardManager;
 import org.hcmc.hcplayground.HCPlayground;
-import org.hcmc.hcplayground.model.item.ItemBase;
+import org.hcmc.hcplayground.manager.RecordManager;
 import org.hcmc.hcplayground.serialization.*;
 import org.hcmc.hcplayground.enums.CrazyBlockType;
 import org.hcmc.hcplayground.enums.RecipeType;
@@ -69,6 +69,21 @@ public final class Global {
     public final static String FIELD_NAME_COMMANDMAP = "commandMap";
     public final static Pattern patternNumber = Pattern.compile("-?\\d+(\\.\\d+)?");
 
+    public final static String FILE_CONFIG=                            "config.yml";
+    public final static String FILE_ITEMS= "items.yml";
+    public final static String FILE_DROPS="drops.yml";
+    public final static String FILE_MESSAGES="messages.yml";
+    public final static String FILE_LEVELS="levels.yml";
+    public final static String FILE_COMMANDS="command.yml";
+    public final static String FILE_MENU="menu.yml";
+    public final static String FILE_PERMISSION="permission.yml";
+    public final static String FILE_MOBS="mobs.yml";
+    public final static String FILE_BROADCAST="broadcast.yml";
+    public final static String FILE_CLEARLAG="clearlag.yml";
+    public final static String FILE_RECIPE="recipe.yml";
+    public final static String FILE_RECORD="record/record.yml";
+    public final static String FILE_DATABASE="database/hcdb.db";
+
     public static PluginRunnable runnable;
     public static Map<String, YamlConfiguration> yamlMap;
     public static Gson GsonObject;
@@ -88,20 +103,20 @@ public final class Global {
         yamlMap = new HashMap<>();
         HealthScoreboard = CreateScoreboard();
         ymlFilenames = new String[]{
-                "config.yml",
-                "items.yml",
-                "drops.yml",
-                "messages.yml",
-                "levels.yml",
-                "command.yml",
-                "menu.yml",
-                "permission.yml",
-                "mobs.yml",
-                "broadcast.yml",
-                "clearlag.yml",
-                "recipe.yml",
-                "record/record.yml",
-                "database/hcdb.db",
+                FILE_CONFIG,
+                FILE_ITEMS,
+                FILE_DROPS,
+                FILE_MESSAGES,
+                FILE_LEVELS,
+                FILE_COMMANDS,
+                FILE_MENU,
+                FILE_PERMISSION,
+                FILE_MOBS,
+                FILE_BROADCAST,
+                FILE_CLEARLAG,
+                FILE_RECIPE,
+                FILE_RECORD,
+                FILE_DATABASE,
         };
 
         GsonObject = new GsonBuilder()
@@ -115,7 +130,7 @@ public final class Global {
                 .registerTypeAdapter(InventoryType.class, new InventoryTypeSerialization())
                 .registerTypeAdapter(ItemBaseA.class, new ItemBaseSerialization())
                 .registerTypeAdapter(ItemFlag.class, new ItemFlagsSerialization())
-                .registerTypeAdapter(MaterialData.class, new MaterialSerialization())
+                .registerTypeAdapter(MaterialData.class, new MaterialDataSerialization())
                 .registerTypeAdapter(NamespacedKey.class, new NamespacedKeySerialization())
                 .registerTypeAdapter(PotionEffect.class, new PotionEffectSerialization())
                 .registerTypeAdapter(PermissionDefault.class, new PermissionDefaultSerialization())
@@ -146,6 +161,7 @@ public final class Global {
         }
         // 清除内存
         PlayerManager.clearAllPlayerData();
+        RecordManager.saveCrazyRecord();
         yamlMap.clear();
         // 关闭sqlite数据库
         if (!Sqlite.isClosed()) Sqlite.close();
@@ -157,7 +173,7 @@ public final class Global {
     public static void LoadConfig() throws IllegalAccessException {
         String value;
         ConfigurationSection section;
-        YamlConfiguration config = getYamlConfiguration("config.yml");
+        YamlConfiguration config = getYamlConfiguration(FILE_CONFIG);
 
         section = config.getConfigurationSection(CONFIG_AUTHME);
         if (section != null) {

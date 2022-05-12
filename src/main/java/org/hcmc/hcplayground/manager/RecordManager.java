@@ -3,13 +3,18 @@ package org.hcmc.hcplayground.manager;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import org.apache.commons.lang.StringUtils;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.block.Block;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.model.CrazyRecord;
+import org.hcmc.hcplayground.model.item.Crazy;
+import org.hcmc.hcplayground.model.item.ItemBase;
 import org.hcmc.hcplayground.utility.Global;
 
 import java.io.IOException;
@@ -76,30 +81,18 @@ public class RecordManager {
             Field[] fields = r.getClass().getDeclaredFields();
             Map<String, Object> mapRecord = new HashMap<>();
             for (Field f : fields) {
-                f.setAccessible(true);
                 Expose e = f.getDeclaredAnnotation(Expose.class);
                 SerializedName s = f.getDeclaredAnnotation(SerializedName.class);
-
-                String propertyName;
-
                 if (e == null || !e.serialize()) continue;
-                if (s == null || StringUtils.isEmpty(s.value())) {
-                    propertyName = f.getName();
-                } else {
-                    propertyName = s.value();
-                }
 
-
+                f.setAccessible(true);
+                String propertyName = s == null || StringUtils.isEmpty(s.value()) ? f.getName() : s.value();
                 mapRecord.put(propertyName, f.get(r));
             }
             mapYaml.put(UUID.randomUUID(), mapRecord);
-
         }
-
-
         yamlRecord.createSection(SECTION_KEY_CRAZY, mapYaml);
-        yamlRecord.save(String.format("%s/record/record.yml", plugin.getDataFolder()));
-
+        yamlRecord.save(String.format("%s/%s", plugin.getDataFolder(), Global.FILE_RECORD));
     }
 
     public static void Load(YamlConfiguration yaml) throws IllegalAccessException {
@@ -109,5 +102,16 @@ public class RecordManager {
             crazyRecords = Global.SetItemList(section, CrazyRecord.class);
         }
 
+        for (CrazyRecord record : crazyRecords) {
+            Crazy ib = (Crazy) ItemManager.FindItemById(record.getName());
+            if (ib == null) continue;
+
+            World w = Bukkit.getWorld(record.getWorld());
+            if (w == null) continue;
+
+            Location l = new Location(w, record.getX(), record.getY(), record.getZ(), record.getYaw(), record.getPitch());
+            Block b = w.getBlockAt(l);
+            if (!b.getType().equals(ib.getMaterial().value)) b.setType(ib.getMaterial().value);
+        }
     }
 }

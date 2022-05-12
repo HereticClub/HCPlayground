@@ -23,9 +23,12 @@ public class Crazy extends ItemBaseA {
     @SerializedName(value = "block")
     private String block;
 
-
     public Crazy() {
 
+    }
+
+    public CrazyBlockType getType() {
+        return type;
     }
 
     @Override

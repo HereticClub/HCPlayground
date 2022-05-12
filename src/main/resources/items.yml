@@ -361,7 +361,7 @@ joins:
 # 当方块被破坏后，会掉落这个方块被放置前的物品
 crazies:
   # Id，必须唯一
-  crafting_table1:
+  crafting_table:
     # 物品的名称
     name: '&6疯狂工作台'
     # 物品被拿在手上时的材质
@@ -398,6 +398,17 @@ crazies:
     glowing: true
     lore:
       - '&7一块疯狂的石头'
+    worlds: []
+    flags:
+      - HIDE_ATTRIBUTES
+      - HIDE_ENCHANTS
+  crazy_dirt:
+    name: '&e魔法泥土'
+    material: dirt
+    type: CRAZY_CRAFTING_TABLE
+    glowing: true
+    lore:
+      - '&7一块带有魔法的泥土'
     worlds: []
     flags:
       - HIDE_ATTRIBUTES

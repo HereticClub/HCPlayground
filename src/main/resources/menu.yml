@@ -83,6 +83,7 @@ menu:
   # GREEN_STAINED_GLASS_PANE - 绿色染色玻璃板
   # RED_STAINED_GLASS_PANE - 红色染色玻璃板
   # BLACK_STAINED_GLASS_PANE - 黑色染色玻璃板
+  # result: 设置为true时，该格子作为当箱子界面作为配方界面时的成品输出格子，默认值: false
   decorates:
     - slot: 5
       displayText: '&f欢迎 &b%player%'
@@ -95,6 +96,7 @@ menu:
       glowing: true
       canDrop: false
       canDrag: false
+      result: false
       flags: []
       lore: []
     - slot: 21
@@ -234,3 +236,224 @@ recipebook:
       left_click:
         - '[player] recipebook 2'
       lore: []
+crazycrafting:
+  title: '&d&lCrazy &9Crafting Table'
+  size: 54
+  type: chest
+  decorates:
+    - slot: 1
+      canDrop: true
+      canDrag: true
+    - slot: 2
+      canDrop: true
+      canDrag: true
+    - slot: 3
+      canDrop: true
+      canDrag: true
+    - slot: 4
+      canDrop: true
+      canDrag: true
+    - slot: 5
+      canDrop: true
+      canDrag: true
+    - slot: 6
+      canDrop: true
+      canDrag: true
+    - slot: 10
+      canDrop: true
+      canDrag: true
+    - slot: 11
+      canDrop: true
+      canDrag: true
+    - slot: 12
+      canDrop: true
+      canDrag: true
+    - slot: 13
+      canDrop: true
+      canDrag: true
+    - slot: 14
+      canDrop: true
+      canDrag: true
+    - slot: 15
+      canDrop: true
+      canDrag: true
+    - slot: 19
+      canDrop: true
+      canDrag: true
+    - slot: 20
+      canDrop: true
+      canDrag: true
+    - slot: 21
+      canDrop: true
+      canDrag: true
+    - slot: 22
+      canDrop: true
+      canDrag: true
+    - slot: 23
+      canDrop: true
+      canDrag: true
+    - slot: 24
+      canDrop: true
+      canDrag: true
+    - slot: 28
+      canDrop: true
+      canDrag: true
+    - slot: 29
+      canDrop: true
+      canDrag: true
+    - slot: 30
+      canDrop: true
+      canDrag: true
+    - slot: 31
+      canDrop: true
+      canDrag: true
+    - slot: 32
+      canDrop: true
+      canDrag: true
+    - slot: 33
+      canDrop: true
+      canDrag: true
+    - slot: 37
+      canDrop: true
+      canDrag: true
+    - slot: 38
+      canDrop: true
+      canDrag: true
+    - slot: 39
+      canDrop: true
+      canDrag: true
+    - slot: 40
+      canDrop: true
+      canDrag: true
+    - slot: 41
+      canDrop: true
+      canDrag: true
+    - slot: 42
+      canDrop: true
+      canDrag: true
+    - slot: 46
+      canDrop: true
+      canDrag: true
+    - slot: 47
+      canDrop: true
+      canDrag: true
+    - slot: 48
+      canDrop: true
+      canDrag: true
+    - slot: 49
+      canDrop: true
+      canDrag: true
+    - slot: 50
+      canDrop: true
+      canDrag: true
+    - slot: 51
+      canDrop: true
+      canDrag: true
+    - slot: 17
+      displayText: '&6疯狂工作台'
+      material: crafting_table
+      canDrop: false
+      canDrag: false
+      glowing: true
+      lore:
+        - '&7普通的工作台已经不能满足你的需求'
+    - slot: 35
+      canDrop: false
+      canDrag: true
+      result: true
+    - slot: 7
+      displayText: '&f'
+      material: BLACK_STAINED_GLASS_PANE
+      canDrop: false
+      canDrag: false
+      glowing: false
+    - slot: 8
+      displayText: '&f'
+      material: BLACK_STAINED_GLASS_PANE
+      canDrop: false
+      canDrag: false
+      glowing: false
+    - slot: 9
+      displayText: '&f'
+      material: BLACK_STAINED_GLASS_PANE
+      canDrop: false
+      canDrag: false
+      glowing: false
+    - slot: 16
+      displayText: '&f'
+      material: BLACK_STAINED_GLASS_PANE
+      canDrop: false
+      canDrag: false
+      glowing: false
+    - slot: 18
+      displayText: '&f'
+      material: BLACK_STAINED_GLASS_PANE
+      canDrop: false
+      canDrag: false
+      glowing: false
+    - slot: 25
+      displayText: '&f'
+      material: BLACK_STAINED_GLASS_PANE
+      canDrop: false
+      canDrag: false
+      glowing: false
+    - slot: 26
+      displayText: '&f'
+      material: BLACK_STAINED_GLASS_PANE
+      canDrop: false
+      canDrag: false
+      glowing: false
+    - slot: 27
+      displayText: '&f'
+      material: BLACK_STAINED_GLASS_PANE
+      canDrop: false
+      canDrag: false
+      glowing: false
+    - slot: 34
+      displayText: '&f'
+      material: BLACK_STAINED_GLASS_PANE
+      canDrop: false
+      canDrag: false
+      glowing: false
+    - slot: 36
+      displayText: '&f'
+      material: BLACK_STAINED_GLASS_PANE
+      canDrop: false
+      canDrag: false
+      glowing: false
+    - slot: 43
+      displayText: '&f'
+      material: BLACK_STAINED_GLASS_PANE
+      canDrop: false
+      canDrag: false
+      glowing: false
+    - slot: 44
+      displayText: '&f'
+      material: BLACK_STAINED_GLASS_PANE
+      canDrop: false
+      canDrag: false
+      glowing: false
+    - slot: 45
+      displayText: '&f'
+      material: BLACK_STAINED_GLASS_PANE
+      canDrop: false
+      canDrag: false
+      glowing: false
+    - slot: 52
+      displayText: '&f'
+      material: BLACK_STAINED_GLASS_PANE
+      canDrop: false
+      canDrag: false
+      glowing: false
+    - slot: 53
+      displayText: '&f'
+      material: BLACK_STAINED_GLASS_PANE
+      canDrop: false
+      canDrag: false
+      glowing: false
+    - slot: 54
+      displayText: '&f'
+      material: BLACK_STAINED_GLASS_PANE
+      canDrop: false
+      canDrag: false
+      glowing: false

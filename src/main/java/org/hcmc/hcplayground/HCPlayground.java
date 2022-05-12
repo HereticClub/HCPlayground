@@ -130,28 +130,28 @@ public class HCPlayground extends JavaPlugin {
         Global.LoadConfig();
         // 从yml格式文档加载配置到实例，必须按照指定的加载顺序
         // 1.加载本地化文档
-        LocalizationManager.Load(Global.getYamlConfiguration("messages.yml"));
+        LocalizationManager.Load(Global.getYamlConfiguration(Global.FILE_MESSAGES));
         // 2.加载权限列表
-        PermissionManager.Load(Global.getYamlConfiguration("permission.yml"));
+        PermissionManager.Load(Global.getYamlConfiguration(Global.FILE_PERMISSION));
         // 3.加载指令
-        CommandManager.Load(Global.getYamlConfiguration("command.yml"));
+        CommandManager.Load(Global.getYamlConfiguration(Global.FILE_COMMANDS));
         // 4.加载自定义物品
-        ItemManager.Load(Global.getYamlConfiguration("items.yml"));
+        ItemManager.Load(Global.getYamlConfiguration(Global.FILE_ITEMS));
         // 5.加载破坏方块的自定义掉落列表，可掉落自定义物品
-        DropManager.Load(Global.getYamlConfiguration("drops.yml"));
+        DropManager.Load(Global.getYamlConfiguration(Global.FILE_DROPS));
         // 6.加载等级设置列表
-        LevelManager.Load(Global.getYamlConfiguration("levels.yml"));
+        LevelManager.Load(Global.getYamlConfiguration(Global.FILE_LEVELS));
         // 7.加载各种菜单(箱子)模板
-        MenuManager.Load(Global.getYamlConfiguration("menu.yml"));
+        MenuManager.Load(Global.getYamlConfiguration(Global.FILE_MENU));
         // 8.加载各种可生成的生物列表
-        MobManager.Load(Global.getYamlConfiguration("mobs.yml"));
+        MobManager.Load(Global.getYamlConfiguration(Global.FILE_MOBS));
         // 9.加载随机公告消息列表
-        BroadcastManager.Load(Global.getYamlConfiguration("broadcast.yml"));
+        BroadcastManager.Load(Global.getYamlConfiguration(Global.FILE_BROADCAST));
         // 10.加载清除垃圾物品设置
-        ClearLagManager.Load(Global.getYamlConfiguration("clearlag.yml"));
+        ClearLagManager.Load(Global.getYamlConfiguration(Global.FILE_CLEARLAG));
         // 11.加载配方列表
-        RecipeManager.Load(Global.getYamlConfiguration("recipe.yml"));
+        RecipeManager.Load(Global.getYamlConfiguration(Global.FILE_RECIPE));
         // 12.加载自定义可放置方块的摆放记录
-        RecordManager.Load(Global.getYamlConfiguration("record/record.yml"));
+        RecordManager.Load(Global.getYamlConfiguration(Global.FILE_RECORD));
     }
 }

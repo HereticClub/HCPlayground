@@ -50,6 +50,9 @@ public class MenuItem {
     @Expose
     @SerializedName(value = "glowing")
     public boolean glowing = false;
+    @Expose
+    @SerializedName(value = "result")
+    public boolean result = false;
 
     public MenuItem() {
 

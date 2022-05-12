@@ -1,5 +1,6 @@
 package org.hcmc.hcplayground.listener;
 
+import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -22,21 +23,20 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.entity.EntitySpawnEvent;
-import org.bukkit.event.inventory.ClickType;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryType;
-import org.bukkit.event.inventory.PrepareAnvilEvent;
+import org.bukkit.event.inventory.*;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.*;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Scoreboard;
 import org.hcmc.hcplayground.HCPlayground;
+import org.hcmc.hcplayground.enums.CrazyBlockType;
 import org.hcmc.hcplayground.enums.RecipeType;
 import org.hcmc.hcplayground.event.PlayerEquipmentChangedEvent;
 import org.hcmc.hcplayground.manager.*;
 import org.hcmc.hcplayground.model.CrazyRecord;
 import org.hcmc.hcplayground.model.MobEntity;
+import org.hcmc.hcplayground.model.command.CommandItem;
 import org.hcmc.hcplayground.model.config.BanConfiguration;
 import org.hcmc.hcplayground.model.item.Crazy;
 import org.hcmc.hcplayground.model.item.ItemBase;
@@ -155,17 +155,6 @@ public class PluginListener implements Listener {
         player.setGameMode(playerData.GameMode);
         playerData.SaveConfig();
         PlayerManager.removePlayerData(player, playerData);
-    }
-
-    @EventHandler
-    private void onPlayerBlockClicked(PlayerInteractEvent event) {
-        Block block = event.getClickedBlock();
-        Player player = event.getPlayer();
-        Action action = event.getAction();
-        if (block == null) return;
-        if (!action.equals(Action.RIGHT_CLICK_BLOCK)) return;
-
-
     }
 
     /**
@@ -415,9 +404,8 @@ public class PluginListener implements Listener {
         ItemBase ib = ItemManager.getItemBase(is);
         if (!(ib instanceof Crazy crazy)) return;
 
-        CrazyRecord record = new CrazyRecord(ib.getId(), block.getLocation());
+        CrazyRecord record = new CrazyRecord(crazy.getId(), block.getLocation());
         RecordManager.addCrazyRecord(record);
-        RecordManager.saveCrazyRecord();
     }
 
     /**
@@ -579,6 +567,66 @@ public class PluginListener implements Listener {
     }
 
     @EventHandler
+    private void onCrazyBlockClicked(PlayerInteractEvent event) {
+        Block block = event.getClickedBlock();
+        Player player = event.getPlayer();
+        Action action = event.getAction();
+        boolean sneaking = player.isSneaking();
+        // 检测block是否null
+        if (block == null) return;
+        // 检测玩家是否sneaking(潜行)状态
+        if (sneaking) return;
+        // 非右键点击无效
+        if (!action.equals(Action.RIGHT_CLICK_BLOCK)) return;
+        // 获取自定义可放置方块的记录信息
+        CrazyRecord record = RecordManager.findCrazyRecord(block.getLocation());
+        if (record == null) return;
+        // 获取自定义可放置方块的物品信息
+        Crazy crazyItem = (Crazy) ItemManager.FindItemById(record.getName());
+        if (crazyItem == null) return;
+        // 设置执行指令
+        String crazyCommand = "";
+        if (crazyItem.getType().equals(CrazyBlockType.CRAZY_CRAFTING_TABLE)) {
+            crazyCommand = String.format("%s %s", CommandItem.COMMAND_CRAZY, CommandItem.COMMAND_CRAZY_CRAFTING);
+        }
+        if (crazyItem.getType().equals(CrazyBlockType.CRAZY_ENCHANTING_TABLE)) {
+            crazyCommand = String.format("%s %s", CommandItem.COMMAND_CRAZY, CommandItem.COMMAND_CRAZY_ENCHANTING);
+        }
+        if (crazyItem.getType().equals(CrazyBlockType.CRAZY_ANVIL)) {
+            crazyCommand = String.format("%s %s", CommandItem.COMMAND_CRAZY, CommandItem.COMMAND_CRAZY_ANVIL);
+        }
+        // 执行指令，并且取消当前事件(防止弹出系统界面)
+        if (!StringUtils.isEmpty(crazyCommand)) {
+            runPlayerCommand(crazyCommand, player);
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    private void onMenuClosed(InventoryCloseEvent event) {
+        // 获取打开的箱子界面并且当前箱子是否属于InventoryDetail实例
+        Inventory inv = event.getInventory();
+        HumanEntity human = event.getPlayer();
+        InventoryHolder holder = inv.getHolder();
+        // 检测是否打开了属于InventoryDetail实例创建的箱子
+        if (!(holder instanceof MenuDetail detail)) return;
+        // 检测点击箱子界面的实体是否为玩家
+        if (!(human instanceof Player player)) return;
+        // 检测箱子界面的每个格子
+        for (int i = 0; i < 54; i++) {
+            // 获取格子的物品及数量
+            ItemStack is = inv.getItem(i);
+            // 获取格子的额外信息
+            MenuItem mi = detail.getSlot(i + 1);
+            // 格子内没有物品或者物品没有额外信息则忽略
+            if (is == null) continue;
+            if (mi == null) continue;
+            // 除了成品输出格子外，如果格子设置为可放入或者可拿取，则返还格子的物品给玩家
+            if ((mi.draggable || mi.droppable) && !mi.result) player.getInventory().addItem(is);
+        }
+    }
+
+    @EventHandler
     private void onMenuClicked(InventoryClickEvent event) {
         if (event.isCancelled()) return;
         // 获取打开的箱子界面并且当前箱子是否属于InventoryDetail实例
@@ -625,7 +673,19 @@ public class PluginListener implements Listener {
             }
         }
 
-        if (!slot.draggable || !slot.droppable) event.setCancelled(true);
+        InventoryAction action = event.getAction();
+        boolean placeFlag = action.equals(InventoryAction.PLACE_ALL) || action.equals(InventoryAction.PLACE_ONE) || action.equals(InventoryAction.PLACE_SOME);
+        boolean pickupFlag = action.equals(InventoryAction.PICKUP_ALL) || action.equals(InventoryAction.PICKUP_ONE) || action.equals(InventoryAction.PICKUP_HALF);
+
+        if (action.equals(InventoryAction.SWAP_WITH_CURSOR)) event.setCancelled(true);
+        if (!slot.droppable && placeFlag) event.setCancelled(true);
+        if (!slot.draggable && pickupFlag) event.setCancelled(true);
+    }
+
+    @EventHandler
+    private void onCrazyRecipeCrafting(InventoryClickEvent event) {
+        if (event.isCancelled()) return;
+        // TODO: 自定义合成公式和成品输出
     }
 
     private void runConsoleCommand(String command, Player player) {

@@ -8,7 +8,7 @@ public class MaterialData {
 
     @Expose
     @SerializedName(value = "value")
-    public Material value = Material.STONE;
+    public Material value = Material.AIR;
     @Expose
     @SerializedName(value = "name")
     public String name;

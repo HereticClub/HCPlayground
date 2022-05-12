@@ -47,6 +47,20 @@ quartermaster:
     - quarter
     - master
     - qm
+crazy:
+  runOnConsole: false
+  runOnPlayer: true
+  args:
+    - name: crafting
+      permission: ''
+      index: 1
+    - name: anvil
+      permission: ''
+      index: 1
+    - name: enchanting
+      permission: ''
+      index: 1
+
 menu:
   permission: ''
   runOnConsole: false

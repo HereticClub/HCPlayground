@@ -56,6 +56,10 @@ public class CommandItem extends Command {
     public static final String COMMAND_HC_RELOAD = "reload";
     public static final String COMMAND_HC_HELP = "help";
     public static final String COMMAND_SCALE = "scale";
+    public static final String COMMAND_CRAZY="crazy";
+    public static final String COMMAND_CRAZY_CRAFTING="crafting";
+    public static final String COMMAND_CRAZY_ENCHANTING="enchanting";
+    public static final String COMMAND_CRAZY_ANVIL="anvil";
 
     /**
      * 当前指令的使用权限，设置为null或者空字符串，表示当前命令不需要权限
@@ -171,6 +175,9 @@ public class CommandItem extends Command {
             if (commandText.equalsIgnoreCase(COMMAND_RECIPE_BOOK)) {
                 return RunOpenChestMenuCommand((Player) sender, COMMAND_RECIPE_BOOK);
             }
+            if(commandText.equalsIgnoreCase(COMMAND_CRAZY)) {
+                return RunCrazyCommand(sender, args);
+            }
             // 军需官指令 - /quatermaster
             if (commandText.equalsIgnoreCase(COMMAND_QUARTERMASTER)) {
                 return RunQuartermasterCommand(sender, args);
@@ -217,8 +224,46 @@ public class CommandItem extends Command {
         return false;
     }
 
-    private boolean RunScaleCommand(CommandSender sender, String[] args) {
+    private boolean RunCrazyCommand(CommandSender sender, String[] args) {
         // 当前hc指令需要至少1个参数
+        if (args.length <= 0) {
+            return ShowCommandHelp(sender, 1);
+        }
+
+        if (args[0].equalsIgnoreCase(COMMAND_CRAZY_CRAFTING)) {
+            return RunCrazyCraftingCommand(sender);
+        }
+        if (args[0].equalsIgnoreCase(COMMAND_CRAZY_ENCHANTING)) {
+            return RunCrazyEnchantingCommand(sender);
+        }
+        if (args[0].equalsIgnoreCase(COMMAND_CRAZY_ANVIL)) {
+            return RunCrazyAnvilCommand(sender);
+        }
+
+        return false;
+    }
+
+    private boolean RunCrazyCraftingCommand(CommandSender sender) {
+        String menuId = String.format("%s%s", COMMAND_CRAZY, COMMAND_CRAZY_CRAFTING);
+        Player player = (Player) sender;
+        Inventory inv = MenuManager.CreateMenu(menuId, player);
+        if (inv == null) return false;
+
+        player.openInventory(inv);
+
+        return false;
+    }
+
+    private boolean RunCrazyEnchantingCommand(CommandSender sender){
+        return false;
+    }
+
+    private boolean RunCrazyAnvilCommand(CommandSender sender){
+        return false;
+    }
+
+    private boolean RunScaleCommand(CommandSender sender, String[] args) {
+        // 当前hc指令需要至少2个参数
         if (args.length <= 1) {
             return ShowCommandHelp(sender, 2);
         }

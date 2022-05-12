@@ -195,3 +195,10 @@ messages:
       &9/<command> scale maxHealth
       &9scale &7- &fThe player health scaled to
       &9maxHealth &7- &fThe player max health
+  crazy:
+    description: Menu for crazy crafting, crazy enchanting, crazy anvil
+    usage: |-
+      &7 <command> command usage:
+      &9/<command> crafting &7- &fOpen a menu for crazy crafting
+      &9/<command> enchanting &7- &fOpen a menu for crazy enchanting
+      &9/<command> anvil &7- &fOpen a menu for crazy anvil

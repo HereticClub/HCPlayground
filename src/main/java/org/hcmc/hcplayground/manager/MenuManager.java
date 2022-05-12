@@ -77,7 +77,10 @@ public class MenuManager {
 
         for (MenuItem d : item.decorates) {
             ItemStack is;
-
+            if (d.material == null) {
+                d.material = new MaterialData();
+                d.material.setData(Material.AIR, "");
+            }
             if (!d.material.value.equals(Material.PLAYER_HEAD)) {
                 is = new ItemStack(d.material.value, d.amount);
             } else {

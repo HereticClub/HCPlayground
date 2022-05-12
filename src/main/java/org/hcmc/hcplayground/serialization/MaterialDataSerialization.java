@@ -8,9 +8,9 @@ import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.List;
 
-public class MaterialSerialization implements JsonDeserializer<MaterialData>, JsonSerializer<MaterialData> {
+public class MaterialDataSerialization implements JsonDeserializer<MaterialData>, JsonSerializer<MaterialData> {
 
-    public MaterialSerialization() {
+    public MaterialDataSerialization() {
 
     }
 
@@ -37,6 +37,7 @@ public class MaterialSerialization implements JsonDeserializer<MaterialData>, Js
     @Override
     public JsonElement serialize(MaterialData data, Type type, JsonSerializationContext jsonSerializationContext) {
         String value = data.name == null ? data.value.name() : data.name;
+        //System.out.println(data.name + ": " + data.value);
         return new JsonPrimitive(value);
     }
 }
