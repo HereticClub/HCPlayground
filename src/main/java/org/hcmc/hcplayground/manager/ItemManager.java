@@ -86,16 +86,16 @@ public class ItemManager {
         }
     }
 
-    public static ItemBase Create(Material material) {
-        ItemBaseX x = new ItemBaseX();
+    public static ItemBase createItemBase(String id, Material material) {
+        CraftItemBase x = new CraftItemBase();
         MaterialData md = new MaterialData();
-        md.setData(material, null);
-        x.setId(null);
+        md.setData(material, material.name());
+        x.setId(id);
         x.setMaterial(md);
         return x;
     }
 
-    public static ItemBase FindItemById(String id) {
+    public static ItemBase findItemById(String id) {
         return ItemEntire.stream().filter(x -> x.getId().equalsIgnoreCase(id)).findAny().orElse(null);
     }
 
@@ -107,7 +107,7 @@ public class ItemManager {
         PersistentDataContainer mainContainer = im.getPersistentDataContainer();
         String id = mainContainer.get(mainKey, PersistentDataType.STRING);
 
-        return FindItemById(id);
+        return findItemById(id);
     }
 
     public static void Give(CommandSender sender, String playerName, String itemId, int amount) {
@@ -124,7 +124,7 @@ public class ItemManager {
             return;
         }
 
-        ItemBase ib = FindItemById(itemId);
+        ItemBase ib = findItemById(itemId);
         if (ib == null) {
             sender.sendMessage(LocalizationManager.getMessage("noSuchItem", player).replace("%item%", itemId));
             return;
@@ -134,7 +134,7 @@ public class ItemManager {
         player.getInventory().setItem(player.getInventory().firstEmpty(), is);
     }
 
-    private static class ItemBaseX extends ItemBaseA {
+    private static class CraftItemBase extends ItemBaseA {
 
         @Override
         public ItemStack toItemStack() {

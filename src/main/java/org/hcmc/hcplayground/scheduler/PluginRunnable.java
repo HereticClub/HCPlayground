@@ -153,7 +153,7 @@ public class PluginRunnable extends BukkitRunnable {
             String id = mainContainer.get(mainKey, PersistentDataType.STRING);
             if (id == null) continue;
 
-            ItemBase itemX = ItemManager.FindItemById(id);
+            ItemBase itemX = ItemManager.findItemById(id);
             if (itemX == null) continue;
 
             Field[] fields = itemX.getClass().getFields();

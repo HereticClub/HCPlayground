@@ -27,7 +27,7 @@ public class DropItem {
      */
     @Expose
     @SerializedName(value = "drops")
-    public ItemBaseA[] drops;
+    public ItemBase[] drops;
     /**
      * 如果方块是作物，则可再判断其年龄
      * 比如小麦胡萝卜的成熟时年龄为7

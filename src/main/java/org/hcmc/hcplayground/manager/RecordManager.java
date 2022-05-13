@@ -9,12 +9,10 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.model.CrazyRecord;
 import org.hcmc.hcplayground.model.item.Crazy;
-import org.hcmc.hcplayground.model.item.ItemBase;
 import org.hcmc.hcplayground.utility.Global;
 
 import java.io.IOException;
@@ -103,7 +101,7 @@ public class RecordManager {
         }
 
         for (CrazyRecord record : crazyRecords) {
-            Crazy ib = (Crazy) ItemManager.FindItemById(record.getName());
+            Crazy ib = (Crazy) ItemManager.findItemById(record.getName());
             if (ib == null) continue;
 
             World w = Bukkit.getWorld(record.getWorld());

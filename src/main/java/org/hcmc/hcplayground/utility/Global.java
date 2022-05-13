@@ -28,6 +28,8 @@ import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.ScoreboardManager;
 import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.manager.RecordManager;
+import org.hcmc.hcplayground.model.item.ItemBase;
+import org.hcmc.hcplayground.model.recipe.Ingredients;
 import org.hcmc.hcplayground.serialization.*;
 import org.hcmc.hcplayground.enums.CrazyBlockType;
 import org.hcmc.hcplayground.enums.RecipeType;
@@ -60,8 +62,6 @@ import java.util.regex.Pattern;
 public final class Global {
     private final static String[] ymlFilenames;
     private final static JavaPlugin plugin;
-    private final static Type mapType = new TypeToken<Map<?, ?>>() {
-    }.getType();
 
     public final static String CONFIG_AUTHME = "authme";
     public final static String CONFIG_POTION = "potion";
@@ -128,7 +128,7 @@ public final class Global {
                 .registerTypeAdapter(EntityType.class, new EntityTypeSerialization())
                 .registerTypeAdapter(EquipmentSlot.class, new EquipmentSlotSerialization())
                 .registerTypeAdapter(InventoryType.class, new InventoryTypeSerialization())
-                .registerTypeAdapter(ItemBaseA.class, new ItemBaseSerialization())
+                .registerTypeAdapter(ItemBase.class, new ItemBaseSerialization())
                 .registerTypeAdapter(ItemFlag.class, new ItemFlagsSerialization())
                 .registerTypeAdapter(MaterialData.class, new MaterialDataSerialization())
                 .registerTypeAdapter(NamespacedKey.class, new NamespacedKeySerialization())
@@ -153,7 +153,7 @@ public final class Global {
      */
     public static void Dispose() throws SQLException, IOException, IllegalAccessException, InvalidConfigurationException {
         // 停止所有runnable线程
-        runnable.cancel();
+        if(!runnable.isCancelled()) runnable.cancel();
         // 保存所有在线玩家的数据
         for (Player player : plugin.getServer().getOnlinePlayers()) {
             PlayerData pd = PlayerManager.getPlayerData(player);

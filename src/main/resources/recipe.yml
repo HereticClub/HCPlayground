@@ -8,10 +8,10 @@ recipe1:
     - ' B  A '
     - 'B    A'
   ingredients:
-    A: stick
-    B: stone
+    - 'A, stick'
+    - 'B, stone'
   amount:
-    A: 4
-    B: 5
+    - 'A, 4'
+    - 'B, 5'
   result: chest
   group: group1

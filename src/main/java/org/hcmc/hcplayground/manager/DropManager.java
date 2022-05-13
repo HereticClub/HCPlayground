@@ -12,6 +12,7 @@ import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.hcmc.hcplayground.model.item.DropItem;
+import org.hcmc.hcplayground.model.item.ItemBase;
 import org.hcmc.hcplayground.model.item.ItemBaseA;
 import org.hcmc.hcplayground.utility.Global;
 import org.hcmc.hcplayground.utility.RandomNumber;
@@ -58,7 +59,7 @@ public class DropManager {
         boolean checkBingo = RandomNumber.checkBingo(de.rate);
         if (checkBingo) {
             ItemStack is;
-            for (ItemBaseA ib : de.drops) {
+            for (ItemBase ib : de.drops) {
                 is = ib.getId() == null ? new ItemStack(ib.getMaterial().value) : ib.toItemStack();
                 player.getInventory().addItem(is);
             }
@@ -79,7 +80,7 @@ public class DropManager {
         if (!checkBingo) return;
 
         ItemStack is;
-        for (ItemBaseA ib : de.drops) {
+        for (ItemBase ib : de.drops) {
             if (ib.getId() == null) {
                 is = new ItemStack(ib.getMaterial().value);
             } else {

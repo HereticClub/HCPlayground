@@ -373,7 +373,7 @@ public class PluginListener implements Listener {
 
         CrazyRecord record = RecordManager.findCrazyRecord(block.getLocation());
         if (record == null) return;
-        Crazy ib = (Crazy) ItemManager.FindItemById(record.getName());
+        Crazy ib = (Crazy) ItemManager.findItemById(record.getName());
         if (ib == null) return;
 
         event.setDropItems(false);
@@ -582,7 +582,7 @@ public class PluginListener implements Listener {
         CrazyRecord record = RecordManager.findCrazyRecord(block.getLocation());
         if (record == null) return;
         // 获取自定义可放置方块的物品信息
-        Crazy crazyItem = (Crazy) ItemManager.FindItemById(record.getName());
+        Crazy crazyItem = (Crazy) ItemManager.findItemById(record.getName());
         if (crazyItem == null) return;
         // 设置执行指令
         String crazyCommand = "";
