@@ -62,6 +62,8 @@ import java.util.regex.Pattern;
 public final class Global {
     private final static String[] ymlFilenames;
     private final static JavaPlugin plugin;
+    private final static Type mapCharInteger = new TypeToken<Map<Character, Integer>>(){}.getType();
+    private final static Type mapCharItemBase = new TypeToken<Map<Character, ItemBase>>(){}.getType();
 
     public final static String CONFIG_AUTHME = "authme";
     public final static String CONFIG_POTION = "potion";
@@ -130,6 +132,8 @@ public final class Global {
                 .registerTypeAdapter(InventoryType.class, new InventoryTypeSerialization())
                 .registerTypeAdapter(ItemBase.class, new ItemBaseSerialization())
                 .registerTypeAdapter(ItemFlag.class, new ItemFlagsSerialization())
+                .registerTypeAdapter(mapCharInteger, new MapCharIntegerSerialization())
+                .registerTypeAdapter(mapCharItemBase, new MapCharItemBaseSerialization())
                 .registerTypeAdapter(MaterialData.class, new MaterialDataSerialization())
                 .registerTypeAdapter(NamespacedKey.class, new NamespacedKeySerialization())
                 .registerTypeAdapter(PotionEffect.class, new PotionEffectSerialization())
@@ -152,8 +156,6 @@ public final class Global {
      * 在执行/reload指令或者插件退出时都需要执行该方法
      */
     public static void Dispose() throws SQLException, IOException, IllegalAccessException, InvalidConfigurationException {
-        // 停止所有runnable线程
-        if(!runnable.isCancelled()) runnable.cancel();
         // 保存所有在线玩家的数据
         for (Player player : plugin.getServer().getOnlinePlayers()) {
             PlayerData pd = PlayerManager.getPlayerData(player);
@@ -165,6 +167,8 @@ public final class Global {
         yamlMap.clear();
         // 关闭sqlite数据库
         if (!Sqlite.isClosed()) Sqlite.close();
+        // 停止所有runnable线程
+        if (!runnable.isCancelled()) runnable.cancel();
     }
 
     /**

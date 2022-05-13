@@ -7,10 +7,11 @@ import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.Recipe;
+import org.bukkit.inventory.ShapedRecipe;
+import org.bukkit.plugin.Plugin;
 import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.manager.ItemManager;
 import org.hcmc.hcplayground.model.item.ItemBase;
-import org.hcmc.hcplayground.model.item.ItemBaseA;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -25,26 +26,26 @@ public class ShapedRecipe6x6 implements Recipe {
     private final NamespacedKey key;
     @Expose
     @SerializedName(value = "shape")
-    private List<String> shape = new ArrayList<>();
+    private String[] shape;
     @Expose
     @SerializedName(value = "ingredients")
-    private List<String> ingredients =new ArrayList<>();
+    private Map<Character, ItemBase> ingredients = new HashMap<>();
     @Expose
     @SerializedName(value = "amount")
-    private List<String> ingredientAmount = new ArrayList<>();
+    private Map<Character, Integer> ingredientAmount = new HashMap<>();
     @Expose
     @SerializedName(value = "group")
     private String group = "";
 
     @Expose(serialize = false, deserialize = false)
     private String id;
+    Plugin plugin = HCPlayground.getPlugin();
 
     public ShapedRecipe6x6() {
         // TODO:
         String uuid = UUID.randomUUID().toString();
-        key = new NamespacedKey(HCPlayground.getPlugin(), uuid);
+        key = new NamespacedKey(plugin, uuid);
         result = ItemManager.createItemBase("NewRecipe", Material.STONE);
-
     }
 
     @NotNull
@@ -52,18 +53,17 @@ public class ShapedRecipe6x6 implements Recipe {
         return key;
     }
 
-    @NotNull
-    public List<String> getShape() {
+    public String[] getShape() {
         return shape;
     }
 
     @NotNull
-    public List<String> getIngredients() {
+    public Map<Character, ItemBase> getIngredients() {
         return ingredients;
     }
 
     @NotNull
-    public List<String> getIngredientAmount() {
+    public Map<Character, Integer> getIngredientAmount() {
         return ingredientAmount;
     }
 
@@ -80,14 +80,14 @@ public class ShapedRecipe6x6 implements Recipe {
         Validate.notNull(shape, "Must provide a shape");
         Validate.isTrue(shape.length >= 1 && shape.length <= 6, "Crafting recipes should be 1, 2, 3, 4, 5, 6 rows, not ", shape.length);
 
-        this.shape = Arrays.stream(shape).toList();
+        this.shape = shape;
         int lastLen = -1;
 
-        HashMap<Character, String> newIngredients = new HashMap<>();
+        HashMap<Character, ItemBase> newIngredients = new HashMap<>();
 
         for (String row : shape) {
             Validate.notNull(row, "Shape cannot have null rows");
-            Validate.isTrue(row.length() >= 1 && row.length() <= 6, "Crafting rows should be 1, 2, 3, 4, 5, 6 characters, not ", row.length());
+            Validate.isTrue(row.length() >= 1 && row.length() <= 6, "Crafting rows should be 1, 2, 3, 4, 5, 6 character, not ", row.length());
             Validate.isTrue(lastLen == -1 || lastLen == row.length(), "Crafting recipes must be rectangular");
             lastLen = row.length();
 
@@ -97,9 +97,9 @@ public class ShapedRecipe6x6 implements Recipe {
             }
         }
 
-
+        ingredients = newIngredients;
     }
-    /*
+
     public void setIngredientAmount(Map<Character, Integer> ingredientAmount) {
         this.ingredientAmount = ingredientAmount;
     }
@@ -110,18 +110,13 @@ public class ShapedRecipe6x6 implements Recipe {
         this.ingredientAmount.put(key, amount);
     }
 
-    public void setIngredients(Map<Character, String> value) {
+    public void setIngredients(Map<Character, ItemBase> value) {
         this.ingredients = value;
     }
 
-    public void setIngredients(Character key, String ingredient) {
-        Validate.isTrue(this.ingredients.containsKey(key), "Symbol does not appear in the shape:", key);
-        this.ingredients.put(key, ingredient);
-    }
-
-    public void setResult(ItemBaseA item) {
+    public void setResult(ItemBase item) {
         result = item;
-    }*/
+    }
 
     @NotNull
     @Override
