@@ -202,3 +202,14 @@ messages:
       &9/<command> crafting &7- &fOpen a menu for crazy crafting
       &9/<command> enchanting &7- &fOpen a menu for crazy enchanting
       &9/<command> anvil &7- &fOpen a menu for crazy anvil
+  parkouradmin:
+    description: Create, Modify, Delete a parkour course owned by a player
+    usage: |-
+      &7 <command> command usage:
+      &9/<command> create <course> &7- &fCreate a parkour course by a player, player will own this course
+      &9/<command> modify <course> &7- &fModify a parkour course, the course must be owned by player himself
+      &9/<command> delete <course> &7- &fDelete a parkour course, the course must be owned by player himself
+      &9/<command> leave &7- &fLeave from parkour course design, its owner may modify this course again any time
+      &9/<command> startpoint <course> &7- &fDecide where the Course to start, stand in the position and face the direction you want the Players to teleport to
+      &9/<command> ready <course> &7- &fPlayer finish setting up the Course, and it's ready for other players to join
+      &9/<command> help <course> &7- &fShow this screen

@@ -27,7 +27,7 @@ public class ItemBaseSerialization implements JsonDeserializer<ItemBase> {
         if (m == null) m = Material.STONE;
 
         ItemBase ib = ItemManager.findItemById(jsonValue);
-        if (ib == null) ib = ItemManager.createItemBase(UUID.randomUUID().toString(), m);
+        if (ib == null) ib = ItemManager.createItemBase(m, 1);
 
         return ib;
     }

@@ -357,6 +357,26 @@ joins:
     flags:
       - HIDE_ATTRIBUTES
       - HIDE_ENCHANTS
+  enchanting_diamond_block:
+    name: '&d魔法钻石块'
+    material: diamond_block
+    glowing: true
+    lore:
+      - '&7有魔法力量的钻石块'
+    worlds: []
+    flags:
+      - HIDE_ATTRIBUTES
+      - HIDE_ENCHANTS
+  enchanting_emerald_block:
+    name: '&d魔法宝石块'
+    material: emerald_block
+    glowing: true
+    lore:
+      - '&7有魔法力量的宝石块'
+    worlds: []
+    flags:
+      - HIDE_ATTRIBUTES
+      - HIDE_ENCHANTS
 # 可放置的自定义物品列表，当物品放置后，根据type属性可能会触发一些特定功能
 # 当方块被破坏后，会掉落这个方块被放置前的物品
 crazies:

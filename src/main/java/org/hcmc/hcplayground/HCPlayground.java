@@ -108,7 +108,7 @@ public class HCPlayground extends JavaPlugin {
     }
 
     private void InitialChildrenFolders() {
-        String[] childrenFolders = new String[]{"profile", "database", "record"};
+        String[] childrenFolders = new String[]{"profile", "database", "record", "storage"};
 
         if (!getDataFolder().exists()) {
             boolean flag = getDataFolder().mkdir();

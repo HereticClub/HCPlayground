@@ -1,5 +1,10 @@
+# 配方Id，必须唯一
 recipe1:
+  # 配方名称
   name: name1
+  # 成分的列表，必须是正方形，且长度不能大于6，用符号表示成分(成分符号化)
+  # 当列表的长度少于或者等于3，并且ingredients属性的成分列表全部皆为Material值之一
+  # 则忽略amount属性，当前配方会被列入游戏的传统配方，其成品可以在普通工作台合成获得
   shape:
     - 'A    B'
     - ' A  B '
@@ -7,11 +12,88 @@ recipe1:
     - '  BA  '
     - ' B  A '
     - 'B    A'
+  # 成分的符号解析，比如: 某符号代表的物质，可以是自定义物品的Id，也可以是Material的名称
+  # 当shape属性的长度少于或者等于3，并且成分列表全部皆为Material值之一
+  # 则忽略amount属性，当前配方会被列入游戏的传统配方，其成品可以在普通工作台合成获得
+  ingredients:
+    - 'A, stick'
+    - 'B, stone'
+  # 成分的数量表示
+  amount:
+    - 'A, 4'
+    - 'B, 5'
+  # 成品输出，可以是自定义物品的Id，也可以是Material的名称，获得数量: 1
+  result: chest
+  # 成品输出的数量，默认值: 1
+  result_amount: 3
+  # 配方分组，绝大多数情况下，group的值为0长度字符串或者不设置
+  # 只有在多种配方的输出成品相同或者相近的情况下才用到group属性
+  # 例如: 把各种颜色玻璃板的配方分组为stained_glass_pane
+  group: ''
+recipe2:
+  name: name2
+  shape:
+    - 'AB'
+    - 'BA'
   ingredients:
     - 'A, stick'
     - 'B, stone'
   amount:
-    - 'A, 4'
-    - 'B, 5'
-  result: chest
+    - 'A, 2'
+    - 'B, 2'
+  result: oak_leaves
+  group: group1
+recipe3:
+  name: name3
+  shape:
+    - 'XX '
+    - ' YY'
+    - 'Z Z'
+  ingredients:
+    - 'X, diamond'
+    - 'Y, emerald'
+    - 'Z, redstone'
+  amount:
+    - 'X, 1'
+    - 'Y, 1'
+    - 'Z, 3'
+  result: diamond_block
+  group: group1
+recipe4:
+  name: name4
+  shape:
+    - 'E  '
+    - ' G '
+    - '  J'
+  ingredients:
+    - 'E, paper'
+    - 'G, wheat'
+    - 'J, wheat_seeds'
+  amount:
+    - 'E, 2'
+    - 'G, 1'
+    - 'J, 2'
+  result: join.flying_spell_fragments1
+  group: group1
+recipe5:
+  name: name5
+  shape:
+    - 'EE'
+    - 'EE'
+  ingredients:
+    - 'E, crazy.crazy_stone'
+  amount:
+    - 'E, 2'
+  result: join.enchanting_diamond_block
+  group: group1
+crazy_crafting_table:
+  name: crazy_crafting_table
+  shape:
+    - 'EE'
+    - 'EE'
+  ingredients:
+    - 'E, crafting_table'
+  amount:
+    - 'E, 1'
+  result: crazy.crafting_table
   group: group1

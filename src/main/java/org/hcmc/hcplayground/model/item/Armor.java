@@ -54,7 +54,7 @@ public class Armor extends ItemBaseA {
     }
 
     public ItemStack toItemStack() {
-        ItemStack is = new ItemStack(this.getMaterial().value, 1);
+        ItemStack is = new ItemStack(this.getMaterial().value, getAmount());
         ItemMeta im = this.setBaseItemMeta(is);
 
         if (im != null) {

@@ -13,7 +13,10 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.manager.ItemManager;
@@ -60,6 +63,14 @@ public class CommandItem extends Command {
     public static final String COMMAND_CRAZY_CRAFTING="crafting";
     public static final String COMMAND_CRAZY_ENCHANTING="enchanting";
     public static final String COMMAND_CRAZY_ANVIL="anvil";
+    public static final String COMMAND_PARKOUR_ADMIN="parkouradmin";
+    public static final String COMMAND_PARKOUR_ADMIN_CREATE="create";
+    public static final String COMMAND_PARKOUR_ADMIN_MODIFY="modify";
+    public static final String COMMAND_PARKOUR_ADMIN_DELETE="delete";
+    public static final String COMMAND_PARKOUR_ADMIN_LEAVE="leave";
+    public static final String COMMAND_PARKOUR_ADMIN_READY="ready";
+    public static final String COMMAND_PARKOUR_ADMIN_START_POINT="startpoint";
+    public static final String COMMAND_PARKOUR_ADMIN_HELP="help";
 
     /**
      * 当前指令的使用权限，设置为null或者空字符串，表示当前命令不需要权限
@@ -175,7 +186,7 @@ public class CommandItem extends Command {
             if (commandText.equalsIgnoreCase(COMMAND_RECIPE_BOOK)) {
                 return RunOpenChestMenuCommand((Player) sender, COMMAND_RECIPE_BOOK);
             }
-            if(commandText.equalsIgnoreCase(COMMAND_CRAZY)) {
+            if (commandText.equalsIgnoreCase(COMMAND_CRAZY)) {
                 return RunCrazyCommand(sender, args);
             }
             // 军需官指令 - /quatermaster
@@ -217,9 +228,77 @@ public class CommandItem extends Command {
             if (commandText.equalsIgnoreCase(COMMAND_SCALE)) {
                 return RunScaleCommand(sender, args);
             }
+            if (commandText.equalsIgnoreCase(COMMAND_PARKOUR_ADMIN)) {
+                return RunParkourAdminCommand(sender, args);
+            }
         } catch (SQLException | InvalidAlgorithmParameterException | NoSuchPaddingException | IllegalBlockSizeException | NoSuchAlgorithmException | InvalidKeySpecException | BadPaddingException | InvalidKeyException | NoSuchFieldException | IllegalAccessException | IOException | InvalidConfigurationException e) {
             e.printStackTrace();
         }
+
+        return false;
+    }
+
+    private boolean RunParkourAdminCommand(CommandSender sender, String[] args) throws IOException, IllegalAccessException, InvalidConfigurationException {
+        if (args.length <= 0) {
+            return ShowCommandHelp(sender, 1);
+        }
+        // /pkadmin create
+        if (args[0].equalsIgnoreCase(COMMAND_PARKOUR_ADMIN_CREATE)) {
+            return RunParkourCourseCreateCommand(sender, args);
+        }
+        // /pkadmin create
+        if (args[0].equalsIgnoreCase(COMMAND_PARKOUR_ADMIN_LEAVE)) {
+            return RunParkourCourseLeaveCommand(sender, args);
+        }
+
+
+        if (args[0].equalsIgnoreCase(COMMAND_PARKOUR_ADMIN_HELP)) {
+            return ShowCommandHelp(sender, 0);
+        }
+
+        return false;
+    }
+
+    private boolean RunParkourCourseCreateCommand(CommandSender sender, String[] args) throws IOException, IllegalAccessException, InvalidConfigurationException {
+        Player player = (Player) sender;
+        PlayerData data = PlayerManager.getPlayerData(player);
+
+        data.storage.obtainStorage();
+
+        return false;
+    }
+
+    private boolean RunParkourCourseModifyCommand(CommandSender sender, String[] args) {
+
+
+        return false;
+    }
+
+    private boolean RunParkourCourseDeleteCommand(CommandSender sender, String[] args) throws IOException, IllegalAccessException, InvalidConfigurationException {
+
+
+
+
+        return false;
+    }
+
+    private boolean RunParkourCourseLeaveCommand(CommandSender sender, String[] args) throws IOException, IllegalAccessException, InvalidConfigurationException {
+        Player player = (Player) sender;
+        PlayerData data = PlayerManager.getPlayerData(player);
+
+        data.storage.replaceStorage();
+
+        return false;
+    }
+
+    private boolean RunParkourCourseReadyCommand(CommandSender sender, String[] args) {
+
+
+        return false;
+    }
+
+    private boolean RunParkourCourseStartPointCommand(CommandSender sender, String[] args) {
+
 
         return false;
     }

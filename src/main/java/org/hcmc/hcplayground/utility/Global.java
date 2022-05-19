@@ -28,8 +28,8 @@ import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.ScoreboardManager;
 import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.manager.RecordManager;
+import org.hcmc.hcplayground.model.config.ParkourAdminConfiguration;
 import org.hcmc.hcplayground.model.item.ItemBase;
-import org.hcmc.hcplayground.model.recipe.Ingredients;
 import org.hcmc.hcplayground.serialization.*;
 import org.hcmc.hcplayground.enums.CrazyBlockType;
 import org.hcmc.hcplayground.enums.RecipeType;
@@ -37,7 +37,6 @@ import org.hcmc.hcplayground.manager.BanItemManager;
 import org.hcmc.hcplayground.manager.PlayerManager;
 import org.hcmc.hcplayground.model.config.AuthmeConfiguration;
 import org.hcmc.hcplayground.model.config.PotionConfiguration;
-import org.hcmc.hcplayground.model.item.ItemBaseA;
 import org.hcmc.hcplayground.model.player.PlayerData;
 import org.hcmc.hcplayground.scheduler.PluginRunnable;
 import org.jetbrains.annotations.NotNull;
@@ -68,6 +67,7 @@ public final class Global {
     public final static String CONFIG_AUTHME = "authme";
     public final static String CONFIG_POTION = "potion";
     public final static String CONFIG_BAN_ITEM = "banitem";
+    public final static String CONFIG_PARKOUR="parkouradmin";
     public final static String FIELD_NAME_COMMANDMAP = "commandMap";
     public final static Pattern patternNumber = Pattern.compile("-?\\d+(\\.\\d+)?");
 
@@ -88,8 +88,10 @@ public final class Global {
 
     public static PluginRunnable runnable;
     public static Map<String, YamlConfiguration> yamlMap;
+
     public static Gson GsonObject;
     public static Scoreboard HealthScoreboard;
+    public static ParkourAdminConfiguration ParkourAdmin = null;
     public static AuthmeConfiguration authme = null;
     public static PotionConfiguration potion = null;
     public static Connection Sqlite = null;
@@ -189,9 +191,13 @@ public final class Global {
             value = GsonObject.toJson(section.getValues(false));
             potion = GsonObject.fromJson(value, PotionConfiguration.class);
         }
-
         section = config.getConfigurationSection(CONFIG_BAN_ITEM);
         BanItemManager.Load(section);
+        section = config.getConfigurationSection(CONFIG_PARKOUR);
+        if (section != null) {
+            value = GsonObject.toJson(section.getValues(false));
+            ParkourAdmin = GsonObject.fromJson(value, ParkourAdminConfiguration.class);
+        }
     }
 
     /**

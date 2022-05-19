@@ -164,8 +164,8 @@ public abstract class ItemBaseA implements ItemBase {
         flags = value;
     }
 
-    public ItemMeta setBaseItemMeta(ItemStack is) {
-        ItemMeta im = is.getItemMeta();
+    public ItemMeta setBaseItemMeta(ItemStack itemStack) {
+        ItemMeta im = itemStack.getItemMeta();
         if (im == null) return null;
 
         NamespacedKey mainKey = new NamespacedKey(plugin, PERSISTENT_MAIN_KEY);
@@ -177,7 +177,7 @@ public abstract class ItemBaseA implements ItemBase {
         im.setLore(lore);
         im.setUnbreakable(unbreakable);
         im.addItemFlags(flags);
-        is.setItemMeta(im);
+        itemStack.setItemMeta(im);
 
         return im;
     }

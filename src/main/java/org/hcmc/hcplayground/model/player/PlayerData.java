@@ -87,6 +87,10 @@ public class PlayerData {
     // 杀掉生物记录
     public Map<EntityType, Integer> KillMobList = new HashMap<>();
     /**
+     * 玩家的背包和装备物品的记录
+     */
+    public PlayerParkourStorage storage;
+    /**
      * 玩家在runnable线程的时间检查点，初始化为登陆时间
      * 通常不会更改这个属性的值
      */
@@ -140,6 +144,7 @@ public class PlayerData {
 
         name = player.getName();
         uuid = player.getUniqueId();
+        storage = new PlayerParkourStorage(player);
     }
 
     public double getCurrentHealth() {

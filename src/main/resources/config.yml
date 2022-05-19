@@ -32,3 +32,12 @@ banitem:
       - '&cCan''t be used here!'
   crafting: {}
   potion: {}
+# 跑酷赛道设计配置
+parkouradmin:
+  # 跑酷赛道的可设计范围(半径)
+  design_range: 200
+  # 跑酷赛道的保护范围(半径)，保护范围必须大于设计范围，涉及范围到保护范围之间的区域不可建筑
+  # 带有op权限的玩家可以忽略该限制
+  protect_range: 250
+  # 跑酷赛道的起始层数
+  start_layer: 60

@@ -86,11 +86,12 @@ public class ItemManager {
         }
     }
 
-    public static ItemBase createItemBase(String id, Material material) {
-        CraftItemBase x = new CraftItemBase();
+    // 创建一个id为null的ItemBase实例
+    public static ItemBase createItemBase(Material material, int amount) {
+        CraftItemBase x = new CraftItemBase(amount);
         MaterialData md = new MaterialData();
         md.setData(material, material.name());
-        x.setId(id);
+        x.setId(null);
         x.setMaterial(md);
         return x;
     }
@@ -136,9 +137,16 @@ public class ItemManager {
 
     private static class CraftItemBase extends ItemBaseA {
 
+        private final int amount;
+
+        public CraftItemBase(int amount) {
+            this.amount = amount;
+        }
+
         @Override
         public ItemStack toItemStack() {
-            return new ItemStack(this.getMaterial().value);
+
+            return new ItemStack(this.getMaterial().value, amount);
         }
     }
 }

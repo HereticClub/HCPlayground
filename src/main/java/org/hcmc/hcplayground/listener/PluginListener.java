@@ -44,15 +44,13 @@ import org.hcmc.hcplayground.model.menu.MenuDetail;
 import org.hcmc.hcplayground.model.menu.MenuItem;
 import org.hcmc.hcplayground.model.player.PlayerData;
 import org.hcmc.hcplayground.scheduler.EquipmentMonitorRunnable;
+import org.hcmc.hcplayground.scheduler.RecipeFinderRunnable;
 import org.hcmc.hcplayground.utility.Global;
 import org.hcmc.hcplayground.utility.RandomNumber;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /*
 Java 本身的编程思路就已经足够混乱
@@ -627,7 +625,49 @@ public class PluginListener implements Listener {
     }
 
     @EventHandler
-    private void onMenuClicked(InventoryClickEvent event) {
+    private void onMenuOrRecipeClicked(InventoryClickEvent event) {
+        if (event.isCancelled()) return;
+        // 获取打开的箱子界面并且当前箱子是否属于InventoryDetail实例
+        Inventory inv = event.getInventory();
+        InventoryHolder holder = inv.getHolder();
+        HumanEntity human = event.getWhoClicked();
+        ClickType clickType = event.getClick();
+        // 检测是否打开了属于InventoryDetail实例创建的箱子
+        if (!(holder instanceof MenuDetail detail)) return;
+        // 检测点击箱子界面的实体是否为玩家
+        if (!(human instanceof Player player)) return;
+        // 检测玩家点击的箱子界面是否属于玩家的背包或快捷栏
+        Inventory pInv = event.getClickedInventory();
+        if (pInv instanceof PlayerInventory && !clickType.isShiftClick()) return;
+        // 获得玩家点击箱子中某个格子的InventorySlot实例
+        int slotIndex = event.getSlot();
+        MenuItem slot = detail.getSlot(slotIndex + 1);
+        if (slot == null) {
+            event.setCancelled(true);
+            return;
+        }
+        // 执行自定义菜单的鼠标点击指令
+        List<String> commands = new ArrayList<>();
+        // 获取鼠标点击类型，鼠标的左键，右键，中建点击
+        if (clickType.equals(ClickType.LEFT)) commands = slot.leftCommands;
+        if (clickType.equals(ClickType.RIGHT)) commands = slot.rightCommands;
+        runMenuItemCommand(commands, player);
+        // 检查自定义合成公式并且在输入格子展示合成物品，让玩家拿取
+        // TODO: 检查自定义合成公式并且在输入格子展示合成物品，让玩家拿取
+        RecipeFinderRunnable finder = new RecipeFinderRunnable(inv);
+        finder.runTask(plugin);
+
+        // 过滤不可放置格子和不可拿取格子的动作
+        InventoryAction action = event.getAction();
+        boolean placeFlag = action.equals(InventoryAction.PLACE_ALL) || action.equals(InventoryAction.PLACE_ONE) || action.equals(InventoryAction.PLACE_SOME) || event.isShiftClick();
+        boolean pickupFlag = action.equals(InventoryAction.PICKUP_ALL) || action.equals(InventoryAction.PICKUP_ONE) || action.equals(InventoryAction.PICKUP_HALF) || event.isShiftClick();
+        if (action.equals(InventoryAction.SWAP_WITH_CURSOR)) event.setCancelled(true);
+        if (!slot.droppable && placeFlag) event.setCancelled(true);
+        if (!slot.draggable && pickupFlag) event.setCancelled(true);
+    }
+
+    @EventHandler
+    private void onItemDragging(InventoryDragEvent event) {
         if (event.isCancelled()) return;
         // 获取打开的箱子界面并且当前箱子是否属于InventoryDetail实例
         Inventory inv = event.getInventory();
@@ -638,28 +678,20 @@ public class PluginListener implements Listener {
         // 检测点击箱子界面的实体是否为玩家
         if (!(human instanceof Player player)) return;
         // 检测玩家点击的箱子界面是否属于玩家的背包或快捷栏
-        // 如果使用了鼠标单击则忽略事件
-        // 如果使用了SHIFT+鼠标点击则取消事件
-        Inventory pInv = event.getClickedInventory();
-        boolean isPlayerInventory = pInv instanceof PlayerInventory;
-        if (isPlayerInventory) {
-            if (event.isShiftClick()) event.setCancelled(true);
-            return;
+        Set<Integer> slots = event.getRawSlots();
+        for (Integer index : slots) {
+            if (index >= 54) continue;
+            MenuItem slot = detail.getSlot(index + 1);
+            if (slot == null || !slot.droppable) {
+                event.setCancelled(true);
+                break;
+            }
         }
-        // 获得玩家点击箱子中某个格子的InventorySlot实例
-        // 检测当前点击的格子位置是否可放可拿
-        int index = event.getSlot();
-        MenuItem slot = detail.getSlot(index + 1);
-        if (slot == null) {
-            event.setCancelled(true);
-            return;
-        }
+        RecipeFinderRunnable finder = new RecipeFinderRunnable(inv);
+        finder.runTask(plugin);
+    }
 
-        List<String> commands = new ArrayList<>();
-        ClickType clickType = event.getClick();
-        if (clickType.equals(ClickType.LEFT)) commands = slot.leftCommands;
-        if (clickType.equals(ClickType.RIGHT)) commands = slot.rightCommands;
-
+    private void runMenuItemCommand(List<String> commands, Player player){
         for (String s : commands) {
             int firstSpace = s.indexOf(" ");
             String key = firstSpace >= 1 ? s.substring(0, firstSpace) : s;
@@ -672,20 +704,6 @@ public class PluginListener implements Listener {
                 runPlayerCommand(command, player);
             }
         }
-
-        InventoryAction action = event.getAction();
-        boolean placeFlag = action.equals(InventoryAction.PLACE_ALL) || action.equals(InventoryAction.PLACE_ONE) || action.equals(InventoryAction.PLACE_SOME);
-        boolean pickupFlag = action.equals(InventoryAction.PICKUP_ALL) || action.equals(InventoryAction.PICKUP_ONE) || action.equals(InventoryAction.PICKUP_HALF);
-
-        if (action.equals(InventoryAction.SWAP_WITH_CURSOR)) event.setCancelled(true);
-        if (!slot.droppable && placeFlag) event.setCancelled(true);
-        if (!slot.draggable && pickupFlag) event.setCancelled(true);
-    }
-
-    @EventHandler
-    private void onCrazyRecipeCrafting(InventoryClickEvent event) {
-        if (event.isCancelled()) return;
-        // TODO: 自定义合成公式和成品输出
     }
 
     private void runConsoleCommand(String command, Player player) {

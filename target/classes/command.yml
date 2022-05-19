@@ -138,3 +138,22 @@ scale:
   runOnConsole: false
   runOnPlayer: true
   worlds: []
+parkouradmin:
+  runOnPlayer: true
+  args:
+    - name: create
+      index: 1
+    - name: modify
+      index: 1
+    - name: leave
+      index: 1
+    - name: ready
+      index: 1
+    - name: startpoint
+      index: 1
+    - name: delete
+      index: 1
+    - name: help
+      index: 1
+  aliases:
+    - pkadmin
