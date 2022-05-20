@@ -24,7 +24,7 @@ public class RandomNumber {
         if (rate <= 0.0f) return false;
 
         Random rnd = new Random();
-        float randomValue = rnd.nextFloat(bound);
+        float randomValue = rnd.nextFloat() * bound;
         return randomValue < rate;
     }
 

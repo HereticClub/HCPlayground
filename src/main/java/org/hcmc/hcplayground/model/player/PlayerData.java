@@ -394,7 +394,8 @@ public class PlayerData {
         String banDateTime = String.format("%s %s", df.format(banDate), tf.format(banDate));
 
         switch (state) {
-            case Player_Not_Exist -> player.sendMessage(LocalizationManager.getMessage("playerNotExist", player).replace("%player%", targetPlayer));
+            case Player_Not_Exist ->
+                    player.sendMessage(LocalizationManager.getMessage("playerNotExist", player).replace("%player%", targetPlayer));
             case Player_Banned -> {
                 if (target != null) {
                     target.kickPlayer(LocalizationManager.getMessage("playerBannedMessage", player)
@@ -405,7 +406,8 @@ public class PlayerData {
                 }
                 player.sendMessage(LocalizationManager.getMessage("playerBanned", player).replace("%player%", targetPlayer));
             }
-            case Player_Unbanned -> player.sendMessage(LocalizationManager.getMessage("playerUnBanned", player).replace("%player%", targetPlayer));
+            case Player_Unbanned ->
+                    player.sendMessage(LocalizationManager.getMessage("playerUnBanned", player).replace("%player%", targetPlayer));
         }
     }
 

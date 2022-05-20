@@ -11,7 +11,8 @@ import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.model.item.ItemBase;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 6x6配方类
@@ -121,7 +122,7 @@ public class CrazyShapedRecipe implements Recipe {
                 matrixIndex++;
 
                 if (ib != null) {
-                    ItemStack isItem =  ib.toItemStack();
+                    ItemStack isItem = ib.toItemStack();
                     ItemStack isClone = ib.toItemStack().clone();
                     isItem.setAmount(amount);
                     isClone.setAmount(1);

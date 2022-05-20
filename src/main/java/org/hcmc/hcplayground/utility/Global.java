@@ -27,18 +27,18 @@ import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.ScoreboardManager;
 import org.hcmc.hcplayground.HCPlayground;
-import org.hcmc.hcplayground.manager.RecordManager;
-import org.hcmc.hcplayground.model.config.ParkourAdminConfiguration;
-import org.hcmc.hcplayground.model.item.ItemBase;
-import org.hcmc.hcplayground.serialization.*;
 import org.hcmc.hcplayground.enums.CrazyBlockType;
 import org.hcmc.hcplayground.enums.RecipeType;
 import org.hcmc.hcplayground.manager.BanItemManager;
 import org.hcmc.hcplayground.manager.PlayerManager;
+import org.hcmc.hcplayground.manager.RecordManager;
 import org.hcmc.hcplayground.model.config.AuthmeConfiguration;
+import org.hcmc.hcplayground.model.config.ParkourAdminConfiguration;
 import org.hcmc.hcplayground.model.config.PotionConfiguration;
+import org.hcmc.hcplayground.model.item.ItemBase;
 import org.hcmc.hcplayground.model.player.PlayerData;
 import org.hcmc.hcplayground.scheduler.PluginRunnable;
+import org.hcmc.hcplayground.serialization.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -61,30 +61,32 @@ import java.util.regex.Pattern;
 public final class Global {
     private final static String[] ymlFilenames;
     private final static JavaPlugin plugin;
-    private final static Type mapCharInteger = new TypeToken<Map<Character, Integer>>(){}.getType();
-    private final static Type mapCharItemBase = new TypeToken<Map<Character, ItemBase>>(){}.getType();
+    private final static Type mapCharInteger = new TypeToken<Map<Character, Integer>>() {
+    }.getType();
+    private final static Type mapCharItemBase = new TypeToken<Map<Character, ItemBase>>() {
+    }.getType();
 
     public final static String CONFIG_AUTHME = "authme";
     public final static String CONFIG_POTION = "potion";
     public final static String CONFIG_BAN_ITEM = "banitem";
-    public final static String CONFIG_PARKOUR="parkouradmin";
+    public final static String CONFIG_PARKOUR = "parkouradmin";
     public final static String FIELD_NAME_COMMANDMAP = "commandMap";
     public final static Pattern patternNumber = Pattern.compile("-?\\d+(\\.\\d+)?");
 
-    public final static String FILE_CONFIG=                            "config.yml";
-    public final static String FILE_ITEMS= "items.yml";
-    public final static String FILE_DROPS="drops.yml";
-    public final static String FILE_MESSAGES="messages.yml";
-    public final static String FILE_LEVELS="levels.yml";
-    public final static String FILE_COMMANDS="command.yml";
-    public final static String FILE_MENU="menu.yml";
-    public final static String FILE_PERMISSION="permission.yml";
-    public final static String FILE_MOBS="mobs.yml";
-    public final static String FILE_BROADCAST="broadcast.yml";
-    public final static String FILE_CLEARLAG="clearlag.yml";
-    public final static String FILE_RECIPE="recipe.yml";
-    public final static String FILE_RECORD="record/record.yml";
-    public final static String FILE_DATABASE="database/hcdb.db";
+    public final static String FILE_CONFIG = "config.yml";
+    public final static String FILE_ITEMS = "items.yml";
+    public final static String FILE_DROPS = "drops.yml";
+    public final static String FILE_MESSAGES = "messages.yml";
+    public final static String FILE_LEVELS = "levels.yml";
+    public final static String FILE_COMMANDS = "command.yml";
+    public final static String FILE_MENU = "menu.yml";
+    public final static String FILE_PERMISSION = "permission.yml";
+    public final static String FILE_MOBS = "mobs.yml";
+    public final static String FILE_BROADCAST = "broadcast.yml";
+    public final static String FILE_CLEARLAG = "clearlag.yml";
+    public final static String FILE_RECIPE = "recipe.yml";
+    public final static String FILE_RECORD = "record/record.yml";
+    public final static String FILE_DATABASE = "database/hcdb.db";
 
     public static PluginRunnable runnable;
     public static Map<String, YamlConfiguration> yamlMap;

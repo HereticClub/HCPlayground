@@ -65,7 +65,8 @@ public class HCPlayground extends JavaPlugin {
             //ConsoleLegacyFilter.RegisterFilter(getLogger());
             ConsoleLog4jFilter.RegisterFilter();
             HCPluginExpansion.RegisterExpansion();
-        } catch (IllegalAccessException | NoSuchFieldException | SQLException | NoSuchAlgorithmException | InvalidKeySpecException | IOException | InvalidConfigurationException e) {
+        } catch (IllegalAccessException | NoSuchFieldException | SQLException | NoSuchAlgorithmException |
+                 InvalidKeySpecException | IOException | InvalidConfigurationException e) {
             e.printStackTrace();
         }
     }

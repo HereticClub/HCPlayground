@@ -13,10 +13,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.manager.ItemManager;
@@ -59,18 +56,18 @@ public class CommandItem extends Command {
     public static final String COMMAND_HC_RELOAD = "reload";
     public static final String COMMAND_HC_HELP = "help";
     public static final String COMMAND_SCALE = "scale";
-    public static final String COMMAND_CRAZY="crazy";
-    public static final String COMMAND_CRAZY_CRAFTING="crafting";
-    public static final String COMMAND_CRAZY_ENCHANTING="enchanting";
-    public static final String COMMAND_CRAZY_ANVIL="anvil";
-    public static final String COMMAND_PARKOUR_ADMIN="parkouradmin";
-    public static final String COMMAND_PARKOUR_ADMIN_CREATE="create";
-    public static final String COMMAND_PARKOUR_ADMIN_MODIFY="modify";
-    public static final String COMMAND_PARKOUR_ADMIN_DELETE="delete";
-    public static final String COMMAND_PARKOUR_ADMIN_LEAVE="leave";
-    public static final String COMMAND_PARKOUR_ADMIN_READY="ready";
-    public static final String COMMAND_PARKOUR_ADMIN_START_POINT="startpoint";
-    public static final String COMMAND_PARKOUR_ADMIN_HELP="help";
+    public static final String COMMAND_CRAZY = "crazy";
+    public static final String COMMAND_CRAZY_CRAFTING = "crafting";
+    public static final String COMMAND_CRAZY_ENCHANTING = "enchanting";
+    public static final String COMMAND_CRAZY_ANVIL = "anvil";
+    public static final String COMMAND_PARKOUR_ADMIN = "parkouradmin";
+    public static final String COMMAND_PARKOUR_ADMIN_CREATE = "create";
+    public static final String COMMAND_PARKOUR_ADMIN_MODIFY = "modify";
+    public static final String COMMAND_PARKOUR_ADMIN_DELETE = "delete";
+    public static final String COMMAND_PARKOUR_ADMIN_LEAVE = "leave";
+    public static final String COMMAND_PARKOUR_ADMIN_READY = "ready";
+    public static final String COMMAND_PARKOUR_ADMIN_START_POINT = "startpoint";
+    public static final String COMMAND_PARKOUR_ADMIN_HELP = "help";
 
     /**
      * 当前指令的使用权限，设置为null或者空字符串，表示当前命令不需要权限
@@ -231,14 +228,19 @@ public class CommandItem extends Command {
             if (commandText.equalsIgnoreCase(COMMAND_PARKOUR_ADMIN)) {
                 return RunParkourAdminCommand(sender, args);
             }
-        } catch (SQLException | InvalidAlgorithmParameterException | NoSuchPaddingException | IllegalBlockSizeException | NoSuchAlgorithmException | InvalidKeySpecException | BadPaddingException | InvalidKeyException | NoSuchFieldException | IllegalAccessException | IOException | InvalidConfigurationException e) {
+        } catch (SQLException | InvalidAlgorithmParameterException | NoSuchPaddingException |
+                 IllegalBlockSizeException | NoSuchAlgorithmException | InvalidKeySpecException | BadPaddingException |
+                 InvalidKeyException | NoSuchFieldException | IllegalAccessException | IOException |
+                 InvalidConfigurationException e) {
             e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
         }
 
         return false;
     }
 
-    private boolean RunParkourAdminCommand(CommandSender sender, String[] args) throws IOException, IllegalAccessException, InvalidConfigurationException {
+    private boolean RunParkourAdminCommand(CommandSender sender, String[] args) throws IOException, IllegalAccessException, InvalidConfigurationException, ClassNotFoundException {
         if (args.length <= 0) {
             return ShowCommandHelp(sender, 1);
         }
@@ -246,7 +248,7 @@ public class CommandItem extends Command {
         if (args[0].equalsIgnoreCase(COMMAND_PARKOUR_ADMIN_CREATE)) {
             return RunParkourCourseCreateCommand(sender, args);
         }
-        // /pkadmin create
+        // /pkadmin leave
         if (args[0].equalsIgnoreCase(COMMAND_PARKOUR_ADMIN_LEAVE)) {
             return RunParkourCourseLeaveCommand(sender, args);
         }
@@ -259,7 +261,7 @@ public class CommandItem extends Command {
         return false;
     }
 
-    private boolean RunParkourCourseCreateCommand(CommandSender sender, String[] args) throws IOException, IllegalAccessException, InvalidConfigurationException {
+    private boolean RunParkourCourseCreateCommand(CommandSender sender, String[] args) throws IOException, IllegalAccessException, InvalidConfigurationException, ClassNotFoundException {
         Player player = (Player) sender;
         PlayerData data = PlayerManager.getPlayerData(player);
 
@@ -277,12 +279,10 @@ public class CommandItem extends Command {
     private boolean RunParkourCourseDeleteCommand(CommandSender sender, String[] args) throws IOException, IllegalAccessException, InvalidConfigurationException {
 
 
-
-
         return false;
     }
 
-    private boolean RunParkourCourseLeaveCommand(CommandSender sender, String[] args) throws IOException, IllegalAccessException, InvalidConfigurationException {
+    private boolean RunParkourCourseLeaveCommand(CommandSender sender, String[] args) throws IOException, IllegalAccessException, InvalidConfigurationException, ClassNotFoundException {
         Player player = (Player) sender;
         PlayerData data = PlayerManager.getPlayerData(player);
 
@@ -333,11 +333,11 @@ public class CommandItem extends Command {
         return false;
     }
 
-    private boolean RunCrazyEnchantingCommand(CommandSender sender){
+    private boolean RunCrazyEnchantingCommand(CommandSender sender) {
         return false;
     }
 
-    private boolean RunCrazyAnvilCommand(CommandSender sender){
+    private boolean RunCrazyAnvilCommand(CommandSender sender) {
         return false;
     }
 

@@ -8,7 +8,6 @@ import org.hcmc.hcplayground.model.item.ItemBase;
 import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 public class MapCharItemBaseSerialization implements JsonDeserializer<Map<Character, ItemBase>> {
 

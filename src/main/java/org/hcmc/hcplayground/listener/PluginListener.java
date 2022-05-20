@@ -691,7 +691,7 @@ public class PluginListener implements Listener {
         finder.runTask(plugin);
     }
 
-    private void runMenuItemCommand(List<String> commands, Player player){
+    private void runMenuItemCommand(List<String> commands, Player player) {
         for (String s : commands) {
             int firstSpace = s.indexOf(" ");
             String key = firstSpace >= 1 ? s.substring(0, firstSpace) : s;

@@ -1,22 +1,21 @@
 package org.hcmc.hcplayground.model.player;
 
-import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.annotations.Expose;
+import com.google.gson.reflect.TypeToken;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.plugin.Plugin;
 import org.hcmc.hcplayground.HCPlayground;
-import org.hcmc.hcplayground.model.config.ParkourAdminConfiguration;
 import org.hcmc.hcplayground.utility.Global;
 
-import java.io.File;
+import javax.swing.*;
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
-import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
@@ -56,22 +55,20 @@ public class PlayerParkourStorage {
     /**
      * 获取玩家身上所有物品并且放入到储存器，包括背包和装备栏，主副手等物品，并且以json格式保存到玩家文档
      */
-    public void obtainStorage() throws IOException {
+    public void obtainStorage() throws IOException, ClassNotFoundException {
         obtainEquipments();
         obtainContents();
         parkourSetting = true;
-
-        System.out.println(equipments);
-        System.out.println(contents);
 
         saveFile();
     }
 
     /**
      * 将储存器的物品发回给玩家，包括背包和装备栏，主副手等物品，然后清空玩家储存文档
+     *
      * @throws IOException
      */
-    public void replaceStorage() throws IOException {
+    public void replaceStorage() throws IOException, ClassNotFoundException {
         loadFile();
         replaceEquipments();
         replaceContents();
@@ -85,11 +82,16 @@ public class PlayerParkourStorage {
     private void saveFile() throws IOException {
         UUID uuid = player.getUniqueId();
         String file = String.format("%s/storage/%s.parkour.json", plugin.getDataFolder(), uuid);
+        String value = Global.GsonObject.toJson(this, PlayerParkourStorage.class);
 
-        ObjectMapper mapper = new ObjectMapper();
-        String value = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(this);
+        Type t1 = new TypeToken<Map<EquipmentSlot, ItemStack>>(){}.getType();
+        Type t2 = new TypeToken<Map<Integer, ItemStack>>(){}.getType();
 
-        //String value = Global.GsonObject.toJson(this, PlayerParkourStorage.class);
+        String v1 = Global.GsonObject.toJson(this.equipments, t1);
+        String v2 = Global.GsonObject.toJson(this.contents, t2);
+        System.out.println(v1);
+        System.out.println(v2);
+
         Path path = Paths.get(file);
         Files.writeString(path, value, Charset.defaultCharset());
     }
@@ -97,13 +99,13 @@ public class PlayerParkourStorage {
     private void loadFile() throws IOException {
         UUID uuid = player.getUniqueId();
         String file = String.format("%s/storage/%s.parkour.json", plugin.getDataFolder(), uuid);
-        ObjectMapper mapper = new ObjectMapper();
+        //ObjectMapper mapper = new ObjectMapper();
         Path path = Paths.get(file);
         PlayerParkourStorage storage;
 
         String value = Files.readString(path, Charset.defaultCharset());
-        //storage = Global.GsonObject.fromJson(value, this.getClass());
-        storage = mapper.readValue(value, PlayerParkourStorage.class);
+        storage = Global.GsonObject.fromJson(value, this.getClass());
+        //storage = mapper.readValue(value, PlayerParkourStorage.class);
 
         this.equipments = storage.getEquipments();
         this.contents = storage.getContents();
