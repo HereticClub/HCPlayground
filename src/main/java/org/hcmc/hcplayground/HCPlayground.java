@@ -109,7 +109,7 @@ public class HCPlayground extends JavaPlugin {
     }
 
     private void InitialChildrenFolders() {
-        String[] childrenFolders = new String[]{"profile", "database", "record", "storage"};
+        String[] childrenFolders = new String[]{"profile", "database", "record", "designer"};
 
         if (!getDataFolder().exists()) {
             boolean flag = getDataFolder().mkdir();
@@ -154,5 +154,7 @@ public class HCPlayground extends JavaPlugin {
         RecipeManager.Load(Global.getYamlConfiguration(Global.FILE_RECIPE));
         // 12.加载自定义可放置方块的摆放记录
         RecordManager.Load(Global.getYamlConfiguration(Global.FILE_RECORD));
+        // 13.加载跑酷赛道信息
+        CourseManager.Load(Global.getYamlConfiguration(Global.FILE_COURSE));
     }
 }

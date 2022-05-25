@@ -41,6 +41,11 @@ public class RandomNumber {
         return random.nextInt(bound);
     }
 
+    public static boolean getRandomBoolean() {
+        Random random = new Random();
+        return random.nextBoolean();
+    }
+
     /**
      * 获取一个从min到max之间的随机浮点数，包含min，但不包含max
      *

@@ -40,7 +40,7 @@ public class PlayerManager {
         if (pd == null) {
             pd = new PlayerData(player);
             //Global.LogMessage(String.format("\033[1;35mgetPlayerData GameMode: \033[1;33m%s\033[0m", player.getGameMode()));
-            pd.GameMode = player.getGameMode();
+            pd.setGameMode(player.getGameMode());
             pd.LoadConfig();
             PlayerDataMap.put(playerUuid, pd);
         }

@@ -3,6 +3,7 @@ package org.hcmc.hcplayground.model.command;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import org.apache.commons.lang.StringUtils;
+import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.attribute.Attribute;
@@ -16,10 +17,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.hcmc.hcplayground.HCPlayground;
-import org.hcmc.hcplayground.manager.ItemManager;
-import org.hcmc.hcplayground.manager.LocalizationManager;
-import org.hcmc.hcplayground.manager.MenuManager;
-import org.hcmc.hcplayground.manager.PlayerManager;
+import org.hcmc.hcplayground.manager.*;
 import org.hcmc.hcplayground.model.player.PlayerData;
 import org.hcmc.hcplayground.utility.Global;
 import org.jetbrains.annotations.NotNull;
@@ -252,6 +250,10 @@ public class CommandItem extends Command {
         if (args[0].equalsIgnoreCase(COMMAND_PARKOUR_ADMIN_LEAVE)) {
             return RunParkourCourseLeaveCommand(sender, args);
         }
+        // /pkadmin modify
+        if (args[0].equalsIgnoreCase(COMMAND_PARKOUR_ADMIN_MODIFY)) {
+            return RunParkourCourseModifyCommand(sender, args);
+        }
 
 
         if (args[0].equalsIgnoreCase(COMMAND_PARKOUR_ADMIN_HELP)) {
@@ -261,19 +263,55 @@ public class CommandItem extends Command {
         return false;
     }
 
-    private boolean RunParkourCourseCreateCommand(CommandSender sender, String[] args) throws IOException, IllegalAccessException, InvalidConfigurationException, ClassNotFoundException {
+    private boolean RunParkourCourseCreateCommand(CommandSender sender, String[] args) throws IOException, IllegalAccessException, InvalidConfigurationException {
         Player player = (Player) sender;
         PlayerData data = PlayerManager.getPlayerData(player);
 
-        data.storage.obtainStorage();
+        if (args.length <= 1) {
+            ShowCommandHelp(sender, 2);
+            return false;
+        }
+        if (data.isCourseSetting) {
+            player.sendMessage(LocalizationManager.getMessage("courseDesigning", player));
+            return false;
+        }
+        // 创建跑酷赛道，如果该跑酷的名称存在，则停止创建
+        String courseName = args[1];
+        if(CourseManager.existCourse(courseName)){
+            return false;
+        }
+        // 获取新创建的跑酷赛道的位置
+        Location location = CourseManager.createCourse(courseName);
+        data.designer.design(location, courseName, true);
+        // 保存跑酷赛道信息到course.yml
+        CourseManager.saveFile();
 
-        return false;
+        return true;
     }
 
-    private boolean RunParkourCourseModifyCommand(CommandSender sender, String[] args) {
+    private boolean RunParkourCourseModifyCommand(CommandSender sender, String[] args) throws IOException, IllegalAccessException, InvalidConfigurationException {
+        Player player = (Player) sender;
+        PlayerData data = PlayerManager.getPlayerData(player);
 
+        if (args.length <= 1) {
+            ShowCommandHelp(sender, 2);
+            return false;
+        }
+        if (data.isCourseSetting) {
+            player.sendMessage(LocalizationManager.getMessage("courseDesigning", player));
+            return false;
+        }
 
-        return false;
+        String courseName = args[1];
+        if(!data.courseNames.contains(courseName)) {
+            player.sendMessage(LocalizationManager.getMessage("courseNotExist", player));
+            return false;
+        }
+
+        Location location = CourseManager.getCourseLocation(courseName);
+        data.designer.design(location, courseName, false);
+
+        return true;
     }
 
     private boolean RunParkourCourseDeleteCommand(CommandSender sender, String[] args) throws IOException, IllegalAccessException, InvalidConfigurationException {
@@ -286,7 +324,7 @@ public class CommandItem extends Command {
         Player player = (Player) sender;
         PlayerData data = PlayerManager.getPlayerData(player);
 
-        data.storage.replaceStorage();
+        data.designer.leave();
 
         return false;
     }

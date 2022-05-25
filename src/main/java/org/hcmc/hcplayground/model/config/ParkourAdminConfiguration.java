@@ -12,7 +12,10 @@ public class ParkourAdminConfiguration {
     private int protectRange;
     @Expose
     @SerializedName(value = "start_layer")
-    private int startLayer;
+    private double startLayer;
+    @Expose
+    @SerializedName(value = "world")
+    private String world;
 
     public int getDesignRange() {
         return designRange;
@@ -22,8 +25,12 @@ public class ParkourAdminConfiguration {
         return protectRange;
     }
 
-    public int getStartLayer() {
+    public double getStartLayer() {
         return startLayer;
+    }
+
+    public String getWorld() {
+        return world;
     }
 
     public ParkourAdminConfiguration() {

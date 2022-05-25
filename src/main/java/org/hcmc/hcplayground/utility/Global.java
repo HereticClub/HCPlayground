@@ -7,7 +7,7 @@ import com.sk89q.worldguard.WorldGuard;
 import net.milkbowl.vault.chat.Chat;
 import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.permission.Permission;
-import org.bukkit.NamespacedKey;
+import org.bukkit.*;
 import org.bukkit.command.CommandMap;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
@@ -18,6 +18,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemFlag;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.permissions.PermissionDefault;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
@@ -85,6 +86,7 @@ public final class Global {
     public final static String FILE_BROADCAST = "broadcast.yml";
     public final static String FILE_CLEARLAG = "clearlag.yml";
     public final static String FILE_RECIPE = "recipe.yml";
+    public final static String FILE_COURSE="course.yml";
     public final static String FILE_RECORD = "record/record.yml";
     public final static String FILE_DATABASE = "database/hcdb.db";
 
@@ -123,6 +125,7 @@ public final class Global {
                 FILE_RECIPE,
                 FILE_RECORD,
                 FILE_DATABASE,
+                FILE_COURSE,
         };
 
         GsonObject = new GsonBuilder()
@@ -133,9 +136,12 @@ public final class Global {
                 .registerTypeAdapter(Enchantment.class, new EnchantmentSerialization())
                 .registerTypeAdapter(EntityType.class, new EntityTypeSerialization())
                 .registerTypeAdapter(EquipmentSlot.class, new EquipmentSlotSerialization())
+                .registerTypeAdapter(GameMode.class, new GameModeSerialization())
                 .registerTypeAdapter(InventoryType.class, new InventoryTypeSerialization())
                 .registerTypeAdapter(ItemBase.class, new ItemBaseSerialization())
                 .registerTypeAdapter(ItemFlag.class, new ItemFlagsSerialization())
+                .registerTypeAdapter(ItemStack.class, new ItemStackSerialization())
+                .registerTypeAdapter(Location.class, new LocationSerialization())
                 .registerTypeAdapter(mapCharInteger, new MapCharIntegerSerialization())
                 .registerTypeAdapter(mapCharItemBase, new MapCharItemBaseSerialization())
                 .registerTypeAdapter(MaterialData.class, new MaterialDataSerialization())
@@ -199,6 +205,13 @@ public final class Global {
         if (section != null) {
             value = GsonObject.toJson(section.getValues(false));
             ParkourAdmin = GsonObject.fromJson(value, ParkourAdminConfiguration.class);
+
+            String world = ParkourAdmin.getWorld();
+            World w = Bukkit.getWorld(world);
+            if (w == null) {
+                WorldCreator creator = new WorldCreator(world);
+                Bukkit.createWorld(creator);
+            }
         }
     }
 
@@ -252,7 +265,7 @@ public final class Global {
             //System.out.println(value);
 
             T item = GsonObject.fromJson(value, tClass);
-            Field fieldId = Arrays.stream(tClass.getFields()).filter(x -> x.getName().equalsIgnoreCase("id")).findAny().orElse(null);
+            Field fieldId = Arrays.stream(tClass.getDeclaredFields()).filter(x -> x.getName().equalsIgnoreCase("id")).findAny().orElse(null);
             if (fieldId != null) {
                 fieldId.setAccessible(true);
                 fieldId.set(item, s);

@@ -150,7 +150,7 @@ public class PluginListener implements Listener {
         Player player = event.getPlayer();
         PlayerData playerData = PlayerManager.getPlayerData(player);
         //Global.LogMessage(String.format("\033[1;35mPlayerQuitEvent GameMode: \033[1;33m%s\033[0m", playerData.GameMode));
-        player.setGameMode(playerData.GameMode);
+        player.setGameMode(playerData.getGameMode());
         playerData.SaveConfig();
         PlayerManager.removePlayerData(player, playerData);
     }
@@ -169,7 +169,7 @@ public class PluginListener implements Listener {
         PlayerData playerData = PlayerManager.getPlayerData(player);
         if (!playerData.getLogin()) return;
 
-        playerData.GameMode = event.getNewGameMode();
+        playerData.setGameMode(event.getNewGameMode());
         //Global.LogMessage(String.format("\033[1;35mPlayerGameModeChangeEvent GameMode: \033[1;33m%s\033[0m", playerData.GameMode));
         PlayerManager.setPlayerData(player, playerData);
     }

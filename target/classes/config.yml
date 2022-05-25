@@ -40,4 +40,6 @@ parkouradmin:
   # 带有op权限的玩家可以忽略该限制
   protect_range: 250
   # 跑酷赛道的起始层数
-  start_layer: 60
+  start_layer: -61
+  # 跑酷赛道所在的世界名称
+  world: parkour

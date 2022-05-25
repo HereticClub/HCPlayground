@@ -6,7 +6,6 @@ import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
@@ -50,6 +49,9 @@ public class PlayerData {
     private static final String Section_Key_DropList = "dropList";
     private static final String Section_Key_PickupList = "pickupList";
     private static final String Section_Key_KillMobList = "killMobList";
+    private static final String Section_Key_Parkour = "parkour";
+    private static final String Section_Key_Parkour_Is_Design = "is_design";
+    private static final String Section_Key_Parkour_Course_Name = "name";
 
     private static final String TYPE_JAVA_UTIL_MAP = "java.util.Map";
     public static final double BASE_HEALTH = 20.0F;
@@ -89,7 +91,9 @@ public class PlayerData {
     /**
      * 玩家的背包和装备物品的记录
      */
-    public PlayerParkourStorage storage;
+    public CourseDesigner designer;
+    public boolean isCourseSetting = false;
+    public List<String> courseNames = new ArrayList<>();
     /**
      * 玩家在runnable线程的时间检查点，初始化为登陆时间
      * 通常不会更改这个属性的值
@@ -98,7 +102,7 @@ public class PlayerData {
     /**
      * 记录玩家登陆时的游戏模式
      */
-    public GameMode GameMode;
+    private GameMode gameMode;
     /**
      * 玩家的Player实例
      */
@@ -144,7 +148,7 @@ public class PlayerData {
 
         name = player.getName();
         uuid = player.getUniqueId();
-        storage = new PlayerParkourStorage(player);
+        designer = new CourseDesigner(this);
     }
 
     public double getCurrentHealth() {
@@ -294,6 +298,14 @@ public class PlayerData {
         return player;
     }
 
+    public org.bukkit.GameMode getGameMode() {
+        return gameMode;
+    }
+
+    public void setGameMode(GameMode gameMode) {
+        this.gameMode = gameMode;
+    }
+
     public boolean Exist() throws SQLException {
         return SqliteManager.PlayerExist(player);
     }
@@ -326,8 +338,8 @@ public class PlayerData {
                     .replace("%player%", name));
         } else {
             isLogin = true;
-            //Global.LogMessage(String.format("\033[1;35mPlayer register GameMode: \033[1;33m%s\033[0m", GameMode));
-            player.setGameMode(GameMode);
+            //Global.LogMessage(String.format("\033[1;35mPlayer register gameMode: \033[1;33m%s\033[0m", gameMode));
+            player.setGameMode(gameMode);
             plugin.getServer().broadcastMessage(LocalizationManager.getMessage("playerRegisterWelcome", player)
                     .replace("%player%", name));
         }
@@ -357,8 +369,8 @@ public class PlayerData {
         if (!isLogin) {
             player.sendMessage(LocalizationManager.getMessage("playerLoginFailed", player).replace("%player%", name));
         } else {
-            //Global.LogMessage(String.format("\033[1;35mPlayer Login GameMode: \033[1;33m%s\033[0m", GameMode));
-            player.setGameMode(GameMode);
+            //Global.LogMessage(String.format("\033[1;35mPlayer Login gameMode: \033[1;33m%s\033[0m", gameMode));
+            player.setGameMode(gameMode);
             player.sendMessage(LocalizationManager.getMessage("playerLoginWelcome", player).replace("&", "§").replace("%player%", name));
         }
 
@@ -411,19 +423,30 @@ public class PlayerData {
         }
     }
 
-    public void LoadConfig() throws IllegalAccessException, IOException, InvalidConfigurationException {
+    public void LoadConfig() throws IllegalAccessException {
         UUID playerUuid = player.getUniqueId();
         File f = new File(plugin.getDataFolder(), String.format("profile/%s.yml", playerUuid));
-        // TODO:
+        // 加载所有Map<Material, Integer>类型的玩家记录
         YamlConfiguration yaml = YamlConfiguration.loadConfiguration(f);
         Yaml2Map(yaml);
+        // 加载玩家的其他数据记录或者状态
+        ConfigurationSection section = yaml.getConfigurationSection(Section_Key_Parkour);
+        if (section != null) {
+            isCourseSetting = section.getBoolean(Section_Key_Parkour_Is_Design);
+            courseNames = section.getStringList(Section_Key_Parkour_Course_Name);
+        }
     }
 
     public void SaveConfig() throws IOException, IllegalAccessException {
         UUID playerUuid = player.getUniqueId();
         File f = new File(plugin.getDataFolder(), String.format("profile/%s.yml", playerUuid));
-
-        Map2Yaml().save(f);
+        // 转换所有Map<Material, Integer>类型的玩家记录，成为Yaml格式字符串
+        YamlConfiguration yaml = Map2Yaml();
+        // 保存玩家的其他记录数据或者状态
+        ConfigurationSection section = yaml.createSection(Section_Key_Parkour);
+        section.set(Section_Key_Parkour_Is_Design, isCourseSetting);
+        section.set(Section_Key_Parkour_Course_Name, courseNames);
+        yaml.save(f);
     }
 
     /**

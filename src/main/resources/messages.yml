@@ -98,6 +98,12 @@ messages:
   systemAdminName: '&eSystem Administrator'
   # 当玩法或者功能正在开发中，并且被玩家尝试使用时显示
   UnderConstruction: '&eThis feature is under construction and will be available soon'
+  # 当玩家正在设计一条跑酷赛道，并且尝试再次创建或者修改跑道时显示
+  courseDesigning: '&cYou are designing a parkour course, leave and try again.'
+  # 当玩家不在设计跑酷赛道的状态时，再次尝试离开赛道的设计状态时显示
+  courseNotDesign: '&cYou have left the course design'
+  # 当玩家尝试修改不存在的跑酷赛道时显示
+  courseNotExist: '&cThe course &e%course% &cdoes not exist, or it is not owned by you.'
   # 玩家账号被禁用并且被移出服务器时显示
   # 可以使用%player%占位符，代表被禁用的玩家名称
   # 可以使用%master%占位符，代表发出禁止指令的玩家名称

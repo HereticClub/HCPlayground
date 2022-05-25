@@ -1,0 +1,24 @@
+course1:
+  name: '&e死亡赛道'
+  x: 0
+  y: -61
+  z: 0
+  yaw: 0
+  pitch: 0
+  world: parkour
+course2:
+  name: '&d生死时速'
+  x: 500
+  y: -61
+  z: 0
+  yaw: 0
+  pitch: 0
+  world: parkour
+course3:
+  name: '&d回到未来'
+  x: 500
+  y: -61
+  z: 500
+  yaw: 0
+  pitch: 0
+  world: parkour
