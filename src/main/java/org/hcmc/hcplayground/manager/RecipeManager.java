@@ -2,6 +2,7 @@ package org.hcmc.hcplayground.manager;
 
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.inventory.Recipe;
 import org.bukkit.inventory.ShapedRecipe;
 import org.hcmc.hcplayground.model.item.ItemBase;
 import org.hcmc.hcplayground.model.recipe.CrazyShapedRecipe;
@@ -38,6 +39,10 @@ public class RecipeManager {
     }
 
     private static void setLegacyRecipe(CrazyShapedRecipe crazyRecipe) {
+
+        Recipe r = Bukkit.getRecipe(crazyRecipe.getKey());
+        if (r != null) Bukkit.removeRecipe(crazyRecipe.getKey());
+
         ShapedRecipe recipe = new ShapedRecipe(crazyRecipe.getKey(), crazyRecipe.getResult());
         recipe.shape(crazyRecipe.getIngredientShape());
         Set<Character> symbols = crazyRecipe.getIngredients().keySet();

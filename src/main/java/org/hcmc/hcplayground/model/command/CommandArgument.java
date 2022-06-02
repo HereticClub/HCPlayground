@@ -17,9 +17,9 @@ public class CommandArgument {
     @Expose
     @SerializedName(value = "permission")
     public String permission = "";
-    @Expose
-    @SerializedName(value = "parent")
-    public List<String> parent = new ArrayList<>();
+
+    @Expose(serialize = false, deserialize = false)
+    public String id;
 
     public CommandArgument() {
 

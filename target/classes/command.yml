@@ -8,23 +8,19 @@ hcplayground:
   # True or False，玩家是否可执行该命令，默认值: False
   runOnPlayer: true
   # 指令参数，每条指令可设置多个参数，不设置则改指令没有参数
-  # name: 参数的名称
-  # permission: 该参数的使用权限
-  # 当参数的位置是2或者更多，可以使用%parent%占位符
-  # %parent%将代替当前位置参数的上一个参数的名称
-  # 例如：设置了当前参数的权限为permission.%parent%.use
-  # 如果当前参数的上一个参数为arg1，则权限会被改为permission.arg1.use
-  # index: 该参数在当前指令的位置，例如：/command arg1 arg2 ... argN
-  # 1表示第一个参数，2表示第二个参数，如此类推
-  # parent: 当前参数的上一个参数所属
   args:
-    - name: help
+    1:
+      # name: 参数的名称
+      name: help
+      # permission: 该参数的使用权限，留空则不需要权限
+      permission: ''
+      # index: 该参数在当前指令的位置，例如：/command arg1 arg2 ... argN
+      # 1表示第一个参数，2表示第二个参数，如此类推
       index: 1
-      parent: []
-    - name: reload
+    2:
+      name: reload
       permission: hc.reload
       index: 1
-      parent: []
   # 表示那些世界可以使用该指令，不设置该属性则任何世界都可用
   worlds: []
   # 指令的别名
@@ -35,13 +31,16 @@ quartermaster:
   runOnConsole: false
   runOnPlayer: true
   args:
-    - name: gui
+    1:
+      name: gui
       permission: hc.quartermaster.gui
       index: 1
-    - name: give
+    2:
+      name: give
       permission: hc.quartermaster.give
       index: 1
-    - name: help
+    3:
+      name: help
       index: 1
   aliases:
     - quarter
@@ -51,13 +50,16 @@ crazy:
   runOnConsole: false
   runOnPlayer: true
   args:
-    - name: crafting
+    1:
+      name: crafting
       permission: ''
       index: 1
-    - name: anvil
+    2:
+      name: anvil
       permission: ''
       index: 1
-    - name: enchanting
+    3:
+      name: enchanting
       permission: ''
       index: 1
 
@@ -65,13 +67,11 @@ menu:
   permission: ''
   runOnConsole: false
   runOnPlayer: true
-  args: []
   worlds: []
 profile:
   permission: ''
   runOnConsole: false
   runOnPlayer: true
-  args: []
   worlds: []
 recipebook:
   runOnConsole: false
@@ -81,7 +81,6 @@ recipebook:
 login:
   runOnConsole: false
   runOnPlayer: true
-  args: []
   worlds: []
   aliases:
     - log
@@ -89,12 +88,10 @@ login:
 logout:
   runOnConsole: false
   runOnPlayer: true
-  args: []
   worlds: []
 register:
   runOnConsole: false
   runOnPlayer: true
-  args: []
   worlds: []
   aliases:
     - reg
@@ -102,7 +99,6 @@ register:
 unregister:
   runOnConsole: false
   runOnPlayer: true
-  args: []
   worlds: []
   aliases:
     - unreg
@@ -110,7 +106,6 @@ unregister:
 changepassword:
   runOnConsole: false
   runOnPlayer: true
-  args: []
   worlds: []
   aliases:
     - passwd
@@ -118,7 +113,6 @@ changepassword:
 seen:
   runOnConsole: true
   runOnPlayer: true
-  args: []
   worlds: []
   aliases: []
 banplayer:
@@ -130,7 +124,8 @@ banplayer:
     - banp
     - bp
   args:
-    - name: u
+    1:
+      name: u
       permission: hc.banplayer.unban
       index: 2
 scale:
@@ -138,22 +133,49 @@ scale:
   runOnConsole: false
   runOnPlayer: true
   worlds: []
-parkouradmin:
+course:
   runOnPlayer: true
   args:
-    - name: create
+    1:
+      name: create
       index: 1
-    - name: modify
+    2:
+      name: modify
       index: 1
-    - name: leave
+    3:
+      name: leave
       index: 1
-    - name: ready
+    4:
+      name: startpoint
       index: 1
-    - name: startpoint
+    5:
+      name: checkpoint
       index: 1
-    - name: delete
+    6:
+      name: delete
       index: 1
-    - name: help
+    7:
+      name: help
       index: 1
-  aliases:
-    - pkadmin
+    8:
+      name: list
+      index: 1
+    9:
+      name: abandons
+      index: 1
+    10:
+      name: claim
+      index: 1
+    11:
+      name: ready
+      index: 1
+    12:
+      name: display
+      index: 1
+    13:
+      name: tp
+      index: 1
+    14:
+      name: parkourkit
+      index: 1
+

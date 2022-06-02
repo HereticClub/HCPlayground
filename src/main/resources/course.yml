@@ -1,11 +1,12 @@
-course1:
+demo:
   name: '&e死亡赛道'
+  abandon: false
   x: 0
   y: -61
   z: 0
   yaw: 0
   pitch: 0
-  world: parkour
+  world: parkour_world
 course2:
   name: '&d生死时速'
   x: 500
@@ -13,7 +14,7 @@ course2:
   z: 0
   yaw: 0
   pitch: 0
-  world: parkour
+  world: parkour_world
 course3:
   name: '&d回到未来'
   x: 500
@@ -21,4 +22,4 @@ course3:
   z: 500
   yaw: 0
   pitch: 0
-  world: parkour
+  world: parkour_world

@@ -15,17 +15,35 @@ public class LocationSerialization implements JsonDeserializer<Location>, JsonSe
 
     @Override
     public Location deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
-        JsonObject jo = jsonElement.getAsJsonObject();
-        double x = jo.get("x").getAsDouble();
-        double y = jo.get("y").getAsDouble();
-        double z = jo.get("z").getAsDouble();
-        float yaw = jo.get("yaw").getAsFloat();
-        float pitch = jo.get("pitch").getAsFloat();
-        String world = jo.get("world").getAsString();
+        Location location = null;
 
-        World w = Bukkit.getWorld(world);
-        Location location = new Location(w, x, y, z, yaw, pitch);
+        if (jsonElement.isJsonObject()) {
+            JsonObject jo = jsonElement.getAsJsonObject();
+            double x = jo.get("x").getAsDouble();
+            double y = jo.get("y").getAsDouble();
+            double z = jo.get("z").getAsDouble();
+            float yaw = jo.get("yaw").getAsFloat();
+            float pitch = jo.get("pitch").getAsFloat();
+            String world = jo.get("world").getAsString();
 
+            World w = Bukkit.getWorld(world);
+            location = new Location(w, x, y, z, yaw, pitch);
+        } else {
+            String[] keys = jsonElement.getAsString().split(",");
+            if (keys.length >= 4) {
+                World w = Bukkit.getWorld(keys[0].trim());
+                double x = Double.parseDouble(keys[1].trim());
+                double y = Double.parseDouble(keys[2].trim());
+                double z = Double.parseDouble(keys[3].trim());
+                location = new Location(w, x, y, z);
+            }
+            if (keys.length >= 6) {
+                float yaw = Float.parseFloat(keys[4].trim());
+                float pitch = Float.parseFloat(keys[5].trim());
+                location.setYaw(yaw);
+                location.setPitch(pitch);
+            }
+        }
         return location;
     }
 

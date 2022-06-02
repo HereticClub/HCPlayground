@@ -28,15 +28,17 @@ import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.ScoreboardManager;
 import org.hcmc.hcplayground.HCPlayground;
+import org.hcmc.hcplayground.enums.CcmdActionType;
 import org.hcmc.hcplayground.enums.CrazyBlockType;
 import org.hcmc.hcplayground.enums.RecipeType;
 import org.hcmc.hcplayground.manager.BanItemManager;
 import org.hcmc.hcplayground.manager.PlayerManager;
 import org.hcmc.hcplayground.manager.RecordManager;
 import org.hcmc.hcplayground.model.config.AuthmeConfiguration;
-import org.hcmc.hcplayground.model.config.ParkourAdminConfiguration;
+import org.hcmc.hcplayground.model.config.CourseConfiguration;
 import org.hcmc.hcplayground.model.config.PotionConfiguration;
 import org.hcmc.hcplayground.model.item.ItemBase;
+import org.hcmc.hcplayground.model.menu.MenuItem;
 import org.hcmc.hcplayground.model.player.PlayerData;
 import org.hcmc.hcplayground.scheduler.PluginRunnable;
 import org.hcmc.hcplayground.serialization.*;
@@ -66,6 +68,7 @@ public final class Global {
     }.getType();
     private final static Type mapCharItemBase = new TypeToken<Map<Character, ItemBase>>() {
     }.getType();
+    private final static Type listMenuItem=new TypeToken<List<MenuItem>>(){}.getType();
 
     public final static String CONFIG_AUTHME = "authme";
     public final static String CONFIG_POTION = "potion";
@@ -87,6 +90,7 @@ public final class Global {
     public final static String FILE_CLEARLAG = "clearlag.yml";
     public final static String FILE_RECIPE = "recipe.yml";
     public final static String FILE_COURSE="course.yml";
+    public final static String FILE_CCMD="ccmd.yml";
     public final static String FILE_RECORD = "record/record.yml";
     public final static String FILE_DATABASE = "database/hcdb.db";
 
@@ -95,14 +99,14 @@ public final class Global {
 
     public static Gson GsonObject;
     public static Scoreboard HealthScoreboard;
-    public static ParkourAdminConfiguration ParkourAdmin = null;
+    public static CourseConfiguration course = null;
     public static AuthmeConfiguration authme = null;
     public static PotionConfiguration potion = null;
     public static Connection Sqlite = null;
-    public static WorldGuard WorldGuardApi = null;
-    public static Economy EconomyApi = null;
-    public static Chat ChatApi = null;
-    public static Permission PermissionApi = null;
+    public static WorldGuard worldGuardApi = null;
+    public static Economy economyApi = null;
+    public static Chat chatApi = null;
+    public static Permission permissionApi = null;
     public static CommandMap CommandMap = null;
 
     static {
@@ -126,12 +130,14 @@ public final class Global {
                 FILE_RECORD,
                 FILE_DATABASE,
                 FILE_COURSE,
+                FILE_CCMD,
         };
 
         GsonObject = new GsonBuilder()
                 .disableHtmlEscaping()
                 .enableComplexMapKeySerialization()
                 .excludeFieldsWithoutExposeAnnotation()
+                .registerTypeAdapter(CcmdActionType.class, new CcmdActionTypeSerialization())
                 .registerTypeAdapter(CrazyBlockType.class, new CrazyTypeSerialization())
                 .registerTypeAdapter(Enchantment.class, new EnchantmentSerialization())
                 .registerTypeAdapter(EntityType.class, new EntityTypeSerialization())
@@ -145,17 +151,19 @@ public final class Global {
                 .registerTypeAdapter(mapCharInteger, new MapCharIntegerSerialization())
                 .registerTypeAdapter(mapCharItemBase, new MapCharItemBaseSerialization())
                 .registerTypeAdapter(MaterialData.class, new MaterialDataSerialization())
+                .registerTypeAdapter(listMenuItem, new MenuItemListSerialization())
                 .registerTypeAdapter(NamespacedKey.class, new NamespacedKeySerialization())
                 .registerTypeAdapter(PotionEffect.class, new PotionEffectSerialization())
                 .registerTypeAdapter(PermissionDefault.class, new PermissionDefaultSerialization())
                 .registerTypeAdapter(RecipeType.class, new RecipeTypeSerialization())
+                .registerTypeAdapter(Sound.class, new SoundSerialization())
                 .serializeNulls()
                 .setDateFormat("yyyy-MM-dd HH:mm:ss")
                 .setPrettyPrinting()
                 .create();
 
         try {
-            CommandMap = CreateCommandMap();
+            CommandMap = getCommandMap();
         } catch (NoSuchFieldException | IllegalAccessException e) {
             e.printStackTrace();
         }
@@ -204,12 +212,17 @@ public final class Global {
         section = config.getConfigurationSection(CONFIG_PARKOUR);
         if (section != null) {
             value = GsonObject.toJson(section.getValues(false));
-            ParkourAdmin = GsonObject.fromJson(value, ParkourAdminConfiguration.class);
+            course = GsonObject.fromJson(value, CourseConfiguration.class);
 
-            String world = ParkourAdmin.getWorld();
+            String world = course.getWorld();
             World w = Bukkit.getWorld(world);
             if (w == null) {
                 WorldCreator creator = new WorldCreator(world);
+                Bukkit.createWorld(creator);
+            }
+
+            if(Bukkit.getWorld("survival_world") == null){
+                WorldCreator creator = new WorldCreator("survival_world");
                 Bukkit.createWorld(creator);
             }
         }
@@ -294,7 +307,7 @@ public final class Global {
         if (p == null) {
             LogWarning("WorldGuard not found :(");
         } else {
-            WorldGuardApi = WorldGuard.getInstance();
+            worldGuardApi = WorldGuard.getInstance();
             LogMessage(String.format("Found WorldGuard, version: %s", p.getDescription().getVersion()));
         }
     }
@@ -311,6 +324,15 @@ public final class Global {
             SetVaultEconomy();
             SetVaultPermission();
             LogMessage(String.format("Found Vault, version: %s", p.getDescription().getVersion()));
+        }
+    }
+
+    public static void ValidParkourPlugin() {
+        Plugin pa = plugin.getServer().getPluginManager().getPlugin("Parkour");
+        if (pa == null) {
+            LogWarning("Parkour not found :(");
+        } else {
+            LogMessage(String.format("Found Parkour, version: %s", pa.getDescription().getVersion()));
         }
     }
 
@@ -370,21 +392,21 @@ public final class Global {
         RegisteredServiceProvider<Economy> rsp = plugin.getServer().getServicesManager().getRegistration(Economy.class);
         if (rsp == null) return;
 
-        EconomyApi = rsp.getProvider();
+        economyApi = rsp.getProvider();
     }
 
     private static void SetVaultChat() {
         RegisteredServiceProvider<Chat> rsp = plugin.getServer().getServicesManager().getRegistration(Chat.class);
         if (rsp == null) return;
 
-        ChatApi = rsp.getProvider();
+        chatApi = rsp.getProvider();
     }
 
     private static void SetVaultPermission() {
         RegisteredServiceProvider<Permission> rsp = plugin.getServer().getServicesManager().getRegistration(Permission.class);
         if (rsp == null) return;
 
-        PermissionApi = rsp.getProvider();
+        permissionApi = rsp.getProvider();
     }
 
     @NotNull
@@ -418,7 +440,7 @@ public final class Global {
         return yamlPlugin;
     }
 
-    private static CommandMap CreateCommandMap() throws NoSuchFieldException, IllegalAccessException {
+    private static CommandMap getCommandMap() throws NoSuchFieldException, IllegalAccessException {
         // 获取Bukkit.Server.CommandMap字段
         Field fieldCommandMap = plugin.getServer().getClass().getDeclaredField(FIELD_NAME_COMMANDMAP);
         // 设置CommandMap字段为可访问

@@ -1,0 +1,38 @@
+# 自定义命令
+lobby:
+  # 别名
+  aliases:
+    - hub
+  # 所需权限，留空则不需要
+  permission: ''
+  # 说明
+  description: '&e回到&d异族世界主城'
+  # 使用方法
+  usage: |-
+    &f<command> usage:
+    &9/<command> &7- &e回到&d异族世界主城
+  # 可用的世界，留空则所有世界可用
+  world: []
+    #- world
+  # 指令的冷却时间
+  cooldown: 15
+  # 指令的动作
+  actions:
+    # 动作id，名称唯一
+    "1":
+      # 动作的类型，必须是CcmdActionType的值之一
+      # Message: 发送消息动作，为当前玩家发送一条text文本，并且/或者播放一段sound声音
+      # Wait: 等待动作，等待duration秒
+      # Teleport: 传送动作，传送到location位置
+      type: message
+      text: '&f[&d异族主城&f] &c传送门将在4秒内打开…………'
+    "2":
+      type: wait
+      duration: 4
+    "3":
+      type: teleport
+      location: world, -379.868, 107, 126.464, 90, 0
+    "4":
+      type: message
+      text: '&f[&d异族主城&f] &e您已经空降到&d异族世界主城'
+      sound: ENTITY_PLAYER_LEVELUP

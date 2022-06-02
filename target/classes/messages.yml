@@ -96,12 +96,60 @@ messages:
     false: '&cOffline'
   # 系统管理员的名字，当使用控制台指令时以此名称代替执行指令的玩家名称
   systemAdminName: '&eSystem Administrator'
+  # 当玩家尝试在冷却时间内运行自定义指令时显示
+  # 可以使用%cooldown%占位符，表示该指令的剩余冷却时间，单位: 秒
+  # 可以使用%command%占位符，表示该指令的名称
+  customCommandCooldown: '&cYou have to wait for &e%remain% &csecond to run this command: &e%command%'
   # 当玩法或者功能正在开发中，并且被玩家尝试使用时显示
   UnderConstruction: '&eThis feature is under construction and will be available soon'
+  # 当玩家准备进入赛道设计模式时显示，可以使用%second%占位符，表示需要等待的秒数
+  courseEnteringDesignMode: '&fYou are coming into course design mode, please waiting for &e%second% &fsecond'
+  # 当玩家正式进入赛道设计模式后显示
+  courseDesignModeEntered: '&aYou have entered course design mode'
+  # 当玩家正式离开赛道设计模式后显示
+  courseDesignModeLeave: '&fYou have left course design mode, all items were returned to your container'
   # 当玩家正在设计一条跑酷赛道，并且尝试再次创建或者修改跑道时显示
-  courseDesigning: '&cYou are designing a parkour course, leave and try again.'
+  courseDesigning: '&cYou are designing a parkour course, leave it and try again.'
   # 当玩家不在设计跑酷赛道的状态时，再次尝试离开赛道的设计状态时显示
   courseNotDesign: '&cYou have left the course design'
+  # 当玩家尝试修改非该玩家拥有的跑酷赛道时显示，可以使用%course%占位符，表示要修改的赛道名称
+  courseNotOwned: '&cThe course &e%course% &cis not your owned.'
+  # 当玩家尝试修改不存在的跑酷赛道时显示，可以使用%course%占位符，表示要修改的赛道名称
+  courseNotExist: '&cThe course &e%course% &cis not exists'
+  # 当玩家已经离开了跑酷赛道的设计，并且再次尝试执行/course leave指令时显示
+  courseHasLeft: '&cYou have left the course design'
+  # 当玩家舍弃一条已经被舍弃的跑酷赛道时显示，可以使用%course%占位符，表示要修改的赛道名称
+  courseWasAbandoned: '&cThe course &e%course% &cwas abandoned'
+  # 当玩家刚刚舍弃了一条跑酷赛道时显示，可以使用%course%占位符，表示被弃置的赛道名称
+  courseHasAbandoned: '&cYou have abandoned the course &e%course%'
+  # 当玩家在没有创建起点的情况下，尝试创建检查点时显示
+  courseNoStartPoint: '&cA &estart point &cmust be created for first'
+  # 当玩家尝试领取一条没有被舍弃的跑道时显示，可以使用%course%占位符，表示要弃置的赛道名称
+  courseNonAbandoned: '&cCourse %course% is not abandoned'
+  # 当玩家使用/course display指令，并且没有提供参数时显示
+  courseDisplayEmpty: '&cPlease provider a display name'
+  # 当玩家使用/course tp指令，并且没有提供参数时显示
+  courseTeleportEmpty: '&cPlease specify a course name'
+  # 当玩家的身份为op并且尝试领取一条被舍弃的跑酷赛道时显示
+  courseOpNoNeedClaim: '&aYou are op, no need to claim'
+  # 当玩家执行指令/course startpoint时显示，可以使用%course%占位符，表示要设置起点的赛道名称
+  courseStartPoint: '&aStart point created, keep an eye out for the white wool block under your feet'
+  # 当玩家领取了一条弃置的跑道时显示，可以使用%course%占位符，表示要领取的赛道名称
+  courseClaimOK: '&aYou claimed a parkour course: &e%course%'
+  # 当玩家在非跑道设计模式，或者在没有获得实施权限的跑道上实施任何动作时显示
+  courseNoPermission: '&cYou can not do that!'
+  # 当玩家在使用/course ready指令时并且参数不是true或者false时显示
+  courseReadyArgInvalid: '&cMust be &etrue &cor &efalse &cfor this command parameter'
+  # 当玩家在跑酷设计模式时，禁止执行绝大部分命令
+  courseDenyCommandOnDesign: '&4Leave course design mode before perform any more commands!'
+  # 当玩家尝试创建跑酷赛道，但该赛道已经存在时显示，可以使用%course%占位符，表示要创建的赛道名称
+  courseExist: |- 
+    &cThe course &e%course% &cis already exists
+    &cUse &e/course modify %course% &ccommand to modify
+  # 当玩家在设计跑酷赛道，并且玩家的位置超出了跑酷赛道的设计范围时显示
+  outOfCourseRange: '&cYou are out of course range'
+  # 当玩家在设计跑酷赛道，并且玩家的位置进入了跑酷赛道的设计范围时显示
+  enterCourseRange: '&aYou just entered course range'
   # 玩家账号被禁用并且被移出服务器时显示
   # 可以使用%player%占位符，代表被禁用的玩家名称
   # 可以使用%master%占位符，代表发出禁止指令的玩家名称
@@ -122,6 +170,7 @@ messages:
     description: Open the main menu for a player
     # 指令的帮助提示，当使用/help menu时显示
     usage: |-
+      §f<command> command usage:
       §9/<command> §7- §fOpen the main menu for a player
   # 异族游乐场主菜单指令说明，必须与定义的指令名称一致
   profile:
@@ -129,6 +178,7 @@ messages:
     description: Open the player profile menu
     # 指令的帮助提示，当使用/help profile时显示
     usage: |-
+      §f<command> command usage:
       §9/<command> §7- §fOpen the player profile menu
   # 异族游乐场主菜单指令说明，必须与定义的指令名称一致
   recipebook:
@@ -136,12 +186,13 @@ messages:
     description: Open the player recipe book menu
     # 指令的帮助提示，当使用/help profile时显示
     usage: |-
+      §f<command> command usage:
       §9/<command> §7- §fOpen the player recipe book menu
   # 军需官指令说明，必须与定义的指令名称一致
   quartermaster:
     description: The quartermaster, who manages weapons, off-hand items, armor, accessories
     usage: |-
-      §f <command> command usage:
+      §f<command> command usage:
       §e/<command> {help|give|gui} {player} {item} [amount]
       §9/<command> help §7- §fShow help of this command on this screen
       §9/<command> give §7- §fGive an item to player
@@ -149,43 +200,43 @@ messages:
   hcplayground:
     description: HC playground main command
     usage: |-
-      §f <command> command usage:
+      §f<command> command usage:
       §9/<command> help &7- &fShow help for this command
       §9/<command> reload &7- &fReload all configuration files
   login:
     description: Player login command, player must login for first before playing on this server
     usage: |-
-      §f <command> command usage:
+      §f<command> command usage:
       §9/<command> your-password
   logout:
     description: Player logout command, disconnect player from server
     usage: |-
-      §f <command> command usage:
+      §f<command> command usage:
       §9/<command>
   register:
     description: Player register command, player must register for first before playing on this server
     usage: |-
-      §f <command> command usage:
+      §f<command> command usage:
       §9/<command> your-password your-password
   unregister:
     description: Unregister player account, all attached items and points of this player will be distroyed
     usage: |-
-      §f <command> command usage:
+      §f<command> command usage:
       §9/<command> your-password
   changepassword:
     description: Player change password command, player can change password by this command any time
     usage: |-
-      §f <command> command usage:
+      §f<command> command usage:
       §9/<command> old-password new-password new-password
   seen:
     description: See a player's online status
     usage: |-
-      §f <command> command usage:
+      §f<command> command usage:
       §9/<command> {player} &7- The player name who is being seen by you
   banplayer:
     description: Forbidden a player to enter the server
     usage: |-
-      §f <command> command usage:
+      §f<command> command usage:
       §9/<command> {player} [u]
       §9player &7- The player name to be banned
       §9u &7- Ban message, if u parameter is specified, the player will be unbanned
@@ -195,25 +246,32 @@ messages:
   scale:
     description: Sets player scale health
     usage: |-
-      &7 <command> command usage:
+      &7<command> command usage:
       &9/<command> scale maxHealth
       &9scale &7- &fThe player health scaled to
       &9maxHealth &7- &fThe player max health
   crazy:
     description: Menu for crazy crafting, crazy enchanting, crazy anvil
     usage: |-
-      &7 <command> command usage:
+      &7<command> command usage:
       &9/<command> crafting &7- &fOpen a menu for crazy crafting
       &9/<command> enchanting &7- &fOpen a menu for crazy enchanting
       &9/<command> anvil &7- &fOpen a menu for crazy anvil
-  parkouradmin:
+  course:
     description: Create, Modify, Delete a parkour course owned by a player
     usage: |-
-      &7 <command> command usage:
-      &9/<command> create <course> &7- &fCreate a parkour course by a player, player will own this course
-      &9/<command> modify <course> &7- &fModify a parkour course, the course must be owned by player himself
-      &9/<command> delete <course> &7- &fDelete a parkour course, the course must be owned by player himself
-      &9/<command> leave &7- &fLeave from parkour course design, its owner may modify this course again any time
-      &9/<command> startpoint <course> &7- &fDecide where the Course to start, stand in the position and face the direction you want the Players to teleport to
-      &9/<command> ready <course> &7- &fPlayer finish setting up the Course, and it's ready for other players to join
+      &7<command> command usage:
       &9/<command> help <course> &7- &fShow this screen
+      &9/<command> abandons &7- &fList all abandoned parkour courses
+      &9/<command> claim <course> &7- &fClaim a abandoned parkour course, the course must be abandoned
+      &9/<command> checkpoint [remove|1...n] &7- &fCreate a checkpoint for a course, or delete last checkpoint for this course
+      &9/<command> create <course> &7- &fCreate a parkour course by a player, player will own this course
+      &9/<command> delete <course> &7- &fSets a parkour course to abandon state, the course must be owned by player himself
+      &9/<command> display <text> &7- &fSets a parkour course display name
+      &9/<command> leave &7- &fLeave from parkour course design, its owner may modify this course again any time
+      &9/<command> list &7- &fList all parkour courses you created
+      &9/<command> modify <course> &7- &fModify a parkour course, the course must be owned by player himself
+      &9/<command> parkourkit &7- &fGet a set of default parkour kit
+      &9/<command> ready <true|false> &7- &atrue: Open your course to other players, &afalse: Close your course, other players join this course no longer except yourself 
+      &9/<command> startpoint <course> &7- &fDecide where the Course to start, stand in the position and face the direction you want the Players to teleport to
+      &9/<command> tp <course> &7- &fTeleport to a course, player must NOT be in design mode

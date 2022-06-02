@@ -5,12 +5,19 @@ import com.google.gson.annotations.SerializedName;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.jetbrains.annotations.NotNull;
 
-public class CourseInfo {
+public class CourseInfo implements Comparable<CourseInfo> {
 
     @Expose
     @SerializedName(value = "name")
     private String name;
+    @Expose
+    @SerializedName(value = "abandon")
+    private boolean abandon=false;
+    @Expose
+    @SerializedName(value = "world")
+    private String world = "";
     @Expose
     @SerializedName(value = "x")
     private double X;
@@ -26,9 +33,6 @@ public class CourseInfo {
     @Expose
     @SerializedName(value = "pitch")
     private float pitch;
-    @Expose
-    @SerializedName(value = "world")
-    private String world = "";
 
     private String id;
 
@@ -36,14 +40,11 @@ public class CourseInfo {
 
     }
 
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
+    /**
+     *
+     * @param location 赛道的位置
+     * @param name 赛道的名称，可以包含颜色代码，同时被转化成为Id
+     */
     public CourseInfo(Location location, String name) {
         World w = location.getWorld();
         if (w != null) world = w.getName();
@@ -57,7 +58,23 @@ public class CourseInfo {
         this.name = name;
 
         id = name;
-        if (name.charAt(0) == '&' || name.charAt(0) == '§') id = name.substring(2);
+        if ((name.charAt(0) == '&' || name.charAt(0) == '§') && name.length() >= 3) id = name.substring(2);
+    }
+
+    public boolean isAbandon() {
+        return abandon;
+    }
+
+    public void setAbandon(boolean abandon) {
+        this.abandon = abandon;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     public Location getLocation() {
@@ -95,4 +112,8 @@ public class CourseInfo {
         return pitch;
     }
 
+    @Override
+    public int compareTo(@NotNull CourseInfo o) {
+        return this.id.compareTo(o.id);
+    }
 }

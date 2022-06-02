@@ -40,8 +40,11 @@ public class RecipeFinderRunnable extends BukkitRunnable {
         InventoryHolder holder = inventory.getHolder();
         if (!(holder instanceof MenuDetail detail)) return;
         MenuItem mi = detail.decorates.stream().filter(x -> x.result).findFirst().orElse(null);
-        if (mi == null) return;
-        inventory.setItem(mi.number - 1, null);
+        if (mi == null || mi.numbers == null) return;
+        for (int i : mi.numbers) {
+            inventory.setItem(i - 1, null);
+        }
+
 
         for (int i = 0; i <= 53; i++) {
             ItemStack is = inventory.getItem(i);
@@ -95,6 +98,8 @@ public class RecipeFinderRunnable extends BukkitRunnable {
         if (amountNotMatch) return;
 
         ItemStack is = recipe.getResult();
-        inventory.setItem(mi.number - 1, is);
+        for (int i : mi.numbers) {
+            inventory.setItem(i - 1, is);
+        }
     }
 }

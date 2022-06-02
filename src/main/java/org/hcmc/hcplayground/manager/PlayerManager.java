@@ -4,18 +4,23 @@ import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.plugin.Plugin;
+import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.model.item.ItemBase;
 import org.hcmc.hcplayground.model.player.PlayerData;
+import org.hcmc.hcplayground.utility.Global;
 import org.hcmc.hcplayground.utility.NameBinaryTagResolver;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
+import java.sql.DataTruncation;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
 public class PlayerManager {
     private static final Map<UUID, PlayerData> PlayerDataMap;
+    private static final Plugin plugin = HCPlayground.getPlugin();
 
     public static final float BASE_PLAYER_HEALTH = 20.0F;
 
@@ -41,6 +46,7 @@ public class PlayerManager {
             pd = new PlayerData(player);
             //Global.LogMessage(String.format("\033[1;35mgetPlayerData GameMode: \033[1;33m%s\033[0m", player.getGameMode()));
             pd.setGameMode(player.getGameMode());
+            pd.attachment = player.addAttachment(plugin);
             pd.LoadConfig();
             PlayerDataMap.put(playerUuid, pd);
         }
@@ -62,6 +68,8 @@ public class PlayerManager {
 
     public static void removePlayerData(@NotNull Player player, PlayerData data) {
         UUID playerUuid = player.getUniqueId();
+        player.removeAttachment(data.attachment);
+        data.attachment.remove();
         //Global.LogMessage(String.format("\033[1;35mremovePlayerData GameMode: \033[1;33m%s\033[0m", data.GameMode));
         PlayerDataMap.remove(playerUuid, data);
     }

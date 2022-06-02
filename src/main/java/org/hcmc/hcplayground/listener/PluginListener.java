@@ -1,10 +1,7 @@
 package org.hcmc.hcplayground.listener;
 
 import org.apache.commons.lang.StringUtils;
-import org.bukkit.Bukkit;
-import org.bukkit.GameMode;
-import org.bukkit.Location;
-import org.bukkit.Material;
+import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.block.Block;
@@ -27,6 +24,7 @@ import org.bukkit.event.inventory.*;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.*;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Scoreboard;
 import org.hcmc.hcplayground.HCPlayground;
@@ -37,7 +35,7 @@ import org.hcmc.hcplayground.manager.*;
 import org.hcmc.hcplayground.model.CrazyRecord;
 import org.hcmc.hcplayground.model.MobEntity;
 import org.hcmc.hcplayground.model.command.CommandItem;
-import org.hcmc.hcplayground.model.config.BanConfiguration;
+import org.hcmc.hcplayground.model.config.BanItemConfiguration;
 import org.hcmc.hcplayground.model.item.Crazy;
 import org.hcmc.hcplayground.model.item.ItemBase;
 import org.hcmc.hcplayground.model.menu.MenuDetail;
@@ -132,9 +130,13 @@ public class PluginListener implements Listener {
         // 获取玩家实例
         Player player = event.getPlayer();
         // 获取玩家附加数据实例
-        PlayerData playerData = PlayerManager.getPlayerData(player);
+        PlayerData data = PlayerManager.getPlayerData(player);
         // 在玩家成功登陆前，禁止玩家移动
-        if (!playerData.getLogin()) event.setCancelled(true);
+        if (!data.getLogin()) {
+            event.setCancelled(true);
+            return;
+        }
+        data.designer.EdgeDetection(player.getLocation());
     }
 
     /**
@@ -148,11 +150,76 @@ public class PluginListener implements Listener {
     private void onPlayerLeave(PlayerQuitEvent event) throws IOException, IllegalAccessException, InvalidConfigurationException {
         // 获得玩家实例
         Player player = event.getPlayer();
-        PlayerData playerData = PlayerManager.getPlayerData(player);
+        PlayerData data = PlayerManager.getPlayerData(player);
         //Global.LogMessage(String.format("\033[1;35mPlayerQuitEvent GameMode: \033[1;33m%s\033[0m", playerData.GameMode));
-        player.setGameMode(playerData.getGameMode());
-        playerData.SaveConfig();
-        PlayerManager.removePlayerData(player, playerData);
+
+        BukkitTask task = data.designer.getLeaveTask();
+        if(task != null && !task.isCancelled()) task.cancel();
+
+        player.setGameMode(data.getGameMode());
+        data.SaveConfig();
+        PlayerManager.removePlayerData(player, data);
+    }
+
+    /*
+    @EventHandler
+    private void onPlayerTeleport(PlayerTeleportEvent event) throws IOException, IllegalAccessException, InvalidConfigurationException {
+        if (event.isCancelled()) return;
+        // 避免这个事件会多次触发
+        PlayerTeleportEvent.TeleportCause cause = event.getCause();
+        if (cause.equals(PlayerTeleportEvent.TeleportCause.UNKNOWN)) return;
+        // 获得玩家实体及数据
+        Player player = event.getPlayer();
+        PlayerData data = PlayerManager.getPlayerData(player);
+        // op玩家不需要添加成员
+        if (player.isOp()) return;
+        // 获取玩家传送起点和终点
+        Location fromLocation = event.getFrom();
+        Location toLocation = event.getTo();
+        if (toLocation == null) return;
+        World fromWorld = fromLocation.getWorld();
+        World toWorld = toLocation.getWorld();
+        if (fromWorld == null) return;
+        if (toWorld == null) return;
+        // 在跑酷世界移除WorldGuard成员
+        String parkourWorld = Global.course.getWorld();
+        if (fromWorld.getName().equalsIgnoreCase(parkourWorld) && data.isCourseDesigning) {
+            WorldGuardApiManager.removeMember(player, fromWorld);
+        }
+        // 在跑酷世界添加WorldGuard成员
+        if (toWorld.getName().equalsIgnoreCase(parkourWorld) && data.isCourseDesigning) {
+            WorldGuardApiManager.addMember(player, toWorld);
+        }
+    }
+
+     */
+
+    @EventHandler
+    private void onPlayerInventoryOpening(InventoryOpenEvent event) throws IOException, IllegalAccessException, InvalidConfigurationException {
+        if (event.isCancelled()) return;
+        // 忽略非人类打开箱子
+        HumanEntity human = event.getPlayer();
+        if (!(human instanceof Player player)) return;
+        // 获取玩家数据
+        PlayerData data = PlayerManager.getPlayerData(player);
+        String playerName = player.getName();
+        // 无论任何人包括op玩家，都必须先登录，才能再打开任何类型的箱子界面
+        if (!data.getLogin()) {
+            player.sendMessage(LocalizationManager.getMessage("playerNoLogin", player).replace("%player%", playerName));
+            event.setCancelled(true);
+            return;
+        }
+        // 检测打开的箱子是否自定义菜单
+        Inventory inv = event.getInventory();
+        InventoryHolder holder = inv.getHolder();
+        if(holder instanceof MenuDetail) return;
+        // 非op玩家在非设计模式时，在跑酷赛道上不能打开任何箱子
+        // TODO: 需要处理打开菜单界面和疯狂合成界面的兼容性，理论上菜单能打开而疯狂合成界面不能打开
+        if (!data.designer.ContainerDetection(inv)) {
+            player.sendMessage(LocalizationManager.getMessage("courseNoPermission", player));
+            event.setCancelled(true);
+            return;
+        }
     }
 
     /**
@@ -170,7 +237,7 @@ public class PluginListener implements Listener {
         if (!playerData.getLogin()) return;
 
         playerData.setGameMode(event.getNewGameMode());
-        //Global.LogMessage(String.format("\033[1;35mPlayerGameModeChangeEvent GameMode: \033[1;33m%s\033[0m", playerData.GameMode));
+        //Global.LogMessage(String.format("\033[1;35mPlayerGameModeChangeEvent GameMode: \033[1;33m%s\033[0m", playerData.getGameMode()));
         PlayerManager.setPlayerData(player, playerData);
     }
 
@@ -193,12 +260,20 @@ public class PluginListener implements Listener {
         if (command == null) return;
 
         Player player = event.getPlayer();
-        PlayerData playerData = PlayerManager.getPlayerData(player);
+        PlayerData data = PlayerManager.getPlayerData(player);
         String playerName = player.getName();
-
-        if (!playerData.getLogin() && !command.getName().equalsIgnoreCase(COMMAND_LOGIN) && !command.getName().equalsIgnoreCase(COMMAND_REGISTER)) {
+        // 无论任何人包括op玩家，都必须先登录，才能执行任何其他命令
+        if (!data.getLogin() && !command.getName().equalsIgnoreCase(COMMAND_LOGIN) && !command.getName().equalsIgnoreCase(COMMAND_REGISTER)) {
             player.sendMessage(LocalizationManager.getMessage("playerNoLogin", player).replace("%player%", playerName));
             Global.LogWarning(String.format("%s tries to issue command %s before login", playerName, message));
+            event.setCancelled(true);
+            return;
+        }
+        // op玩家可以绕过除登陆外的限制
+        if (player.isOp()) return;
+        // 跑酷赛道设计状态下，非op玩家禁止执行除/course外的任何指令
+        if (data.isCourseDesigning && data.getLogin() && !command.getName().equalsIgnoreCase(CommandItem.COMMAND_COURSE)) {
+            player.sendMessage(LocalizationManager.getMessage("courseDenyCommandOnDesign", player));
             event.setCancelled(true);
         }
     }
@@ -255,7 +330,7 @@ public class PluginListener implements Listener {
     @EventHandler
     private void onPlayerEnchanting(PrepareAnvilEvent event) {
         AnvilInventory inv = event.getInventory();
-        BanConfiguration banItem = BanItemManager.getBanItem(RecipeType.SMITHING);
+        BanItemConfiguration banItem = BanItemManager.getBanItem(RecipeType.SMITHING);
 
         ItemStack item1 = inv.getItem(0);
         boolean hasEnchant1 = BanItemManager.checkEnchantments(item1, banItem.getEnchantments());
@@ -312,16 +387,24 @@ public class PluginListener implements Listener {
         if (event.isCancelled()) return;
         // 获取玩家及UUID
         Player player = event.getPlayer();
+        PlayerData data = PlayerManager.getPlayerData(player);
+        String playerName = player.getName();
+        // 无论任何人包括op玩家，都必须先登录，才能扔掉些什么
+        if (!data.getLogin()) {
+            player.sendMessage(LocalizationManager.getMessage("playerNoLogin", player).replace("%player%", playerName));
+            event.setCancelled(true);
+            return;
+        }
         // 获取玩家扔出去的物品及数量
         Item item = event.getItemDrop();
         ItemStack is = item.getItemStack();
         int amount = is.getAmount();
         Material material = item.getItemStack().getType();
         // 记录玩家数据
-        PlayerData playerData = PlayerManager.getPlayerData(player);
-        int count = playerData.DropList.getOrDefault(material, 0);
-        playerData.DropList.put(material, count + amount);
-        PlayerManager.setPlayerData(player, playerData);
+
+        int count = data.DropList.getOrDefault(material, 0);
+        data.DropList.put(material, count + amount);
+        PlayerManager.setPlayerData(player, data);
     }
 
     /**
@@ -333,20 +416,27 @@ public class PluginListener implements Listener {
     @EventHandler
     private void onItemPickup(EntityPickupItemEvent event) throws IllegalAccessException, IOException, InvalidConfigurationException {
         if (event.isCancelled()) return;
-        // 获取拾取物品的生物
+        // 获取拾取物品的生物，并且忽略非人类拾取事件
         LivingEntity entity = event.getEntity();
+        if (!(entity instanceof Player player)) return;
+        // 获取玩家数据
+        PlayerData data = PlayerManager.getPlayerData(player);
+        String playerName = player.getName();
+        // 无论任何人包括op玩家，都必须先登录，才能拾取些什么
+        if (!data.getLogin()) {
+            player.sendMessage(LocalizationManager.getMessage("playerNoLogin", player).replace("%player%", playerName));
+            event.setCancelled(true);
+            return;
+        }
         // 获取拾取的物品，类型及数量
         Item item = event.getItem();
         ItemStack is = item.getItemStack();
         Material material = is.getType();
         int amount = is.getAmount();
-
         // 记录玩家拾取物品的数据
-        if (!(entity instanceof Player player)) return;
-        PlayerData playerData = PlayerManager.getPlayerData(player);
-        int count = playerData.PickupList.getOrDefault(material, 0);
-        playerData.PickupList.put(material, count + amount);
-        PlayerManager.setPlayerData(player, playerData);
+        int count = data.PickupList.getOrDefault(material, 0);
+        data.PickupList.put(material, count + amount);
+        PlayerManager.setPlayerData(player, data);
     }
 
     /**
@@ -359,15 +449,15 @@ public class PluginListener implements Listener {
         if (event.isCancelled()) return;
 
         Player player = event.getPlayer();
+        PlayerData data = PlayerManager.getPlayerData(player);
         Block block = event.getBlock();
         Material material = block.getType();
 
         DropManager.ExtraDrops(block);
 
-        PlayerData playerData = PlayerManager.getPlayerData(player);
-        int count = playerData.BreakList.getOrDefault(material, 0);
-        playerData.BreakList.put(material, count + 1);
-        PlayerManager.setPlayerData(player, playerData);
+        int count = data.BreakList.getOrDefault(material, 0);
+        data.BreakList.put(material, count + 1);
+        PlayerManager.setPlayerData(player, data);
 
         CrazyRecord record = RecordManager.findCrazyRecord(block.getLocation());
         if (record == null) return;
@@ -389,21 +479,20 @@ public class PluginListener implements Listener {
         if (event.isCancelled()) return;
 
         Player player = event.getPlayer();
+        PlayerData data = PlayerManager.getPlayerData(player);
         Block block = event.getBlock();
         Material material = block.getType();
-
-        PlayerData playerData = PlayerManager.getPlayerData(player);
-        int count = playerData.PlaceList.getOrDefault(material, 0);
-        playerData.PlaceList.put(material, count + 1);
-        PlayerManager.setPlayerData(player, playerData);
-
+        // 计数玩家的各种方块摆放
+        int count = data.PlaceList.getOrDefault(material, 0);
+        data.PlaceList.put(material, count + 1);
+        PlayerManager.setPlayerData(player, data);
         // 自定义可放置方块的摆放记录
         ItemStack is = event.getItemInHand();
         ItemBase ib = ItemManager.getItemBase(is);
-        if (!(ib instanceof Crazy crazy)) return;
-
-        CrazyRecord record = new CrazyRecord(crazy.getId(), block.getLocation());
-        RecordManager.addCrazyRecord(record);
+        if (ib instanceof Crazy crazy) {
+            CrazyRecord record = new CrazyRecord(crazy.getId(), block.getLocation());
+            RecordManager.addCrazyRecord(record);
+        }
     }
 
     /**

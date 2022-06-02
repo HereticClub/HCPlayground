@@ -1,6 +1,9 @@
 package org.hcmc.hcplayground.model.player;
 
 import com.google.gson.reflect.TypeToken;
+import com.mojang.authlib.GameProfile;
+import com.mojang.authlib.properties.Property;
+import com.mojang.authlib.properties.PropertyMap;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
@@ -9,6 +12,7 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
+import org.bukkit.permissions.PermissionAttachment;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.enums.PlayerBannedState;
@@ -49,9 +53,11 @@ public class PlayerData {
     private static final String Section_Key_DropList = "dropList";
     private static final String Section_Key_PickupList = "pickupList";
     private static final String Section_Key_KillMobList = "killMobList";
+    private static final String Section_Key_CcmdCooldownList = "ccmdCooldown";
     private static final String Section_Key_Parkour = "parkour";
-    private static final String Section_Key_Parkour_Is_Design = "is_design";
-    private static final String Section_Key_Parkour_Course_Name = "name";
+    private static final String Section_Key_Course_Design = "design";
+    private static final String Section_Key_Course_List = "list";
+    private static final String GAMEPROFILE_PROPERTY_TEXTURES = "textures";
 
     private static final String TYPE_JAVA_UTIL_MAP = "java.util.Map";
     public static final double BASE_HEALTH = 20.0F;
@@ -75,6 +81,7 @@ public class PlayerData {
             Section_Key_PickupList,
             Section_Key_KillMobList,
             Section_Key_FishingList,
+            Section_Key_CcmdCooldownList,
     };
     // 破坏方块记录
     public Map<Material, Integer> BreakList = new HashMap<>();
@@ -88,12 +95,15 @@ public class PlayerData {
     public Map<Material, Integer> PickupList = new HashMap<>();
     // 杀掉生物记录
     public Map<EntityType, Integer> KillMobList = new HashMap<>();
+    public Map<String, Date> CcmdCooldownList = new HashMap<>();
     /**
      * 玩家的背包和装备物品的记录
      */
     public CourseDesigner designer;
-    public boolean isCourseSetting = false;
-    public List<String> courseNames = new ArrayList<>();
+    public boolean isCourseDesigning = false;
+    public List<String> courseIds = new ArrayList<>();
+    public PermissionAttachment attachment;
+
     /**
      * 玩家在runnable线程的时间检查点，初始化为登陆时间
      * 通常不会更改这个属性的值
@@ -131,6 +141,7 @@ public class PlayerData {
      * 本插件的实例
      */
     private final JavaPlugin plugin = HCPlayground.getPlugin();
+    private GameProfile profile;
 
     private double totalArmor = BASE_ARMOR;
     private double totalAttackReach = BASE_ATTACK_REACH;
@@ -223,6 +234,15 @@ public class PlayerData {
 
     public double getTotalLoggingSpeed() {
         return totalLoggingSpeed;
+    }
+
+    public GameProfile setHeadTextures(String base64Value) {
+        if (profile == null) profile = new GameProfile(UUID.randomUUID(), null);
+        PropertyMap pm = profile.getProperties();
+        Property pp = new Property(GAMEPROFILE_PROPERTY_TEXTURES, base64Value);
+        pm.put(GAMEPROFILE_PROPERTY_TEXTURES, pp);
+
+        return profile;
     }
 
     public void setTotalLoggingSpeed(double value) {
@@ -432,8 +452,8 @@ public class PlayerData {
         // 加载玩家的其他数据记录或者状态
         ConfigurationSection section = yaml.getConfigurationSection(Section_Key_Parkour);
         if (section != null) {
-            isCourseSetting = section.getBoolean(Section_Key_Parkour_Is_Design);
-            courseNames = section.getStringList(Section_Key_Parkour_Course_Name);
+            isCourseDesigning = section.getBoolean(Section_Key_Course_Design);
+            courseIds = section.getStringList(Section_Key_Course_List);
         }
     }
 
@@ -444,8 +464,8 @@ public class PlayerData {
         YamlConfiguration yaml = Map2Yaml();
         // 保存玩家的其他记录数据或者状态
         ConfigurationSection section = yaml.createSection(Section_Key_Parkour);
-        section.set(Section_Key_Parkour_Is_Design, isCourseSetting);
-        section.set(Section_Key_Parkour_Course_Name, courseNames);
+        section.set(Section_Key_Course_Design, isCourseDesigning);
+        section.set(Section_Key_Course_List, courseIds);
         yaml.save(f);
     }
 

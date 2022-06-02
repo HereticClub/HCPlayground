@@ -10,7 +10,7 @@ import org.hcmc.hcplayground.expansion.HCPluginExpansion;
 import org.hcmc.hcplayground.filter.ConsoleLog4jFilter;
 import org.hcmc.hcplayground.listener.PluginListener;
 import org.hcmc.hcplayground.manager.*;
-import org.hcmc.hcplayground.model.permission.PermissionManager;
+import org.hcmc.hcplayground.manager.PermissionManager;
 import org.hcmc.hcplayground.model.player.PlayerData;
 import org.hcmc.hcplayground.scheduler.EquipmentMonitorRunnable;
 import org.hcmc.hcplayground.sqlite.SqliteManager;
@@ -49,6 +49,7 @@ public class HCPlayground extends JavaPlugin {
             // 验证并且注册所依赖的Plugin
             Global.ValidWorldGuardPlugin();
             Global.ValidVaultPlugin();
+            Global.ValidParkourPlugin();
             // 执行/reload指令后，重新加载所有玩家数据
             // 假定每个在线玩家已经注册并且已经登陆
             for (Player p : getServer().getOnlinePlayers()) {
@@ -109,7 +110,7 @@ public class HCPlayground extends JavaPlugin {
     }
 
     private void InitialChildrenFolders() {
-        String[] childrenFolders = new String[]{"profile", "database", "record", "designer"};
+        String[] childrenFolders = new String[]{"profile", "database", "record", "designer", "storage"};
 
         if (!getDataFolder().exists()) {
             boolean flag = getDataFolder().mkdir();
@@ -156,5 +157,7 @@ public class HCPlayground extends JavaPlugin {
         RecordManager.Load(Global.getYamlConfiguration(Global.FILE_RECORD));
         // 13.加载跑酷赛道信息
         CourseManager.Load(Global.getYamlConfiguration(Global.FILE_COURSE));
+        // 14.加载自定义命令列表
+        CcmdManager.Load(Global.getYamlConfiguration(Global.FILE_CCMD));
     }
 }

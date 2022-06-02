@@ -1,9 +1,11 @@
 package org.hcmc.hcplayground.manager;
 
 import org.bukkit.command.CommandMap;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.hcmc.hcplayground.HCPlayground;
+import org.hcmc.hcplayground.model.command.CommandArgument;
 import org.hcmc.hcplayground.model.command.CommandItem;
 import org.hcmc.hcplayground.utility.Global;
 
@@ -27,6 +29,11 @@ public class CommandManager {
         // 注册自定义命令，这些命令无需在plugin.yml中定义
         for (CommandItem item : Commands) {
             item.Enroll(commandMap);
+
+            String path = String.format("%s.args", item.id);
+            ConfigurationSection section = yaml.getConfigurationSection(path);
+            if (section == null) continue;
+            item.args = Global.SetItemList(section, CommandArgument.class);
         }
     }
 }

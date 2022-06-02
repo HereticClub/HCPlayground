@@ -42,4 +42,6 @@ parkouradmin:
   # 跑酷赛道的起始层数
   start_layer: -61
   # 跑酷赛道所在的世界名称
-  world: parkour
+  world: parkour_world
+  # 进入赛道设计模式前等待的秒数
+  wait_for: 3

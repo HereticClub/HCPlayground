@@ -8,7 +8,9 @@ import org.bukkit.inventory.InventoryHolder;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class MenuDetail implements InventoryHolder {
 
@@ -22,14 +24,13 @@ public class MenuDetail implements InventoryHolder {
     @SerializedName(value = "size")
     public int size = 54;
     @Expose
-    @SerializedName(value = "decorates")
-    public List<MenuItem> decorates = new ArrayList<>();
-    @Expose
     @SerializedName(value = "worlds")
     public List<String> enableWorlds = new ArrayList<>();
 
     @Expose(serialize = false, deserialize = false)
     public String id;
+    @Expose(deserialize = false)
+    public List<MenuItem> decorates = new ArrayList<>();
     @Expose(serialize = false, deserialize = false)
     private Inventory inventory;
 
@@ -44,6 +45,6 @@ public class MenuDetail implements InventoryHolder {
     }
 
     public MenuItem getSlot(int slot) {
-        return decorates.stream().filter(x -> x.number == slot).findAny().orElse(null);
+        return decorates.stream().filter(x -> x.numbers.contains(slot)).findAny().orElse(null);
     }
 }

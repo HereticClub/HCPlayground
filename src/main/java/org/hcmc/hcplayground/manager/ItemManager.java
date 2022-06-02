@@ -86,6 +86,16 @@ public class ItemManager {
         }
     }
 
+    public static List<String> getIdList() {
+        List<String> list = new ArrayList<>();
+
+        for (ItemBase ib : ItemEntire) {
+            list.add(ib.getId());
+        }
+
+        return list;
+    }
+
     // 创建一个id为null的ItemBase实例
     public static ItemBase createItemBase(Material material, int amount) {
         CraftItemBase x = new CraftItemBase(amount);

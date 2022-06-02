@@ -3,7 +3,7 @@ package org.hcmc.hcplayground.model.config;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-public class ParkourAdminConfiguration {
+public class CourseConfiguration {
     @Expose
     @SerializedName(value = "design_range")
     private int designRange;
@@ -13,6 +13,9 @@ public class ParkourAdminConfiguration {
     @Expose
     @SerializedName(value = "start_layer")
     private double startLayer;
+    @Expose
+    @SerializedName(value = "wait_for")
+    private int waitFor;
     @Expose
     @SerializedName(value = "world")
     private String world;
@@ -33,7 +36,11 @@ public class ParkourAdminConfiguration {
         return world;
     }
 
-    public ParkourAdminConfiguration() {
+    public int getWaitFor() {
+        return waitFor;
+    }
+
+    public CourseConfiguration() {
 
     }
 }

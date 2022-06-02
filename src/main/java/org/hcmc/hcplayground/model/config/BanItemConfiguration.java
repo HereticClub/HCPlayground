@@ -12,7 +12,7 @@ import org.hcmc.hcplayground.enums.RecipeType;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BanConfiguration {
+public class BanItemConfiguration {
 
     @Expose
     @SerializedName(value = "enchantments")
@@ -40,7 +40,7 @@ public class BanConfiguration {
     @Expose(serialize = false, deserialize = false)
     private String id;
 
-    public BanConfiguration() {
+    public BanItemConfiguration() {
 
     }
 

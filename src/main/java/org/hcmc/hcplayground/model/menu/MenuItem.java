@@ -24,8 +24,8 @@ public class MenuItem {
     @SerializedName(value = "displayText")
     public String text;
     @Expose
-    @SerializedName(value = "slot")
-    public int number;
+    @SerializedName(value = "slots")
+    public List<Integer> numbers = new ArrayList<>();
     @Expose
     @SerializedName(value = "amount")
     public int amount = 1;
@@ -53,6 +53,8 @@ public class MenuItem {
     @Expose
     @SerializedName(value = "result")
     public boolean result = false;
+    @Expose(serialize = false, deserialize = false)
+    public String id;
 
     public MenuItem() {
 

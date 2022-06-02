@@ -1,11 +1,13 @@
 name: HCPlayground
-version: 1.2.18.2-SNAPSHOT
+version: 1.3.18.2-SNAPSHOT
 authors:
   - Terry NG
 main: org.hcmc.hcplayground.HCPlayground
 api-version: 1.13
 depend:
+  - Multiverse-Core
   - PlaceholderAPI
+  - Parkour
+  - WorldGuard
 softdepend:
   - Vault
-  - WorldGuard

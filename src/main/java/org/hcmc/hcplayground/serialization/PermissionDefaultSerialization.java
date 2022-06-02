@@ -19,8 +19,6 @@ public class PermissionDefaultSerialization implements JsonDeserializer<Permissi
     @Override
     public PermissionDefault deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
         List<PermissionDefault> permissionDefaults = Arrays.stream(PermissionDefault.values()).toList();
-        PermissionDefault value = permissionDefaults.stream().filter(x -> x.name().equalsIgnoreCase(jsonElement.getAsString())).findAny().orElse(null);
-
-        return value;
+        return permissionDefaults.stream().filter(x -> x.name().equalsIgnoreCase(jsonElement.getAsString())).findAny().orElse(null);
     }
 }
