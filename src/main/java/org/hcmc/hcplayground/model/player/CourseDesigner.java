@@ -330,7 +330,7 @@ public class CourseDesigner {
     }
 
     public void startPoint(@NotNull CourseInfo course) {
-        String courseName = course.getName();
+        String courseName = course.getName().replace("§","&");
 
         if (!ParkourApiManager.existCourse(courseName)) ParkourApiManager.createCourse(player, courseName);
         ParkourApiManager.setStartPoint(player, courseName);
