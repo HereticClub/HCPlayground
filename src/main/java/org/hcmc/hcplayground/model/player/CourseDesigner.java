@@ -7,7 +7,6 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EquipmentSlot;
-import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.plugin.Plugin;
@@ -26,6 +25,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.function.Predicate;
 
 public class CourseDesigner {
     /**
@@ -55,12 +55,13 @@ public class CourseDesigner {
     /**
      * 玩家正在设计的跑酷赛道实例
      */
-    private CourseInfo currentCourse;
+    private String currentCourseId;
     private final PlayerData data;
     private final Player player;
     private final Plugin plugin;
     private final World world;
     private final int designRange;
+    private final int protectRange;
     private boolean outOfDesignRange;
 
     private BukkitTask designTask;
@@ -79,6 +80,7 @@ public class CourseDesigner {
         plugin = HCPlayground.getPlugin();
         world = Bukkit.getWorld(Global.course.getWorld());
         designRange = Global.course.getDesignRange();
+        protectRange = Global.course.getProtectRange();
     }
 
     public Map<EquipmentSlot, ItemStack> getEquipments() {
@@ -97,8 +99,8 @@ public class CourseDesigner {
         return gameMode;
     }
 
-    public CourseInfo getCurrentCourse() {
-        return currentCourse;
+    public String getCurrentCourseId() {
+        return currentCourseId;
     }
 
     public boolean isOutOfDesignRange() {
@@ -120,36 +122,44 @@ public class CourseDesigner {
         if (!w.equals(world)) return true;
         if (!data.isCourseDesigning) return false;
 
-        Location l = blockLocation.subtract(currentCourse.getLocation());
+        CourseInfo course = CourseManager.getCourse(currentCourseId);
+        if(course == null) return false;
+
+        Location l = blockLocation.subtract(course.getLocation());
         double x = Math.abs(l.getX());
         double z = Math.abs(l.getZ());
         return x <= designRange && z <= designRange;
     }
 
-    public boolean ContainerDetection(@NotNull Inventory inv) {
+    /**
+     * 检测要互动的方块是否在某条跑酷赛道上<br>
+     * 如果不在某条跑酷赛道上，则由系统决定是否可互动<br>
+     * 反之，如果玩家不在设计模式，则不可互动
+     * @return True: 允许互动<br>False: 不允许互动
+     */
+    public boolean InteractDetection(@NotNull Block block) {
         // op玩家忽略该检测
         if (player.isOp()) return true;
-        World w = player.getWorld();
-        if (!w.equals(world)) return true;
-        if (!data.isCourseDesigning) return false;
-        Location invLocation = inv.getLocation();
-        if (invLocation == null) return true;
+        // 根据互动方块的位置，预测该方块所在的跑酷赛道
+        List<CourseInfo> courses = CourseManager.getCourses();
+        CourseInfo course = courses.stream().filter(predicateCourse(block)).findAny().orElse(null);
+        if (course == null) return true;
 
-        Location l = invLocation.subtract(currentCourse.getLocation());
-        double x = Math.abs(l.getX());
-        double z = Math.abs(l.getZ());
-        return x <= designRange && z <= designRange;
+        return data.isCourseDesigning;
     }
 
     public void EdgeDetection(Location playerLocation) {
-        if(currentCourse == null) return;
+        if (currentCourseId == null) return;
 
         World w = playerLocation.getWorld();
         if (w == null) return;
         if (!w.equals(world)) return;
         if (!data.isCourseDesigning) return;
 
-        Location l = playerLocation.subtract(currentCourse.getLocation());
+        CourseInfo course = CourseManager.getCourse(currentCourseId);
+        if (course == null) return;
+
+        Location l = playerLocation.subtract(course.getLocation());
         double x = Math.abs(l.getX());
         double z = Math.abs(l.getZ());
         outOfDesignRange = x >= designRange || z >= designRange;
@@ -167,11 +177,13 @@ public class CourseDesigner {
     /**
      * 获取玩家身上所有物品并且放入到储存器，包括背包和装备栏，主副手等物品，并且以json格式保存到玩家文档
      *
-     * @param course 跑酷赛道实例
+     * @param id 跑酷赛道实例的id编号
      * @param create True: 表示该赛道正在被创建, False: 表示该赛道正在被修改
      * @throws IOException 文档读写异常
      */
-    public void design(@NotNull CourseInfo course, boolean create) throws IOException, IllegalAccessException, InvalidConfigurationException {
+    public void design(@NotNull String id, boolean create) throws IOException, IllegalAccessException, InvalidConfigurationException {
+        CourseInfo course = CourseManager.getCourse(id);
+        if (course == null) return;
         // 非op玩家必须把背包和装备放入"储物柜"，并且游戏模式被设置为CREATIVE
         if (!player.isOp()) {
             // 储存身上装备和背包物品
@@ -185,7 +197,7 @@ public class CourseDesigner {
             String perms = String.format(PermissionManager.PERMISSION_WORLDGUARD_REGION_BYPASS, world.getName());
             PermissionManager.addPermission(player, perms);
             // 创建赛道时，添加赛道Id到玩家列表
-            if (create) data.courseIds.add(course.getId());
+            if (create) data.courseIds.add(id);
             // 等待进入赛道设计模式
             int waitFor = Global.course.getWaitFor();
             if (waitFor <= 0) waitFor = 3;
@@ -208,7 +220,7 @@ public class CourseDesigner {
         Block block = world.getBlockAt(course.getLocation());
         if (!block.getType().isOccluding()) block.setType(Material.STONE);
         // 保存当前赛道的实例，设计进入设计模式的标记
-        currentCourse = course;
+        currentCourseId = course.getId();
         data.isCourseDesigning = true;
         // 保存玩家数据
         PlayerManager.setPlayerData(player, data);
@@ -253,7 +265,7 @@ public class CourseDesigner {
             }.runTaskLater(plugin, waitFor * 20L);
         }
 
-        currentCourse = null;
+        currentCourseId = null;
         ParkourApiManager.deselectCourse(player);
 
         if (location != null) player.teleport(location);
@@ -268,19 +280,28 @@ public class CourseDesigner {
      */
     // What the hell the 'Boolean method is always inverted'
     public boolean addCheckpoint(int index){
-        return ParkourApiManager.setCheckpoint(player, currentCourse.getName(), index);
+        CourseInfo course = CourseManager.getCourse(currentCourseId);
+        if(course == null) return false;
+
+        return ParkourApiManager.setCheckpoint(player, course.getName(), index);
     }
 
     public void deleteCheckpoint() {
-        ParkourApiManager.deleteCheckpoint(player, currentCourse.getName());
+        CourseInfo course = CourseManager.getCourse(currentCourseId);
+        if(course == null) return;
+
+        ParkourApiManager.deleteCheckpoint(player, course.getName());
     }
 
-    public boolean teleport(String course) {
-        CourseInfo c = CourseManager.getCourse(course);
+    public boolean teleport(String id) {
+        // 赛道存在检测
+        CourseInfo c = CourseManager.getCourse(id);
         if (c == null) return false;
+        // 安全传送检测
+        Block block = world.getBlockAt(c.getLocation());
+        if (!block.getType().isOccluding()) return false;
 
         player.teleport(c.getLocation().add(0, 1, 0));
-
         return true;
     }
 
@@ -311,7 +332,10 @@ public class CourseDesigner {
         return values;
     }
 
-    public void abandon(@NotNull CourseInfo course) throws IOException, InvalidConfigurationException, IllegalAccessException {
+    public void abandon(@NotNull String id) throws IOException, InvalidConfigurationException, IllegalAccessException {
+        CourseInfo course = CourseManager.getCourse(id);
+        if (course == null) return;
+
         course.setAbandon(true);
         data.courseIds.remove(course.getId());
         CourseManager.save();
@@ -320,18 +344,23 @@ public class CourseDesigner {
         if(!player.isOp()) leave();
     }
 
-    public void claim(@NotNull CourseInfo course) throws IOException, InvalidConfigurationException, IllegalAccessException {
+    public void claim(@NotNull String id) throws IOException, InvalidConfigurationException, IllegalAccessException {
+        CourseInfo course = CourseManager.getCourse(id);
+        if (course == null) return;
+
         course.setAbandon(false);
         data.courseIds.add(course.getId());
         CourseManager.save();
         PlayerManager.setPlayerData(player, data);
 
-        design(course, false);
+        design(id, false);
     }
 
-    public void startPoint(@NotNull CourseInfo course) {
-        String courseName = course.getName();
+    public void startPoint(@NotNull String id) {
+        CourseInfo course = CourseManager.getCourse(id);
+        if (course == null) return;
 
+        String courseName = course.getName();
         if (!ParkourApiManager.existCourse(courseName)) ParkourApiManager.createCourse(player, courseName);
         ParkourApiManager.setStartPoint(player, courseName);
 
@@ -349,11 +378,24 @@ public class CourseDesigner {
     }
 
     public void setReady(boolean ready) {
-        ParkourApiManager.setReady(player, currentCourse.getName(), ready);
+        CourseInfo course = CourseManager.getCourse(currentCourseId);
+        if(course == null) return;
+
+        ParkourApiManager.setReady(player, course.getName(), ready);
+    }
+
+    public void setLinkLobby(String lobby) {
+        CourseInfo course = CourseManager.getCourse(currentCourseId);
+        if (course == null) return;
+
+        ParkourApiManager.setLinkLobby(player, course.getName(), lobby);
     }
 
     public void setDisplayName(String display) {
-        ParkourApiManager.setDisplay(player, currentCourse.getName(), display);
+        CourseInfo course = CourseManager.getCourse(currentCourseId);
+        if(course == null) return;
+
+        ParkourApiManager.setDisplay(player, course.getName(), display);
     }
 
     private void saveSetting() throws IOException {
@@ -426,5 +468,12 @@ public class CourseDesigner {
             ItemStack is = equipments.get(s);
             inv.setItem(s, is);
         }
+    }
+
+    private Predicate<CourseInfo> predicateCourse(Block block){
+        World world = block.getWorld();
+        Location location = block.getLocation();
+
+        return x -> x.getWorld().equalsIgnoreCase(world.getName()) && Math.abs(x.getLocation().subtract(location).getX()) <= protectRange && Math.abs(x.getLocation().subtract(location).getZ()) <= protectRange;
     }
 }

@@ -1,25 +1,16 @@
-demo:
+# 跑酷赛道的Id，必须唯一，用于create, modify, teleport, delete
+default:
+  # 跑酷赛道的名称，可用颜色代码
   name: '&e死亡赛道'
+  # 赛道弃置状态，True: 表示赛道被弃置，False: 赛道被某玩家拥有
   abandon: false
+  # 赛道的中心点坐标
   x: 0
   y: -61
   z: 0
   yaw: 0
   pitch: 0
+  # 赛道所在的世界名称
   world: parkour_world
-course2:
-  name: '&d生死时速'
-  x: 500
-  y: -61
-  z: 0
-  yaw: 0
-  pitch: 0
-  world: parkour_world
-course3:
-  name: '&d回到未来'
-  x: 500
-  y: -61
-  z: 500
-  yaw: 0
-  pitch: 0
-  world: parkour_world
+  # 赛道是否是跑酷大厅，可用于玩家在完成赛道挑战后返回的地方
+  is_lobby: true

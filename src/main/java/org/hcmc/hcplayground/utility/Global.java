@@ -54,6 +54,7 @@ import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.regex.Pattern;
@@ -75,6 +76,7 @@ public final class Global {
     public final static String CONFIG_BAN_ITEM = "banitem";
     public final static String CONFIG_PARKOUR = "parkouradmin";
     public final static String FIELD_NAME_COMMANDMAP = "commandMap";
+    public final static String DATE_TIME_FORMAT = "yyyy/MM/dd HH:mm:ss";
     public final static Pattern patternNumber = Pattern.compile("-?\\d+(\\.\\d+)?");
 
     public final static String FILE_CONFIG = "config.yml";
@@ -158,7 +160,7 @@ public final class Global {
                 .registerTypeAdapter(RecipeType.class, new RecipeTypeSerialization())
                 .registerTypeAdapter(Sound.class, new SoundSerialization())
                 .serializeNulls()
-                .setDateFormat("yyyy-MM-dd HH:mm:ss")
+                .setDateFormat(DATE_TIME_FORMAT)
                 .setPrettyPrinting()
                 .create();
 

@@ -2,9 +2,8 @@ package org.hcmc.hcplayground.model.ccmd;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+import io.github.a5h73y.parkour.utility.time.DateTimeUtils;
 import org.apache.commons.lang.StringUtils;
-import org.bukkit.Bukkit;
-import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandMap;
 import org.bukkit.command.CommandSender;
@@ -16,13 +15,13 @@ import org.hcmc.hcplayground.manager.LocalizationManager;
 import org.hcmc.hcplayground.manager.PlayerManager;
 import org.hcmc.hcplayground.model.player.PlayerData;
 import org.hcmc.hcplayground.scheduler.CcmdActionRunnable;
+import org.hcmc.hcplayground.utility.Global;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
-import java.time.Clock;
-import java.time.Instant;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 
 public class CcmdItem extends Command {
 
@@ -58,7 +57,7 @@ public class CcmdItem extends Command {
     public boolean execute(@NotNull CommandSender sender, @NotNull String label, @NotNull String[] args) {
         try {
             return RunCustomCommand(sender, args);
-        } catch (IOException | IllegalAccessException | InvalidConfigurationException e) {
+        } catch (IOException | IllegalAccessException | InvalidConfigurationException | ParseException e) {
             throw new RuntimeException(e);
         }
     }
@@ -73,7 +72,7 @@ public class CcmdItem extends Command {
         commandMap.register(plugin.getName(), this);
     }
 
-    private boolean RunCustomCommand(CommandSender sender, @NotNull String[] args) throws IOException, IllegalAccessException, InvalidConfigurationException {
+    private boolean RunCustomCommand(CommandSender sender, @NotNull String[] args) throws IOException, IllegalAccessException, InvalidConfigurationException, ParseException {
         // 自定义命令必须玩家执行
         if (!(sender instanceof Player player)) {
             sender.sendMessage(LocalizationManager.getMessage("player-message", sender).replace("%command%", id));
@@ -85,14 +84,11 @@ public class CcmdItem extends Command {
             if (worlds.stream().noneMatch(x -> x.equalsIgnoreCase(w))) return false;
         }
         if (!player.isOp() && !this.testPermission(sender)) return false;
-
-
         PlayerData data = PlayerManager.getPlayerData(player);
-        Date lastTime = data.CcmdCooldownList.get(id);
-        if (lastTime == null) lastTime = new Date(0);
 
-        Date current = new Date();
-        long diff = current.getTime() - lastTime.getTime();
+        double lastTime = data.CcmdCooldownList.containsKey(id) ? data.CcmdCooldownList.get(id) : new Date(0).getTime();
+        double current = new Date().getTime();
+        double diff = current - lastTime;
         if (diff <= cooldown * 1000L) {
             int remain = (int) ((cooldown * 1000L - diff) / 1000);
             player.sendMessage(LocalizationManager.getMessage("customCommandCooldown", player).replace("%command%", id).replace("%remain%", String.valueOf(remain)));
@@ -102,7 +98,7 @@ public class CcmdItem extends Command {
         CcmdActionRunnable r = new CcmdActionRunnable(player, actions);
         r.runTaskTimer(plugin, 0, 2);
 
-        lastTime = new Date();
+        lastTime = new Date().getTime();
         data.CcmdCooldownList.put(id, lastTime);
         PlayerManager.setPlayerData(player, data);
         return true;
@@ -115,7 +111,6 @@ public class CcmdItem extends Command {
         // 以下所有属性值都不能为null
         if (aliases == null) aliases = new ArrayList<>();
         if (args == null) args = new ArrayList<>();
-        //if (permission == null) permission = "";
         if (worlds == null) worlds = new ArrayList<>();
 
         if (!StringUtils.isBlank(this.permission)) this.setPermission(this.permission);

@@ -9,6 +9,8 @@ import io.github.a5h73y.parkour.type.course.CourseManager;
 import io.github.a5h73y.parkour.type.course.CourseSettingsManager;
 import io.github.a5h73y.parkour.type.kit.ParkourKitConfig;
 import io.github.a5h73y.parkour.type.kit.ParkourKitManager;
+import io.github.a5h73y.parkour.type.lobby.LobbyConfig;
+import io.github.a5h73y.parkour.type.lobby.LobbyManager;
 import io.github.a5h73y.parkour.type.player.PlayerManager;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
@@ -101,6 +103,21 @@ public class ParkourApiManager {
         }
 
         return true;
+    }
+
+    public static List<String> getLobbyNames() {
+        LobbyConfig lc = parkour.getConfigManager().getLobbyConfig();
+        return lc.getAllLobbyNames().stream().toList();
+    }
+
+    public static void setLinkLobby(Player player, String course, String lobby) {
+        CourseSettingsManager csm = parkour.getCourseSettingsManager();
+        csm.setCourseToLobbyLink(player, course, lobby);
+    }
+
+    public static boolean isLobbyExist(String lobby) {
+        LobbyConfig lc = parkour.getConfigManager().getLobbyConfig();
+        return lc.doesLobbyExist(lobby);
     }
 
     public static void deleteCheckpoint(Player player, String course) {

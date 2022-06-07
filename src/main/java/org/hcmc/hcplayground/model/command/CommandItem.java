@@ -73,7 +73,8 @@ public class CommandItem extends Command {
     public static final String COMMAND_COURSE_CHECKPOINT_REMOVE = "remove";
     public static final String COMMAND_COURSE_TELEPORT = "tp";
     public static final String COMMAND_COURSE_PARKOUR_KIT = "parkourkit";
-    public static final String COMMAND_PARKOUR_ADMIN_HELP = "help";
+    public static final String COMMAND_COURSE_LINK_LOBBY = "linklobby";
+    public static final String COMMAND_COURSE_HELP = "help";
 
     /**
      * 当前指令的使用权限，设置为null或者空字符串，表示当前命令不需要权限
@@ -171,6 +172,9 @@ public class CommandItem extends Command {
                 if (args[0].equalsIgnoreCase(COMMAND_COURSE_PARKOUR_KIT)) {
                     tabs = ParkourApiManager.getParkourKitNameList();
                 }
+                if (args[0].equalsIgnoreCase(COMMAND_COURSE_LINK_LOBBY)) {
+                    tabs = ParkourApiManager.getLobbyNames();
+                }
             }
 
             if (index == 3 && getName().equalsIgnoreCase(COMMAND_QUARTERMASTER)) {
@@ -203,8 +207,9 @@ public class CommandItem extends Command {
 
     private List<String> getCheckpointList(Player player) throws IOException, IllegalAccessException, InvalidConfigurationException {
         PlayerData data = PlayerManager.getPlayerData(player);
-        CourseInfo course = data.designer.getCurrentCourse();
+        String courseId = data.designer.getCurrentCourseId();
 
+        CourseInfo course = CourseManager.getCourse(courseId);
         if (course == null) return new ArrayList<>();
 
         return CourseManager.getCheckPointList(course.getName());
@@ -382,12 +387,38 @@ public class CommandItem extends Command {
         if (args[0].equalsIgnoreCase(COMMAND_COURSE_PARKOUR_KIT)) {
             return RunCourseParkourKitCommand(sender, args);
         }
+        // /course linklobby
+        if (args[0].equalsIgnoreCase(COMMAND_COURSE_LINK_LOBBY)) {
+            return RunCourseLinkLobbyCommand(sender, args);
+        }
         // /course help
-        if (args[0].equalsIgnoreCase(COMMAND_PARKOUR_ADMIN_HELP)) {
+        if (args[0].equalsIgnoreCase(COMMAND_COURSE_HELP)) {
             return ShowCommandHelp(sender, 0);
         }
 
         return false;
+    }
+
+    private boolean RunCourseLinkLobbyCommand(CommandSender sender, String[] args) throws IOException, IllegalAccessException, InvalidConfigurationException {
+        Player player = (Player) sender;
+        PlayerData data = PlayerManager.getPlayerData(player);
+        if (args.length <= 1) return ShowCommandHelp(sender, 2);
+
+        // 非op玩家必须在跑道设计状态
+        if (!data.isCourseDesigning && !player.isOp()) {
+            player.sendMessage(LocalizationManager.getMessage("courseHasLeft", player));
+            return false;
+        }
+
+        String lobby = args[1];
+        boolean exist = ParkourApiManager.isLobbyExist(lobby);
+        if (!exist) {
+            player.sendMessage(LocalizationManager.getMessage("lobbyNotExist", player).replace("%lobby%", lobby));
+            return false;
+        }
+
+        data.designer.setLinkLobby(lobby);
+        return true;
     }
 
     private boolean RunCourseParkourKitCommand(CommandSender sender, String[] args) throws IOException, IllegalAccessException, InvalidConfigurationException {
@@ -508,20 +539,21 @@ public class CommandItem extends Command {
             return false;
         }
         // 获取跑酷赛道实例
-        String courseName = args[1];
-        CourseInfo course = CourseManager.getCourse(courseName);
-        if (course == null) {
-            player.sendMessage(LocalizationManager.getMessage("courseNotExist", player).replace("%course%", courseName));
+        String courseId = args[1];
+        boolean exist= CourseManager.existCourse(courseId);
+        if (!exist) {
+            player.sendMessage(LocalizationManager.getMessage("courseNotExist", player).replace("%course%", courseId));
             return false;
         }
         // 检测跑道是否被弃置
-        if (!course.isAbandon()) {
-            player.sendMessage(LocalizationManager.getMessage("courseNonAbandoned", player).replace("%course%", courseName));
+        boolean abandon = CourseManager.isAbandoned(courseId);
+        if (!abandon) {
+            player.sendMessage(LocalizationManager.getMessage("courseNonAbandoned", player).replace("%course%", courseId));
             return false;
         }
 
-        data.designer.claim(course);
-        player.sendMessage(LocalizationManager.getMessage("courseClaimOK", player).replace("%course%", courseName));
+        data.designer.claim(courseId);
+        player.sendMessage(LocalizationManager.getMessage("courseClaimOK", player).replace("%course%", courseId));
         return true;
     }
 
@@ -565,15 +597,15 @@ public class CommandItem extends Command {
             return false;
         }
         // 创建跑酷赛道，如果该跑酷的名称存在，则停止创建
-        String courseName = args[1];
-        if (CourseManager.existCourse(courseName)) {
-            player.sendMessage(LocalizationManager.getMessage("courseExist", player).replace("%course%", courseName));
+        String courseId = args[1];
+        if (CourseManager.existCourse(courseId)) {
+            player.sendMessage(LocalizationManager.getMessage("courseExist", player).replace("%course%", courseId));
             return false;
         }
         // 获取新创建的跑酷赛道实例，并且搭建赛道的初始平台
-        CourseInfo course = CourseManager.createCourse(courseName);
+        CourseInfo course = CourseManager.createCourse(courseId);
         if (!player.isOp()) course.setAbandon(false);
-        data.designer.design(course, true);
+        data.designer.design(courseId, true);
         // 保存跑酷赛道信息到course.yml
         CourseManager.save();
 
@@ -593,25 +625,26 @@ public class CommandItem extends Command {
             player.sendMessage(LocalizationManager.getMessage("courseDesigning", player));
             return false;
         }
-        String courseName = args[1];
-        CourseInfo course = CourseManager.getCourse(courseName);
+        String courseId = args[1];
         // 检测非op玩家是否拥有该赛道
-        if (!data.courseIds.contains(courseName) && !player.isOp()) {
-            player.sendMessage(LocalizationManager.getMessage("courseNotOwned", player).replace("%course%", courseName));
+        if (!data.courseIds.contains(courseId) && !player.isOp()) {
+            player.sendMessage(LocalizationManager.getMessage("courseNotOwned", player).replace("%course%", courseId));
             return false;
         }
         // 当赛道Id不存在于列表中
-        if (course == null) {
-            player.sendMessage(LocalizationManager.getMessage("courseNotExist", player).replace("%course%", courseName));
+        boolean exist = CourseManager.existCourse(courseId);
+        if (!exist) {
+            player.sendMessage(LocalizationManager.getMessage("courseNotExist", player).replace("%course%", courseId));
             return false;
         }
         // 非op玩家不能修改已经被舍弃的赛道
-        if (course.isAbandon() && !player.isOp()) {
-            player.sendMessage(LocalizationManager.getMessage("courseWasAbandoned", player).replace("%course%", course.getId()));
+        boolean abandon = CourseManager.isAbandoned(courseId);
+        if (abandon && !player.isOp()) {
+            player.sendMessage(LocalizationManager.getMessage("courseWasAbandoned", player).replace("%course%", courseId));
             return false;
         }
 
-        data.designer.design(course, false);
+        data.designer.design(courseId, false);
         return true;
     }
 
@@ -628,23 +661,24 @@ public class CommandItem extends Command {
             return false;
         }
 
-        String courseName = args[1];
-        CourseInfo course = CourseManager.getCourse(courseName);
-        if (!data.courseIds.contains(courseName) && !player.isOp()) {
-            player.sendMessage(LocalizationManager.getMessage("courseNotOwned", player).replace("%course%", courseName));
+        String courseId = args[1];
+        if (!data.courseIds.contains(courseId) && !player.isOp()) {
+            player.sendMessage(LocalizationManager.getMessage("courseNotOwned", player).replace("%course%", courseId));
             return false;
         }
-        if (course == null) {
-            player.sendMessage(LocalizationManager.getMessage("courseNotExist", player).replace("%course%", courseName));
+        boolean exist = CourseManager.existCourse(courseId);
+        if (!exist) {
+            player.sendMessage(LocalizationManager.getMessage("courseNotExist", player).replace("%course%", courseId));
             return false;
         }
-        if (course.isAbandon()) {
-            player.sendMessage(LocalizationManager.getMessage("courseWasAbandoned", player).replace("%course%", course.getId()));
+        boolean abandon = CourseManager.isAbandoned(courseId);
+        if (abandon) {
+            player.sendMessage(LocalizationManager.getMessage("courseWasAbandoned", player).replace("%course%", courseId));
             return false;
         }
 
-        data.designer.abandon(course);
-        player.sendMessage(LocalizationManager.getMessage("courseHasAbandoned", player).replace("%course%", courseName));
+        data.designer.abandon(courseId);
+        player.sendMessage(LocalizationManager.getMessage("courseHasAbandoned", player).replace("%course%", courseId));
         return true;
     }
 
@@ -676,13 +710,13 @@ public class CommandItem extends Command {
             return false;
         }
 
-        CourseInfo course = data.designer.getCurrentCourse();
-        if (course == null) {
+        String courseId = data.designer.getCurrentCourseId();
+        if (StringUtils.isBlank(courseId)) {
             player.sendMessage(LocalizationManager.getMessage("courseHasLeft", player));
             return false;
         }
-        data.designer.startPoint(course);
-        player.sendMessage(LocalizationManager.getMessage("courseStartPoint", player).replace("%course%", course.getId()));
+        data.designer.startPoint(courseId);
+        player.sendMessage(LocalizationManager.getMessage("courseStartPoint", player).replace("%course%", courseId));
         return true;
     }
 

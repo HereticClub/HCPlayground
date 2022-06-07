@@ -14,7 +14,10 @@ public class CourseInfo implements Comparable<CourseInfo> {
     private String name;
     @Expose
     @SerializedName(value = "abandon")
-    private boolean abandon=false;
+    private boolean abandon;
+    @Expose
+    @SerializedName(value = "is_lobby")
+    private boolean lobby;
     @Expose
     @SerializedName(value = "world")
     private String world = "";
@@ -41,9 +44,8 @@ public class CourseInfo implements Comparable<CourseInfo> {
     }
 
     /**
-     *
      * @param location 赛道的位置
-     * @param name 赛道的名称，可以包含颜色代码，同时被转化成为Id
+     * @param name     赛道的名称，可以包含颜色代码，同时被转化成为Id
      */
     public CourseInfo(Location location, String name) {
         World w = location.getWorld();
@@ -54,11 +56,17 @@ public class CourseInfo implements Comparable<CourseInfo> {
         Z = location.getZ();
         yaw = location.getYaw();
         pitch = location.getPitch();
+        abandon = false;
+        lobby = false;
 
         this.name = name;
 
         id = name;
         if ((name.charAt(0) == '&' || name.charAt(0) == '§') && name.length() >= 3) id = name.substring(2);
+    }
+
+    public boolean isLobby() {
+        return lobby;
     }
 
     public boolean isAbandon() {
@@ -67,6 +75,10 @@ public class CourseInfo implements Comparable<CourseInfo> {
 
     public void setAbandon(boolean abandon) {
         this.abandon = abandon;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getId() {

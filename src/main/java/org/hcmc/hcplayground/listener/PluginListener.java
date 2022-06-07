@@ -194,6 +194,7 @@ public class PluginListener implements Listener {
 
      */
 
+    /*
     @EventHandler
     private void onPlayerInventoryOpening(InventoryOpenEvent event) throws IOException, IllegalAccessException, InvalidConfigurationException {
         if (event.isCancelled()) return;
@@ -215,12 +216,14 @@ public class PluginListener implements Listener {
         if(holder instanceof MenuDetail) return;
         // 非op玩家在非设计模式时，在跑酷赛道上不能打开任何箱子
         // TODO: 需要处理打开菜单界面和疯狂合成界面的兼容性，理论上菜单能打开而疯狂合成界面不能打开
-        if (!data.designer.ContainerDetection(inv)) {
+        if (!data.designer.InteractDetection(inv)) {
             player.sendMessage(LocalizationManager.getMessage("courseNoPermission", player));
             event.setCancelled(true);
             return;
         }
     }
+
+     */
 
     /**
      * 玩家的游戏模式被改变事件
@@ -654,13 +657,29 @@ public class PluginListener implements Listener {
     }
 
     @EventHandler
-    private void onCrazyBlockClicked(PlayerInteractEvent event) {
+    private void onCrazyBlockClicked(PlayerInteractEvent event) throws IOException, IllegalAccessException, InvalidConfigurationException {
         Block block = event.getClickedBlock();
         Player player = event.getPlayer();
         Action action = event.getAction();
+        PlayerData data = PlayerManager.getPlayerData(player);
+        String playerName = player.getName();
+        // 获取玩家的潜行状态
         boolean sneaking = player.isSneaking();
-        // 检测block是否null
+        // 检测block是否null，比如右键点击了空气方块
         if (block == null) return;
+        // 无论任何人包括op玩家，都必须先登录，才能进行任何互动
+        if (!data.getLogin()) {
+            player.sendMessage(LocalizationManager.getMessage("playerNoLogin", player).replace("%player%", playerName));
+            event.setCancelled(true);
+            return;
+        }
+        // 跑酷赛道的方块互动检测
+        boolean allowInteract = data.designer.InteractDetection(block);
+        if (!allowInteract) {
+            player.sendMessage(LocalizationManager.getMessage("courseNoPermission", player));
+            event.setCancelled(true);
+            return;
+        }
         // 检测玩家是否sneaking(潜行)状态
         if (sneaking) return;
         // 非右键点击无效

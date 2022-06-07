@@ -150,6 +150,8 @@ messages:
   outOfCourseRange: '&cYou are out of course range'
   # 当玩家在设计跑酷赛道，并且玩家的位置进入了跑酷赛道的设计范围时显示
   enterCourseRange: '&aYou just entered course range'
+  # 当玩家设置赛道的跑酷大厅，但跑酷大厅的名字不存在时显示
+  lobbyNotExist: '&aLobby &e%lobby% &cis not exist'
   # 玩家账号被禁用并且被移出服务器时显示
   # 可以使用%player%占位符，代表被禁用的玩家名称
   # 可以使用%master%占位符，代表发出禁止指令的玩家名称
@@ -269,9 +271,10 @@ messages:
       &9/<command> delete <course> &7- &fSets a parkour course to abandon state, the course must be owned by player himself
       &9/<command> display <text> &7- &fSets a parkour course display name
       &9/<command> leave &7- &fLeave from parkour course design, its owner may modify this course again any time
+      &9/<command> linklobby <lobby> &7- &fLink course to lobby, when finish the course, player will back to that lobby
       &9/<command> list &7- &fList all parkour courses you created
       &9/<command> modify <course> &7- &fModify a parkour course, the course must be owned by player himself
       &9/<command> parkourkit &7- &fGet a set of default parkour kit
       &9/<command> ready <true|false> &7- &atrue: Open your course to other players, &afalse: Close your course, other players join this course no longer except yourself 
-      &9/<command> startpoint <course> &7- &fDecide where the Course to start, stand in the position and face the direction you want the Players to teleport to
+      &9/<command> startpoint <course> &7- &fDecide where the Course to start, stand in the position and face the direction you want the Players to teleport to 
       &9/<command> tp <course> &7- &fTeleport to a course, player must NOT be in design mode

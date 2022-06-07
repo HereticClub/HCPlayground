@@ -1,5 +1,7 @@
 package org.hcmc.hcplayground.model.player;
 
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 import com.google.gson.reflect.TypeToken;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
@@ -9,6 +11,7 @@ import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
@@ -53,11 +56,13 @@ public class PlayerData {
     private static final String Section_Key_DropList = "dropList";
     private static final String Section_Key_PickupList = "pickupList";
     private static final String Section_Key_KillMobList = "killMobList";
-    private static final String Section_Key_CcmdCooldownList = "ccmdCooldown";
+    private static final String Section_Key_CcmdCooldownList = "ccmdCooldownList";
     private static final String Section_Key_Parkour = "parkour";
-    private static final String Section_Key_Course_Design = "design";
-    private static final String Section_Key_Course_List = "list";
+    private static final String Section_Key_Parkour_Design = "parkour.design";
+    private static final String Section_Key_Parkour_List = "parkour.list";
     private static final String GAMEPROFILE_PROPERTY_TEXTURES = "textures";
+
+
 
     private static final String TYPE_JAVA_UTIL_MAP = "java.util.Map";
     public static final double BASE_HEALTH = 20.0F;
@@ -83,26 +88,46 @@ public class PlayerData {
             Section_Key_FishingList,
             Section_Key_CcmdCooldownList,
     };
+
     // 破坏方块记录
+    @Expose
+    @SerializedName(value = Section_Key_BreakList)
     public Map<Material, Integer> BreakList = new HashMap<>();
     // 摆放方块记录
+    @Expose
+    @SerializedName(value = Section_Key_PlaceList)
     public Map<Material, Integer> PlaceList = new HashMap<>();
     // 钓鱼记录
+    @Expose
+    @SerializedName(value = Section_Key_FishingList)
     public Map<Material, Integer> FishingList = new HashMap<>();
     // 扔掉物品记录
+    @Expose
+    @SerializedName(value = Section_Key_DropList)
     public Map<Material, Integer> DropList = new HashMap<>();
     // 拾取物品记录
+    @Expose
+    @SerializedName(value = Section_Key_PickupList)
     public Map<Material, Integer> PickupList = new HashMap<>();
     // 杀掉生物记录
+    @Expose
+    @SerializedName(value = Section_Key_KillMobList)
     public Map<EntityType, Integer> KillMobList = new HashMap<>();
-    public Map<String, Date> CcmdCooldownList = new HashMap<>();
+    // Custom Command cooldown
+    @Expose
+    @SerializedName(value = Section_Key_CcmdCooldownList)
+    public Map<String, Double> CcmdCooldownList = new HashMap<>();
+    @Expose
+    @SerializedName(value = "parkour.design")
+    public boolean isCourseDesigning = false;
+    @Expose
+    @SerializedName(value = "parkour.list")
+    public List<String> courseIds = new ArrayList<>();
+    public PermissionAttachment attachment;
     /**
      * 玩家的背包和装备物品的记录
      */
     public CourseDesigner designer;
-    public boolean isCourseDesigning = false;
-    public List<String> courseIds = new ArrayList<>();
-    public PermissionAttachment attachment;
 
     /**
      * 玩家在runnable线程的时间检查点，初始化为登陆时间
@@ -449,31 +474,18 @@ public class PlayerData {
         // 加载所有Map<Material, Integer>类型的玩家记录
         YamlConfiguration yaml = YamlConfiguration.loadConfiguration(f);
         Yaml2Map(yaml);
-        // 加载玩家的其他数据记录或者状态
-        ConfigurationSection section = yaml.getConfigurationSection(Section_Key_Parkour);
-        if (section != null) {
-            isCourseDesigning = section.getBoolean(Section_Key_Course_Design);
-            courseIds = section.getStringList(Section_Key_Course_List);
-        }
     }
 
-    public void SaveConfig() throws IOException, IllegalAccessException {
+    public void SaveConfig() throws IOException, IllegalAccessException, InvalidConfigurationException {
         UUID playerUuid = player.getUniqueId();
         File f = new File(plugin.getDataFolder(), String.format("profile/%s.yml", playerUuid));
         // 转换所有Map<Material, Integer>类型的玩家记录，成为Yaml格式字符串
         YamlConfiguration yaml = Map2Yaml();
-        // 保存玩家的其他记录数据或者状态
-        ConfigurationSection section = yaml.createSection(Section_Key_Parkour);
-        section.set(Section_Key_Course_Design, isCourseDesigning);
-        section.set(Section_Key_Course_List, courseIds);
         yaml.save(f);
     }
 
     /**
      * 将玩家档案内所有记录数据加载到类型为Map&lt;?, ?&gt;的属性
-     *
-     * @param yaml
-     * @throws IllegalAccessException
      */
     private void Yaml2Map(YamlConfiguration yaml) throws IllegalAccessException {
         // 循环检测SectionKeys字段内的字符串列表
@@ -496,30 +508,20 @@ public class PlayerData {
             Map<?, ?> value = Global.GsonObject.fromJson(data, mapType);
             field.set(this, value);
         }
+        // 加载玩家的其他数据记录或者状态
+        isCourseDesigning = yaml.getBoolean(Section_Key_Parkour_Design);
+        courseIds = yaml.getStringList(Section_Key_Parkour_List);
     }
 
     /**
      * 将所有类型为Map&lt;?, ?&gt;的属性保存到yaml实例
      *
      * @return YamlConfiguration实例
-     * @throws IllegalAccessException
      */
-    private YamlConfiguration Map2Yaml() throws IllegalAccessException {
+    private YamlConfiguration Map2Yaml() throws InvalidConfigurationException {
         YamlConfiguration yaml = new YamlConfiguration();
-
-        for (String s : SectionKeys) {
-            Field[] fields = this.getClass().getFields();
-            Field field = Arrays.stream(fields).filter(x -> x.getName().equalsIgnoreCase(s)).findAny().orElse(null);
-            if (field == null) continue;
-
-            ParameterizedType pType = (ParameterizedType) field.getGenericType();
-            String name = pType.getRawType().getTypeName();
-            if (!name.equalsIgnoreCase(TYPE_JAVA_UTIL_MAP)) continue;
-
-            Map<?, ?> value = (Map<?, ?>) field.get(this);
-            yaml.createSection(s, value);
-        }
-
+        String v = Global.GsonObject.toJson(this);
+        yaml.loadFromString(v);
         return yaml;
     }
 

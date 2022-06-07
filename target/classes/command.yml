@@ -178,4 +178,7 @@ course:
     14:
       name: parkourkit
       index: 1
+    15:
+      name: linklobby
+      index: 1
 

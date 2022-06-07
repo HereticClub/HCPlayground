@@ -14,11 +14,12 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
 import java.util.*;
+import java.util.function.Predicate;
 
 public class CourseManager {
 
     private static List<CourseInfo> courses = new ArrayList<>();
-    private static String courseId;
+    //private static String courseId;
     private static final Plugin plugin = HCPlayground.getPlugin();
 
 
@@ -49,6 +50,18 @@ public class CourseManager {
         y.save(f);
     }
 
+    public static CourseInfo getCourse(String id) {
+        CourseInfo c = courses.stream().filter(x -> x.getId().equalsIgnoreCase(id)).findAny().orElse(null);
+        if (c == null) return null;
+        String name = c.getName().replace("§", "&");
+        c.setName(name);
+        return c;
+    }
+
+    public static boolean isAbandoned(String id) {
+        return courses.stream().anyMatch(x -> x.getId().equalsIgnoreCase(id) && x.isAbandon());
+    }
+
     /**
      * 创建一条跑酷赛道实例
      * @param name 赛道的名称
@@ -56,24 +69,20 @@ public class CourseManager {
      */
     @NotNull
     public static CourseInfo createCourse(String name) {
-        courseId = name;
+        //courseId = name;
 
         // 获得赛道的空余位置
         Location location = nextLocation();
         // 搭建初始建筑平台
         buildPlatform(location);
         // 创建跑道实例
-        CourseInfo course = new CourseInfo(location, courseId);
+        CourseInfo course = new CourseInfo(location, name);
         // 默认跑道创建时被舍弃
         course.setAbandon(true);
         // 添加到跑道总列表
         courses.add(course);
         // 返回创建的跑道实例
         return course;
-    }
-
-    public static CourseInfo getCourse(String id) {
-        return courses.stream().filter(x -> x.getId().equalsIgnoreCase(id)).findAny().orElse(null);
     }
 
     public static boolean existCourse(String id){
