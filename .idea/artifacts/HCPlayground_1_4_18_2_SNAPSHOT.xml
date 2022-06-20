@@ -1,0 +1,9 @@
+<component name="ArtifactManager">
+  <artifact type="jar" build-on-make="true" name="HCPlayground-1.4.18.2-SNAPSHOT">
+    <output-path>$PROJECT_DIR$/out/artifacts/HCPlayground_1_4_18_2_SNAPSHOT</output-path>
+    <root id="archive" name="HCPlayground-1.4.18.2-SNAPSHOT.jar">
+      <element id="module-output" name="HCPlayground" />
+      <element id="file-copy" path="$PROJECT_DIR$/src/main/resources/plugin.yml" />
+    </root>
+  </artifact>
+</component>
