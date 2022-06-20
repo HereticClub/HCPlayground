@@ -32,8 +32,8 @@ import org.hcmc.hcplayground.enums.CrazyBlockType;
 import org.hcmc.hcplayground.enums.RecipeType;
 import org.hcmc.hcplayground.event.PlayerEquipmentChangedEvent;
 import org.hcmc.hcplayground.manager.*;
-import org.hcmc.hcplayground.model.CrazyRecord;
-import org.hcmc.hcplayground.model.MobEntity;
+import org.hcmc.hcplayground.model.recipe.CrazyBlockRecord;
+import org.hcmc.hcplayground.model.mob.MobEntity;
 import org.hcmc.hcplayground.model.command.CommandItem;
 import org.hcmc.hcplayground.model.config.BanItemConfiguration;
 import org.hcmc.hcplayground.model.item.Crazy;
@@ -41,34 +41,19 @@ import org.hcmc.hcplayground.model.item.ItemBase;
 import org.hcmc.hcplayground.model.menu.MenuDetail;
 import org.hcmc.hcplayground.model.menu.MenuItem;
 import org.hcmc.hcplayground.model.player.PlayerData;
+import org.hcmc.hcplayground.model.scoreboard.ScoreboardItem;
 import org.hcmc.hcplayground.scheduler.EquipmentMonitorRunnable;
 import org.hcmc.hcplayground.scheduler.RecipeFinderRunnable;
+import org.hcmc.hcplayground.sqlite.table.BanPlayerDetail;
 import org.hcmc.hcplayground.utility.Global;
 import org.hcmc.hcplayground.utility.RandomNumber;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.text.DateFormat;
 import java.util.*;
 
-/*
-Java 本身的编程思路就已经足够混乱
-Bukkit Api在本来已经混乱的基础上添加更混乱的逻辑思路
-InventoryClickEvent只能获取当前任何类型的Inventory是否被点击
-所以这个事件只能获取玩家点击的是哪一类型的Inventory
-但要获取被点击的ItemStack，必须要在下一个Tick(50毫秒)之后
-关键点就是这下一个Tick必须通过异步线程检测
-而Plugin的运作线程全部在主线程内，所以通过while loop等只能锁死在当前线程
-而在异步线程的类和方法不能直接和Bukkit Api的变量互交，这就是死循环
-所以就必须使用继承BukkitRunnable类来下一Tick的事件
-因此又要定义很大量的Event类和Listener类来回调InventoryClickEvent的各种参数
-
-以下就是一个典型例子
-在InventoryClickEvent获取玩家点击，然后通过某个Runnable类获取下一Tick的已点击的ItemStack
-在Runnable类的必须实现的run方法里面再触发自定义事件，通过该事件传递获取到的ItemStack
-然后在另一个自定义Listener类里面接收这个Event的参数而得知这个ItemStack是何物
-*/
 public class PluginListener implements Listener {
-
     private final static String COMMAND_LOGIN = "login";
     private final static String COMMAND_REGISTER = "register";
     private final static String SCOREBOARD_CRITERIA_HEALTH = "health";
@@ -89,23 +74,37 @@ public class PluginListener implements Listener {
      * 后续的进入服务器，需要执行/login password以登陆
      *
      * @param event 玩家进入服务器事件
-     * @throws SQLException 当SQL执行操作时发生异常
      */
     @EventHandler
     private void onPlayerJoined(final PlayerJoinEvent event) throws SQLException, IllegalAccessException, IOException, InvalidConfigurationException {
         // 获取登陆玩家实例
         Player player = event.getPlayer();
+        World world = player.getWorld();
         // 获取玩家实例的附加数据
-        PlayerData playerData = PlayerManager.getPlayerData(player);
+        PlayerData data = PlayerManager.getPlayerData(player);
+        // 进入服务器马上显示计分板
+        data.ShowSidebar(world.getName());
         // 判断玩家是否被禁止进入服务器
-        if (playerData.isBanned()) return;
+        BanPlayerDetail detail = data.isBanned();
+        if (detail != null) {
+            DateFormat df = DateFormat.getDateInstance(DateFormat.FULL, Locale.CHINA);
+            DateFormat tf = DateFormat.getTimeInstance(DateFormat.FULL, Locale.CHINA);
+            String banDateTime = String.format("%s %s", df.format(detail.banDate), tf.format(detail.banDate));
+            String bannedMessage = LanguageManager.getMessage("playerBannedMessage", player)
+                    .replace("%player%", player.getName())
+                    .replace("%master%", detail.masterName)
+                    .replace("%reason%", detail.message)
+                    .replace("%banDate%", banDateTime);
+            player.kickPlayer(bannedMessage);
+            return;
+        }
         // 获取玩家是否已经注册到服务器
         // 用于显示提醒登陆或者提醒注册
-        boolean exist = playerData.Exist();
-        playerData.setRegister(exist);
+        boolean register = data.isRegister();
+        data.setRegister(register);
         // 获取并记录玩家的登陆时间
-        playerData.loginTimeStamp = new Date().getTime() / 1000;
-        playerData.setLoginTime(new Date());
+        data.loginTimeStamp = new Date().getTime() / 1000;
+        data.setLoginTime(new Date());
         // 获取玩家身上的附加属性
         // 任务new EquipmentMonitorRunnable(player).runTask(plugin)
         // 已经执行了一次PlayerManager.setPlayerData(player, playerData)
@@ -122,7 +121,6 @@ public class PluginListener implements Listener {
      * 当玩家没有正式登陆前，禁止移动
      *
      * @param event 玩家移动事件
-     * @throws IllegalAccessException IllegalAccessException
      */
     @EventHandler
     private void onPlayerMove(PlayerMoveEvent event) throws IllegalAccessException, IOException, InvalidConfigurationException {
@@ -132,7 +130,7 @@ public class PluginListener implements Listener {
         // 获取玩家附加数据实例
         PlayerData data = PlayerManager.getPlayerData(player);
         // 在玩家成功登陆前，禁止玩家移动
-        if (!data.getLogin()) {
+        if (!data.isLogin()) {
             event.setCancelled(true);
             return;
         }
@@ -144,7 +142,6 @@ public class PluginListener implements Listener {
      * 保存玩家所有数据
      *
      * @param event 玩家离开服务器事件
-     * @throws IOException 当IO执行操作时发生异常
      */
     @EventHandler
     private void onPlayerLeave(PlayerQuitEvent event) throws IOException, IllegalAccessException, InvalidConfigurationException {
@@ -161,95 +158,25 @@ public class PluginListener implements Listener {
         PlayerManager.removePlayerData(player, data);
     }
 
-    /*
-    @EventHandler
-    private void onPlayerTeleport(PlayerTeleportEvent event) throws IOException, IllegalAccessException, InvalidConfigurationException {
-        if (event.isCancelled()) return;
-        // 避免这个事件会多次触发
-        PlayerTeleportEvent.TeleportCause cause = event.getCause();
-        if (cause.equals(PlayerTeleportEvent.TeleportCause.UNKNOWN)) return;
-        // 获得玩家实体及数据
-        Player player = event.getPlayer();
-        PlayerData data = PlayerManager.getPlayerData(player);
-        // op玩家不需要添加成员
-        if (player.isOp()) return;
-        // 获取玩家传送起点和终点
-        Location fromLocation = event.getFrom();
-        Location toLocation = event.getTo();
-        if (toLocation == null) return;
-        World fromWorld = fromLocation.getWorld();
-        World toWorld = toLocation.getWorld();
-        if (fromWorld == null) return;
-        if (toWorld == null) return;
-        // 在跑酷世界移除WorldGuard成员
-        String parkourWorld = Global.course.getWorld();
-        if (fromWorld.getName().equalsIgnoreCase(parkourWorld) && data.isCourseDesigning) {
-            WorldGuardApiManager.removeMember(player, fromWorld);
-        }
-        // 在跑酷世界添加WorldGuard成员
-        if (toWorld.getName().equalsIgnoreCase(parkourWorld) && data.isCourseDesigning) {
-            WorldGuardApiManager.addMember(player, toWorld);
-        }
-    }
-
-     */
-
-    /*
-    @EventHandler
-    private void onPlayerInventoryOpening(InventoryOpenEvent event) throws IOException, IllegalAccessException, InvalidConfigurationException {
-        if (event.isCancelled()) return;
-        // 忽略非人类打开箱子
-        HumanEntity human = event.getPlayer();
-        if (!(human instanceof Player player)) return;
-        // 获取玩家数据
-        PlayerData data = PlayerManager.getPlayerData(player);
-        String playerName = player.getName();
-        // 无论任何人包括op玩家，都必须先登录，才能再打开任何类型的箱子界面
-        if (!data.getLogin()) {
-            player.sendMessage(LocalizationManager.getMessage("playerNoLogin", player).replace("%player%", playerName));
-            event.setCancelled(true);
-            return;
-        }
-        // 检测打开的箱子是否自定义菜单
-        Inventory inv = event.getInventory();
-        InventoryHolder holder = inv.getHolder();
-        if(holder instanceof MenuDetail) return;
-        // 非op玩家在非设计模式时，在跑酷赛道上不能打开任何箱子
-        // TODO: 需要处理打开菜单界面和疯狂合成界面的兼容性，理论上菜单能打开而疯狂合成界面不能打开
-        if (!data.designer.InteractDetection(inv)) {
-            player.sendMessage(LocalizationManager.getMessage("courseNoPermission", player));
-            event.setCancelled(true);
-            return;
-        }
-    }
-
-     */
-
     /**
      * 玩家的游戏模式被改变事件
-     *
-     * @param event
-     * @throws IllegalAccessException
      */
     @EventHandler
     private void onPlayerGameModeChanged(PlayerGameModeChangeEvent event) throws IllegalAccessException, IOException, InvalidConfigurationException {
         if (event.isCancelled()) return;
 
         Player player = event.getPlayer();
-        PlayerData playerData = PlayerManager.getPlayerData(player);
-        if (!playerData.getLogin()) return;
+        PlayerData data = PlayerManager.getPlayerData(player);
+        if (!data.isLogin()) return;
 
-        playerData.setGameMode(event.getNewGameMode());
+        data.setGameMode(event.getNewGameMode());
         //Global.LogMessage(String.format("\033[1;35mPlayerGameModeChangeEvent GameMode: \033[1;33m%s\033[0m", playerData.getGameMode()));
-        PlayerManager.setPlayerData(player, playerData);
+        PlayerManager.setPlayerData(player, data);
     }
 
     /**
      * 玩家发出的指令的预处理事件<br>
      * 在玩家成功登陆到游戏前，禁止执行除了/login, /register之外的任何指令
-     *
-     * @param event
-     * @throws IllegalAccessException
      */
     @EventHandler
     private void onPlayerCommandPreprocess(PlayerCommandPreprocessEvent event) throws IllegalAccessException, IOException, InvalidConfigurationException {
@@ -266,8 +193,8 @@ public class PluginListener implements Listener {
         PlayerData data = PlayerManager.getPlayerData(player);
         String playerName = player.getName();
         // 无论任何人包括op玩家，都必须先登录，才能执行任何其他命令
-        if (!data.getLogin() && !command.getName().equalsIgnoreCase(COMMAND_LOGIN) && !command.getName().equalsIgnoreCase(COMMAND_REGISTER)) {
-            player.sendMessage(LocalizationManager.getMessage("playerNoLogin", player).replace("%player%", playerName));
+        if (!data.isLogin() && !command.getName().equalsIgnoreCase(COMMAND_LOGIN) && !command.getName().equalsIgnoreCase(COMMAND_REGISTER)) {
+            player.sendMessage(LanguageManager.getMessage("playerNoLogin", player).replace("%player%", playerName));
             Global.LogWarning(String.format("%s tries to issue command %s before login", playerName, message));
             event.setCancelled(true);
             return;
@@ -275,8 +202,8 @@ public class PluginListener implements Listener {
         // op玩家可以绕过除登陆外的限制
         if (player.isOp()) return;
         // 跑酷赛道设计状态下，非op玩家禁止执行除/course外的任何指令
-        if (data.isCourseDesigning && data.getLogin() && !command.getName().equalsIgnoreCase(CommandItem.COMMAND_COURSE)) {
-            player.sendMessage(LocalizationManager.getMessage("courseDenyCommandOnDesign", player));
+        if (data.isCourseDesigning && data.isLogin() && !command.getName().equalsIgnoreCase(CommandItem.COMMAND_COURSE)) {
+            player.sendMessage(LanguageManager.getMessage("courseDenyCommandOnDesign", player));
             event.setCancelled(true);
         }
     }
@@ -312,8 +239,6 @@ public class PluginListener implements Listener {
 
     /**
      * 玩家主副手的物品改变后的事件
-     *
-     * @param event
      */
     @EventHandler
     private void onPlayerHandItemChanged(PlayerItemHeldEvent event) {
@@ -324,11 +249,61 @@ public class PluginListener implements Listener {
         runnable.runTask(plugin);
     }
 
+    @EventHandler
+    private void onCrazyBlockClicked(PlayerInteractEvent event) throws IOException, IllegalAccessException, InvalidConfigurationException {
+        Block block = event.getClickedBlock();
+        Player player = event.getPlayer();
+        Action action = event.getAction();
+        PlayerData data = PlayerManager.getPlayerData(player);
+        String playerName = player.getName();
+        // 获取玩家的潜行状态
+        boolean sneaking = player.isSneaking();
+        // 检测block是否null，比如右键点击了空气方块
+        if (block == null) return;
+        // 无论任何人包括op玩家，都必须先登录，才能进行任何互动
+        if (!data.isLogin()) {
+            player.sendMessage(LanguageManager.getMessage("playerNoLogin", player).replace("%player%", playerName));
+            event.setCancelled(true);
+            return;
+        }
+        // 跑酷赛道的方块互动检测
+        boolean allowInteract = data.designer.InteractDetection(block);
+        if (!allowInteract) {
+            player.sendMessage(LanguageManager.getMessage("courseNoPermission", player));
+            event.setCancelled(true);
+            return;
+        }
+        // 检测玩家是否sneaking(潜行)状态
+        if (sneaking) return;
+        // 非右键点击无效
+        if (!action.equals(Action.RIGHT_CLICK_BLOCK)) return;
+        // 获取自定义可放置方块的记录信息
+        CrazyBlockRecord record = RecordManager.findCrazyRecord(block.getLocation());
+        if (record == null) return;
+        // 获取自定义可放置方块的物品信息
+        Crazy crazyItem = (Crazy) ItemManager.findItemById(record.getName());
+        if (crazyItem == null) return;
+        // 设置执行指令
+        String crazyCommand = "";
+        if (crazyItem.getType().equals(CrazyBlockType.CRAZY_CRAFTING_TABLE)) {
+            crazyCommand = String.format("%s %s", CommandItem.COMMAND_CRAZY, CommandItem.COMMAND_CRAZY_CRAFTING);
+        }
+        if (crazyItem.getType().equals(CrazyBlockType.CRAZY_ENCHANTING_TABLE)) {
+            crazyCommand = String.format("%s %s", CommandItem.COMMAND_CRAZY, CommandItem.COMMAND_CRAZY_ENCHANTING);
+        }
+        if (crazyItem.getType().equals(CrazyBlockType.CRAZY_ANVIL)) {
+            crazyCommand = String.format("%s %s", CommandItem.COMMAND_CRAZY, CommandItem.COMMAND_CRAZY_ANVIL);
+        }
+        // 执行指令，并且取消当前事件(防止弹出系统界面)
+        if (!StringUtils.isEmpty(crazyCommand)) {
+            runPlayerCommand(crazyCommand, player);
+            event.setCancelled(true);
+        }
+    }
+
     /**
      * 玩家在使用铁砧为物品(武器或盔甲)附魔时的预处理事件<br>
      * 禁止玩家使用普通铁砧为物品(武器或盔甲)附魔经验修复
-     *
-     * @param event
      */
     @EventHandler
     private void onPlayerEnchanting(PrepareAnvilEvent event) {
@@ -393,8 +368,8 @@ public class PluginListener implements Listener {
         PlayerData data = PlayerManager.getPlayerData(player);
         String playerName = player.getName();
         // 无论任何人包括op玩家，都必须先登录，才能扔掉些什么
-        if (!data.getLogin()) {
-            player.sendMessage(LocalizationManager.getMessage("playerNoLogin", player).replace("%player%", playerName));
+        if (!data.isLogin()) {
+            player.sendMessage(LanguageManager.getMessage("playerNoLogin", player).replace("%player%", playerName));
             event.setCancelled(true);
             return;
         }
@@ -404,17 +379,23 @@ public class PluginListener implements Listener {
         int amount = is.getAmount();
         Material material = item.getItemStack().getType();
         // 记录玩家数据
-
         int count = data.DropList.getOrDefault(material, 0);
         data.DropList.put(material, count + amount);
         PlayerManager.setPlayerData(player, data);
     }
 
+    @EventHandler
+    private void onPlayerChangedWorld(PlayerChangedWorldEvent event) throws IOException, IllegalAccessException, InvalidConfigurationException {
+        Player player = event.getPlayer();
+        PlayerData data = PlayerManager.getPlayerData(player);
+        World world = player.getWorld();
+
+        data.ShowSidebar(world.getName());
+        PlayerManager.setPlayerData(player, data);
+    }
+
     /**
      * 生物(包括玩家)拾起物品事件
-     *
-     * @param event
-     * @throws IllegalAccessException
      */
     @EventHandler
     private void onItemPickup(EntityPickupItemEvent event) throws IllegalAccessException, IOException, InvalidConfigurationException {
@@ -426,8 +407,8 @@ public class PluginListener implements Listener {
         PlayerData data = PlayerManager.getPlayerData(player);
         String playerName = player.getName();
         // 无论任何人包括op玩家，都必须先登录，才能拾取些什么
-        if (!data.getLogin()) {
-            player.sendMessage(LocalizationManager.getMessage("playerNoLogin", player).replace("%player%", playerName));
+        if (!data.isLogin()) {
+            player.sendMessage(LanguageManager.getMessage("playerNoLogin", player).replace("%player%", playerName));
             event.setCancelled(true);
             return;
         }
@@ -443,65 +424,7 @@ public class PluginListener implements Listener {
     }
 
     /**
-     * 方块被破坏时触发的事件
-     *
-     * @param event 方块被破坏时触发的事件实例
-     */
-    @EventHandler
-    private void onBlockBroken(final BlockBreakEvent event) throws IllegalAccessException, IOException, InvalidConfigurationException {
-        if (event.isCancelled()) return;
-
-        Player player = event.getPlayer();
-        PlayerData data = PlayerManager.getPlayerData(player);
-        Block block = event.getBlock();
-        Material material = block.getType();
-
-        DropManager.ExtraDrops(block);
-
-        int count = data.BreakList.getOrDefault(material, 0);
-        data.BreakList.put(material, count + 1);
-        PlayerManager.setPlayerData(player, data);
-
-        CrazyRecord record = RecordManager.findCrazyRecord(block.getLocation());
-        if (record == null) return;
-        Crazy ib = (Crazy) ItemManager.findItemById(record.getName());
-        if (ib == null) return;
-
-        event.setDropItems(false);
-        block.getWorld().dropItemNaturally(block.getLocation(), ib.toItemStack());
-        RecordManager.removeCrazyRecord(record);
-    }
-
-    /**
-     * 方块被放置时触发的事件
-     *
-     * @param event 方块被放置时触发的事件实例
-     */
-    @EventHandler
-    private void onBlockPlaced(final BlockPlaceEvent event) throws IllegalAccessException, IOException, InvalidConfigurationException {
-        if (event.isCancelled()) return;
-
-        Player player = event.getPlayer();
-        PlayerData data = PlayerManager.getPlayerData(player);
-        Block block = event.getBlock();
-        Material material = block.getType();
-        // 计数玩家的各种方块摆放
-        int count = data.PlaceList.getOrDefault(material, 0);
-        data.PlaceList.put(material, count + 1);
-        PlayerManager.setPlayerData(player, data);
-        // 自定义可放置方块的摆放记录
-        ItemStack is = event.getItemInHand();
-        ItemBase ib = ItemManager.getItemBase(is);
-        if (ib instanceof Crazy crazy) {
-            CrazyRecord record = new CrazyRecord(crazy.getId(), block.getLocation());
-            RecordManager.addCrazyRecord(record);
-        }
-    }
-
-    /**
      * 实体生物生成后事件
-     *
-     * @param event
      */
     @EventHandler
     private void onMonsterSpawned(final EntitySpawnEvent event) {
@@ -540,41 +463,11 @@ public class PluginListener implements Listener {
 
         /*
         TODO: 需要实施在生物的名字下方显示生命值
-
-        monster.addScoreboardTag(monster.getUniqueId().toString());
-        Player[] players = plugin.getServer().getOnlinePlayers().toArray(new Player[0]);
-        Scoreboard sb = Global.HealthScoreboard;
-        Objective objective = sb.registerNewObjective(monster.getUniqueId().toString(), SCOREBOARD_CRITERIA_DUMMY, ChatColor.RED + "❤");
-        objective.setDisplaySlot(DisplaySlot.BELOW_NAME);
-        //objective.setRenderType(RenderType.HEARTS);
-        objective.getScore("").setScore(monsterHealth);
-
-        for (Player p : players) {
-            p.setScoreboard(sb);
-        }
-
-        Player player = plugin.getServer().getPlayer("TerryNG9527");
-        if (player == null) return;
-        Location location = player.getLocation();
-        location.setX(location.getX() + 5);
-        monster.teleport(location);
-
-        location.setY(location.getY() + 0.7);
-        ArmorStand armorStand=monster.getWorld().spawn(location, ArmorStand.class);
-        armorStand.setCustomNameVisible(true);
-        armorStand.setCustomName(String.valueOf(monsterHealth));
-        armorStand.setSmall(true);
-        armorStand.setGravity(false);
-
          */
-
-
     }
 
     /**
      * 实体攻击另一个实体事件
-     *
-     * @param event
      */
     @EventHandler
     private void onMonsterAttacked(EntityDamageByEntityEvent event) {
@@ -622,6 +515,73 @@ public class PluginListener implements Listener {
         PlayerManager.setPlayerData(player, playerData);
     }
 
+    /**
+     * 方块被破坏时触发的事件
+     *
+     * @param event 方块被破坏时触发的事件实例
+     */
+    @EventHandler
+    private void onBlockBroken(final BlockBreakEvent event) throws IllegalAccessException, IOException, InvalidConfigurationException {
+        if (event.isCancelled()) return;
+
+        Player player = event.getPlayer();
+        PlayerData data = PlayerManager.getPlayerData(player);
+        Block block = event.getBlock();
+        Material material = block.getType();
+        // 检测玩家是否在跑酷设计状态，并且超出了跑酷设计范围
+        if (!data.designer.RangeDetection(block.getLocation())) {
+            event.setCancelled(true);
+            return;
+        }
+        // 破坏方块时检测额外掉落
+        DropManager.ExtraDrops(block);
+        // 记录破坏方块的种类和数量
+        int count = data.BreakList.getOrDefault(material, 0);
+        data.BreakList.put(material, count + 1);
+        PlayerManager.setPlayerData(player, data);
+        // 记录疯狂方块的位置
+        CrazyBlockRecord record = RecordManager.findCrazyRecord(block.getLocation());
+        if (record == null) return;
+        Crazy ib = (Crazy) ItemManager.findItemById(record.getName());
+        if (ib == null) return;
+        // 如果被破坏的方块是疯狂方块，则取消掉落，改为掉落疯狂方块相应的物品
+        event.setDropItems(false);
+        block.getWorld().dropItemNaturally(block.getLocation(), ib.toItemStack());
+        // 移除疯狂方块的摆放记录
+        RecordManager.removeCrazyRecord(record);
+    }
+
+    /**
+     * 方块被放置时触发的事件
+     *
+     * @param event 方块被放置时触发的事件实例
+     */
+    @EventHandler
+    private void onBlockPlaced(final BlockPlaceEvent event) throws IllegalAccessException, IOException, InvalidConfigurationException {
+        if (event.isCancelled()) return;
+
+        Player player = event.getPlayer();
+        PlayerData data = PlayerManager.getPlayerData(player);
+        Block block = event.getBlock();
+        Material material = block.getType();
+        // 检测玩家是否在跑酷设计状态，并且超出了跑酷设计范围
+        if (!data.designer.RangeDetection(block.getLocation())) {
+            event.setCancelled(true);
+            return;
+        }
+        // 计数玩家的各种方块摆放
+        int count = data.PlaceList.getOrDefault(material, 0);
+        data.PlaceList.put(material, count + 1);
+        PlayerManager.setPlayerData(player, data);
+        // 自定义可放置方块的摆放记录
+        ItemStack is = event.getItemInHand();
+        ItemBase ib = ItemManager.getItemBase(is);
+        if (ib instanceof Crazy crazy) {
+            CrazyBlockRecord record = new CrazyBlockRecord(crazy.getId(), block.getLocation());
+            RecordManager.addCrazyRecord(record);
+        }
+    }
+
     @EventHandler
     private void onEquipmentSlotClicked(InventoryClickEvent event) {
         /*
@@ -654,58 +614,6 @@ public class PluginListener implements Listener {
 
         EquipmentMonitorRunnable runnable = new EquipmentMonitorRunnable(player);
         runnable.runTask(plugin);
-    }
-
-    @EventHandler
-    private void onCrazyBlockClicked(PlayerInteractEvent event) throws IOException, IllegalAccessException, InvalidConfigurationException {
-        Block block = event.getClickedBlock();
-        Player player = event.getPlayer();
-        Action action = event.getAction();
-        PlayerData data = PlayerManager.getPlayerData(player);
-        String playerName = player.getName();
-        // 获取玩家的潜行状态
-        boolean sneaking = player.isSneaking();
-        // 检测block是否null，比如右键点击了空气方块
-        if (block == null) return;
-        // 无论任何人包括op玩家，都必须先登录，才能进行任何互动
-        if (!data.getLogin()) {
-            player.sendMessage(LocalizationManager.getMessage("playerNoLogin", player).replace("%player%", playerName));
-            event.setCancelled(true);
-            return;
-        }
-        // 跑酷赛道的方块互动检测
-        boolean allowInteract = data.designer.InteractDetection(block);
-        if (!allowInteract) {
-            player.sendMessage(LocalizationManager.getMessage("courseNoPermission", player));
-            event.setCancelled(true);
-            return;
-        }
-        // 检测玩家是否sneaking(潜行)状态
-        if (sneaking) return;
-        // 非右键点击无效
-        if (!action.equals(Action.RIGHT_CLICK_BLOCK)) return;
-        // 获取自定义可放置方块的记录信息
-        CrazyRecord record = RecordManager.findCrazyRecord(block.getLocation());
-        if (record == null) return;
-        // 获取自定义可放置方块的物品信息
-        Crazy crazyItem = (Crazy) ItemManager.findItemById(record.getName());
-        if (crazyItem == null) return;
-        // 设置执行指令
-        String crazyCommand = "";
-        if (crazyItem.getType().equals(CrazyBlockType.CRAZY_CRAFTING_TABLE)) {
-            crazyCommand = String.format("%s %s", CommandItem.COMMAND_CRAZY, CommandItem.COMMAND_CRAZY_CRAFTING);
-        }
-        if (crazyItem.getType().equals(CrazyBlockType.CRAZY_ENCHANTING_TABLE)) {
-            crazyCommand = String.format("%s %s", CommandItem.COMMAND_CRAZY, CommandItem.COMMAND_CRAZY_ENCHANTING);
-        }
-        if (crazyItem.getType().equals(CrazyBlockType.CRAZY_ANVIL)) {
-            crazyCommand = String.format("%s %s", CommandItem.COMMAND_CRAZY, CommandItem.COMMAND_CRAZY_ANVIL);
-        }
-        // 执行指令，并且取消当前事件(防止弹出系统界面)
-        if (!StringUtils.isEmpty(crazyCommand)) {
-            runPlayerCommand(crazyCommand, player);
-            event.setCancelled(true);
-        }
     }
 
     @EventHandler

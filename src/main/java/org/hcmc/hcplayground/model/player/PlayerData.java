@@ -6,6 +6,7 @@ import com.google.gson.reflect.TypeToken;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import com.mojang.authlib.properties.PropertyMap;
+import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
@@ -17,9 +18,18 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.permissions.PermissionAttachment;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scoreboard.DisplaySlot;
+import org.bukkit.scoreboard.Objective;
+import org.bukkit.scoreboard.Scoreboard;
+import org.bukkit.scoreboard.Team;
 import org.hcmc.hcplayground.HCPlayground;
+import org.hcmc.hcplayground.enums.ItemFeatureType;
 import org.hcmc.hcplayground.enums.PlayerBannedState;
-import org.hcmc.hcplayground.manager.LocalizationManager;
+import org.hcmc.hcplayground.manager.ItemManager;
+import org.hcmc.hcplayground.manager.LanguageManager;
+import org.hcmc.hcplayground.manager.ScoreboardManager;
+import org.hcmc.hcplayground.model.item.ItemBase;
+import org.hcmc.hcplayground.model.scoreboard.ScoreboardItem;
 import org.hcmc.hcplayground.sqlite.SqliteManager;
 import org.hcmc.hcplayground.sqlite.table.BanPlayerDetail;
 import org.hcmc.hcplayground.utility.Global;
@@ -42,14 +52,6 @@ import java.text.DateFormat;
 import java.util.*;
 
 public class PlayerData {
-    /*
-    Key:
-    如果是普通方块比如麦子等
-    则保存保存该方块的Material
-    如果含有PersistentData，则保存其Id
-    Value:
-    破快或放置该方块的总数量
-    */
     private static final String Section_Key_BreakList = "breakList";
     private static final String Section_Key_PlaceList = "placeList";
     private static final String Section_Key_FishingList = "fishingList";
@@ -57,12 +59,9 @@ public class PlayerData {
     private static final String Section_Key_PickupList = "pickupList";
     private static final String Section_Key_KillMobList = "killMobList";
     private static final String Section_Key_CcmdCooldownList = "ccmdCooldownList";
-    private static final String Section_Key_Parkour = "parkour";
     private static final String Section_Key_Parkour_Design = "parkour.design";
     private static final String Section_Key_Parkour_List = "parkour.list";
     private static final String GAMEPROFILE_PROPERTY_TEXTURES = "textures";
-
-
 
     private static final String TYPE_JAVA_UTIL_MAP = "java.util.Map";
     public static final double BASE_HEALTH = 20.0F;
@@ -123,17 +122,19 @@ public class PlayerData {
     @Expose
     @SerializedName(value = "parkour.list")
     public List<String> courseIds = new ArrayList<>();
-    public PermissionAttachment attachment;
     /**
      * 玩家的背包和装备物品的记录
      */
     public CourseDesigner designer;
-
     /**
      * 玩家在runnable线程的时间检查点，初始化为登陆时间
      * 通常不会更改这个属性的值
      */
     public long loginTimeStamp = 0;
+    /**
+     * 本插件实例
+     */
+    private final JavaPlugin plugin = HCPlayground.getPlugin();
     /**
      * 记录玩家登陆时的游戏模式
      */
@@ -153,20 +154,15 @@ public class PlayerData {
     /**
      * 玩家是否已经使用/login指令登陆到服务器
      */
-    private boolean isLogin;
+    private boolean login;
     /**
      * 玩家是否已经使用/register指令注册到服务器
      */
-    private boolean isRegister;
-    /**
-     * 玩家最近的登陆时间
-     */
-    private Date loginTime = new Date();
-    /**
-     * 本插件的实例
-     */
-    private final JavaPlugin plugin = HCPlayground.getPlugin();
+    private boolean register;
+    private final PermissionAttachment attachment;
     private GameProfile profile;
+    private Date loginTime = new Date();
+    private ScoreboardItem sidebar;
 
     private double totalArmor = BASE_ARMOR;
     private double totalAttackReach = BASE_ATTACK_REACH;
@@ -179,12 +175,20 @@ public class PlayerData {
     private double totalDiggingSpeed = BASE_DIGGING_SPEED;
     private double totalLoggingSpeed = BASE_LOGGING_SPEED;
 
-    public PlayerData(Player player) {
+    public PlayerData(Player player) throws IllegalAccessException {
         this.player = player;
 
         name = player.getName();
         uuid = player.getUniqueId();
+        gameMode = player.getGameMode();
+        attachment = player.addAttachment(plugin);
+
         designer = new CourseDesigner(this);
+        LoadConfig();
+    }
+
+    public PermissionAttachment getAttachment() {
+        return attachment;
     }
 
     public double getCurrentHealth() {
@@ -306,12 +310,12 @@ public class PlayerData {
         totalRecover = value;
     }
 
-    public boolean getLogin() {
-        return isLogin;
+    public boolean isLogin() {
+        return login;
     }
 
     public void setLogin(boolean value) {
-        isLogin = value;
+        login = value;
     }
 
     public Date getLoginTime() {
@@ -323,11 +327,11 @@ public class PlayerData {
     }
 
     public boolean getRegister() {
-        return isRegister;
+        return register;
     }
 
     public void setRegister(boolean value) {
-        isRegister = value;
+        register = value;
     }
 
     public UUID getUuid() {
@@ -351,41 +355,25 @@ public class PlayerData {
         this.gameMode = gameMode;
     }
 
-    public boolean Exist() throws SQLException {
-        return SqliteManager.PlayerExist(player);
+    public boolean isRegister() throws SQLException {
+        return SqliteManager.isPlayerRegister(player);
     }
 
-    public boolean isBanned() throws SQLException {
-        BanPlayerDetail detail = SqliteManager.isPlayerBanned(player);
-        if (detail == null) return false;
-
-        DateFormat df = DateFormat.getDateInstance(DateFormat.FULL, Locale.CHINA);
-        DateFormat tf = DateFormat.getTimeInstance(DateFormat.FULL, Locale.CHINA);
-        String masterName = detail.masterName;
-        String reason = detail.message;
-        Date banDate = detail.banDate;
-        String banDateTime = String.format("%s %s", df.format(banDate), tf.format(banDate));
-        String bannedMessage = LocalizationManager.getMessage("playerBannedMessage", player)
-                .replace("%player%", name)
-                .replace("%master%", masterName)
-                .replace("%reason%", reason)
-                .replace("%banDate%", banDateTime);
-        player.kickPlayer(bannedMessage);
-
-        return detail.isBanned;
+    public BanPlayerDetail isBanned() throws SQLException {
+        return SqliteManager.isPlayerBanned(player);
     }
 
     public boolean Register(String password) throws SQLException, InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException {
 
         boolean register = SqliteManager.PlayerRegister(player, password);
         if (!register) {
-            player.sendMessage(LocalizationManager.getMessage("playerRegisterExist", player)
+            player.sendMessage(LanguageManager.getMessage("playerRegisterExist", player)
                     .replace("%player%", name));
         } else {
-            isLogin = true;
+            login = true;
             //Global.LogMessage(String.format("\033[1;35mPlayer register gameMode: \033[1;33m%s\033[0m", gameMode));
             player.setGameMode(gameMode);
-            plugin.getServer().broadcastMessage(LocalizationManager.getMessage("playerRegisterWelcome", player)
+            plugin.getServer().broadcastMessage(LanguageManager.getMessage("playerRegisterWelcome", player)
                     .replace("%player%", name));
         }
 
@@ -396,48 +384,70 @@ public class PlayerData {
 
         boolean unregister = SqliteManager.PlayerUnregister(player, password);
         if (!unregister) {
-            player.sendMessage(LocalizationManager.getMessage("playerURPasswordNotRight", player).replace("%player%", name));
+            player.sendMessage(LanguageManager.getMessage("playerURPasswordNotRight", player).replace("%player%", name));
         } else {
-            player.kickPlayer(LocalizationManager.getMessage("playerUnregistered", player).replace("%player%", name));
+            player.kickPlayer(LanguageManager.getMessage("playerUnregistered", player).replace("%player%", name));
         }
 
         return unregister;
     }
 
+    /**
+     * 玩家登陆，如果之前玩家已经登陆成功，之后再调用这个函数，则直接判断玩家无需要再登陆
+     * @param password 玩家的密码
+     * @return True: 玩家登陆成功，False: 玩家登陆失败
+     */
     public boolean Login(String password) throws InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException, SQLException {
 
-        if (isLogin) {
-            player.sendMessage(LocalizationManager.getMessage("playerHasLogin", player).replace("%player%", name));
+        if (login) {
+            player.sendMessage(LanguageManager.getMessage("playerHasLogin", player).replace("%player%", name));
             return false;
         }
-        isLogin = SqliteManager.PlayerLogin(player, password);
-        if (!isLogin) {
-            player.sendMessage(LocalizationManager.getMessage("playerLoginFailed", player).replace("%player%", name));
+        login = SqliteManager.PlayerLogin(player, password);
+        if (!login) {
+            player.sendMessage(LanguageManager.getMessage("playerLoginFailed", player).replace("%player%", name));
         } else {
             //Global.LogMessage(String.format("\033[1;35mPlayer Login gameMode: \033[1;33m%s\033[0m", gameMode));
             player.setGameMode(gameMode);
-            player.sendMessage(LocalizationManager.getMessage("playerLoginWelcome", player).replace("&", "§").replace("%player%", name));
+            player.sendMessage(LanguageManager.getMessage("playerLoginWelcome", player).replace("&", "§").replace("%player%", name));
+
+            List<ItemBase> books = ItemManager.getBooks();
+            for (ItemBase ib : books) {
+                if (Arrays.asList(ib.getFeature()).contains(ItemFeatureType.OPEN_BOOK_ON_JOIN)) {
+                    player.openBook(ib.toItemStack());
+                }
+            }
         }
 
-        return isLogin;
+        return login;
     }
 
     public boolean ChangePassword(String oldPassword, String newPassword) throws InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException, SQLException {
 
         boolean exist = SqliteManager.CheckPassword(player, oldPassword);
         if (!exist) {
-            player.sendMessage(LocalizationManager.getMessage("playerOldPasswordNotRight", player).replace("%player%", name));
+            player.sendMessage(LanguageManager.getMessage("playerOldPasswordNotRight", player).replace("%player%", name));
             return false;
         }
 
         boolean changed = SqliteManager.ChangePassword(player, newPassword);
         if (!changed) {
-            player.sendMessage(LocalizationManager.getMessage("systemError", player).replace("%player%", name));
+            player.sendMessage(LanguageManager.getMessage("systemError", player).replace("%player%", name));
         } else {
-            player.sendMessage(LocalizationManager.getMessage("playerPasswordChanged", player).replace("%player%", name));
+            player.sendMessage(LanguageManager.getMessage("playerPasswordChanged", player).replace("%player%", name));
         }
 
         return changed;
+    }
+
+    public void UnBanPlayer(String targetPlayer) throws SQLException {
+        PlayerBannedState state = SqliteManager.UnBanPlayer(targetPlayer);
+        switch (state) {
+            case Player_Not_Exist ->
+                    player.sendMessage(LanguageManager.getMessage("playerNotExist", player).replace("%player%", targetPlayer));
+            case Player_Unbanned ->
+                    player.sendMessage(LanguageManager.getMessage("playerUnBanned", player).replace("%player%", targetPlayer));
+        }
     }
 
     public void BanPlayer(String targetPlayer, String reason) throws SQLException {
@@ -452,20 +462,30 @@ public class PlayerData {
 
         switch (state) {
             case Player_Not_Exist ->
-                    player.sendMessage(LocalizationManager.getMessage("playerNotExist", player).replace("%player%", targetPlayer));
+                    player.sendMessage(LanguageManager.getMessage("playerNotExist", player).replace("%player%", targetPlayer));
             case Player_Banned -> {
                 if (target != null) {
-                    target.kickPlayer(LocalizationManager.getMessage("playerBannedMessage", player)
+                    target.kickPlayer(LanguageManager.getMessage("playerBannedMessage", player)
                             .replace("%player%", targetPlayer)
                             .replace("%master%", name)
                             .replace("%reason%", reason)
                             .replace("%banDate%", banDateTime));
                 }
-                player.sendMessage(LocalizationManager.getMessage("playerBanned", player).replace("%player%", targetPlayer));
+                player.sendMessage(LanguageManager.getMessage("playerBanned", player).replace("%player%", targetPlayer));
             }
-            case Player_Unbanned ->
-                    player.sendMessage(LocalizationManager.getMessage("playerUnBanned", player).replace("%player%", targetPlayer));
         }
+    }
+
+    public void ShowSidebar(String world) {
+        ScoreboardItem sidebar = ScoreboardManager.getItemByWorld(world);
+        this.sidebar = sidebar;
+        if (sidebar == null) return;
+        sidebar.display(player);
+    }
+
+    public void UpdateSidebar() {
+        if (this.sidebar == null) return;
+        sidebar.Update(player);
     }
 
     public void LoadConfig() throws IllegalAccessException {

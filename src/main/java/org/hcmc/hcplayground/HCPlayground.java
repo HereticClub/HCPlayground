@@ -1,5 +1,6 @@
 package org.hcmc.hcplayground;
 
+import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.InvalidConfigurationException;
@@ -8,6 +9,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
 import org.hcmc.hcplayground.expansion.HCPluginExpansion;
 import org.hcmc.hcplayground.filter.ConsoleLog4jFilter;
+import org.hcmc.hcplayground.listener.HologramListener;
 import org.hcmc.hcplayground.listener.PluginListener;
 import org.hcmc.hcplayground.manager.*;
 import org.hcmc.hcplayground.manager.PermissionManager;
@@ -37,6 +39,8 @@ public class HCPlayground extends JavaPlugin {
         super.onEnable();
 
         try {
+            // 连接和加载Sqlite数据库
+            Global.Sqlite = SqliteManager.CreateSqliteConnection();
             // 重新加载所有yml文档
             ReloadConfiguration();
             // 以下代码不需要在ReloadPlugin()中执行，只需要在插件启用时执行一次
@@ -44,8 +48,8 @@ public class HCPlayground extends JavaPlugin {
             task = Global.runnable.runTaskTimer(this, 20, 20);
             // 注册Listener
             getServer().getPluginManager().registerEvents(new PluginListener(), this);
-            // 连接和加载Sqlite数据库
-            Global.Sqlite = SqliteManager.CreateSqliteConnection();
+            //getServer().getMessenger().registerIncomingPluginChannel(this, "HOLOGRAM", new HologramListener());
+            //getServer().getMessenger().registerOutgoingPluginChannel(this, "HOLOGRAM");
             // 验证并且注册所依赖的Plugin
             Global.ValidWorldGuardPlugin();
             Global.ValidVaultPlugin();
@@ -109,22 +113,9 @@ public class HCPlayground extends JavaPlugin {
         return getPlugin(instance.getClass());
     }
 
-    private void InitialChildrenFolders() {
-        String[] childrenFolders = new String[]{"profile", "database", "record", "designer", "storage"};
-
-        if (!getDataFolder().exists()) {
-            boolean flag = getDataFolder().mkdir();
-        }
-
-        for (String s : childrenFolders) {
-            File f = new File(String.format("%s/%s", getDataFolder(), s));
-            boolean flag = f.mkdir();
-        }
-    }
-
     public void ReloadConfiguration() throws IllegalAccessException, NoSuchFieldException, SQLException, NoSuchAlgorithmException, InvalidKeySpecException, IOException {
         // 创建插件所需要的子目录
-        InitialChildrenFolders();
+        Global.InitialChildrenFolders();
         // 合并所有Yml格式文档到插件目录
         // 兼容前版本的配置，并且添加新版本的配置
         Global.SaveYamlResource();
@@ -132,7 +123,7 @@ public class HCPlayground extends JavaPlugin {
         Global.LoadConfig();
         // 从yml格式文档加载配置到实例，必须按照指定的加载顺序
         // 1.加载本地化文档
-        LocalizationManager.Load(Global.getYamlConfiguration(Global.FILE_MESSAGES));
+        LanguageManager.Load(Global.getYamlConfiguration(Global.FILE_MESSAGES));
         // 2.加载权限列表
         PermissionManager.Load(Global.getYamlConfiguration(Global.FILE_PERMISSION));
         // 3.加载指令
@@ -159,5 +150,9 @@ public class HCPlayground extends JavaPlugin {
         CourseManager.Load(Global.getYamlConfiguration(Global.FILE_COURSE));
         // 14.加载自定义命令列表
         CcmdManager.Load(Global.getYamlConfiguration(Global.FILE_CCMD));
+        // 15.加载计分板定义列表
+        ScoreboardManager.Load(Global.getYamlConfiguration(Global.FILE_SCOREBOARD));
+        // 16.加载漂浮字体定义列表
+        HologramManager.Load(Global.getYamlConfiguration(Global.FILE_HOLOGRAM));
     }
 }

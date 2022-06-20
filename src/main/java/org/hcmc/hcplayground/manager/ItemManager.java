@@ -17,20 +17,17 @@ import org.hcmc.hcplayground.model.item.*;
 import org.hcmc.hcplayground.utility.Global;
 import org.hcmc.hcplayground.utility.MaterialData;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 public class ItemManager {
 
     private static final JavaPlugin plugin;
-    private static final List<ItemBase> ItemEntire;
+    private static final List<ItemBase> items;
     private static List<Weapon> itemWeapons;
     private static List<Armor> itemArmors;
     private static List<Hand> itemHands;
     private static List<Join> itemJoins;
     private static List<Crazy> itemCrazies;
-    private static ItemManager instance = null;
 
     static {
         itemWeapons = new ArrayList<>();
@@ -38,49 +35,71 @@ public class ItemManager {
         itemHands = new ArrayList<>();
         itemJoins = new ArrayList<>();
         itemCrazies = new ArrayList<>();
-        ItemEntire = new ArrayList<>();
+        items = new ArrayList<>();
         plugin = HCPlayground.getPlugin();
     }
 
     public ItemManager() {
-        instance = this;
+
     }
 
-    public ItemManager getInstance() {
-        return instance;
-    }
-
-    public static List<ItemBase> getItemEntire() {
-        return ItemEntire;
+    public static List<ItemBase> getItems() {
+        return items;
     }
 
     public static void Load(YamlConfiguration yaml) {
         /*
          在items.yml文档中
-         weapons 节段内所有item为武器
-         armors 节段内所有item为盔甲
-         accessories 节段内所有item为饰品
+         weapons - 武器物品
+         armors - 盔甲物品
+         accessories 饰物，可能会带有某些药水效果
+         joins - 自定义物品，普通的没有效果的物品，比如：书本、某种附加了NBT数据的矿石等
+         crazies - 疯狂物品，玩家可互动方块，比如：疯狂合成台、疯狂锻造台，疯狂附魔台等
         */
         ConfigurationSection section;
 
         try {
+            // 获取weapons节段内容
             section = yaml.getConfigurationSection("weapons");
             if (section != null) itemWeapons = Global.SetItemList(section, Weapon.class);
+            // 获取armors节段内容
             section = yaml.getConfigurationSection("armors");
             if (section != null) itemArmors = Global.SetItemList(section, Armor.class);
+            // 获取hands节段内容
             section = yaml.getConfigurationSection("hands");
             if (section != null) itemHands = Global.SetItemList(section, Hand.class);
-            section = yaml.getConfigurationSection("joins");
-            if (section != null) itemJoins = Global.SetItemList(section, Join.class);
+            // 获取crazies节段内容
             section = yaml.getConfigurationSection("crazies");
             if (section != null) itemCrazies = Global.SetItemList(section, Crazy.class);
+            // 获取joins节段内容，需要处理作为书本的物品
+            section = yaml.getConfigurationSection("joins");
+            if (section != null) {
+                itemJoins = Global.SetItemList(section, Join.class);
+                for (Join join : itemJoins) {
+                    // 获取Join类物品的Id
+                    String[] keys = join.getId().split("\\.");
+                    ConfigurationSection pageSection = section.getConfigurationSection(String.format("%s.pages", keys[1]));
+                    if (pageSection == null) continue;
+                    // 获取作为书本类型的页码配置
+                    Set<String> indexes = pageSection.getKeys(false);
+                    Set<String> sorted = new TreeSet<>(Comparator.naturalOrder());
+                    sorted.addAll(indexes);
 
-            ItemEntire.clear();
-            ItemEntire.addAll(itemArmors);
-            ItemEntire.addAll(itemHands);
-            ItemEntire.addAll(itemWeapons);
-            ItemEntire.addAll(itemJoins);
-            ItemEntire.addAll(itemCrazies);
+                    for (String index : sorted) {
+                        int i = Integer.parseInt(index);
+                        List<String> text = pageSection.getStringList(String.format("%s.content", index));
+                        text.replaceAll(x -> x.replace("&", "§"));
+                        join.pages.put(i, text);
+                    }
+                }
+            }
+
+            items.clear();
+            items.addAll(itemArmors);
+            items.addAll(itemHands);
+            items.addAll(itemWeapons);
+            items.addAll(itemJoins);
+            items.addAll(itemCrazies);
         } catch (IllegalAccessException ex) {
             ex.printStackTrace();
         }
@@ -89,14 +108,19 @@ public class ItemManager {
     public static List<String> getIdList() {
         List<String> list = new ArrayList<>();
 
-        for (ItemBase ib : ItemEntire) {
+        for (ItemBase ib : items) {
             list.add(ib.getId());
         }
 
         return list;
     }
 
-    // 创建一个id为null的ItemBase实例
+    /**
+     * 创建一个id为null的ItemBase实例
+     * @param material 物品的材质
+     * @param amount 物品的数量
+     * @return ItemBase实例
+     */
     public static ItemBase createItemBase(Material material, int amount) {
         CraftItemBase x = new CraftItemBase(amount);
         MaterialData md = new MaterialData();
@@ -106,8 +130,12 @@ public class ItemManager {
         return x;
     }
 
+    public static List<ItemBase> getBooks(){
+        return items.stream().filter(ItemBase::isWrittenBook).toList();
+    }
+
     public static ItemBase findItemById(String id) {
-        return ItemEntire.stream().filter(x -> x.getId().equalsIgnoreCase(id)).findAny().orElse(null);
+        return items.stream().filter(x -> x.getId().equalsIgnoreCase(id)).findAny().orElse(null);
     }
 
     public static ItemBase getItemBase(ItemStack is) {
@@ -126,18 +154,18 @@ public class ItemManager {
         Player player = Arrays.stream(players).filter(x -> x.getName().equalsIgnoreCase(playerName)).findAny().orElse(null);
 
         if (player == null) {
-            sender.sendMessage(LocalizationManager.getMessage("playerNotExist", null).replace("%player%", playerName));
+            sender.sendMessage(LanguageManager.getMessage("playerNotExist", null).replace("%player%", playerName));
             return;
         }
         // 可能这个判断没有用
         if (!player.isOnline()) {
-            sender.sendMessage(LocalizationManager.getMessage("playerOffLine", player).replace("%player%", playerName));
+            sender.sendMessage(LanguageManager.getMessage("playerOffLine", player).replace("%player%", playerName));
             return;
         }
 
         ItemBase ib = findItemById(itemId);
         if (ib == null) {
-            sender.sendMessage(LocalizationManager.getMessage("noSuchItem", player).replace("%item%", itemId));
+            sender.sendMessage(LanguageManager.getMessage("noSuchItem", player).replace("%item%", itemId));
             return;
         }
         ItemStack is = ib.toItemStack();

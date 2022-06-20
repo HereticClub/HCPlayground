@@ -8,10 +8,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BookMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 public class Join extends ItemBaseA {
     /**
@@ -51,7 +48,8 @@ public class Join extends ItemBaseA {
      */
     @Expose
     @SerializedName(value = "pages")
-    public List<Page> Pages = new ArrayList<>();
+    //public List<Page> Pages = new ArrayList<>();
+    public Map<Integer, List<String>> pages = new HashMap<>();
     /**
      * 表示该物品是一本书，以及该书本的作者
      */
@@ -104,15 +102,18 @@ public class Join extends ItemBaseA {
     private void setBookMeta(BookMeta meta) {
         if (!Author.equalsIgnoreCase("")) meta.setAuthor(Author);
         if (!Title.equalsIgnoreCase("")) meta.setTitle(Title);
-        Pages.sort(Comparator.comparing(x -> x.Number));
-        for (Page p : Pages) {
+        // 获取所有页面
+        Set<Integer> keys = pages.keySet();
+        // 获取每页内容
+        for (Integer i : keys) {
+            List<String> text = pages.get(i);
             // 书本的每一行内容最后都要添加\n字符
             // 书本的每一页内容都是单个字符串实例
             StringBuilder content = new StringBuilder();
-            for (String s : p.Content) {
+            for (String s : text) {
                 content.append(String.format("%s§r\n", s));
             }
-            // 每一个字符串实例算添加一页
+            // 把内容添加到当前页面
             meta.addPage(content.toString());
         }
         meta.setGeneration(Generation);

@@ -122,12 +122,20 @@ banplayer:
   worlds: []
   aliases:
     - banp
+unbanplayer:
+  permission: hc.banplayer.unban
+  runOnConsole: true
+  runOnPlayer: true
+  worlds: []
+  aliases:
+    - unbanp
+broadcastplus:
+  permission: hc.broadcastplus.show
+  runOnConsole: true
+  runOnPlayer: true
+  worlds: []
+  aliases:
     - bp
-  args:
-    1:
-      name: u
-      permission: hc.banplayer.unban
-      index: 2
 scale:
   permission: hc.scale
   runOnConsole: false

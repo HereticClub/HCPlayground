@@ -165,11 +165,11 @@ public class CourseDesigner {
         outOfDesignRange = x >= designRange || z >= designRange;
 
         if (!outOfDesignRange && showMessage) {
-            player.sendMessage(LocalizationManager.getMessage("enterCourseRange", player));
+            player.sendMessage(LanguageManager.getMessage("enterCourseRange", player));
             showMessage = false;
         }
         if (outOfDesignRange && !showMessage) {
-            player.sendMessage(LocalizationManager.getMessage("outOfCourseRange", player));
+            player.sendMessage(LanguageManager.getMessage("outOfCourseRange", player));
             showMessage = true;
         }
     }
@@ -202,12 +202,12 @@ public class CourseDesigner {
             int waitFor = Global.course.getWaitFor();
             if (waitFor <= 0) waitFor = 3;
             // 跑酷插件会强制玩家进入世界后改变玩家的游戏模式
-            player.sendMessage(LocalizationManager.getMessage("courseEnteringDesignMode", player).replace("%second%", String.valueOf(waitFor)));
+            player.sendMessage(LanguageManager.getMessage("courseEnteringDesignMode", player).replace("%second%", String.valueOf(waitFor)));
             designTask = new BukkitRunnable() {
                 @Override
                 public void run() {
                     player.setGameMode(GameMode.CREATIVE);
-                    player.sendMessage(LocalizationManager.getMessage("courseDesignModeEntered", player));
+                    player.sendMessage(LanguageManager.getMessage("courseDesignModeEntered", player));
                 }
             }.runTaskLater(plugin, waitFor * 20L);
         }
@@ -260,7 +260,7 @@ public class CourseDesigner {
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
-                    player.sendMessage(LocalizationManager.getMessage("courseDesignModeLeave", player));
+                    player.sendMessage(LanguageManager.getMessage("courseDesignModeLeave", player));
                 }
             }.runTaskLater(plugin, waitFor * 20L);
         }

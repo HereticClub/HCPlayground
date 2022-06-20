@@ -3,6 +3,7 @@ package org.hcmc.hcplayground.model.item;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
@@ -11,6 +12,7 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.hcmc.hcplayground.HCPlayground;
+import org.hcmc.hcplayground.enums.ItemFeatureType;
 import org.hcmc.hcplayground.utility.MaterialData;
 
 import java.util.ArrayList;
@@ -21,8 +23,8 @@ import java.util.List;
  * 自定义物品的基础类<br>
  * 该类或者子类的属性和值将会写入PersistentData中<br>
  * 如果当前实例的id属性值为null<br>
- * 则该实例所有属性除了material外都无效<br>
- * 即该实例只是一个普通的Material<br>
+ * 则该实例所有属性除了material和amount外都无效<br>
+ * 即该实例只是一个常规的ItemStack<br>
  */
 public abstract class ItemBaseA implements ItemBase {
     /**
@@ -75,6 +77,12 @@ public abstract class ItemBaseA implements ItemBase {
     @Expose
     @SerializedName(value = "flags")
     private ItemFlag[] flags = new ItemFlag[]{};
+    /**
+     * 物品的特性，比如登陆时打开的书本，进入某个世界时给与玩家等等
+     */
+    @Expose
+    @SerializedName(value = "features")
+    public ItemFeatureType[] features = new ItemFeatureType[]{};
 
     /*
     使用了@Expose，必须在创建Gson实例时<br>
@@ -120,8 +128,17 @@ public abstract class ItemBaseA implements ItemBase {
     }
 
     @Override
+    public ItemFeatureType[] getFeature() {
+        return features;
+    }
+
+    @Override
     public ItemFlag[] getFlags() {
         return flags;
+    }
+
+    public void setFeatures(ItemFeatureType[] features) {
+        this.features = features;
     }
 
     @Override
@@ -162,6 +179,10 @@ public abstract class ItemBaseA implements ItemBase {
     @Override
     public void setFlags(ItemFlag[] value) {
         flags = value;
+    }
+
+    public boolean isWrittenBook() {
+        return material.value.equals(Material.WRITTEN_BOOK);
     }
 
     public ItemMeta setBaseItemMeta(ItemStack itemStack) {

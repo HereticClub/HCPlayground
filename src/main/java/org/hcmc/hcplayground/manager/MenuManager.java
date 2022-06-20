@@ -59,7 +59,7 @@ public class MenuManager {
         String worldName = player.getWorld().getName();
         boolean isEnabledWorld = detail.enableWorlds.stream().anyMatch(x -> x.equalsIgnoreCase(worldName));
         if (detail.enableWorlds.size() >= 1 && !isEnabledWorld && !player.isOp()) {
-            player.sendMessage(LocalizationManager.getMessage("menuWorldProhibited", player)
+            player.sendMessage(LanguageManager.getMessage("menuWorldProhibited", player)
                     .replace("%world%", worldName)
                     .replace("%menu%", title)
             );

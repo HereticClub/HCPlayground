@@ -10,11 +10,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-public class LocalizationManager {
+public class LanguageManager {
 
     public static Map<String, String> Messages = new HashMap<>();
 
-    public LocalizationManager() {
+    public LanguageManager() {
 
     }
 
@@ -31,6 +31,10 @@ public class LocalizationManager {
 
             Messages.put(s, value.replace('&', '§'));
         }
+    }
+
+    public static String getMessage(String key) {
+        return Messages.get(key);
     }
 
     public static String getMessage(String key, CommandSender sender) {

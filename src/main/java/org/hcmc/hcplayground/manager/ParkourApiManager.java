@@ -1,8 +1,10 @@
 package org.hcmc.hcplayground.manager;
 
+import com.ibm.icu.util.TimeUnit;
 import io.github.a5h73y.parkour.Parkour;
 import io.github.a5h73y.parkour.configuration.ConfigManager;
-import io.github.a5h73y.parkour.type.checkpoint.Checkpoint;
+import io.github.a5h73y.parkour.database.DatabaseManager;
+import io.github.a5h73y.parkour.database.TimeEntry;
 import io.github.a5h73y.parkour.type.checkpoint.CheckpointManager;
 import io.github.a5h73y.parkour.type.course.Course;
 import io.github.a5h73y.parkour.type.course.CourseManager;
@@ -10,19 +12,21 @@ import io.github.a5h73y.parkour.type.course.CourseSettingsManager;
 import io.github.a5h73y.parkour.type.kit.ParkourKitConfig;
 import io.github.a5h73y.parkour.type.kit.ParkourKitManager;
 import io.github.a5h73y.parkour.type.lobby.LobbyConfig;
-import io.github.a5h73y.parkour.type.lobby.LobbyManager;
 import io.github.a5h73y.parkour.type.player.PlayerManager;
-import org.bukkit.block.BlockFace;
+import me.clip.placeholderapi.util.TimeUtil;
+import org.apache.commons.lang.StringUtils;
 import org.bukkit.entity.Player;
-import org.hcmc.hcplayground.HCPlayground;
 
+import java.sql.Timestamp;
+import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 
 public class ParkourApiManager {
 
     public static final String PARKOUR_KIT_DEFAULT = "default";
-
     private static final Parkour parkour = Parkour.getInstance();
 
     public ParkourApiManager() {
@@ -36,6 +40,36 @@ public class ParkourApiManager {
         if (c == null) return 0;
         return c.getNumberOfCheckpoints();
 
+    }
+
+    public static List<String> getTopBestScoreboard() {
+        DatabaseManager dm = parkour.getDatabaseManager();
+        CourseManager cm = parkour.getCourseManager();
+        List<String> courses = cm.getCourseNames();
+        List<String> result = new ArrayList<>();
+
+
+        result.add(LanguageManager.getMessage("template.courses_top.hearer"));
+
+        for (String course : courses) {
+            List<TimeEntry> topBest = dm.getTopBestTimes(course, 1);
+            topBest.sort(Comparator.comparing(TimeEntry::getTime));
+
+            for (TimeEntry entry : topBest) {
+                Duration duration = Duration.ofMillis(entry.getTime());
+
+                String time = String.format("%s:%s:%s.%s", duration.toHoursPart(), duration.toMinutesPart(), duration.toSecondsPart(), duration.toMillisPart());
+                String line = LanguageManager.getMessage("template.courses_top.line")
+                        .replace("%player%", entry.getPlayerName())
+                        .replace("%course%", course)
+                        .replace("%time%", time);
+                result.add(line);
+            }
+        }
+
+        String footer = LanguageManager.getMessage("template.courses_top.footer");
+        if (!StringUtils.isBlank(footer)) result.add(footer);
+        return result;
     }
 
     public static boolean existCourse(String course) {

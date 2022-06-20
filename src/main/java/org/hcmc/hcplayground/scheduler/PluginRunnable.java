@@ -1,5 +1,6 @@
 package org.hcmc.hcplayground.scheduler;
 
+import me.clip.placeholderapi.PlaceholderAPI;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.TextComponent;
@@ -15,18 +16,17 @@ import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scoreboard.*;
 import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.manager.*;
+import org.hcmc.hcplayground.model.hologram.HologramItem;
 import org.hcmc.hcplayground.model.item.ItemBase;
 import org.hcmc.hcplayground.model.player.PlayerData;
 import org.hcmc.hcplayground.utility.Global;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 public class PluginRunnable extends BukkitRunnable {
 
@@ -59,7 +59,7 @@ public class PluginRunnable extends BukkitRunnable {
     private void doClearLag() {
         long delta = new Date().getTime() / 1000 - lastClearLagTime.getTime() / 1000;
         int remainSecond = ClearLagManager.Interval - (int) delta;
-        int clearedItem;
+        int clearedCount;
         String msg = ClearLagManager.Remind.get(remainSecond);
         if (msg != null) {
             plugin.getServer().broadcastMessage(msg.replace("%remain%", String.valueOf(remainSecond)));
@@ -67,7 +67,7 @@ public class PluginRunnable extends BukkitRunnable {
 
         if (delta <= ClearLagManager.Interval) return;
         lastClearLagTime = new Date();
-        clearedItem = 0;
+        clearedCount = 0;
 
         List<World> worlds = plugin.getServer().getWorlds();
         for (World w : worlds) {
@@ -75,10 +75,10 @@ public class PluginRunnable extends BukkitRunnable {
             List<Entity> dropped = entities.stream().filter(x -> ClearLagManager.Types.contains(x.getType())).toList();
             for (Entity item : dropped) {
                 item.remove();
-                clearedItem++;
+                clearedCount++;
             }
         }
-        plugin.getServer().broadcastMessage(ClearLagManager.ClearMessage.replace("%removed%", String.valueOf(clearedItem)));
+        plugin.getServer().broadcastMessage(ClearLagManager.ClearMessage.replace("%removed%", String.valueOf(clearedCount)));
     }
 
     private void doBroadcastTask() {
@@ -86,7 +86,7 @@ public class PluginRunnable extends BukkitRunnable {
         if (delta <= BroadcastManager.Interval) return;
 
         lastBroadcastTime = new Date();
-        List<String> msg = BroadcastManager.RandomMessage();
+        List<String> msg = BroadcastManager.randomMessage();
         for (String s : msg) {
             plugin.getServer().broadcastMessage(s);
         }
@@ -98,39 +98,41 @@ public class PluginRunnable extends BukkitRunnable {
         // 每秒更新自1970年1月1日开始至今的总秒数
         totalSeconds = new Date().getTime() / 1000;
         for (Player player : players) {
-            PlayerData pd = PlayerManager.getPlayerData(player);
+            PlayerData data = PlayerManager.getPlayerData(player);
 
-            doRemindLogin(pd);
-            doPotionEffect(pd);
-            doShowActionBar(pd);
+            doRemindLogin(data);
+            doPotionEffect(data);
+            doShowActionBar(data);
+            doUpdateSidebar(data);
         }
+    }
+
+    /*
+    TODO: Hologram, 需要实施漂浮字体内容更新功能
+    private void doUpdateHologram(Player player) {
+        List<HologramItem> holograms = HologramManager.getHolograms();
+        for (HologramItem holo : holograms) {
+            holo.update(player);
+        }
+    }
+     */
+
+    private void doUpdateSidebar(PlayerData data) {
+        data.UpdateSidebar();
     }
 
     private void doShowActionBar(PlayerData pd) {
         int interval = (int) (totalSeconds - pd.loginTimeStamp) % Global.potion.refreshInterval + 1;
         if (interval < 2) return;
 
-        double maxHealth = pd.getMaxHealth();
-        double currentHealth = pd.getCurrentHealth();
-        double totalArmor = pd.getTotalArmor();
-        double totalAttackDamage = pd.getTotalAttackDamage();
-        double totalCritical = pd.getTotalCritical();
-        double totalCriticalDamage = pd.getTotalCriticalDamage();
-
-
-        //String value = String.format("§c生命: §e%.1f§7/§e%.1f §b护甲: §e%.1f §a攻击: §e%.1f §6暴击: §e%.1f%% §5爆伤: §e%.1f%%", currentHealth, maxHealth, totalArmor, totalAttackDamage, totalCritical * 100, totalCriticalDamage * 100);
-
         Player player = pd.getPlayer();
-        String value = LocalizationManager.getMessage("playerActionBar", player);
+        String value = LanguageManager.getMessage("playerActionBar", player);
         BaseComponent baseComponent = new TextComponent(value);
         player.spigot().sendMessage(ChatMessageType.ACTION_BAR, baseComponent);
     }
 
     /**
      * 检测和激活玩家身上装备的药水效果
-     *
-     * @param pd
-     * @throws IllegalAccessException
      */
     private void doPotionEffect(PlayerData pd) throws IllegalAccessException {
         int interval = (int) (totalSeconds - pd.loginTimeStamp) % Global.potion.refreshInterval + 1;
@@ -170,29 +172,27 @@ public class PluginRunnable extends BukkitRunnable {
         // 自玩家登录时间开始，至今的总秒数
         long loginSeconds = pd.getLoginTime().getTime() / 1000;
         // 获取玩家是否已经登录
-        boolean isLogin = pd.getLogin();
+        boolean isLogin = pd.isLogin();
         // 获取玩家是否已经注册
         boolean isRegister = pd.getRegister();
         // 如果玩家已经登录，则不需要再提醒登录操作
         if (isLogin) return;
 
-        Player player = plugin.getServer().getPlayer(pd.getUuid());
-        if (player == null) return;
-
+        Player player = pd.getPlayer();
         int interval = (int) (totalSeconds - pd.loginTimeStamp) % Global.authme.remainInterval + 1;
         if (interval >= Global.authme.remainInterval) {
             long remain = Global.authme.timeout - (totalSeconds - loginSeconds);
             if (!isRegister) {
-                player.sendMessage(LocalizationManager.getMessage("playerRegisterRemind", player).replace("%remain%", String.valueOf(remain)));
+                player.sendMessage(LanguageManager.getMessage("playerRegisterRemind", player).replace("%remain%", String.valueOf(remain)));
             } else {
-                player.sendMessage(LocalizationManager.getMessage("playerLoginRemind", player).replace("%remain%", String.valueOf(remain)));
+                player.sendMessage(LanguageManager.getMessage("playerLoginRemind", player).replace("%remain%", String.valueOf(remain)));
             }
         }
         if (totalSeconds - loginSeconds >= Global.authme.timeout) {
             if (!isRegister) {
-                player.kickPlayer(LocalizationManager.getMessage("playerRegisterTimeout", player).replace("%player%", player.getName()));
+                player.kickPlayer(LanguageManager.getMessage("playerRegisterTimeout", player).replace("%player%", player.getName()));
             } else {
-                player.kickPlayer(LocalizationManager.getMessage("playerLoginTimeout", player).replace("%player%", player.getName()));
+                player.kickPlayer(LanguageManager.getMessage("playerLoginTimeout", player).replace("%player%", player.getName()));
             }
         }
     }

@@ -142,6 +142,10 @@ messages:
   courseReadyArgInvalid: '&cMust be &etrue &cor &efalse &cfor this command parameter'
   # 当玩家在跑酷设计模式时，禁止执行绝大部分命令
   courseDenyCommandOnDesign: '&4Leave course design mode before perform any more commands!'
+  # 玩家不拥有任何赛道
+  courseNoAssetInName: '&fThere are no course asset in your name'
+  # 玩家拥有某些赛道
+  courseHasAssetInName: '&6The course(s) you owned as below'
   # 当玩家尝试创建跑酷赛道，但该赛道已经存在时显示，可以使用%course%占位符，表示要创建的赛道名称
   courseExist: |- 
     &cThe course &e%course% &cis already exists
@@ -239,12 +243,17 @@ messages:
     description: Forbidden a player to enter the server
     usage: |-
       §f<command> command usage:
-      §9/<command> {player} [u]
+      §9/<command> {player} {message}
       §9player &7- The player name to be banned
-      §9u &7- Ban message, if u parameter is specified, the player will be unbanned
+      §9message &7- Show player message while he/she was banned
       §aFor example:
       §a/<command> {player} You have been banned! &7- ban player, he/she can connect to server no longer and get message &f"You have been banned!"
-      §a/<command> {player} u &7- unban player, he/she can connect to server again
+  unbanplayer:
+    description: Lifting a player to enter the server
+    usage: |-
+      §f<command> command usage:
+      §9/<command> {player}
+      §9player &7- The player name to be lifted the ban
   scale:
     description: Sets player scale health
     usage: |-
@@ -259,6 +268,12 @@ messages:
       &9/<command> crafting &7- &fOpen a menu for crazy crafting
       &9/<command> enchanting &7- &fOpen a menu for crazy enchanting
       &9/<command> anvil &7- &fOpen a menu for crazy anvil
+  broadcastplus:
+    description: Show message to all players
+    usage: |-
+      &7<command> command usage:
+      &9/<command> {message} &7- &fShow message to all players
+      &9message &7- &fThe messages to be shown
   course:
     description: Create, Modify, Delete a parkour course owned by a player
     usage: |-
@@ -278,3 +293,16 @@ messages:
       &9/<command> ready <true|false> &7- &atrue: Open your course to other players, &afalse: Close your course, other players join this course no longer except yourself 
       &9/<command> startpoint <course> &7- &fDecide where the Course to start, stand in the position and face the direction you want the Players to teleport to 
       &9/<command> tp <course> &7- &fTeleport to a course, player must NOT be in design mode
+# 模板节段
+template:
+  # 显示id，不能修改名称
+  courses_top:
+    # 模板的header
+    hearer: '&m======&a Top of courses &m======'
+    # 模板的内容，自动重复，可以使用%player%，%course%，%time%占位符
+    # %player%占位符，表示赛道成绩最优秀的玩家名称
+    # %course%占位符，表示最佳成绩赛道的名称
+    # %time%占位符，表示赛道的最佳完成时间
+    line: '&f%player%: &%course% -> %time%'
+    #模板的footer，不配置则不显示
+    footer: ''

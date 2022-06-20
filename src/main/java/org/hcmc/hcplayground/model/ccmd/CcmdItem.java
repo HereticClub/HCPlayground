@@ -2,7 +2,6 @@ package org.hcmc.hcplayground.model.ccmd;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
-import io.github.a5h73y.parkour.utility.time.DateTimeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandMap;
@@ -11,16 +10,14 @@ import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.hcmc.hcplayground.HCPlayground;
-import org.hcmc.hcplayground.manager.LocalizationManager;
+import org.hcmc.hcplayground.manager.LanguageManager;
 import org.hcmc.hcplayground.manager.PlayerManager;
 import org.hcmc.hcplayground.model.player.PlayerData;
 import org.hcmc.hcplayground.scheduler.CcmdActionRunnable;
-import org.hcmc.hcplayground.utility.Global;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class CcmdItem extends Command {
@@ -75,7 +72,7 @@ public class CcmdItem extends Command {
     private boolean RunCustomCommand(CommandSender sender, @NotNull String[] args) throws IOException, IllegalAccessException, InvalidConfigurationException, ParseException {
         // 自定义命令必须玩家执行
         if (!(sender instanceof Player player)) {
-            sender.sendMessage(LocalizationManager.getMessage("player-message", sender).replace("%command%", id));
+            sender.sendMessage(LanguageManager.getMessage("player-message", sender).replace("%command%", id));
             return false;
         }
         // 检测指令的可用世界列表，op玩家绕过检测
@@ -91,7 +88,7 @@ public class CcmdItem extends Command {
         double diff = current - lastTime;
         if (diff <= cooldown * 1000L) {
             int remain = (int) ((cooldown * 1000L - diff) / 1000);
-            player.sendMessage(LocalizationManager.getMessage("customCommandCooldown", player).replace("%command%", id).replace("%remain%", String.valueOf(remain)));
+            player.sendMessage(LanguageManager.getMessage("customCommandCooldown", player).replace("%command%", id).replace("%remain%", String.valueOf(remain)));
             return false;
         }
         // 执行actions
@@ -115,7 +112,7 @@ public class CcmdItem extends Command {
 
         if (!StringUtils.isBlank(this.permission)) this.setPermission(this.permission);
         this.setAliases(this.aliases);
-        this.setPermissionMessage(LocalizationManager.getMessage("permission-message", null).replace("%permission%", permission));
+        this.setPermissionMessage(LanguageManager.getMessage("permission-message", null).replace("%permission%", permission));
         this.setUsage(this.usage);
         this.setDescription(this.description);
     }

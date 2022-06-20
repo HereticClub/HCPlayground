@@ -3,6 +3,7 @@ package org.hcmc.hcplayground.model.item;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.hcmc.hcplayground.enums.ItemFeatureType;
 import org.hcmc.hcplayground.utility.MaterialData;
 
 public interface ItemBase {
@@ -71,6 +72,8 @@ public interface ItemBase {
 
     boolean getGlowing();
 
+    ItemFeatureType[] getFeature();
+
     String[] getLore();
 
     ItemFlag[] getFlags();
@@ -90,6 +93,8 @@ public interface ItemBase {
     void setLore(String[] value);
 
     void setFlags(ItemFlag[] value);
+
+    boolean isWrittenBook();
 
     ItemMeta setBaseItemMeta(ItemStack is);
 

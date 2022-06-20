@@ -1,4 +1,4 @@
-package org.hcmc.hcplayground.model;
+package org.hcmc.hcplayground.model.mob;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;

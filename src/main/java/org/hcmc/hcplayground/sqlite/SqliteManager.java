@@ -10,6 +10,7 @@ import org.hcmc.hcplayground.enums.PlayerBannedState;
 import org.hcmc.hcplayground.sqlite.table.BanPlayerDetail;
 import org.hcmc.hcplayground.utility.AesAlgorithm;
 import org.hcmc.hcplayground.utility.Global;
+import org.jetbrains.annotations.NotNull;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
@@ -24,6 +25,7 @@ import java.util.*;
 
 public class SqliteManager {
 
+    private static final String SQLITE_CONNECTION_STRING = "jdbc:sqlite:%s/database/hcdb.db";
     private static final JavaPlugin plugin = HCPlayground.getPlugin();
     private static Connection connection;
 
@@ -32,9 +34,41 @@ public class SqliteManager {
     }
 
     public static Connection CreateSqliteConnection() throws SQLException {
-        String url = String.format("jdbc:sqlite:%s/database/hcdb.db", plugin.getDataFolder());
+        String url = String.format(SQLITE_CONNECTION_STRING, plugin.getDataFolder());
         connection = DriverManager.getConnection(url);
         return connection;
+    }
+
+    public static List<UUID> getArmorStandIdList(String group) throws SQLException {
+        String commandText = String.format("select * from hologram where [group] = '%s'", group);
+        Statement statement = connection.createStatement();
+        ResultSet resultSet = statement.executeQuery(commandText);
+
+        List<UUID> idList = new ArrayList<>();
+
+        while (resultSet.next()) {
+            Object id = resultSet.getObject("id");
+            UUID uuid = UUID.fromString(id.toString());
+            idList.add(uuid);
+        }
+
+        resultSet.close();
+        statement.close();
+        return idList;
+    }
+
+    public static void clearArmorStandRecord(String group) throws SQLException {
+        String commandText = String.format("delete from hologram where [group] = '%s'", group);
+        Statement statement = connection.createStatement();
+        statement.executeUpdate(commandText);
+        statement.close();
+    }
+
+    public static void insertArmorStandId(UUID uuid, String group) throws SQLException {
+        String commandText = String.format("insert into hologram (id, [group]) values ('%s', '%s')", uuid, group);
+        Statement statement = connection.createStatement();
+        statement.executeUpdate(commandText);
+        statement.close();
     }
 
     public static BanPlayerDetail isPlayerBanned(Player player) throws SQLException {
@@ -82,7 +116,7 @@ public class SqliteManager {
         return count != 0;
     }
 
-    public static boolean PlayerExist(Player player) throws SQLException {
+    public static boolean isPlayerRegister(Player player) throws SQLException {
         UUID uuid = player.getUniqueId();
         String commandText = String.format("select * from player where uuid = '%s'", uuid);
         Statement statement = connection.createStatement();
@@ -145,9 +179,6 @@ public class SqliteManager {
     }
 
     public static PlayerBannedState BanPlayer(Player master, String targetName, String reason) throws SQLException {
-        boolean banAction = !reason.equalsIgnoreCase("u");
-        PlayerBannedState state;
-
         Statement statement = connection.createStatement();
         String commandText;
 
@@ -157,19 +188,29 @@ public class SqliteManager {
         UUID targetUuid = offlinePlayer.getUniqueId();
         UUID masterUuid = master.getUniqueId();
 
-        if (banAction) {
-            commandText = String.format("insert into banRecord (id,masterId,playerId,message) values ('%s','%s','%s','%s')", UUID.randomUUID(), masterUuid, targetUuid, reason);
-            statement.executeUpdate(commandText);
-            state = PlayerBannedState.Player_Banned;
-        } else {
-            state = PlayerBannedState.Player_Unbanned;
-        }
-
-        commandText = String.format("update player set isBanned = '%s' where uuid = '%s'", banAction, targetUuid);
+        commandText = String.format("insert into banRecord (id,masterId,playerId,message) values ('%s','%s','%s','%s')", UUID.randomUUID(), masterUuid, targetUuid, reason);
         statement.executeUpdate(commandText);
-
+        commandText = String.format("update player set isBanned = 'true' where uuid = '%s'", targetUuid);
+        statement.executeUpdate(commandText);
         statement.close();
-        return state;
+
+        return PlayerBannedState.Player_Banned;
+    }
+
+    public static PlayerBannedState UnBanPlayer(@NotNull String targetName) throws SQLException {
+        Statement statement = connection.createStatement();
+        String commandText;
+
+        OfflinePlayer[] offlines = plugin.getServer().getOfflinePlayers();
+        OfflinePlayer target = Arrays.stream(offlines).filter(x -> Objects.requireNonNull(x.getName()).equalsIgnoreCase(targetName)).findAny().orElse(null);
+        if (target == null) return PlayerBannedState.Player_Not_Exist;
+
+        UUID targetUuid = target.getUniqueId();
+        commandText = String.format("update player set isBanned = 'false' where uuid = '%s'", targetUuid);
+        statement.executeUpdate(commandText);
+        statement.close();
+
+        return PlayerBannedState.Player_Unbanned;
     }
 
     private static <T> T ResultSetSerializer(ResultSet resultSet, Class<T> tClass) throws SQLException {
@@ -197,6 +238,7 @@ public class SqliteManager {
         }
 
         String json = Global.GsonObject.toJson(data);
+        //Global.LogMessage(json);
         result = Global.GsonObject.fromJson(json, tClass);
 
         return result;

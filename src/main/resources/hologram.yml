@@ -1,0 +1,17 @@
+# Id，必须唯一
+main:
+  # 位置，格式：world_name, x, y, z
+  location: 'world, -384.5, 111, 126.5'
+  # 标识当前hologram是否按照模板显示，默认值: false
+  is_template: false
+  # hologram的显示内容
+  # 如果is_template属性设置为false，则以多行信息方式显示
+  # 如果is_template属性设置为true，则按照message.yml的template节段中各个id设定显示
+  text:
+    - '&fWelcome! dear &a%player_name%'
+    - '&7Time: &e%player_world_time_24%'
+1:
+  location: 'world, -384.5, 111, 130.5'
+  is_template: true
+  text:
+    - 'courses_top'

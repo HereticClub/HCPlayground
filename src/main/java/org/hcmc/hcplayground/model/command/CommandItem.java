@@ -43,6 +43,7 @@ public class CommandItem extends Command {
     public static final String COMMAND_CHANGE_PASSWORD = "changepassword";
     public static final String COMMAND_SEEN = "seen";
     public static final String COMMAND_BAN_PLAYER = "banplayer";
+    public static final String COMMAND_UNBAN_PLAYER = "unbanplayer";
     public static final String COMMAND_PROFILE = "profile";
     public static final String COMMAND_MENU = "menu";
     public static final String COMMAND_RECIPE_BOOK = "recipebook";
@@ -58,6 +59,7 @@ public class CommandItem extends Command {
     public static final String COMMAND_CRAZY_CRAFTING = "crafting";
     public static final String COMMAND_CRAZY_ENCHANTING = "enchanting";
     public static final String COMMAND_CRAZY_ANVIL = "anvil";
+    public static final String COMMAND_BROADCAST_PLUS = "broadcastplus";
     public static final String COMMAND_COURSE = "course";
     public static final String COMMAND_COURSE_CREATE = "create";
     public static final String COMMAND_COURSE_MODIFY = "modify";
@@ -176,7 +178,6 @@ public class CommandItem extends Command {
                     tabs = ParkourApiManager.getLobbyNames();
                 }
             }
-
             if (index == 3 && getName().equalsIgnoreCase(COMMAND_QUARTERMASTER)) {
                 if (args[0].equalsIgnoreCase(COMMAND_QM_GIVE)) {
                     tabs = ItemManager.getIdList();
@@ -186,6 +187,9 @@ public class CommandItem extends Command {
                 if (args[0].equalsIgnoreCase(COMMAND_QM_GIVE)) {
                     tabs = getRegulaNumberList();
                 }
+            }
+            if (index == 1 && getName().equalsIgnoreCase(COMMAND_BROADCAST_PLUS)) {
+                tabs = BroadcastManager.Messages;
             }
         } catch (IOException | IllegalAccessException | InvalidConfigurationException e) {
             throw new RuntimeException(e);
@@ -309,6 +313,10 @@ public class CommandItem extends Command {
             if (commandText.equalsIgnoreCase(COMMAND_BAN_PLAYER)) {
                 return RunBanPlayerCommand(sender, args);
             }
+            // 解禁玩家指令 /unbanplayer
+            if (commandText.equalsIgnoreCase(COMMAND_UNBAN_PLAYER)) {
+                return RunUnBanPlayerCommand(sender, args);
+            }
             // 执行hc指令 - /hcplayground
             if (commandText.equalsIgnoreCase(COMMAND_HCPLAYGROUND)) {
                 return RunHCPlaygroundCommand(sender, args);
@@ -318,6 +326,9 @@ public class CommandItem extends Command {
             }
             if (commandText.equalsIgnoreCase(COMMAND_COURSE)) {
                 return RunCourseCommand(sender, args);
+            }
+            if (commandText.equalsIgnoreCase(COMMAND_BROADCAST_PLUS)) {
+                return RunBroadcastPlusCommand(sender, args);
             }
         } catch (SQLException | InvalidAlgorithmParameterException | NoSuchPaddingException |
                  IllegalBlockSizeException | NoSuchAlgorithmException | InvalidKeySpecException | BadPaddingException |
@@ -399,6 +410,19 @@ public class CommandItem extends Command {
         return false;
     }
 
+    private boolean RunBroadcastPlusCommand(CommandSender sender, String[] args) {
+        if (args.length <= 0) {
+            return ShowCommandHelp(sender, 1);
+        }
+
+        List<String> msg = BroadcastManager.getMessage(args[0]);
+        for (String s : msg) {
+            plugin.getServer().broadcastMessage(s);
+        }
+
+        return true;
+    }
+
     private boolean RunCourseLinkLobbyCommand(CommandSender sender, String[] args) throws IOException, IllegalAccessException, InvalidConfigurationException {
         Player player = (Player) sender;
         PlayerData data = PlayerManager.getPlayerData(player);
@@ -406,14 +430,14 @@ public class CommandItem extends Command {
 
         // 非op玩家必须在跑道设计状态
         if (!data.isCourseDesigning && !player.isOp()) {
-            player.sendMessage(LocalizationManager.getMessage("courseHasLeft", player));
+            player.sendMessage(LanguageManager.getMessage("courseHasLeft", player));
             return false;
         }
 
         String lobby = args[1];
         boolean exist = ParkourApiManager.isLobbyExist(lobby);
         if (!exist) {
-            player.sendMessage(LocalizationManager.getMessage("lobbyNotExist", player).replace("%lobby%", lobby));
+            player.sendMessage(LanguageManager.getMessage("lobbyNotExist", player).replace("%lobby%", lobby));
             return false;
         }
 
@@ -426,7 +450,7 @@ public class CommandItem extends Command {
         PlayerData data = PlayerManager.getPlayerData(player);
         // 非op玩家必须在跑道设计状态
         if (!data.isCourseDesigning && !player.isOp()) {
-            player.sendMessage(LocalizationManager.getMessage("courseHasLeft", player));
+            player.sendMessage(LanguageManager.getMessage("courseHasLeft", player));
             return false;
         }
 
@@ -439,17 +463,17 @@ public class CommandItem extends Command {
         PlayerData data = PlayerManager.getPlayerData(player);
         // 非op玩家必须在跑道设计状态
         if (data.isCourseDesigning && !player.isOp()) {
-            player.sendMessage(LocalizationManager.getMessage("courseDesigning", player));
+            player.sendMessage(LanguageManager.getMessage("courseDesigning", player));
             return false;
         }
         if (args.length <= 1) {
-            player.sendMessage(LocalizationManager.getMessage("courseTeleportEmpty", player));
+            player.sendMessage(LanguageManager.getMessage("courseTeleportEmpty", player));
             return false;
         }
 
         String courseName = args[1];
         if (!data.designer.teleport(courseName)) {
-            player.sendMessage(LocalizationManager.getMessage("courseNotExist", player).replace("%course%", courseName));
+            player.sendMessage(LanguageManager.getMessage("courseNotExist", player).replace("%course%", courseName));
             return false;
         }
 
@@ -461,11 +485,11 @@ public class CommandItem extends Command {
         PlayerData data = PlayerManager.getPlayerData(player);
         // 非op玩家必须在跑道设计状态
         if (!data.isCourseDesigning && !player.isOp()) {
-            player.sendMessage(LocalizationManager.getMessage("courseHasLeft", player));
+            player.sendMessage(LanguageManager.getMessage("courseHasLeft", player));
             return false;
         }
         if (args.length <= 1) {
-            player.sendMessage(LocalizationManager.getMessage("courseDisplayEmpty", player));
+            player.sendMessage(LanguageManager.getMessage("courseDisplayEmpty", player));
             return false;
         }
 
@@ -478,12 +502,12 @@ public class CommandItem extends Command {
         PlayerData data = PlayerManager.getPlayerData(player);
         // 非op玩家必须在跑道设计状态
         if (!data.isCourseDesigning && !player.isOp()) {
-            player.sendMessage(LocalizationManager.getMessage("courseHasLeft", player));
+            player.sendMessage(LanguageManager.getMessage("courseHasLeft", player));
             return false;
         }
         // 当参数不是true或者false时，判断参数无效
         if (args.length <= 1 || (!args[1].equalsIgnoreCase("true") && !args[1].equalsIgnoreCase("false"))) {
-            player.sendMessage(LocalizationManager.getMessage("courseReadyArgInvalid", player));
+            player.sendMessage(LanguageManager.getMessage("courseReadyArgInvalid", player));
             return false;
         }
 
@@ -497,13 +521,13 @@ public class CommandItem extends Command {
         PlayerData data = PlayerManager.getPlayerData(player);
         // 非op玩家必须在跑道设计状态
         if (!data.isCourseDesigning && !player.isOp()) {
-            player.sendMessage(LocalizationManager.getMessage("courseHasLeft", player));
+            player.sendMessage(LanguageManager.getMessage("courseHasLeft", player));
             return false;
         }
         if (args.length >= 2 && StringUtils.isNumeric(args[1])) {
             int index = Integer.parseInt(args[1]);
             if (!data.designer.addCheckpoint(index)) {
-                player.sendMessage(LocalizationManager.getMessage("courseNoStartPoint", player));
+                player.sendMessage(LanguageManager.getMessage("courseNoStartPoint", player));
             }
         }
         if (args.length >= 2 && args[1].equalsIgnoreCase(COMMAND_COURSE_CHECKPOINT_REMOVE)) {
@@ -512,7 +536,7 @@ public class CommandItem extends Command {
         if (args.length == 1) {
             int index = 0;
             if (!data.designer.addCheckpoint(index)) {
-                player.sendMessage(LocalizationManager.getMessage("courseNoStartPoint", player));
+                player.sendMessage(LanguageManager.getMessage("courseNoStartPoint", player));
                 return false;
             }
         }
@@ -530,30 +554,30 @@ public class CommandItem extends Command {
         }
         // 非op玩家不能在设计跑道时同时领取另一条跑道
         if (data.isCourseDesigning && !player.isOp()) {
-            player.sendMessage(LocalizationManager.getMessage("courseDesigning", player));
+            player.sendMessage(LanguageManager.getMessage("courseDesigning", player));
             return false;
         }
         // op玩家不需要领取任何跑道
         if (player.isOp()) {
-            player.sendMessage(LocalizationManager.getMessage("courseOpNoNeedClaim", player));
+            player.sendMessage(LanguageManager.getMessage("courseOpNoNeedClaim", player));
             return false;
         }
         // 获取跑酷赛道实例
         String courseId = args[1];
         boolean exist= CourseManager.existCourse(courseId);
         if (!exist) {
-            player.sendMessage(LocalizationManager.getMessage("courseNotExist", player).replace("%course%", courseId));
+            player.sendMessage(LanguageManager.getMessage("courseNotExist", player).replace("%course%", courseId));
             return false;
         }
         // 检测跑道是否被弃置
         boolean abandon = CourseManager.isAbandoned(courseId);
         if (!abandon) {
-            player.sendMessage(LocalizationManager.getMessage("courseNonAbandoned", player).replace("%course%", courseId));
+            player.sendMessage(LanguageManager.getMessage("courseNonAbandoned", player).replace("%course%", courseId));
             return false;
         }
 
         data.designer.claim(courseId);
-        player.sendMessage(LocalizationManager.getMessage("courseClaimOK", player).replace("%course%", courseId));
+        player.sendMessage(LanguageManager.getMessage("courseClaimOK", player).replace("%course%", courseId));
         return true;
     }
 
@@ -563,6 +587,13 @@ public class CommandItem extends Command {
         PlayerData data = PlayerManager.getPlayerData(player);
 
         List<String> values = data.designer.list();
+
+        if (values.size() <= 0) {
+            player.sendMessage(LanguageManager.getMessage("courseNoAssetInName", player));
+        } else {
+            player.sendMessage(LanguageManager.getMessage("courseHasAssetInName", player));
+        }
+
         for (String s : values) {
             player.sendMessage(s);
         }
@@ -593,13 +624,13 @@ public class CommandItem extends Command {
         }
         // 非op玩家不能在设计跑道时同时再创建另一条跑道
         if (data.isCourseDesigning && !player.isOp()) {
-            player.sendMessage(LocalizationManager.getMessage("courseDesigning", player));
+            player.sendMessage(LanguageManager.getMessage("courseDesigning", player));
             return false;
         }
         // 创建跑酷赛道，如果该跑酷的名称存在，则停止创建
         String courseId = args[1];
         if (CourseManager.existCourse(courseId)) {
-            player.sendMessage(LocalizationManager.getMessage("courseExist", player).replace("%course%", courseId));
+            player.sendMessage(LanguageManager.getMessage("courseExist", player).replace("%course%", courseId));
             return false;
         }
         // 获取新创建的跑酷赛道实例，并且搭建赛道的初始平台
@@ -622,25 +653,25 @@ public class CommandItem extends Command {
             return false;
         }
         if (data.isCourseDesigning && !player.isOp()) {
-            player.sendMessage(LocalizationManager.getMessage("courseDesigning", player));
+            player.sendMessage(LanguageManager.getMessage("courseDesigning", player));
             return false;
         }
         String courseId = args[1];
         // 检测非op玩家是否拥有该赛道
         if (!data.courseIds.contains(courseId) && !player.isOp()) {
-            player.sendMessage(LocalizationManager.getMessage("courseNotOwned", player).replace("%course%", courseId));
+            player.sendMessage(LanguageManager.getMessage("courseNotOwned", player).replace("%course%", courseId));
             return false;
         }
         // 当赛道Id不存在于列表中
         boolean exist = CourseManager.existCourse(courseId);
         if (!exist) {
-            player.sendMessage(LocalizationManager.getMessage("courseNotExist", player).replace("%course%", courseId));
+            player.sendMessage(LanguageManager.getMessage("courseNotExist", player).replace("%course%", courseId));
             return false;
         }
         // 非op玩家不能修改已经被舍弃的赛道
         boolean abandon = CourseManager.isAbandoned(courseId);
         if (abandon && !player.isOp()) {
-            player.sendMessage(LocalizationManager.getMessage("courseWasAbandoned", player).replace("%course%", courseId));
+            player.sendMessage(LanguageManager.getMessage("courseWasAbandoned", player).replace("%course%", courseId));
             return false;
         }
 
@@ -657,28 +688,28 @@ public class CommandItem extends Command {
             return false;
         }
         if (data.isCourseDesigning && !player.isOp()) {
-            player.sendMessage(LocalizationManager.getMessage("courseDesigning", player));
+            player.sendMessage(LanguageManager.getMessage("courseDesigning", player));
             return false;
         }
 
         String courseId = args[1];
         if (!data.courseIds.contains(courseId) && !player.isOp()) {
-            player.sendMessage(LocalizationManager.getMessage("courseNotOwned", player).replace("%course%", courseId));
+            player.sendMessage(LanguageManager.getMessage("courseNotOwned", player).replace("%course%", courseId));
             return false;
         }
         boolean exist = CourseManager.existCourse(courseId);
         if (!exist) {
-            player.sendMessage(LocalizationManager.getMessage("courseNotExist", player).replace("%course%", courseId));
+            player.sendMessage(LanguageManager.getMessage("courseNotExist", player).replace("%course%", courseId));
             return false;
         }
         boolean abandon = CourseManager.isAbandoned(courseId);
         if (abandon) {
-            player.sendMessage(LocalizationManager.getMessage("courseWasAbandoned", player).replace("%course%", courseId));
+            player.sendMessage(LanguageManager.getMessage("courseWasAbandoned", player).replace("%course%", courseId));
             return false;
         }
 
         data.designer.abandon(courseId);
-        player.sendMessage(LocalizationManager.getMessage("courseHasAbandoned", player).replace("%course%", courseId));
+        player.sendMessage(LanguageManager.getMessage("courseHasAbandoned", player).replace("%course%", courseId));
         return true;
     }
 
@@ -688,7 +719,7 @@ public class CommandItem extends Command {
         PlayerData data = PlayerManager.getPlayerData(player);
 
         if (!data.isCourseDesigning && !player.isOp()) {
-            player.sendMessage(LocalizationManager.getMessage("courseHasLeft", player));
+            player.sendMessage(LanguageManager.getMessage("courseHasLeft", player));
             return false;
         }
 
@@ -701,22 +732,22 @@ public class CommandItem extends Command {
         PlayerData data = PlayerManager.getPlayerData(player);
 
         if (!data.isCourseDesigning && !player.isOp()) {
-            player.sendMessage(LocalizationManager.getMessage("courseHasLeft", player));
+            player.sendMessage(LanguageManager.getMessage("courseHasLeft", player));
             return false;
         }
 
         if (!data.designer.RangeDetection(player.getLocation())) {
-            player.sendMessage(LocalizationManager.getMessage("outOfCourseRange", player));
+            player.sendMessage(LanguageManager.getMessage("outOfCourseRange", player));
             return false;
         }
 
         String courseId = data.designer.getCurrentCourseId();
         if (StringUtils.isBlank(courseId)) {
-            player.sendMessage(LocalizationManager.getMessage("courseHasLeft", player));
+            player.sendMessage(LanguageManager.getMessage("courseHasLeft", player));
             return false;
         }
         data.designer.startPoint(courseId);
-        player.sendMessage(LocalizationManager.getMessage("courseStartPoint", player).replace("%course%", courseId));
+        player.sendMessage(LanguageManager.getMessage("courseStartPoint", player).replace("%course%", courseId));
         return true;
     }
 
@@ -844,7 +875,7 @@ public class CommandItem extends Command {
 
         long b = new Date().getTime();
         long c = b - a;
-        sender.sendMessage(LocalizationManager.getMessage("reload", sender).replace("%time_escaped%", String.valueOf(c)));
+        sender.sendMessage(LanguageManager.getMessage("reload", sender).replace("%time_escaped%", String.valueOf(c)));
 
         return true;
     }
@@ -863,16 +894,16 @@ public class CommandItem extends Command {
         for (OfflinePlayer o : offlinePlayers) {
             if (!Objects.requireNonNull(o.getName()).equalsIgnoreCase(args[0])) continue;
 
-            status = LocalizationManager.getMessage(String.format("onlineStatusMessage.%s", o.isOnline()), o.getPlayer());
+            status = LanguageManager.getMessage(String.format("onlineStatusMessage.%s", o.isOnline()), o.getPlayer());
             lastLogin.setTime(o.getLastPlayed());
             foundPlayer = true;
             break;
         }
 
         if (!foundPlayer) {
-            sender.sendMessage(LocalizationManager.getMessage("playerNotExist", sender).replace("%player%", args[0]));
+            sender.sendMessage(LanguageManager.getMessage("playerNotExist", sender).replace("%player%", args[0]));
         } else {
-            String message = LocalizationManager.getMessage("playerLastLoginTime", sender);
+            String message = LanguageManager.getMessage("playerLastLoginTime", sender);
             String loginFormat = Global.getDateFormat(lastLogin, DateFormat.FULL, Locale.CHINA);
             sender.sendMessage(message.replace("%onlineStatusMessage%", status).replace("%player%", args[0]).replace("%logintime%", loginFormat));
         }
@@ -882,7 +913,7 @@ public class CommandItem extends Command {
     private boolean RunUnRegisterCommand(CommandSender sender, String[] args) throws InvalidAlgorithmParameterException, SQLException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException, IllegalAccessException, IOException, InvalidConfigurationException {
         // 该指令必须玩家执行
         if (!(sender instanceof Player player)) {
-            sender.sendMessage(LocalizationManager.getMessage("console-message", sender).replace("%command%", id));
+            sender.sendMessage(LanguageManager.getMessage("console-message", sender).replace("%command%", id));
             return false;
         }
         // 检查参数数量，必须至少1个参数
@@ -898,7 +929,7 @@ public class CommandItem extends Command {
     private boolean RunLoginCommand(CommandSender sender, String[] args) throws InvalidAlgorithmParameterException, SQLException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException, IllegalAccessException, IOException, InvalidConfigurationException {
         // 该指令必须玩家执行
         if (!(sender instanceof Player player)) {
-            sender.sendMessage(LocalizationManager.getMessage("console-message", sender).replace("%command%", id));
+            sender.sendMessage(LanguageManager.getMessage("console-message", sender).replace("%command%", id));
             return false;
         }
         // 检查参数数量，必须至少1个参数
@@ -914,18 +945,18 @@ public class CommandItem extends Command {
     private boolean RunLogoutCommand(CommandSender sender, String[] args) {
         // 该指令必须玩家执行
         if (!(sender instanceof Player player)) {
-            sender.sendMessage(LocalizationManager.getMessage("console-message", sender).replace("%command%", id));
+            sender.sendMessage(LanguageManager.getMessage("console-message", sender).replace("%command%", id));
             return false;
         }
 
-        player.kickPlayer(LocalizationManager.getMessage("playerLogout", sender).replace("%player%", player.getName()));
+        player.kickPlayer(LanguageManager.getMessage("playerLogout", sender).replace("%player%", player.getName()));
         return true;
     }
 
     private boolean RunRegisterCommand(CommandSender sender, String[] args) throws SQLException, InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException, IllegalAccessException, IOException, InvalidConfigurationException {
         // 该指令必须玩家执行
         if (!(sender instanceof Player player)) {
-            sender.sendMessage(LocalizationManager.getMessage("console-message", sender).replace("%command%", id));
+            sender.sendMessage(LanguageManager.getMessage("console-message", sender).replace("%command%", id));
             return false;
         }
         // 检查参数数量，必须至少2个参数
@@ -935,7 +966,7 @@ public class CommandItem extends Command {
         }
         // 检查2个参数(密码)是否一样，不区分大小写
         if (!args[0].equalsIgnoreCase(args[1])) {
-            sender.sendMessage(LocalizationManager.getMessage("playerPasswordNotMatch", sender));
+            sender.sendMessage(LanguageManager.getMessage("playerPasswordNotMatch", sender));
             return false;
         }
 
@@ -946,7 +977,7 @@ public class CommandItem extends Command {
     private boolean RunChangePasswordCommand(CommandSender sender, String[] args) throws InvalidAlgorithmParameterException, SQLException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException, IllegalAccessException, IOException, InvalidConfigurationException {
         // 该指令必须玩家执行
         if (!(sender instanceof Player player)) {
-            sender.sendMessage(LocalizationManager.getMessage("console-message", sender).replace("%command%", id));
+            sender.sendMessage(LanguageManager.getMessage("console-message", sender).replace("%command%", id));
             return false;
         }
         // 检查参数数量，必须至少3个参数
@@ -955,7 +986,7 @@ public class CommandItem extends Command {
             return false;
         }
         if (!args[1].equalsIgnoreCase(args[2])) {
-            sender.sendMessage(LocalizationManager.getMessage("playerPasswordNotMatch", sender));
+            sender.sendMessage(LanguageManager.getMessage("playerPasswordNotMatch", sender));
             return false;
         }
 
@@ -966,7 +997,7 @@ public class CommandItem extends Command {
     private boolean RunBanPlayerCommand(CommandSender sender, String[] args) throws SQLException, IllegalAccessException, IOException, InvalidConfigurationException {
         // 该指令必须玩家执行
         if (!(sender instanceof Player player)) {
-            sender.sendMessage(LocalizationManager.getMessage("console-message", sender).replace("%command%", id));
+            sender.sendMessage(LanguageManager.getMessage("console-message", sender).replace("%command%", id));
             return false;
         }
         // 检查参数数量，必须至少2个参数
@@ -986,9 +1017,22 @@ public class CommandItem extends Command {
         return true;
     }
 
+    private boolean RunUnBanPlayerCommand(CommandSender sender, String[] args) throws IOException, IllegalAccessException, InvalidConfigurationException, SQLException {
+        // 该指令必须玩家执行
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage(LanguageManager.getMessage("console-message", sender).replace("%command%", id));
+            return false;
+        }
+
+        PlayerData playerData = PlayerManager.getPlayerData(player);
+        playerData.UnBanPlayer(args[0]);
+
+        return true;
+    }
+
     private boolean RunQMGuiCommand(Player player, String[] args) {
         // TODO: 需要实施/quartermaster gui指令
-        player.sendMessage(LocalizationManager.getMessage("UnderConstruction", player));
+        player.sendMessage(LanguageManager.getMessage("UnderConstruction", player));
         return true;
     }
 
@@ -1006,13 +1050,13 @@ public class CommandItem extends Command {
         // 如果指令被定义为不能在控制台执行
         // 并且使用了控制台发送当前指令，验证失败
         if (!this.isConsole && sender instanceof ConsoleCommandSender) {
-            sender.sendMessage(LocalizationManager.getMessage("console-message", sender).replace("%command%", id));
+            sender.sendMessage(LanguageManager.getMessage("console-message", sender).replace("%command%", id));
             return false;
         }
         // 如果指令被定义为不能通过玩家执行
         // 并且通过了玩家发送当前指令，验证失败
         if (!this.isPlayer && sender instanceof Player) {
-            sender.sendMessage(LocalizationManager.getMessage("player-message", sender).replace("%command%", id));
+            sender.sendMessage(LanguageManager.getMessage("player-message", sender).replace("%command%", id));
             return false;
         }
         // 如果指令时可以通过控制台发送，则不验证权限
@@ -1024,7 +1068,7 @@ public class CommandItem extends Command {
             World world = player.getWorld();
             String worldName = world.getName();
             if (!worlds.contains(worldName) && worlds.size() != 0) {
-                sender.sendMessage(LocalizationManager.getMessage("world-message", sender).replace("%command%", id).replace("%world%", worldName));
+                sender.sendMessage(LanguageManager.getMessage("world-message", sender).replace("%command%", id).replace("%world%", worldName));
                 return false;
             }
             // 验证指令的参数的权限
@@ -1035,7 +1079,7 @@ public class CommandItem extends Command {
                 CommandArgument arg = this.args.stream().filter(x -> x.name.equalsIgnoreCase(s)).findAny().orElse(null);
                 // 如果当前指令参数不在参数集合内，则指令语法错误，提示/<command> usage
                 if (arg == null) {
-                    //sender.sendMessage(LocalizationManager.getMessage(String.format("%s.usage", id), sender));
+                    //sender.sendMessage(LanguageManager.getMessage(String.format("%s.usage", id), sender));
                     continue;
                 }
                 // 如果当前指令参数不在参数列表的位置定义，则指令语法错误，提示/<command> usage
@@ -1045,7 +1089,7 @@ public class CommandItem extends Command {
                 }
                 // 如当玩家不拥有前指令参数的权限，提示permission-message
                 if (!player.hasPermission(arg.permission) && !arg.permission.equalsIgnoreCase("")) {
-                    //sender.sendMessage(LocalizationManager.getMessage("permission-message", sender).replace("%permission%", arg.permission));
+                    //sender.sendMessage(LanguageManager.getMessage("permission-message", sender).replace("%permission%", arg.permission));
                     return false;
                 }
             }
@@ -1061,7 +1105,7 @@ public class CommandItem extends Command {
 
     private boolean ShowCommandHelp(CommandSender sender, int argLength) {
         if (argLength >= 1) {
-            sender.sendMessage(LocalizationManager.getMessage("parameterInCorrect", sender).replace("%length%", String.valueOf(argLength)));
+            sender.sendMessage(LanguageManager.getMessage("parameterInCorrect", sender).replace("%length%", String.valueOf(argLength)));
         }
         sender.sendMessage(getDescription());
         sender.sendMessage(getUsage().replace("<command>", getName()));
@@ -1081,8 +1125,8 @@ public class CommandItem extends Command {
 
         if (!this.permission.equalsIgnoreCase("")) this.setPermission(this.permission);
         this.setAliases(this.aliases);
-        this.setPermissionMessage(LocalizationManager.getMessage("permission-message", null).replace("%permission%", permission));
-        this.setUsage(LocalizationManager.getMessage(String.format("%s.usage", id), null));
-        this.setDescription(LocalizationManager.getMessage(String.format("%s.description", id), null));
+        this.setPermissionMessage(LanguageManager.getMessage("permission-message", null).replace("%permission%", permission));
+        this.setUsage(LanguageManager.getMessage(String.format("%s.usage", id), null));
+        this.setDescription(LanguageManager.getMessage(String.format("%s.description", id), null));
     }
 }

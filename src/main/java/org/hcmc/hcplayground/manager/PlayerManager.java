@@ -45,9 +45,6 @@ public class PlayerManager {
         if (pd == null) {
             pd = new PlayerData(player);
             //Global.LogMessage(String.format("\033[1;35mgetPlayerData GameMode: \033[1;33m%s\033[0m", player.getGameMode()));
-            pd.setGameMode(player.getGameMode());
-            pd.attachment = player.addAttachment(plugin);
-            pd.LoadConfig();
             PlayerDataMap.put(playerUuid, pd);
         }
 
@@ -68,8 +65,8 @@ public class PlayerManager {
 
     public static void removePlayerData(@NotNull Player player, PlayerData data) {
         UUID playerUuid = player.getUniqueId();
-        player.removeAttachment(data.attachment);
-        data.attachment.remove();
+        player.removeAttachment(data.getAttachment());
+        data.getAttachment().remove();
         //Global.LogMessage(String.format("\033[1;35mremovePlayerData GameMode: \033[1;33m%s\033[0m", data.GameMode));
         PlayerDataMap.remove(playerUuid, data);
     }
@@ -122,10 +119,8 @@ public class PlayerManager {
         data.setTotalDiggingSpeed(diggingSpeed);
         data.setTotalLoggingSpeed(loggingSpeed);
         setPlayerData(player, data);
-        /* TODO: 在后续的版本需要实施血量压缩显示
-        float totalHealth = health + PlayerManager.BASE_PLAYER_HEALTH;
-        double scale = (totalHealth) / 5;
-        player.setHealthScale(scale);
+        /*
+        TODO: 在后续的版本需要实施血量压缩显示
         */
     }
 }

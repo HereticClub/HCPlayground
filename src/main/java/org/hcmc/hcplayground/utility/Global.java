@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import com.sk89q.worldguard.WorldGuard;
+import com.sk89q.worldguard.protection.managers.storage.StorageException;
 import net.milkbowl.vault.chat.Chat;
 import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.permission.Permission;
@@ -30,6 +31,7 @@ import org.bukkit.scoreboard.ScoreboardManager;
 import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.enums.CcmdActionType;
 import org.hcmc.hcplayground.enums.CrazyBlockType;
+import org.hcmc.hcplayground.enums.ItemFeatureType;
 import org.hcmc.hcplayground.enums.RecipeType;
 import org.hcmc.hcplayground.manager.BanItemManager;
 import org.hcmc.hcplayground.manager.PlayerManager;
@@ -54,7 +56,6 @@ import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.regex.Pattern;
@@ -63,7 +64,9 @@ import java.util.regex.Pattern;
  * @Desciption Store global static variants and methods
  */
 public final class Global {
-    private final static String[] ymlFilenames;
+    private final static String[] childrenFolders;
+    private final static String[] ymlConfigurable;
+    private final static String[] ymlMigratable;
     private final static JavaPlugin plugin;
     private final static Type mapCharInteger = new TypeToken<Map<Character, Integer>>() {
     }.getType();
@@ -91,10 +94,17 @@ public final class Global {
     public final static String FILE_BROADCAST = "broadcast.yml";
     public final static String FILE_CLEARLAG = "clearlag.yml";
     public final static String FILE_RECIPE = "recipe.yml";
-    public final static String FILE_COURSE="course.yml";
-    public final static String FILE_CCMD="ccmd.yml";
+    public final static String FILE_CCMD = "ccmd.yml";
+    public final static String FILE_SCOREBOARD = "scoreboard.yml";
+    public final static String FILE_HOLOGRAM = "hologram.yml";
+    public final static String FILE_COURSE = "course/course.yml";
     public final static String FILE_RECORD = "record/record.yml";
-    public final static String FILE_DATABASE = "database/hcdb.db";
+    public final static String FOLDER_PROFILE = "profile";
+    public final static String FOLDER_DATABASE = "database";
+    public final static String FOLDER_RECORD = "record";
+    public final static String FOLDER_DESIGNER = "designer";
+    public final static String FOLDER_STORAGE = "storage";
+    public final static String FOLDER_COURSE = "course";
 
     public static PluginRunnable runnable;
     public static Map<String, YamlConfiguration> yamlMap;
@@ -116,23 +126,34 @@ public final class Global {
         runnable = new PluginRunnable();
         yamlMap = new HashMap<>();
         HealthScoreboard = CreateScoreboard();
-        ymlFilenames = new String[]{
-                FILE_CONFIG,
-                FILE_ITEMS,
-                FILE_DROPS,
-                FILE_MESSAGES,
-                FILE_LEVELS,
-                FILE_COMMANDS,
-                FILE_MENU,
-                FILE_PERMISSION,
-                FILE_MOBS,
-                FILE_BROADCAST,
+        childrenFolders = new String[]{
+                FOLDER_COURSE,
+                FOLDER_DATABASE,
+                FOLDER_DESIGNER,
+                FOLDER_PROFILE,
+                FOLDER_RECORD,
+                FOLDER_STORAGE,
+        };
+        ymlMigratable = new String[]{
                 FILE_CLEARLAG,
+                FILE_COMMANDS,
+                FILE_CONFIG,
+                FILE_MESSAGES,
+                FILE_PERMISSION,
+        };
+        ymlConfigurable = new String[]{
+                FILE_BROADCAST,
+                FILE_CCMD,
+                FILE_COURSE,
+                FILE_DROPS,
+                FILE_HOLOGRAM,
+                FILE_ITEMS,
+                FILE_LEVELS,
+                FILE_MENU,
+                FILE_MOBS,
                 FILE_RECIPE,
                 FILE_RECORD,
-                FILE_DATABASE,
-                FILE_COURSE,
-                FILE_CCMD,
+                FILE_SCOREBOARD,
         };
 
         GsonObject = new GsonBuilder()
@@ -147,6 +168,7 @@ public final class Global {
                 .registerTypeAdapter(GameMode.class, new GameModeSerialization())
                 .registerTypeAdapter(InventoryType.class, new InventoryTypeSerialization())
                 .registerTypeAdapter(ItemBase.class, new ItemBaseSerialization())
+                .registerTypeAdapter(ItemFeatureType.class, new ItemFeatureTypeSerialization())
                 .registerTypeAdapter(ItemFlag.class, new ItemFlagsSerialization())
                 .registerTypeAdapter(ItemStack.class, new ItemStackSerialization())
                 .registerTypeAdapter(Location.class, new LocationSerialization())
@@ -338,6 +360,20 @@ public final class Global {
         }
     }
 
+    public static void InitialChildrenFolders() {
+
+        File dataFolder = plugin.getDataFolder();
+
+        if (!dataFolder.exists()) {
+            boolean flag = dataFolder.mkdir();
+        }
+
+        for (String s : childrenFolders) {
+            File f = new File(String.format("%s/%s", dataFolder, s));
+            boolean flag = f.mkdir();
+        }
+    }
+
     /**
      * 复制所有Yml资源文档到插件目录
      * 加载所有Yml资源文档
@@ -347,9 +383,8 @@ public final class Global {
 
         yamlMap.clear();
 
-        for (String s : ymlFilenames) {
+        for (String s : ymlMigratable) {
             String ext = s.substring(s.length() - 3);
-
             if (!ext.equalsIgnoreCase("yml")) {
                 plugin.saveResource(s, false);
             } else {
@@ -357,6 +392,14 @@ public final class Global {
                 yaml.save(String.format("%s/%s", plugin.getDataFolder(), s));
                 yamlMap.put(s, yaml);
             }
+        }
+
+        for (String s : ymlConfigurable) {
+            File f = new File(String.format("%s/%s", plugin.getDataFolder(), s));
+            if (plugin.getResource(s) != null && !f.exists()) plugin.saveResource(s, false);
+
+            YamlConfiguration yaml = YamlConfiguration.loadConfiguration(f);
+            yamlMap.put(s, yaml);
         }
     }
 

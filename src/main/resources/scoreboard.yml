@@ -1,0 +1,21 @@
+main:
+  worlds: []
+  title: '%vault_prefix%%player_name%&7·%vault_suffix%%vault_rank%'
+  layout:
+    - '&f荣誉 &7» &e%playerpoints_points%'
+    - '&f金币 &7» &6%money%'
+    - '&7----------------'
+    - '&f彩池 &7» &6%lottery_pot%金币'
+    - '&f彩票 &7» &e%lottery_ptickets%张'
+    - '&7----------------'
+    - '&f延时 &7» %player_colored_ping%毫秒'
+    - '&fTPS &7» %server_tps_1_colored%'
+    - '&f时间 &7» &b%player_world_time_24%'
+1:
+  worlds:
+    - parkour_world
+  title: 'parkour'
+  layout:
+    - '123'
+    - 'abc'
+    - '456'

@@ -55,12 +55,12 @@ public class PermissionManager {
 
     public static void addPermission(Player player, String permission) throws IOException, IllegalAccessException, InvalidConfigurationException {
         PlayerData data = PlayerManager.getPlayerData(player);
-        data.attachment.setPermission(permission, true);
+        data.getAttachment().setPermission(permission, true);
 
     }
 
     public static void removePermission(Player player, String permission) throws IOException, IllegalAccessException, InvalidConfigurationException {
         PlayerData data = PlayerManager.getPlayerData(player);
-        data.attachment.unsetPermission(permission);
+        data.getAttachment().unsetPermission(permission);
     }
 }

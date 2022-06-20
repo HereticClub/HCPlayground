@@ -1,4 +1,4 @@
-package org.hcmc.hcplayground.model;
+package org.hcmc.hcplayground.model.recipe;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
@@ -7,7 +7,7 @@ import org.bukkit.Location;
 import org.bukkit.World;
 
 // 自定义可放置方块的摆放记录类
-public class CrazyRecord {
+public class CrazyBlockRecord {
 
     @Expose
     @SerializedName(value = "name")
@@ -98,11 +98,11 @@ public class CrazyRecord {
         this.name = name;
     }
 
-    public CrazyRecord() {
+    public CrazyBlockRecord() {
 
     }
 
-    public CrazyRecord(String name, Location location) {
+    public CrazyBlockRecord(String name, Location location) {
         this.name = name;
 
         x = location.getX();

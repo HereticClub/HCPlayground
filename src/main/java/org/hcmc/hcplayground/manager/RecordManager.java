@@ -11,7 +11,7 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.Plugin;
 import org.hcmc.hcplayground.HCPlayground;
-import org.hcmc.hcplayground.model.CrazyRecord;
+import org.hcmc.hcplayground.model.recipe.CrazyBlockRecord;
 import org.hcmc.hcplayground.model.item.Crazy;
 import org.hcmc.hcplayground.utility.Global;
 
@@ -22,7 +22,7 @@ import java.util.*;
 public class RecordManager {
     private static final String SECTION_KEY_CRAZY = "crazy";
 
-    private static List<CrazyRecord> crazyRecords = new ArrayList<>();
+    private static List<CrazyBlockRecord> crazyBlockRecords = new ArrayList<>();
     private static YamlConfiguration yamlRecord;
     private static Plugin plugin = HCPlayground.getPlugin();
 
@@ -31,13 +31,13 @@ public class RecordManager {
 
     }
 
-    public static List<CrazyRecord> getCrazyRecords() {
-        return crazyRecords;
+    public static List<CrazyBlockRecord> getCrazyRecords() {
+        return crazyBlockRecords;
     }
 
-    public static void addCrazyRecord(CrazyRecord item) {
+    public static void addCrazyRecord(CrazyBlockRecord item) {
 
-        if (!existCrazyRecord(item.toLocation())) crazyRecords.add(item);
+        if (!existCrazyRecord(item.toLocation())) crazyBlockRecords.add(item);
     }
 
     public static boolean existCrazyRecord(Location l) {
@@ -46,7 +46,7 @@ public class RecordManager {
         if (world != null) worldName = world.getName();
 
         String finalWorldName = worldName;
-        return crazyRecords.stream().anyMatch(x -> x.getX() == l.getX()
+        return crazyBlockRecords.stream().anyMatch(x -> x.getX() == l.getX()
                 && x.getY() == l.getY()
                 && x.getZ() == l.getZ()
                 && x.getWorld().equalsIgnoreCase(finalWorldName)
@@ -54,13 +54,13 @@ public class RecordManager {
                 && x.getYaw() == l.getYaw());
     }
 
-    public static CrazyRecord findCrazyRecord(Location location) {
+    public static CrazyBlockRecord findCrazyRecord(Location location) {
         World world = location.getWorld();
         String worldName = "";
         if (world != null) worldName = world.getName();
 
         String finalWorldName = worldName;
-        return crazyRecords.stream().filter(x -> x.getX() == location.getX()
+        return crazyBlockRecords.stream().filter(x -> x.getX() == location.getX()
                 && x.getY() == location.getY()
                 && x.getZ() == location.getZ()
                 && x.getWorld().equalsIgnoreCase(finalWorldName)
@@ -68,14 +68,14 @@ public class RecordManager {
                 && x.getYaw() == location.getYaw()).findAny().orElse(null);
     }
 
-    public static void removeCrazyRecord(CrazyRecord item) {
-        crazyRecords.remove(item);
+    public static void removeCrazyRecord(CrazyBlockRecord item) {
+        crazyBlockRecords.remove(item);
     }
 
     public static void saveCrazyRecord() throws IllegalAccessException, IOException {
         Map<UUID, Object> mapYaml = new HashMap<>();
 
-        for (CrazyRecord r : crazyRecords) {
+        for (CrazyBlockRecord r : crazyBlockRecords) {
             Field[] fields = r.getClass().getDeclaredFields();
             Map<String, Object> mapRecord = new HashMap<>();
             for (Field f : fields) {
@@ -97,10 +97,10 @@ public class RecordManager {
         yamlRecord = yaml;
         ConfigurationSection section = yaml.getConfigurationSection(SECTION_KEY_CRAZY);
         if (section != null) {
-            crazyRecords = Global.SetItemList(section, CrazyRecord.class);
+            crazyBlockRecords = Global.SetItemList(section, CrazyBlockRecord.class);
         }
 
-        for (CrazyRecord record : crazyRecords) {
+        for (CrazyBlockRecord record : crazyBlockRecords) {
             Crazy ib = (Crazy) ItemManager.findItemById(record.getName());
             if (ib == null) continue;
 

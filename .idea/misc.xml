@@ -5,6 +5,9 @@
       <item index="0" class="java.lang.String" itemvalue="com.google.gson.annotations.Expose" />
       <item index="1" class="java.lang.String" itemvalue="org.bukkit.event.EventHandler" />
     </list>
+    <writeAnnotations>
+      <writeAnnotation name="com.google.gson.annotations.Expose" />
+    </writeAnnotations>
   </component>
   <component name="ExternalStorageConfigurationManager" enabled="true" />
   <component name="MavenProjectsManager">
