@@ -24,7 +24,7 @@ public class RecordManager {
 
     private static List<CrazyBlockRecord> crazyBlockRecords = new ArrayList<>();
     private static YamlConfiguration yamlRecord;
-    private static Plugin plugin = HCPlayground.getPlugin();
+    private static final Plugin plugin = HCPlayground.getInstance();
 
 
     public RecordManager() {

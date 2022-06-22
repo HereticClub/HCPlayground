@@ -4,7 +4,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import com.sk89q.worldguard.WorldGuard;
-import com.sk89q.worldguard.protection.managers.storage.StorageException;
 import net.milkbowl.vault.chat.Chat;
 import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.permission.Permission;
@@ -42,7 +41,7 @@ import org.hcmc.hcplayground.model.config.PotionConfiguration;
 import org.hcmc.hcplayground.model.item.ItemBase;
 import org.hcmc.hcplayground.model.menu.MenuItem;
 import org.hcmc.hcplayground.model.player.PlayerData;
-import org.hcmc.hcplayground.scheduler.PluginRunnable;
+import org.hcmc.hcplayground.runnable.PluginRunnable;
 import org.hcmc.hcplayground.serialization.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -97,14 +96,12 @@ public final class Global {
     public final static String FILE_CCMD = "ccmd.yml";
     public final static String FILE_SCOREBOARD = "scoreboard.yml";
     public final static String FILE_HOLOGRAM = "hologram.yml";
-    public final static String FILE_COURSE = "course/course.yml";
-    public final static String FILE_RECORD = "record/record.yml";
+    public final static String FILE_COURSE = "database/course.yml";
+    public final static String FILE_RECORD = "database/record.yml";
     public final static String FOLDER_PROFILE = "profile";
     public final static String FOLDER_DATABASE = "database";
-    public final static String FOLDER_RECORD = "record";
     public final static String FOLDER_DESIGNER = "designer";
     public final static String FOLDER_STORAGE = "storage";
-    public final static String FOLDER_COURSE = "course";
 
     public static PluginRunnable runnable;
     public static Map<String, YamlConfiguration> yamlMap;
@@ -127,11 +124,9 @@ public final class Global {
         yamlMap = new HashMap<>();
         HealthScoreboard = CreateScoreboard();
         childrenFolders = new String[]{
-                FOLDER_COURSE,
                 FOLDER_DATABASE,
                 FOLDER_DESIGNER,
                 FOLDER_PROFILE,
-                FOLDER_RECORD,
                 FOLDER_STORAGE,
         };
         ymlMigratable = new String[]{

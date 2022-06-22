@@ -36,7 +36,7 @@ public class ItemManager {
         itemJoins = new ArrayList<>();
         itemCrazies = new ArrayList<>();
         items = new ArrayList<>();
-        plugin = HCPlayground.getPlugin();
+        plugin = HCPlayground.getInstance();
     }
 
     public ItemManager() {
@@ -154,18 +154,18 @@ public class ItemManager {
         Player player = Arrays.stream(players).filter(x -> x.getName().equalsIgnoreCase(playerName)).findAny().orElse(null);
 
         if (player == null) {
-            sender.sendMessage(LanguageManager.getMessage("playerNotExist", null).replace("%player%", playerName));
+            sender.sendMessage(LanguageManager.getString("playerNotExist", null).replace("%player%", playerName));
             return;
         }
         // 可能这个判断没有用
         if (!player.isOnline()) {
-            sender.sendMessage(LanguageManager.getMessage("playerOffLine", player).replace("%player%", playerName));
+            sender.sendMessage(LanguageManager.getString("playerOffLine", player).replace("%player%", playerName));
             return;
         }
 
         ItemBase ib = findItemById(itemId);
         if (ib == null) {
-            sender.sendMessage(LanguageManager.getMessage("noSuchItem", player).replace("%item%", itemId));
+            sender.sendMessage(LanguageManager.getString("noSuchItem", player).replace("%item%", itemId));
             return;
         }
         ItemStack is = ib.toItemStack();

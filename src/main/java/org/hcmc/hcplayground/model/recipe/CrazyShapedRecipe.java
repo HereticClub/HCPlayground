@@ -62,7 +62,7 @@ public class CrazyShapedRecipe implements Recipe {
     private final String group = "";
     // 以下变量不会参与序列化和反序列化
     private String id;
-    private final Plugin plugin = HCPlayground.getPlugin();
+    private final Plugin plugin = HCPlayground.getInstance();
     /**
      * 成分的矩阵图(数组)，成分的数量按照实际的配置数量填充
      */

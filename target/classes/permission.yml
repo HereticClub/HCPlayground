@@ -28,11 +28,22 @@ permissions:
       - hc.quartermaster.give
       - hc.quartermaster.take
       - hc.quartermaster.gui
+  permissionMinion:
+    name: hc.minion.*
+    default: op
+    description: Minion administration
+    children:
+      - hc.minion.give
 
   permissionReload:
     name: hc.reload
     description: Permission to reload this plugin
     default: op
+
+  permissionMinion1:
+    name: hc.minion.give
+    default: op
+    description: Give a minion to a player
 
   permissionQuartermaster1:
     name: hc.quartermaster.gui

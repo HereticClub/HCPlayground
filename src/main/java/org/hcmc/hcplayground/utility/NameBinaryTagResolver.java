@@ -17,7 +17,7 @@ public class NameBinaryTagResolver {
         ItemMeta im = itemStack.getItemMeta();
         if (im == null) return;
 
-        plugin = HCPlayground.getPlugin();
+        plugin = HCPlayground.getInstance();
         PersistentDataContainer mainContainer = im.getPersistentDataContainer();
         NamespacedKey key = new NamespacedKey(plugin, ItemBase.PERSISTENT_SUB_KEY);
         subContainer = mainContainer.get(key, PersistentDataType.TAG_CONTAINER);

@@ -1,6 +1,5 @@
 package org.hcmc.hcplayground;
 
-import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.InvalidConfigurationException;
@@ -9,17 +8,15 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
 import org.hcmc.hcplayground.expansion.HCPluginExpansion;
 import org.hcmc.hcplayground.filter.ConsoleLog4jFilter;
-import org.hcmc.hcplayground.listener.HologramListener;
 import org.hcmc.hcplayground.listener.PluginListener;
 import org.hcmc.hcplayground.manager.*;
 import org.hcmc.hcplayground.manager.PermissionManager;
 import org.hcmc.hcplayground.model.player.PlayerData;
-import org.hcmc.hcplayground.scheduler.EquipmentMonitorRunnable;
+import org.hcmc.hcplayground.runnable.EquipmentMonitorRunnable;
 import org.hcmc.hcplayground.sqlite.SqliteManager;
 import org.hcmc.hcplayground.utility.Global;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.File;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
@@ -65,7 +62,7 @@ public class HCPlayground extends JavaPlugin {
                 // 任务new EquipmentMonitorRunnable(player).runTask(plugin)
                 // 已经执行了一次PlayerManager.setPlayerData(player, playerData)
                 // 所以不需要在这里再次执行
-                new EquipmentMonitorRunnable(p).runTask(getPlugin());
+                new EquipmentMonitorRunnable(p).runTask(getInstance());
             }
             //ConsoleLegacyFilter.RegisterFilter(getLogger());
             ConsoleLog4jFilter.RegisterFilter();
@@ -107,10 +104,6 @@ public class HCPlayground extends JavaPlugin {
 
     public static HCPlayground getInstance() {
         return instance;
-    }
-
-    public static JavaPlugin getPlugin() {
-        return getPlugin(instance.getClass());
     }
 
     public void ReloadConfiguration() throws IllegalAccessException, NoSuchFieldException, SQLException, NoSuchAlgorithmException, InvalidKeySpecException, IOException {

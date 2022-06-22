@@ -1,9 +1,9 @@
-package org.hcmc.hcplayground.scheduler;
+package org.hcmc.hcplayground.runnable;
 
-import me.clip.placeholderapi.PlaceholderAPI;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.TextComponent;
+import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
 import org.bukkit.configuration.InvalidConfigurationException;
@@ -16,10 +16,9 @@ import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.scoreboard.*;
 import org.hcmc.hcplayground.HCPlayground;
+import org.hcmc.hcplayground.event.WorldMorningEvent;
 import org.hcmc.hcplayground.manager.*;
-import org.hcmc.hcplayground.model.hologram.HologramItem;
 import org.hcmc.hcplayground.model.item.ItemBase;
 import org.hcmc.hcplayground.model.player.PlayerData;
 import org.hcmc.hcplayground.utility.Global;
@@ -42,7 +41,7 @@ public class PluginRunnable extends BukkitRunnable {
 
 
     public PluginRunnable() {
-        plugin = HCPlayground.getPlugin();
+        plugin = HCPlayground.getInstance();
     }
 
     @Override
@@ -51,8 +50,25 @@ public class PluginRunnable extends BukkitRunnable {
             doOnlinePlayerTask();
             doBroadcastTask();
             doClearLag();
+            doTrackWorldTime();
         } catch (NoSuchFieldException | IllegalAccessException | InvalidConfigurationException | IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    private void doTrackWorldTime() {
+        List<World> worlds = Bukkit.getWorlds();
+        for (World w : worlds) {
+            long gameTime = w.getTime();
+            if (gameTime <= 19) {
+                WorldMorningEvent event = new WorldMorningEvent(w, gameTime);
+                Bukkit.getPluginManager().callEvent(event);
+            }
+
+            /* DO NO DELETE, World time algorithm
+            long hour = gameTime / 1000 + 6;
+            long minute = gameTime % 1000 * 60 / 1000;
+             */
         }
     }
 
@@ -126,7 +142,7 @@ public class PluginRunnable extends BukkitRunnable {
         if (interval < 2) return;
 
         Player player = pd.getPlayer();
-        String value = LanguageManager.getMessage("playerActionBar", player);
+        String value = LanguageManager.getString("playerActionBar", player);
         BaseComponent baseComponent = new TextComponent(value);
         player.spigot().sendMessage(ChatMessageType.ACTION_BAR, baseComponent);
     }
@@ -183,16 +199,16 @@ public class PluginRunnable extends BukkitRunnable {
         if (interval >= Global.authme.remainInterval) {
             long remain = Global.authme.timeout - (totalSeconds - loginSeconds);
             if (!isRegister) {
-                player.sendMessage(LanguageManager.getMessage("playerRegisterRemind", player).replace("%remain%", String.valueOf(remain)));
+                player.sendMessage(LanguageManager.getString("playerRegisterRemind", player).replace("%remain%", String.valueOf(remain)));
             } else {
-                player.sendMessage(LanguageManager.getMessage("playerLoginRemind", player).replace("%remain%", String.valueOf(remain)));
+                player.sendMessage(LanguageManager.getString("playerLoginRemind", player).replace("%remain%", String.valueOf(remain)));
             }
         }
         if (totalSeconds - loginSeconds >= Global.authme.timeout) {
             if (!isRegister) {
-                player.kickPlayer(LanguageManager.getMessage("playerRegisterTimeout", player).replace("%player%", player.getName()));
+                player.kickPlayer(LanguageManager.getString("playerRegisterTimeout", player).replace("%player%", player.getName()));
             } else {
-                player.kickPlayer(LanguageManager.getMessage("playerLoginTimeout", player).replace("%player%", player.getName()));
+                player.kickPlayer(LanguageManager.getString("playerLoginTimeout", player).replace("%player%", player.getName()));
             }
         }
     }

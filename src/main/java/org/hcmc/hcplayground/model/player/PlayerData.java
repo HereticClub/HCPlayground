@@ -6,7 +6,6 @@ import com.google.gson.reflect.TypeToken;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import com.mojang.authlib.properties.PropertyMap;
-import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
@@ -18,10 +17,6 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.permissions.PermissionAttachment;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scoreboard.DisplaySlot;
-import org.bukkit.scoreboard.Objective;
-import org.bukkit.scoreboard.Scoreboard;
-import org.bukkit.scoreboard.Team;
 import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.enums.ItemFeatureType;
 import org.hcmc.hcplayground.enums.PlayerBannedState;
@@ -134,7 +129,7 @@ public class PlayerData {
     /**
      * 本插件实例
      */
-    private final JavaPlugin plugin = HCPlayground.getPlugin();
+    private final JavaPlugin plugin = HCPlayground.getInstance();
     /**
      * 记录玩家登陆时的游戏模式
      */
@@ -367,13 +362,13 @@ public class PlayerData {
 
         boolean register = SqliteManager.PlayerRegister(player, password);
         if (!register) {
-            player.sendMessage(LanguageManager.getMessage("playerRegisterExist", player)
+            player.sendMessage(LanguageManager.getString("playerRegisterExist", player)
                     .replace("%player%", name));
         } else {
             login = true;
             //Global.LogMessage(String.format("\033[1;35mPlayer register gameMode: \033[1;33m%s\033[0m", gameMode));
             player.setGameMode(gameMode);
-            plugin.getServer().broadcastMessage(LanguageManager.getMessage("playerRegisterWelcome", player)
+            plugin.getServer().broadcastMessage(LanguageManager.getString("playerRegisterWelcome", player)
                     .replace("%player%", name));
         }
 
@@ -384,9 +379,9 @@ public class PlayerData {
 
         boolean unregister = SqliteManager.PlayerUnregister(player, password);
         if (!unregister) {
-            player.sendMessage(LanguageManager.getMessage("playerURPasswordNotRight", player).replace("%player%", name));
+            player.sendMessage(LanguageManager.getString("playerURPasswordNotRight", player).replace("%player%", name));
         } else {
-            player.kickPlayer(LanguageManager.getMessage("playerUnregistered", player).replace("%player%", name));
+            player.kickPlayer(LanguageManager.getString("playerUnregistered", player).replace("%player%", name));
         }
 
         return unregister;
@@ -400,16 +395,16 @@ public class PlayerData {
     public boolean Login(String password) throws InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException, SQLException {
 
         if (login) {
-            player.sendMessage(LanguageManager.getMessage("playerHasLogin", player).replace("%player%", name));
+            player.sendMessage(LanguageManager.getString("playerHasLogin", player).replace("%player%", name));
             return false;
         }
         login = SqliteManager.PlayerLogin(player, password);
         if (!login) {
-            player.sendMessage(LanguageManager.getMessage("playerLoginFailed", player).replace("%player%", name));
+            player.sendMessage(LanguageManager.getString("playerLoginFailed", player).replace("%player%", name));
         } else {
             //Global.LogMessage(String.format("\033[1;35mPlayer Login gameMode: \033[1;33m%s\033[0m", gameMode));
             player.setGameMode(gameMode);
-            player.sendMessage(LanguageManager.getMessage("playerLoginWelcome", player).replace("&", "§").replace("%player%", name));
+            player.sendMessage(LanguageManager.getString("playerLoginWelcome", player).replace("&", "§").replace("%player%", name));
 
             List<ItemBase> books = ItemManager.getBooks();
             for (ItemBase ib : books) {
@@ -426,15 +421,15 @@ public class PlayerData {
 
         boolean exist = SqliteManager.CheckPassword(player, oldPassword);
         if (!exist) {
-            player.sendMessage(LanguageManager.getMessage("playerOldPasswordNotRight", player).replace("%player%", name));
+            player.sendMessage(LanguageManager.getString("playerOldPasswordNotRight", player).replace("%player%", name));
             return false;
         }
 
         boolean changed = SqliteManager.ChangePassword(player, newPassword);
         if (!changed) {
-            player.sendMessage(LanguageManager.getMessage("systemError", player).replace("%player%", name));
+            player.sendMessage(LanguageManager.getString("systemError", player).replace("%player%", name));
         } else {
-            player.sendMessage(LanguageManager.getMessage("playerPasswordChanged", player).replace("%player%", name));
+            player.sendMessage(LanguageManager.getString("playerPasswordChanged", player).replace("%player%", name));
         }
 
         return changed;
@@ -444,9 +439,9 @@ public class PlayerData {
         PlayerBannedState state = SqliteManager.UnBanPlayer(targetPlayer);
         switch (state) {
             case Player_Not_Exist ->
-                    player.sendMessage(LanguageManager.getMessage("playerNotExist", player).replace("%player%", targetPlayer));
+                    player.sendMessage(LanguageManager.getString("playerNotExist", player).replace("%player%", targetPlayer));
             case Player_Unbanned ->
-                    player.sendMessage(LanguageManager.getMessage("playerUnBanned", player).replace("%player%", targetPlayer));
+                    player.sendMessage(LanguageManager.getString("playerUnBanned", player).replace("%player%", targetPlayer));
         }
     }
 
@@ -462,16 +457,16 @@ public class PlayerData {
 
         switch (state) {
             case Player_Not_Exist ->
-                    player.sendMessage(LanguageManager.getMessage("playerNotExist", player).replace("%player%", targetPlayer));
+                    player.sendMessage(LanguageManager.getString("playerNotExist", player).replace("%player%", targetPlayer));
             case Player_Banned -> {
                 if (target != null) {
-                    target.kickPlayer(LanguageManager.getMessage("playerBannedMessage", player)
+                    target.kickPlayer(LanguageManager.getString("playerBannedMessage", player)
                             .replace("%player%", targetPlayer)
                             .replace("%master%", name)
                             .replace("%reason%", reason)
                             .replace("%banDate%", banDateTime));
                 }
-                player.sendMessage(LanguageManager.getMessage("playerBanned", player).replace("%player%", targetPlayer));
+                player.sendMessage(LanguageManager.getString("playerBanned", player).replace("%player%", targetPlayer));
             }
         }
     }

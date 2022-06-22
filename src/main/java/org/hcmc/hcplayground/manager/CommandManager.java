@@ -15,7 +15,7 @@ import java.util.List;
 public class CommandManager {
 
     public static List<CommandItem> Commands = new ArrayList<>();
-    private static final JavaPlugin plugin = HCPlayground.getPlugin();
+    private static final JavaPlugin plugin = HCPlayground.getInstance();
 
     public CommandManager() {
 

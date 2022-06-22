@@ -20,7 +20,7 @@ import java.util.UUID;
 
 public class PlayerManager {
     private static final Map<UUID, PlayerData> PlayerDataMap;
-    private static final Plugin plugin = HCPlayground.getPlugin();
+    private static final Plugin plugin = HCPlayground.getInstance();
 
     public static final float BASE_PLAYER_HEALTH = 20.0F;
 

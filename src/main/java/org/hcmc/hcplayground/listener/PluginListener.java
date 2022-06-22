@@ -16,10 +16,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityDeathEvent;
-import org.bukkit.event.entity.EntityPickupItemEvent;
-import org.bukkit.event.entity.EntitySpawnEvent;
+import org.bukkit.event.entity.*;
 import org.bukkit.event.inventory.*;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.*;
@@ -31,6 +28,7 @@ import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.enums.CrazyBlockType;
 import org.hcmc.hcplayground.enums.RecipeType;
 import org.hcmc.hcplayground.event.PlayerEquipmentChangedEvent;
+import org.hcmc.hcplayground.event.WorldMorningEvent;
 import org.hcmc.hcplayground.manager.*;
 import org.hcmc.hcplayground.model.recipe.CrazyBlockRecord;
 import org.hcmc.hcplayground.model.mob.MobEntity;
@@ -41,9 +39,8 @@ import org.hcmc.hcplayground.model.item.ItemBase;
 import org.hcmc.hcplayground.model.menu.MenuDetail;
 import org.hcmc.hcplayground.model.menu.MenuItem;
 import org.hcmc.hcplayground.model.player.PlayerData;
-import org.hcmc.hcplayground.model.scoreboard.ScoreboardItem;
-import org.hcmc.hcplayground.scheduler.EquipmentMonitorRunnable;
-import org.hcmc.hcplayground.scheduler.RecipeFinderRunnable;
+import org.hcmc.hcplayground.runnable.EquipmentMonitorRunnable;
+import org.hcmc.hcplayground.runnable.RecipeFinderRunnable;
 import org.hcmc.hcplayground.sqlite.table.BanPlayerDetail;
 import org.hcmc.hcplayground.utility.Global;
 import org.hcmc.hcplayground.utility.RandomNumber;
@@ -62,7 +59,7 @@ public class PluginListener implements Listener {
     private final static int EQUIPMENT_SLOT_OFFHAND = 40;
     private final static int EQUIPMENT_SLOT_HELMET = 39;
 
-    private final JavaPlugin plugin = HCPlayground.getPlugin();
+    private final JavaPlugin plugin = HCPlayground.getInstance();
 
     public PluginListener() {
 
@@ -90,7 +87,7 @@ public class PluginListener implements Listener {
             DateFormat df = DateFormat.getDateInstance(DateFormat.FULL, Locale.CHINA);
             DateFormat tf = DateFormat.getTimeInstance(DateFormat.FULL, Locale.CHINA);
             String banDateTime = String.format("%s %s", df.format(detail.banDate), tf.format(detail.banDate));
-            String bannedMessage = LanguageManager.getMessage("playerBannedMessage", player)
+            String bannedMessage = LanguageManager.getString("playerBannedMessage", player)
                     .replace("%player%", player.getName())
                     .replace("%master%", detail.masterName)
                     .replace("%reason%", detail.message)
@@ -194,7 +191,7 @@ public class PluginListener implements Listener {
         String playerName = player.getName();
         // 无论任何人包括op玩家，都必须先登录，才能执行任何其他命令
         if (!data.isLogin() && !command.getName().equalsIgnoreCase(COMMAND_LOGIN) && !command.getName().equalsIgnoreCase(COMMAND_REGISTER)) {
-            player.sendMessage(LanguageManager.getMessage("playerNoLogin", player).replace("%player%", playerName));
+            player.sendMessage(LanguageManager.getString("playerNoLogin", player).replace("%player%", playerName));
             Global.LogWarning(String.format("%s tries to issue command %s before login", playerName, message));
             event.setCancelled(true);
             return;
@@ -203,7 +200,7 @@ public class PluginListener implements Listener {
         if (player.isOp()) return;
         // 跑酷赛道设计状态下，非op玩家禁止执行除/course外的任何指令
         if (data.isCourseDesigning && data.isLogin() && !command.getName().equalsIgnoreCase(CommandItem.COMMAND_COURSE)) {
-            player.sendMessage(LanguageManager.getMessage("courseDenyCommandOnDesign", player));
+            player.sendMessage(LanguageManager.getString("courseDenyCommandOnDesign", player));
             event.setCancelled(true);
         }
     }
@@ -249,6 +246,18 @@ public class PluginListener implements Listener {
         runnable.runTask(plugin);
     }
 
+    /**
+     * 玩家右键点击盔甲架事件
+     */
+    @EventHandler
+    private void onArmorStandClicked(PlayerInteractAtEntityEvent event) {
+        if (event.isCancelled()) return;
+        Entity entity = event.getRightClicked();
+        if(!(entity instanceof ArmorStand)) return;
+        System.out.println(entity);
+        // TODO: 实施取消玩家右键点击作为minion的盔甲架事件
+    }
+
     @EventHandler
     private void onCrazyBlockClicked(PlayerInteractEvent event) throws IOException, IllegalAccessException, InvalidConfigurationException {
         Block block = event.getClickedBlock();
@@ -256,23 +265,23 @@ public class PluginListener implements Listener {
         Action action = event.getAction();
         PlayerData data = PlayerManager.getPlayerData(player);
         String playerName = player.getName();
-        // 获取玩家的潜行状态
-        boolean sneaking = player.isSneaking();
         // 检测block是否null，比如右键点击了空气方块
         if (block == null) return;
         // 无论任何人包括op玩家，都必须先登录，才能进行任何互动
         if (!data.isLogin()) {
-            player.sendMessage(LanguageManager.getMessage("playerNoLogin", player).replace("%player%", playerName));
+            player.sendMessage(LanguageManager.getString("playerNoLogin", player).replace("%player%", playerName));
             event.setCancelled(true);
             return;
         }
         // 跑酷赛道的方块互动检测
         boolean allowInteract = data.designer.InteractDetection(block);
         if (!allowInteract) {
-            player.sendMessage(LanguageManager.getMessage("courseNoPermission", player));
+            player.sendMessage(LanguageManager.getString("courseNoPermission", player));
             event.setCancelled(true);
             return;
         }
+        // 获取玩家的潜行状态
+        boolean sneaking = player.isSneaking();
         // 检测玩家是否sneaking(潜行)状态
         if (sneaking) return;
         // 非右键点击无效
@@ -322,24 +331,6 @@ public class PluginListener implements Listener {
         }
     }
 
-
-    @EventHandler
-    private void onPlayerAnvilEnchanted(InventoryClickEvent event) {
-        if (event.isCancelled()) return;
-        Inventory inv = event.getInventory();
-        if (!(inv instanceof AnvilInventory anvil)) return;
-        HumanEntity human = event.getWhoClicked();
-        if (!(human instanceof Player player)) return;
-        InventoryType.SlotType slotType = event.getSlotType();
-        if (!slotType.equals(InventoryType.SlotType.RESULT)) return;
-
-        String name = player.getName();
-        /*
-         TODO: 需要实施以下功能
-          当玩家尝试使用铁砧附魔经验修补时，显示附魔失败信息，并且发出声音
-        */
-    }
-
     /**
      * 玩家的盔甲栏物品被改变后的事件
      *
@@ -369,7 +360,7 @@ public class PluginListener implements Listener {
         String playerName = player.getName();
         // 无论任何人包括op玩家，都必须先登录，才能扔掉些什么
         if (!data.isLogin()) {
-            player.sendMessage(LanguageManager.getMessage("playerNoLogin", player).replace("%player%", playerName));
+            player.sendMessage(LanguageManager.getString("playerNoLogin", player).replace("%player%", playerName));
             event.setCancelled(true);
             return;
         }
@@ -408,7 +399,7 @@ public class PluginListener implements Listener {
         String playerName = player.getName();
         // 无论任何人包括op玩家，都必须先登录，才能拾取些什么
         if (!data.isLogin()) {
-            player.sendMessage(LanguageManager.getMessage("playerNoLogin", player).replace("%player%", playerName));
+            player.sendMessage(LanguageManager.getString("playerNoLogin", player).replace("%player%", playerName));
             event.setCancelled(true);
             return;
         }
@@ -459,11 +450,22 @@ public class PluginListener implements Listener {
             String customName = String.format("%s%s", prefix, display);
             monster.setCustomName(customName);
         }
-
-
         /*
         TODO: 需要实施在生物的名字下方显示生命值
          */
+    }
+
+    /**
+     * 玩家尝试左键点击一个盔甲架事件
+     */
+    @EventHandler
+    private void onMinionDamaged(EntityDamageByEntityEvent event) {
+        if (event.isCancelled()) return;
+        Entity entity = event.getEntity();
+        if (!(entity instanceof ArmorStand)) return;
+
+        event.setCancelled(true);
+        //TODO: 实施取消作为minion的盔甲架的伤害
     }
 
     /**
@@ -472,7 +474,6 @@ public class PluginListener implements Listener {
     @EventHandler
     private void onMonsterAttacked(EntityDamageByEntityEvent event) {
         if (event.isCancelled()) return;
-
         Entity entity = event.getDamager();
         EntityType type = entity.getType();
         if (!(entity instanceof Monster)) return;
@@ -486,9 +487,6 @@ public class PluginListener implements Listener {
 
     /**
      * 实体死亡事件
-     *
-     * @param event
-     * @throws IllegalAccessException
      */
     @EventHandler
     private void onEntityDeath(EntityDeathEvent event) throws IllegalAccessException, IOException, InvalidConfigurationException {
@@ -564,22 +562,61 @@ public class PluginListener implements Listener {
         PlayerData data = PlayerManager.getPlayerData(player);
         Block block = event.getBlock();
         Material material = block.getType();
+        World world = block.getWorld();
+        Location location = block.getLocation();
+        ItemStack is = event.getItemInHand().clone();
         // 检测玩家是否在跑酷设计状态，并且超出了跑酷设计范围
         if (!data.designer.RangeDetection(block.getLocation())) {
             event.setCancelled(true);
             return;
         }
+        if (MinionManager.isMinion(is)) {
+            is.setAmount(1);
+            block.setType(Material.AIR);
+            Location asLocation = new Location(location.getWorld(), (int) location.getX(), (int) location.getY(), (int) location.getZ());
+            asLocation.add(0.5, 0, 0.5);
+            ArmorStand armorStand = (ArmorStand) world.spawnEntity(asLocation, EntityType.ARMOR_STAND);
+            //armorStand.setMarker(true);
+            armorStand.setBasePlate(false);
+            armorStand.setGravity(true);
+            armorStand.setArms(true);
+            EntityEquipment equipment = armorStand.getEquipment();
+            if (equipment != null) {
+                equipment.setItem(EquipmentSlot.HEAD, is);
+                equipment.setItem(EquipmentSlot.CHEST, new ItemStack(Material.DIAMOND_CHESTPLATE));
+                equipment.setItem(EquipmentSlot.LEGS, new ItemStack(Material.DIAMOND_LEGGINGS));
+                equipment.setItem(EquipmentSlot.FEET, new ItemStack(Material.DIAMOND_BOOTS));
+                equipment.setItem(EquipmentSlot.HAND, new ItemStack(Material.DIAMOND_SWORD));
+            }
+        }
+
         // 计数玩家的各种方块摆放
         int count = data.PlaceList.getOrDefault(material, 0);
         data.PlaceList.put(material, count + 1);
         PlayerManager.setPlayerData(player, data);
         // 自定义可放置方块的摆放记录
-        ItemStack is = event.getItemInHand();
         ItemBase ib = ItemManager.getItemBase(is);
         if (ib instanceof Crazy crazy) {
             CrazyBlockRecord record = new CrazyBlockRecord(crazy.getId(), block.getLocation());
             RecordManager.addCrazyRecord(record);
         }
+    }
+
+    @EventHandler
+    private void onPlayerAnvilEnchanted(InventoryClickEvent event) {
+        if (event.isCancelled()) return;
+        Inventory inv = event.getInventory();
+        if (!(inv instanceof AnvilInventory anvil)) return;
+        HumanEntity human = event.getWhoClicked();
+        if (!(human instanceof Player player)) return;
+        InventoryType.SlotType slotType = event.getSlotType();
+        if (!slotType.equals(InventoryType.SlotType.RESULT)) return;
+
+        String name = player.getName();
+        /*
+         TODO: 需要实施以下功能
+          当玩家尝试使用铁砧附魔经验修补时，显示附魔失败信息，并且发出声音
+        */
     }
 
     @EventHandler
@@ -705,6 +742,20 @@ public class PluginListener implements Listener {
         }
         RecipeFinderRunnable finder = new RecipeFinderRunnable(inv);
         finder.runTask(plugin);
+    }
+
+    /**
+     * Morning call
+     */
+    @EventHandler
+    private void onWorldMorning(WorldMorningEvent event) {
+        World world = event.getWorld();
+        Player[] players = Bukkit.getOnlinePlayers().toArray(new Player[0]);
+
+        for (Player player : players) {
+            if (player.getWorld().equals(world))
+                player.playSound(player.getLocation(), Sound.ENTITY_CHICKEN_DEATH, 1f, 1f);
+        }
     }
 
     private void runMenuItemCommand(List<String> commands, Player player) {

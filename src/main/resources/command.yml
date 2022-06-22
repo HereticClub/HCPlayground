@@ -62,7 +62,15 @@ crazy:
       name: enchanting
       permission: ''
       index: 1
-
+minion:
+  runOnConsole: true
+  runOnPlayer: true
+  permission: hc.minion.*
+  args:
+    1:
+      name: give
+      permission: hc.minion.give
+      index: 1
 menu:
   permission: ''
   runOnConsole: false

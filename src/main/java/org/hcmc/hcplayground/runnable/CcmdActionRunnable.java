@@ -1,14 +1,12 @@
-package org.hcmc.hcplayground.scheduler;
+package org.hcmc.hcplayground.runnable;
 
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.hcmc.hcplayground.enums.CcmdActionType;
 import org.hcmc.hcplayground.model.ccmd.CcmdAction;
 
-import java.time.Duration;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 public class CcmdActionRunnable extends BukkitRunnable {
 

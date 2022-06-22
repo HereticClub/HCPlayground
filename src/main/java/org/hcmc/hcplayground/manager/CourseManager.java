@@ -20,7 +20,7 @@ public class CourseManager {
 
     private static List<CourseInfo> courses = new ArrayList<>();
     //private static String courseId;
-    private static final Plugin plugin = HCPlayground.getPlugin();
+    private static final Plugin plugin = HCPlayground.getInstance();
 
 
     public CourseManager() {

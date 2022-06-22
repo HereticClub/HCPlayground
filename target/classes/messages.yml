@@ -71,8 +71,6 @@ messages:
     &6To join this server next time, you must register your account again, thanks!
   # 当玩家修改密码成功时显示，可以使用%player%占位符，代表执行该指令的玩家
   playerPasswordChanged: '&e%player%''s &fpassword has been changed'
-  # 当系统出现错误时显示，一般情况下只有当系统出错时才会显示此信息，可以使用%player%占位符，代表执行该指令的玩家
-  systemError: '&4Oooooooops!!! Something went wrong!'
   # 玩家上一次登录时间，当使用seen指令时显示
   # 可以使用%player%占位符，表示被查看的玩家名称
   # 可以使用%onlineStatusMessage%占位符，表示被查看的玩家的在线状态
@@ -86,6 +84,16 @@ messages:
   playerUnBanned: '&cPlayer %player% has been unbanned!'
   # 玩家的ActionBar显示信息
   playerActionBar: '&cHealth: &e%hcplayground_health%&7/&e%hcplayground_max_health% &1Armor: &e%hcplayground_armor% &4Damage: &e%hcplayground_attack_damage% &5Critical: &e%hcplayground_critical_percentage% &5Critical Damage: &e%hcplayground_critical_damage_percentage%'
+  # 玩家账号被禁用并且被移出服务器时显示
+  # 可以使用%player%占位符，代表被禁用的玩家名称
+  # 可以使用%master%占位符，代表发出禁止指令的玩家名称
+  # 可以使用%reason%占位符，代表被禁止的理由
+  # 可以使用%banDate%占位符，代表被禁止开始时间
+  playerBannedMessage: |-
+    &cOn %banDate%
+    &cYour account &e%player% &chas been banned by %master%
+    &7please contact game master if any question
+    &7Reason: &e%reason%
   # 重新加载插件配置时显示，可以使用%time_escaped%占位符，表示重新加载插件所使用的时间，单位: 毫秒
   reload: '&aConfiguration reload completed, time escaped: &e%time_escaped% &ams'
   # 玩家在线状态信息
@@ -94,8 +102,11 @@ messages:
     true: '&aOnline'
     # 玩家离线时信息提示
     false: '&cOffline'
+  # 当系统出现错误时显示，一般情况下只有当系统出错时才会显示此信息，可以使用%player%占位符，代表执行该指令的玩家
+  systemError: '&4Oooooooops!!! Something went wrong!'
   # 系统管理员的名字，当使用控制台指令时以此名称代替执行指令的玩家名称
   systemAdminName: '&eSystem Administrator'
+  numberFormatInvalid: '&cNumber format not right!'
   # 当玩家尝试在冷却时间内运行自定义指令时显示
   # 可以使用%cooldown%占位符，表示该指令的剩余冷却时间，单位: 秒
   # 可以使用%command%占位符，表示该指令的名称
@@ -156,20 +167,12 @@ messages:
   enterCourseRange: '&aYou just entered course range'
   # 当玩家设置赛道的跑酷大厅，但跑酷大厅的名字不存在时显示
   lobbyNotExist: '&aLobby &e%lobby% &cis not exist'
-  # 玩家账号被禁用并且被移出服务器时显示
-  # 可以使用%player%占位符，代表被禁用的玩家名称
-  # 可以使用%master%占位符，代表发出禁止指令的玩家名称
-  # 可以使用%reason%占位符，代表被禁止的理由
-  # 可以使用%banDate%占位符，代表被禁止开始时间
-  playerBannedMessage: |-
-    &cOn %banDate%
-    &cYour account &e%player% &chas been banned by %master%
-    &7please contact game master if any question
-    &7Reason: &e%reason%
   # 当菜单不能在某个世界打开时显示
   # 可以使用%world%占位符，表示禁止打开菜单的世界名称
   # 可以使用%menu%占位符，表示正在打开的菜单标题
   menuWorldProhibited: '&c不能在&e%world%&c世界打开%menu%&c菜单'
+  # 不能获得爪牙类型时显示，可以使用%minion_type%占位符，表示要测试的爪牙类型
+  minionUnknownType: '&cUnknown minion type: %minion_type%'
   # 异族游乐场主菜单指令说明，必须与定义的指令名称一致
   menu:
     # 指令说明，当使用/help menu时显示
@@ -293,16 +296,34 @@ messages:
       &9/<command> ready <true|false> &7- &atrue: Open your course to other players, &afalse: Close your course, other players join this course no longer except yourself 
       &9/<command> startpoint <course> &7- &fDecide where the Course to start, stand in the position and face the direction you want the Players to teleport to 
       &9/<command> tp <course> &7- &fTeleport to a course, player must NOT be in design mode
-# 模板节段
-template:
-  # 显示id，不能修改名称
-  courses_top:
-    # 模板的header
-    hearer: '&m======&a Top of courses &m======'
-    # 模板的内容，自动重复，可以使用%player%，%course%，%time%占位符
-    # %player%占位符，表示赛道成绩最优秀的玩家名称
-    # %course%占位符，表示最佳成绩赛道的名称
-    # %time%占位符，表示赛道的最佳完成时间
-    line: '&f%player%: &%course% -> %time%'
-    #模板的footer，不配置则不显示
-    footer: ''
+  minion:
+    description: Minion administration
+    usage: |-
+      &7<command> command usage:
+      &9<command> give &7- Give a minion to a player
+  # 模板节段
+  template:
+    # 显示id，不能修改名称
+    courses_top:
+      # 模板的header
+      hearer: '&m======&a Top of courses &m======'
+      # 模板的内容，自动重复，可以使用%player%，%course%，%time%占位符
+      # %player%占位符，表示赛道成绩最优秀的玩家名称
+      # %course%占位符，表示最佳成绩赛道的名称
+      # %time%占位符，表示赛道的最佳完成时间
+      line: '&f%player%: &%course% -> %time%'
+      #模板的footer，不配置则不显示
+      footer: ''
+  minion_type:
+    COBBLESTONE:
+      1:
+        display: '&f圆石爪牙 I'
+        lore:
+          - '&7aaaaaa'
+          - '&7bbbbbb'
+    OAK_LOG:
+      1:
+        display: '&f橡木爪牙 I'
+        lore:
+          - '&7111111'
+          - '&7222222'

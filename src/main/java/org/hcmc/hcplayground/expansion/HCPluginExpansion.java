@@ -21,7 +21,7 @@ public class HCPluginExpansion extends PlaceholderExpansion {
     private final PluginDescriptionFile pluginDescription;
 
     public HCPluginExpansion() {
-        Plugin plugin = HCPlayground.getPlugin();
+        Plugin plugin = HCPlayground.getInstance();
         pluginDescription = plugin.getDescription();
     }
 

@@ -26,7 +26,7 @@ import java.util.*;
 public class SqliteManager {
 
     private static final String SQLITE_CONNECTION_STRING = "jdbc:sqlite:%s/database/hcdb.db";
-    private static final JavaPlugin plugin = HCPlayground.getPlugin();
+    private static final JavaPlugin plugin = HCPlayground.getInstance();
     private static Connection connection;
 
     public SqliteManager() {

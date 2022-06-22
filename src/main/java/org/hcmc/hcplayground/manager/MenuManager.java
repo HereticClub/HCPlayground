@@ -31,7 +31,7 @@ import java.util.*;
 public class MenuManager {
 
     public static List<MenuDetail> Items = new ArrayList<>();
-    public static Plugin plugin = HCPlayground.getPlugin();
+    public static Plugin plugin = HCPlayground.getInstance();
 
     private final static String SKULLMETA_FIELD_NAME_PROFILE = "profile";
 
@@ -59,7 +59,7 @@ public class MenuManager {
         String worldName = player.getWorld().getName();
         boolean isEnabledWorld = detail.enableWorlds.stream().anyMatch(x -> x.equalsIgnoreCase(worldName));
         if (detail.enableWorlds.size() >= 1 && !isEnabledWorld && !player.isOp()) {
-            player.sendMessage(LanguageManager.getMessage("menuWorldProhibited", player)
+            player.sendMessage(LanguageManager.getString("menuWorldProhibited", player)
                     .replace("%world%", worldName)
                     .replace("%menu%", title)
             );

@@ -18,7 +18,7 @@ public class NamespacedKeySerialization implements JsonDeserializer<NamespacedKe
 
     @Override
     public NamespacedKey deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
-        JavaPlugin plugin = HCPlayground.getPlugin();
+        JavaPlugin plugin = HCPlayground.getInstance();
         String value = jsonElement.getAsString();
         return new NamespacedKey(plugin, value);
     }

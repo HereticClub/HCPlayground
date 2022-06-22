@@ -20,7 +20,7 @@ import java.util.*;
 
 public class PermissionManager {
 
-    private static final JavaPlugin plugin = HCPlayground.getPlugin();
+    private static final JavaPlugin plugin = HCPlayground.getInstance();
     private static final PluginManager pluginManager = plugin.getServer().getPluginManager();
     public static List<PermissionItem> Permissions = new ArrayList<>();
 

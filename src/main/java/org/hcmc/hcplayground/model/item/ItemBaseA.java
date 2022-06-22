@@ -90,7 +90,7 @@ public abstract class ItemBaseA implements ItemBase {
     同时没有使用@Expose的字段不会被序列化和反序列化
     */
     @Expose(serialize = false, deserialize = false)
-    protected JavaPlugin plugin = HCPlayground.getPlugin();
+    protected JavaPlugin plugin = HCPlayground.getInstance();
 
     @Override
     public int getAmount() {

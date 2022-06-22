@@ -1,6 +1,5 @@
 package org.hcmc.hcplayground.manager;
 
-import com.ibm.icu.util.TimeUnit;
 import io.github.a5h73y.parkour.Parkour;
 import io.github.a5h73y.parkour.configuration.ConfigManager;
 import io.github.a5h73y.parkour.database.DatabaseManager;
@@ -13,15 +12,12 @@ import io.github.a5h73y.parkour.type.kit.ParkourKitConfig;
 import io.github.a5h73y.parkour.type.kit.ParkourKitManager;
 import io.github.a5h73y.parkour.type.lobby.LobbyConfig;
 import io.github.a5h73y.parkour.type.player.PlayerManager;
-import me.clip.placeholderapi.util.TimeUtil;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.entity.Player;
 
-import java.sql.Timestamp;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.List;
 
 public class ParkourApiManager {
@@ -49,7 +45,7 @@ public class ParkourApiManager {
         List<String> result = new ArrayList<>();
 
 
-        result.add(LanguageManager.getMessage("template.courses_top.hearer"));
+        result.add(LanguageManager.getString("template.courses_top.hearer"));
 
         for (String course : courses) {
             List<TimeEntry> topBest = dm.getTopBestTimes(course, 1);
@@ -59,7 +55,7 @@ public class ParkourApiManager {
                 Duration duration = Duration.ofMillis(entry.getTime());
 
                 String time = String.format("%s:%s:%s.%s", duration.toHoursPart(), duration.toMinutesPart(), duration.toSecondsPart(), duration.toMillisPart());
-                String line = LanguageManager.getMessage("template.courses_top.line")
+                String line = LanguageManager.getString("template.courses_top.line")
                         .replace("%player%", entry.getPlayerName())
                         .replace("%course%", course)
                         .replace("%time%", time);
@@ -67,7 +63,7 @@ public class ParkourApiManager {
             }
         }
 
-        String footer = LanguageManager.getMessage("template.courses_top.footer");
+        String footer = LanguageManager.getString("template.courses_top.footer");
         if (!StringUtils.isBlank(footer)) result.add(footer);
         return result;
     }

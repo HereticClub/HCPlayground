@@ -1,4 +1,4 @@
-package org.hcmc.hcplayground.scheduler;
+package org.hcmc.hcplayground.runnable;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;

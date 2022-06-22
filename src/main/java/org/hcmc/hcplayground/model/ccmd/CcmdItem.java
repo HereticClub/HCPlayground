@@ -13,7 +13,7 @@ import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.manager.LanguageManager;
 import org.hcmc.hcplayground.manager.PlayerManager;
 import org.hcmc.hcplayground.model.player.PlayerData;
-import org.hcmc.hcplayground.scheduler.CcmdActionRunnable;
+import org.hcmc.hcplayground.runnable.CcmdActionRunnable;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -72,7 +72,7 @@ public class CcmdItem extends Command {
     private boolean RunCustomCommand(CommandSender sender, @NotNull String[] args) throws IOException, IllegalAccessException, InvalidConfigurationException, ParseException {
         // 自定义命令必须玩家执行
         if (!(sender instanceof Player player)) {
-            sender.sendMessage(LanguageManager.getMessage("player-message", sender).replace("%command%", id));
+            sender.sendMessage(LanguageManager.getString("player-message", sender).replace("%command%", id));
             return false;
         }
         // 检测指令的可用世界列表，op玩家绕过检测
@@ -88,7 +88,7 @@ public class CcmdItem extends Command {
         double diff = current - lastTime;
         if (diff <= cooldown * 1000L) {
             int remain = (int) ((cooldown * 1000L - diff) / 1000);
-            player.sendMessage(LanguageManager.getMessage("customCommandCooldown", player).replace("%command%", id).replace("%remain%", String.valueOf(remain)));
+            player.sendMessage(LanguageManager.getString("customCommandCooldown", player).replace("%command%", id).replace("%remain%", String.valueOf(remain)));
             return false;
         }
         // 执行actions
@@ -112,7 +112,7 @@ public class CcmdItem extends Command {
 
         if (!StringUtils.isBlank(this.permission)) this.setPermission(this.permission);
         this.setAliases(this.aliases);
-        this.setPermissionMessage(LanguageManager.getMessage("permission-message", null).replace("%permission%", permission));
+        this.setPermissionMessage(LanguageManager.getString("permission-message", null).replace("%permission%", permission));
         this.setUsage(this.usage);
         this.setDescription(this.description);
     }

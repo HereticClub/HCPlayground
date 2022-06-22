@@ -77,7 +77,7 @@ public class CourseDesigner {
     public CourseDesigner(PlayerData data) {
         this.data = data;
         this.player = data.getPlayer();
-        plugin = HCPlayground.getPlugin();
+        plugin = HCPlayground.getInstance();
         world = Bukkit.getWorld(Global.course.getWorld());
         designRange = Global.course.getDesignRange();
         protectRange = Global.course.getProtectRange();
@@ -165,11 +165,11 @@ public class CourseDesigner {
         outOfDesignRange = x >= designRange || z >= designRange;
 
         if (!outOfDesignRange && showMessage) {
-            player.sendMessage(LanguageManager.getMessage("enterCourseRange", player));
+            player.sendMessage(LanguageManager.getString("enterCourseRange", player));
             showMessage = false;
         }
         if (outOfDesignRange && !showMessage) {
-            player.sendMessage(LanguageManager.getMessage("outOfCourseRange", player));
+            player.sendMessage(LanguageManager.getString("outOfCourseRange", player));
             showMessage = true;
         }
     }
@@ -179,13 +179,44 @@ public class CourseDesigner {
      *
      * @param id 跑酷赛道实例的id编号
      * @param create True: 表示该赛道正在被创建, False: 表示该赛道正在被修改
-     * @throws IOException 文档读写异常
      */
     public void design(@NotNull String id, boolean create) throws IOException, IllegalAccessException, InvalidConfigurationException {
+        // 赛道位置实例
         CourseInfo course = CourseManager.getCourse(id);
         if (course == null) return;
+        // 赛道设计模式时，获取玩家进入模式前的位置
+        // 下面一行代码主要为op玩家设计
+        // 因为op玩家可以无限制的随意设计任何赛道
+        // 意味着可以在不离开设计模式时重复调用design()方法
+        // 而非op玩家必须调用了leave()方法后才能再次调用design方法
+        // 因此只记录第一次进入设计模式时的玩家位置
+        if (!data.isCourseDesigning) location = player.getLocation();
+        // 安全传送，脚下的方块如果是透明的不受碰撞影响的方块，则改变为STONE
+        Block block = world.getBlockAt(course.getLocation());
+        if (!block.getType().isOccluding()) block.setType(Material.STONE);
+        // 保存当前正在设计的赛道实例Id
+        currentCourseId = course.getId();
+        // 进入设计模式
+        data.isCourseDesigning = true;
+        // 传送到赛道
+        player.teleport(course.getLocation().add(0.5, 1, 0.5));
+        // 选择跑酷赛道实例
+        if (!create) ParkourApiManager.selectCourse(player, course.getName());
         // 非op玩家必须把背包和装备放入"储物柜"，并且游戏模式被设置为CREATIVE
         if (!player.isOp()) {
+            // 等待进入赛道设计模式
+            // 主要是等待Multiverse-Inventories插件完成它的任务
+            int waitFor = Global.course.getWaitFor();
+            if (waitFor <= 0) waitFor = 3;
+            // 跑酷插件会强制玩家进入世界后改变玩家的游戏模式
+            player.sendMessage(LanguageManager.getString("courseEnteringDesignMode", player).replace("%second%", String.valueOf(waitFor)));
+            designTask = new BukkitRunnable() {
+                @Override
+                public void run() {
+                    player.setGameMode(GameMode.CREATIVE);
+                    player.sendMessage(LanguageManager.getString("courseDesignModeEntered", player));
+                }
+            }.runTaskLater(plugin, waitFor * 20L);
             // 储存身上装备和背包物品
             storeEquipments();
             storeContents();
@@ -198,79 +229,60 @@ public class CourseDesigner {
             PermissionManager.addPermission(player, perms);
             // 创建赛道时，添加赛道Id到玩家列表
             if (create) data.courseIds.add(id);
-            // 等待进入赛道设计模式
-            int waitFor = Global.course.getWaitFor();
-            if (waitFor <= 0) waitFor = 3;
-            // 跑酷插件会强制玩家进入世界后改变玩家的游戏模式
-            player.sendMessage(LanguageManager.getMessage("courseEnteringDesignMode", player).replace("%second%", String.valueOf(waitFor)));
-            designTask = new BukkitRunnable() {
-                @Override
-                public void run() {
-                    player.setGameMode(GameMode.CREATIVE);
-                    player.sendMessage(LanguageManager.getMessage("courseDesignModeEntered", player));
-                }
-            }.runTaskLater(plugin, waitFor * 20L);
         }
 
-        // 赛道设计模式时，获取玩家进入模式前的位置
-        if (!data.isCourseDesigning) location = player.getLocation();
-        // 保存之前的配置
+        // 保存之前的配置，写入到玩家json文档
+        // 包括玩家身上的物品，玩家传送前的位置，玩家的游戏模式
         saveSetting();
-        // 安全传送
-        Block block = world.getBlockAt(course.getLocation());
-        if (!block.getType().isOccluding()) block.setType(Material.STONE);
-        // 保存当前赛道的实例，设计进入设计模式的标记
-        currentCourseId = course.getId();
-        data.isCourseDesigning = true;
         // 保存玩家数据
         PlayerManager.setPlayerData(player, data);
-        // 传送到赛道
-        player.teleport(course.getLocation().add(0.5, 1, 0.5));
-        if (!create) ParkourApiManager.selectCourse(player, course.getName());
     }
 
     /**
      * 将储存器的物品发回给玩家，包括背包和装备栏，主副手等物品，然后清空玩家储存文档
-     *
-     * @throws IOException
      */
     public void leave() throws IOException, IllegalAccessException, InvalidConfigurationException {
         // 加载"储物柜"所有物品
         loadSetting();
         // 非op玩家必须从"储物柜"拿回之前的物品，并且设置游戏模式为进入设计跑道之前的游戏模式
         if (!player.isOp()) {
+            // 清除玩家身上所有物品
             player.getInventory().clear();
+            // 返还玩家之前的装备和物品
+            returnEquipments();
+            returnContents();
+            player.setGameMode(gameMode);
+            // 清空"储物柜"并且保存到文档
+            contents.clear();
+            equipments.clear();
+            saveSetting();
             // 取消WorldGuard保护权限
             String perms = String.format(PermissionManager.PERMISSION_WORLDGUARD_REGION_BYPASS, world.getName());
             PermissionManager.removePermission(player, perms);
+        }
+        // 传送玩家回到原来的世界
+        if (location != null) player.teleport(location);
+        // 离开设计模式
+        data.isCourseDesigning = false;
+        // 取消选择跑酷赛道实例
+        currentCourseId = null;
+        ParkourApiManager.deselectCourse(player);
+        // 保存玩家数据
+        PlayerManager.setPlayerData(player, data);
+        // 以下代码仅仅只是制造一个效果
+        // (形式上)需要玩家等待几秒钟才能离开
+        if (!player.isOp()) {
             // 等待离开赛道设计模式，并且返还装备
             int waitFor = Global.course.getWaitFor();
             if (waitFor <= 0) waitFor = 3;
-            if(designTask != null && !designTask.isCancelled()) designTask.cancel();
+            if (designTask != null && !designTask.isCancelled()) designTask.cancel();
             leaveTask = new BukkitRunnable() {
                 @Override
                 public void run() {
-                    returnEquipments();
-                    returnContents();
-                    contents.clear();
-                    equipments.clear();
-                    player.setGameMode(gameMode);
-                    try {
-                        saveSetting();
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                    player.sendMessage(LanguageManager.getMessage("courseDesignModeLeave", player));
+                    player.sendMessage(LanguageManager.getString("courseDesignModeLeave", player));
                 }
             }.runTaskLater(plugin, waitFor * 20L);
         }
-
-        currentCourseId = null;
-        ParkourApiManager.deselectCourse(player);
-
-        if (location != null) player.teleport(location);
-        data.isCourseDesigning = false;
-        PlayerManager.setPlayerData(player, data);
     }
 
     /**
