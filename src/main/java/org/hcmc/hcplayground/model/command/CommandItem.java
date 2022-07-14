@@ -23,7 +23,7 @@ import org.hcmc.hcplayground.manager.*;
 import org.hcmc.hcplayground.model.parkour.CourseInfo;
 import org.hcmc.hcplayground.model.player.PlayerData;
 import org.hcmc.hcplayground.utility.Global;
-import org.hcmc.hcplayground.utility.RomeNumber;
+import org.hcmc.hcplayground.utility.RomanNumber;
 import org.jetbrains.annotations.NotNull;
 
 import javax.crypto.BadPaddingException;
@@ -37,9 +37,11 @@ import java.security.spec.InvalidKeySpecException;
 import java.sql.SQLException;
 import java.text.DateFormat;
 import java.util.*;
+import java.util.regex.Pattern;
 
 public class CommandItem extends Command {
 
+    private final static Pattern patternNumber = Pattern.compile("-?\\d+(\\.\\d+)?");
     public static final String COMMAND_REGISTER = "register";
     public static final String COMMAND_UNREGISTER = "unregister";
     public static final String COMMAND_LOGIN = "login";
@@ -339,7 +341,7 @@ public class CommandItem extends Command {
             return false;
         }
 
-        int level = RomeNumber.toInteger(args[3]);
+        int level = RomanNumber.toInteger(args[3]);
         if (level <= 0) level = 1;
         int amount = Integer.parseInt(args[4]);
 
@@ -943,7 +945,7 @@ public class CommandItem extends Command {
             return ShowCommandHelp(sender, 1);
         }
 
-        if (args.length >= 4 && args[3] != null && Global.patternNumber.matcher(args[3]).matches()) {
+        if (args.length >= 4 && args[3] != null && patternNumber.matcher(args[3]).matches()) {
             amount = Integer.parseInt(args[3]);
         }
 
@@ -973,7 +975,7 @@ public class CommandItem extends Command {
 
     private boolean RunHCReloadCommand(CommandSender sender) throws SQLException, NoSuchAlgorithmException, InvalidKeySpecException, NoSuchFieldException, IllegalAccessException, IOException {
         long a = new Date().getTime();
-        ((HCPlayground) plugin).ReloadConfiguration();
+        Global.ReloadConfiguration();
 
         long b = new Date().getTime();
         long c = b - a;

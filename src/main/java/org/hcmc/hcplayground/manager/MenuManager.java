@@ -1,6 +1,5 @@
 package org.hcmc.hcplayground.manager;
 
-import com.mojang.authlib.GameProfile;
 import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -19,21 +18,18 @@ import org.bukkit.plugin.Plugin;
 import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.model.menu.MenuDetail;
 import org.hcmc.hcplayground.model.menu.MenuItem;
-import org.hcmc.hcplayground.model.player.PlayerData;
 import org.hcmc.hcplayground.utility.Global;
 import org.hcmc.hcplayground.utility.MaterialData;
+import org.hcmc.hcplayground.utility.PlayerHeaderUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.util.*;
 
 public class MenuManager {
 
     public static List<MenuDetail> Items = new ArrayList<>();
     public static Plugin plugin = HCPlayground.getInstance();
-
-    private final static String SKULLMETA_FIELD_NAME_PROFILE = "profile";
 
     public MenuManager() {
 
@@ -90,7 +86,7 @@ public class MenuManager {
                 if (!d.material.value.equals(Material.PLAYER_HEAD)) {
                     is = new ItemStack(d.material.value, d.amount);
                 } else {
-                    is = d.customSkull.isEmpty() ? ResolvePlayerHead(player, d.material) : ResolveCustomHead(player, d.customSkull);
+                    is = d.customSkull.isEmpty() ? ResolvePlayerHead(player, d.material) : ResolveCustomHead(d.customSkull);
                 }
 
                 ItemMeta im = is.getItemMeta();
@@ -116,24 +112,13 @@ public class MenuManager {
         return inv;
     }
 
-    private static ItemStack ResolveCustomHead(Player player, String base64data) throws IOException, IllegalAccessException, InvalidConfigurationException {
+    private static ItemStack ResolveCustomHead(String base64data) throws IOException, IllegalAccessException, InvalidConfigurationException {
         ItemStack is = new ItemStack(Material.PLAYER_HEAD);
-        SkullMeta sm = (SkullMeta) is.getItemMeta();
-        if (sm == null) return is;
 
-        PlayerData data = PlayerManager.getPlayerData(player);
-        GameProfile profile = data.setHeadTextures(base64data);
+        ItemMeta im = PlayerHeaderUtil.setTextures(is, base64data);
+        if (!(im instanceof SkullMeta meta)) return is;
 
-        try {
-            Field field;
-            field = sm.getClass().getDeclaredField(SKULLMETA_FIELD_NAME_PROFILE);
-            field.setAccessible(true);
-            field.set(sm, profile);
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            e.printStackTrace();
-        }
-
-        is.setItemMeta(sm);
+        is.setItemMeta(meta);
         return is;
     }
 

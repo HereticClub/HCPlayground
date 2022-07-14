@@ -1,0 +1,64 @@
+COBBLESTONE:
+  1:
+    display: '&f圆石爪牙 I'
+    texture: 'eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOWZiYTY4ODk3MjhmMWJmNmI3OWM1ZTgzZTJlYjllYjMwNTkyZmFjMGMxNDg0YTUzNzA3ZjhiYWFiMTZmMTI4YiJ9fX0='
+    lore:
+      - '&7aaaaaa'
+      - '&7bbbbbb'
+    equipments:
+      hand:
+        material: stone_pickaxe
+        color: c0c0c0
+      chest:
+        material: leather_chestplate
+        color: c0c0c0
+      legs:
+        material: leather_leggings
+        color: c0c0c0
+      feet:
+        material: leather_boots
+        color: c0c0c0
+  2:
+    display: '&f圆石爪牙 II'
+    texture: 'eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvM2EyMWJlYTczY2U1Y2UxMGRhMmM0NGU5MjhmOTVhZGJiOTVkNzdjNTIxMjgxY2ViMDY3YjU3MzQxNDhjM2UzMiJ9fX0='
+    lore:
+      - '&7aaaaaa'
+      - '&7bbbbbb'
+    equipments:
+      hand:
+        material: diamond_pickaxe
+        color: c0c0c0
+      chest:
+        material: diamond_chestplate
+        color: c0c0c0
+      legs:
+        material: diamond_leggings
+        color: c0c0c0
+      feet:
+        material: diamond_boots
+        color: c0c0c0
+  3:
+    display: '&f圆石爪牙 III'
+    texture: 'eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZWRhYTJmZWJhNzI3NGEyMzU2Y2JiYWIzMGRhODM3Y2RjYTljNjYzZjMwYTgyNGY1ZGJlYWRiNDljZTA4ODVhNiJ9fX0='
+    lore:
+      - '&7aaaaaa'
+      - '&7bbbbbb'
+  4:
+    display: '&f圆石爪牙 IV'
+    texture: 'eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjBjZTVhOWMyZmMwYjQ5OTVmMDZlMWIwMmVjOTA5NzdlM2M1Y2U1N2Q4MTUyMDUzNDJmYjhkNGQ1MTcyOTA5YyJ9fX0='
+    lore:
+      - '&7aaaaaa'
+      - '&7bbbbbb'
+  5:
+    display: '&f圆石爪牙 V'
+    texture: 'eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjY3ZTMxYzhmOTNlMDQ1MmZhN2M5NTJjMTI2Yjk1OTdhMmRlNjYxODZkOTY3ZDAwNDBlNzYzMjA5MzY0YmNjMSJ9fX0='
+    lore:
+      - '&7aaaaaa'
+      - '&7bbbbbb'
+OAK_LOG:
+  1:
+    display: '&f橡木爪牙 I'
+    texture: 'eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYTc5YzUyYzJiYjgwOGQyZTQ2ZThlNGU0ZGI1MDZmOTQwNmU5ZGZhMjBhZWU0MTlhZDkwZWFjZmIwMjE2YzE2OSJ9fX0='
+    lore:
+      - '&7111111'
+      - '&7222222'

@@ -30,6 +30,7 @@ import org.hcmc.hcplayground.enums.RecipeType;
 import org.hcmc.hcplayground.event.PlayerEquipmentChangedEvent;
 import org.hcmc.hcplayground.event.WorldMorningEvent;
 import org.hcmc.hcplayground.manager.*;
+import org.hcmc.hcplayground.model.minion.MinionRecord;
 import org.hcmc.hcplayground.model.recipe.CrazyBlockRecord;
 import org.hcmc.hcplayground.model.mob.MobEntity;
 import org.hcmc.hcplayground.model.command.CommandItem;
@@ -563,31 +564,27 @@ public class PluginListener implements Listener {
         Block block = event.getBlock();
         Material material = block.getType();
         World world = block.getWorld();
+        // 被摆放方块的位置
         Location location = block.getLocation();
-        ItemStack is = event.getItemInHand().clone();
+        // HandItem, 摆放方块时主手拿着的物品
+        // 从行为上，当方块被摆放后，HandItem就已经被消灭
+        // 因此在此处HandItem只能被某些判断逻辑使用
+        // 而不是对HandItem进行处理，比如更改其材质，数量等
+        ItemStack handItem = event.getItemInHand().clone();
         // 检测玩家是否在跑酷设计状态，并且超出了跑酷设计范围
         if (!data.designer.RangeDetection(block.getLocation())) {
             event.setCancelled(true);
             return;
         }
-        if (MinionManager.isMinion(is)) {
-            is.setAmount(1);
+        if (MinionManager.isMinion(handItem)) {
+            handItem.setAmount(1);
             block.setType(Material.AIR);
-            Location asLocation = new Location(location.getWorld(), (int) location.getX(), (int) location.getY(), (int) location.getZ());
-            asLocation.add(0.5, 0, 0.5);
-            ArmorStand armorStand = (ArmorStand) world.spawnEntity(asLocation, EntityType.ARMOR_STAND);
-            //armorStand.setMarker(true);
-            armorStand.setBasePlate(false);
-            armorStand.setGravity(true);
-            armorStand.setArms(true);
-            EntityEquipment equipment = armorStand.getEquipment();
-            if (equipment != null) {
-                equipment.setItem(EquipmentSlot.HEAD, is);
-                equipment.setItem(EquipmentSlot.CHEST, new ItemStack(Material.DIAMOND_CHESTPLATE));
-                equipment.setItem(EquipmentSlot.LEGS, new ItemStack(Material.DIAMOND_LEGGINGS));
-                equipment.setItem(EquipmentSlot.FEET, new ItemStack(Material.DIAMOND_BOOTS));
-                equipment.setItem(EquipmentSlot.HAND, new ItemStack(Material.DIAMOND_SWORD));
-            }
+
+            Location minionLocation = new Location(location.getWorld(), (int) location.getX(), (int) location.getY(), (int) location.getZ());
+            minionLocation.add(0.5, 0, 0.5);
+            minionLocation.setDirection(player.getLocation().getDirection().multiply(-1));
+            MinionRecord record = MinionManager.spawnArmorStand(minionLocation, handItem);
+            if (record != null) RecordManager.addMinionRecord(record);
         }
 
         // 计数玩家的各种方块摆放
@@ -595,7 +592,7 @@ public class PluginListener implements Listener {
         data.PlaceList.put(material, count + 1);
         PlayerManager.setPlayerData(player, data);
         // 自定义可放置方块的摆放记录
-        ItemBase ib = ItemManager.getItemBase(is);
+        ItemBase ib = ItemManager.getItemBase(handItem);
         if (ib instanceof Crazy crazy) {
             CrazyBlockRecord record = new CrazyBlockRecord(crazy.getId(), block.getLocation());
             RecordManager.addCrazyRecord(record);

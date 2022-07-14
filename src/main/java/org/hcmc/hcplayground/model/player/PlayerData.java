@@ -3,9 +3,6 @@ package org.hcmc.hcplayground.model.player;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.reflect.TypeToken;
-import com.mojang.authlib.GameProfile;
-import com.mojang.authlib.properties.Property;
-import com.mojang.authlib.properties.PropertyMap;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
@@ -22,7 +19,7 @@ import org.hcmc.hcplayground.enums.ItemFeatureType;
 import org.hcmc.hcplayground.enums.PlayerBannedState;
 import org.hcmc.hcplayground.manager.ItemManager;
 import org.hcmc.hcplayground.manager.LanguageManager;
-import org.hcmc.hcplayground.manager.ScoreboardManager;
+import org.hcmc.hcplayground.manager.SidebarManager;
 import org.hcmc.hcplayground.model.item.ItemBase;
 import org.hcmc.hcplayground.model.scoreboard.ScoreboardItem;
 import org.hcmc.hcplayground.sqlite.SqliteManager;
@@ -56,7 +53,6 @@ public class PlayerData {
     private static final String Section_Key_CcmdCooldownList = "ccmdCooldownList";
     private static final String Section_Key_Parkour_Design = "parkour.design";
     private static final String Section_Key_Parkour_List = "parkour.list";
-    private static final String GAMEPROFILE_PROPERTY_TEXTURES = "textures";
 
     private static final String TYPE_JAVA_UTIL_MAP = "java.util.Map";
     public static final double BASE_HEALTH = 20.0F;
@@ -155,7 +151,6 @@ public class PlayerData {
      */
     private boolean register;
     private final PermissionAttachment attachment;
-    private GameProfile profile;
     private Date loginTime = new Date();
     private ScoreboardItem sidebar;
 
@@ -258,15 +253,6 @@ public class PlayerData {
 
     public double getTotalLoggingSpeed() {
         return totalLoggingSpeed;
-    }
-
-    public GameProfile setHeadTextures(String base64Value) {
-        if (profile == null) profile = new GameProfile(UUID.randomUUID(), null);
-        PropertyMap pm = profile.getProperties();
-        Property pp = new Property(GAMEPROFILE_PROPERTY_TEXTURES, base64Value);
-        pm.put(GAMEPROFILE_PROPERTY_TEXTURES, pp);
-
-        return profile;
     }
 
     public void setTotalLoggingSpeed(double value) {
@@ -472,7 +458,7 @@ public class PlayerData {
     }
 
     public void ShowSidebar(String world) {
-        ScoreboardItem sidebar = ScoreboardManager.getItemByWorld(world);
+        ScoreboardItem sidebar = SidebarManager.getItemByWorld(world);
         this.sidebar = sidebar;
         if (sidebar == null) return;
         sidebar.display(player);

@@ -31,6 +31,10 @@ public class HCPlayground extends JavaPlugin {
 
     }
 
+    public static HCPlayground getInstance() {
+        return instance;
+    }
+
     @Override
     public void onEnable() {
         super.onEnable();
@@ -39,7 +43,7 @@ public class HCPlayground extends JavaPlugin {
             // 连接和加载Sqlite数据库
             Global.Sqlite = SqliteManager.CreateSqliteConnection();
             // 重新加载所有yml文档
-            ReloadConfiguration();
+            Global.ReloadConfiguration();
             // 以下代码不需要在ReloadPlugin()中执行，只需要在插件启用时执行一次
             // 启动runnable线程，每秒循环执行一次
             task = Global.runnable.runTaskTimer(this, 20, 20);
@@ -97,55 +101,6 @@ public class HCPlayground extends JavaPlugin {
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command cmd, @NotNull String label, String[] args) {
-        //System.out.println(label);
         return false;
-    }
-
-
-    public static HCPlayground getInstance() {
-        return instance;
-    }
-
-    public void ReloadConfiguration() throws IllegalAccessException, NoSuchFieldException, SQLException, NoSuchAlgorithmException, InvalidKeySpecException, IOException {
-        // 创建插件所需要的子目录
-        Global.InitialChildrenFolders();
-        // 合并所有Yml格式文档到插件目录
-        // 兼容前版本的配置，并且添加新版本的配置
-        Global.SaveYamlResource();
-        // 加载插件的基本设置config.yml
-        Global.LoadConfig();
-        // 从yml格式文档加载配置到实例，必须按照指定的加载顺序
-        // 1.加载本地化文档
-        LanguageManager.Load(Global.getYamlConfiguration(Global.FILE_MESSAGES));
-        // 2.加载权限列表
-        PermissionManager.Load(Global.getYamlConfiguration(Global.FILE_PERMISSION));
-        // 3.加载指令
-        CommandManager.Load(Global.getYamlConfiguration(Global.FILE_COMMANDS));
-        // 4.加载自定义物品
-        ItemManager.Load(Global.getYamlConfiguration(Global.FILE_ITEMS));
-        // 5.加载破坏方块的自定义掉落列表，可掉落自定义物品
-        DropManager.Load(Global.getYamlConfiguration(Global.FILE_DROPS));
-        // 6.加载等级设置列表
-        LevelManager.Load(Global.getYamlConfiguration(Global.FILE_LEVELS));
-        // 7.加载各种菜单(箱子)模板
-        MenuManager.Load(Global.getYamlConfiguration(Global.FILE_MENU));
-        // 8.加载各种可生成的生物列表
-        MobManager.Load(Global.getYamlConfiguration(Global.FILE_MOBS));
-        // 9.加载随机公告消息列表
-        BroadcastManager.Load(Global.getYamlConfiguration(Global.FILE_BROADCAST));
-        // 10.加载清除垃圾物品设置
-        ClearLagManager.Load(Global.getYamlConfiguration(Global.FILE_CLEARLAG));
-        // 11.加载配方列表
-        RecipeManager.Load(Global.getYamlConfiguration(Global.FILE_RECIPE));
-        // 12.加载自定义可放置方块的摆放记录
-        RecordManager.Load(Global.getYamlConfiguration(Global.FILE_RECORD));
-        // 13.加载跑酷赛道信息
-        CourseManager.Load(Global.getYamlConfiguration(Global.FILE_COURSE));
-        // 14.加载自定义命令列表
-        CcmdManager.Load(Global.getYamlConfiguration(Global.FILE_CCMD));
-        // 15.加载计分板定义列表
-        ScoreboardManager.Load(Global.getYamlConfiguration(Global.FILE_SCOREBOARD));
-        // 16.加载漂浮字体定义列表
-        HologramManager.Load(Global.getYamlConfiguration(Global.FILE_HOLOGRAM));
     }
 }

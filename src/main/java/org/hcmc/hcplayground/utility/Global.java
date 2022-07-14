@@ -28,13 +28,8 @@ import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.ScoreboardManager;
 import org.hcmc.hcplayground.HCPlayground;
-import org.hcmc.hcplayground.enums.CcmdActionType;
-import org.hcmc.hcplayground.enums.CrazyBlockType;
-import org.hcmc.hcplayground.enums.ItemFeatureType;
-import org.hcmc.hcplayground.enums.RecipeType;
-import org.hcmc.hcplayground.manager.BanItemManager;
-import org.hcmc.hcplayground.manager.PlayerManager;
-import org.hcmc.hcplayground.manager.RecordManager;
+import org.hcmc.hcplayground.enums.*;
+import org.hcmc.hcplayground.manager.*;
 import org.hcmc.hcplayground.model.config.AuthmeConfiguration;
 import org.hcmc.hcplayground.model.config.CourseConfiguration;
 import org.hcmc.hcplayground.model.config.PotionConfiguration;
@@ -52,12 +47,13 @@ import java.io.InputStreamReader;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.text.DateFormat;
 import java.util.*;
 import java.util.logging.Level;
-import java.util.regex.Pattern;
 
 /**
  * @Desciption Store global static variants and methods
@@ -73,35 +69,35 @@ public final class Global {
     }.getType();
     private final static Type listMenuItem=new TypeToken<List<MenuItem>>(){}.getType();
 
-    public final static String CONFIG_AUTHME = "authme";
-    public final static String CONFIG_POTION = "potion";
-    public final static String CONFIG_BAN_ITEM = "banitem";
-    public final static String CONFIG_PARKOUR = "parkouradmin";
-    public final static String FIELD_NAME_COMMANDMAP = "commandMap";
-    public final static String DATE_TIME_FORMAT = "yyyy/MM/dd HH:mm:ss";
-    public final static Pattern patternNumber = Pattern.compile("-?\\d+(\\.\\d+)?");
+    private final static String CONFIG_AUTHME = "authme";
+    private final static String CONFIG_POTION = "potion";
+    private final static String CONFIG_BAN_ITEM = "banitem";
+    private final static String CONFIG_PARKOUR = "parkouradmin";
+    private final static String FIELD_NAME_COMMANDMAP = "commandMap";
+    private final static String DATE_TIME_FORMAT = "yyyy/MM/dd HH:mm:ss";
 
-    public final static String FILE_CONFIG = "config.yml";
-    public final static String FILE_ITEMS = "items.yml";
-    public final static String FILE_DROPS = "drops.yml";
-    public final static String FILE_MESSAGES = "messages.yml";
-    public final static String FILE_LEVELS = "levels.yml";
-    public final static String FILE_COMMANDS = "command.yml";
-    public final static String FILE_MENU = "menu.yml";
-    public final static String FILE_PERMISSION = "permission.yml";
-    public final static String FILE_MOBS = "mobs.yml";
-    public final static String FILE_BROADCAST = "broadcast.yml";
-    public final static String FILE_CLEARLAG = "clearlag.yml";
-    public final static String FILE_RECIPE = "recipe.yml";
-    public final static String FILE_CCMD = "ccmd.yml";
-    public final static String FILE_SCOREBOARD = "scoreboard.yml";
-    public final static String FILE_HOLOGRAM = "hologram.yml";
+    private final static String FOLDER_PROFILE = "profile";
+    private final static String FOLDER_DATABASE = "database";
+    private final static String FOLDER_DESIGNER = "designer";
+    private final static String FOLDER_STORAGE = "storage";
+    private final static String FILE_CONFIG = "config.yml";
+    private final static String FILE_ITEMS = "items.yml";
+    private final static String FILE_DROPS = "drops.yml";
+    private final static String FILE_MESSAGES = "messages.yml";
+    private final static String FILE_LEVELS = "levels.yml";
+    private final static String FILE_COMMANDS = "command.yml";
+    private final static String FILE_MENU = "menu.yml";
+    private final static String FILE_PERMISSION = "permission.yml";
+    private final static String FILE_MOBS = "mobs.yml";
+    private final static String FILE_BROADCAST = "broadcast.yml";
+    private final static String FILE_CLEARLAG = "clearlag.yml";
+    private final static String FILE_RECIPE = "recipe.yml";
+    private final static String FILE_CCMD = "ccmd.yml";
+    private final static String FILE_SIDEBAR = "scoreboard.yml";
+    private final static String FILE_HOLOGRAM = "hologram.yml";
+    private final static String FILE_MINION = "minion.yml";
     public final static String FILE_COURSE = "database/course.yml";
     public final static String FILE_RECORD = "database/record.yml";
-    public final static String FOLDER_PROFILE = "profile";
-    public final static String FOLDER_DATABASE = "database";
-    public final static String FOLDER_DESIGNER = "designer";
-    public final static String FOLDER_STORAGE = "storage";
 
     public static PluginRunnable runnable;
     public static Map<String, YamlConfiguration> yamlMap;
@@ -145,10 +141,11 @@ public final class Global {
                 FILE_ITEMS,
                 FILE_LEVELS,
                 FILE_MENU,
+                FILE_MINION,
                 FILE_MOBS,
                 FILE_RECIPE,
                 FILE_RECORD,
-                FILE_SCOREBOARD,
+                FILE_SIDEBAR,
         };
 
         GsonObject = new GsonBuilder()
@@ -166,11 +163,12 @@ public final class Global {
                 .registerTypeAdapter(ItemFeatureType.class, new ItemFeatureTypeSerialization())
                 .registerTypeAdapter(ItemFlag.class, new ItemFlagsSerialization())
                 .registerTypeAdapter(ItemStack.class, new ItemStackSerialization())
+                .registerTypeAdapter(listMenuItem, new MenuItemListSerialization())
                 .registerTypeAdapter(Location.class, new LocationSerialization())
                 .registerTypeAdapter(mapCharInteger, new MapCharIntegerSerialization())
                 .registerTypeAdapter(mapCharItemBase, new MapCharItemBaseSerialization())
                 .registerTypeAdapter(MaterialData.class, new MaterialDataSerialization())
-                .registerTypeAdapter(listMenuItem, new MenuItemListSerialization())
+                .registerTypeAdapter(MinionType.class, new MinionTypeSerialization())
                 .registerTypeAdapter(NamespacedKey.class, new NamespacedKeySerialization())
                 .registerTypeAdapter(PotionEffect.class, new PotionEffectSerialization())
                 .registerTypeAdapter(PermissionDefault.class, new PermissionDefaultSerialization())
@@ -188,6 +186,51 @@ public final class Global {
         }
     }
 
+    public static void ReloadConfiguration() throws IllegalAccessException, NoSuchFieldException, SQLException, NoSuchAlgorithmException, InvalidKeySpecException, IOException {
+        // 创建插件所需要的子目录
+        InitialChildrenFolders();
+        // 合并所有Yml格式文档到插件目录
+        // 兼容前版本的配置，并且添加新版本的配置
+        SaveYamlResource();
+        // 加载插件的基本设置config.yml
+        LoadConfig();
+        // 从yml格式文档加载配置到实例，必须按照指定的加载顺序
+        // 1.加载本地化文档
+        LanguageManager.Load(getYamlConfiguration(FILE_MESSAGES));
+        // 2.加载权限列表
+        PermissionManager.Load(getYamlConfiguration(FILE_PERMISSION));
+        // 3.加载指令
+        CommandManager.Load(getYamlConfiguration(FILE_COMMANDS));
+        // 4.加载自定义物品
+        ItemManager.Load(getYamlConfiguration(FILE_ITEMS));
+        // 5.加载破坏方块的自定义掉落列表，可掉落自定义物品
+        DropManager.Load(getYamlConfiguration(FILE_DROPS));
+        // 6.加载等级设置列表
+        LevelManager.Load(getYamlConfiguration(FILE_LEVELS));
+        // 7.加载各种菜单(箱子)模板
+        MenuManager.Load(getYamlConfiguration(FILE_MENU));
+        // 8.加载各种可生成的生物列表
+        MobManager.Load(getYamlConfiguration(FILE_MOBS));
+        // 9.加载随机公告消息列表
+        BroadcastManager.Load(getYamlConfiguration(FILE_BROADCAST));
+        // 10.加载清除垃圾物品设置
+        ClearLagManager.Load(getYamlConfiguration(FILE_CLEARLAG));
+        // 11.加载配方列表
+        RecipeManager.Load(getYamlConfiguration(FILE_RECIPE));
+        // 12.加载跑酷赛道信息
+        CourseManager.Load(getYamlConfiguration(FILE_COURSE));
+        // 13.加载自定义命令列表
+        CcmdManager.Load(getYamlConfiguration(FILE_CCMD));
+        // 14.加载计分板定义列表
+        SidebarManager.Load(getYamlConfiguration(FILE_SIDEBAR));
+        // 15.加载漂浮字体定义列表
+        HologramManager.Load(getYamlConfiguration(FILE_HOLOGRAM));
+        // 16.加载爪牙模板配置
+        MinionManager.Load(getYamlConfiguration(FILE_MINION));
+        // 99.加载自定义可放置方块的摆放记录
+        RecordManager.Load(getYamlConfiguration(FILE_RECORD));
+    }
+
     /**
      * 清理所有正在执行的对象，特别是所有继承于BukkitRunnable的对象<br>
      * 在执行/reload指令或者插件退出时都需要执行该方法
@@ -200,51 +243,14 @@ public final class Global {
         }
         // 清除内存
         PlayerManager.clearAllPlayerData();
-        RecordManager.saveCrazyRecord();
+        RecordManager.Save();
+        //RecordManager.saveCrazyRecord();
+        //RecordManager.saveMinionRecord();
         yamlMap.clear();
         // 关闭sqlite数据库
         if (!Sqlite.isClosed()) Sqlite.close();
         // 停止所有runnable线程
         if (!runnable.isCancelled()) runnable.cancel();
-    }
-
-    /**
-     * 从config.yml加载插件的基本设置
-     */
-    public static void LoadConfig() throws IllegalAccessException {
-        String value;
-        ConfigurationSection section;
-        YamlConfiguration config = getYamlConfiguration(FILE_CONFIG);
-
-        section = config.getConfigurationSection(CONFIG_AUTHME);
-        if (section != null) {
-            value = GsonObject.toJson(section.getValues(false));
-            authme = GsonObject.fromJson(value, AuthmeConfiguration.class);
-        }
-        section = config.getConfigurationSection(CONFIG_POTION);
-        if (section != null) {
-            value = GsonObject.toJson(section.getValues(false));
-            potion = GsonObject.fromJson(value, PotionConfiguration.class);
-        }
-        section = config.getConfigurationSection(CONFIG_BAN_ITEM);
-        BanItemManager.Load(section);
-        section = config.getConfigurationSection(CONFIG_PARKOUR);
-        if (section != null) {
-            value = GsonObject.toJson(section.getValues(false));
-            course = GsonObject.fromJson(value, CourseConfiguration.class);
-
-            String world = course.getWorld();
-            World w = Bukkit.getWorld(world);
-            if (w == null) {
-                WorldCreator creator = new WorldCreator(world);
-                Bukkit.createWorld(creator);
-            }
-
-            if(Bukkit.getWorld("survival_world") == null){
-                WorldCreator creator = new WorldCreator("survival_world");
-                Bukkit.createWorld(creator);
-            }
-        }
     }
 
     /**
@@ -309,16 +315,6 @@ public final class Global {
     }
 
     /**
-     * Get YamlConfiguration instance special by filename parameter
-     *
-     * @param filename The .yml format file without path
-     * @return The instance of YamlConfiguration was loaded by filename parameter
-     */
-    public static YamlConfiguration getYamlConfiguration(String filename) {
-        return yamlMap.get(filename);
-    }
-
-    /**
      * 验证并且注册WorldGuard插件
      */
     public static void ValidWorldGuardPlugin() {
@@ -366,6 +362,33 @@ public final class Global {
         for (String s : childrenFolders) {
             File f = new File(String.format("%s/%s", dataFolder, s));
             boolean flag = f.mkdir();
+        }
+    }
+
+    /**
+     * 从config.yml加载插件的基本设置
+     */
+    private static void LoadConfig() throws IllegalAccessException {
+        String value;
+        ConfigurationSection section;
+        YamlConfiguration config = getYamlConfiguration(FILE_CONFIG);
+
+        section = config.getConfigurationSection(CONFIG_AUTHME);
+        if (section != null) {
+            value = GsonObject.toJson(section.getValues(false));
+            authme = GsonObject.fromJson(value, AuthmeConfiguration.class);
+        }
+        section = config.getConfigurationSection(CONFIG_POTION);
+        if (section != null) {
+            value = GsonObject.toJson(section.getValues(false));
+            potion = GsonObject.fromJson(value, PotionConfiguration.class);
+        }
+        section = config.getConfigurationSection(CONFIG_BAN_ITEM);
+        BanItemManager.Load(section);
+        section = config.getConfigurationSection(CONFIG_PARKOUR);
+        if (section != null) {
+            value = GsonObject.toJson(section.getValues(false));
+            course = GsonObject.fromJson(value, CourseConfiguration.class);
         }
     }
 
@@ -447,6 +470,16 @@ public final class Global {
         if (rsp == null) return;
 
         permissionApi = rsp.getProvider();
+    }
+
+    /**
+     * Get YamlConfiguration instance special by filename parameter
+     *
+     * @param filename The .yml format file without path
+     * @return The instance of YamlConfiguration was loaded by filename parameter
+     */
+    private static YamlConfiguration getYamlConfiguration(String filename) {
+        return yamlMap.get(filename);
     }
 
     @NotNull

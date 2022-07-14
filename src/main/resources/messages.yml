@@ -314,16 +314,3 @@ messages:
       line: '&f%player%: &%course% -> %time%'
       #模板的footer，不配置则不显示
       footer: ''
-  minion_type:
-    COBBLESTONE:
-      1:
-        display: '&f圆石爪牙 I'
-        lore:
-          - '&7aaaaaa'
-          - '&7bbbbbb'
-    OAK_LOG:
-      1:
-        display: '&f橡木爪牙 I'
-        lore:
-          - '&7111111'
-          - '&7222222'

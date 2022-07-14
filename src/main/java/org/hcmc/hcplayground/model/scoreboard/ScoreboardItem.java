@@ -7,7 +7,7 @@ import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.*;
-import org.hcmc.hcplayground.manager.ScoreboardManager;
+import org.hcmc.hcplayground.manager.SidebarManager;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
@@ -60,7 +60,7 @@ public class ScoreboardItem {
 
     public void display(Player player) {
         // 计分板标题
-        String _dummy = ScoreboardManager.SCOREBOARD_CRITERIA_DUMMY;
+        String _dummy = SidebarManager.SCOREBOARD_CRITERIA_DUMMY;
         String _title = PlaceholderAPI.setPlaceholders(player, title.replace("&", "§"));
         // 初始化map
         //if (mapTeamLayout == null)

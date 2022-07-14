@@ -8,24 +8,22 @@ import org.bukkit.plugin.Plugin;
 import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.model.item.ItemBase;
 import org.hcmc.hcplayground.model.player.PlayerData;
-import org.hcmc.hcplayground.utility.Global;
 import org.hcmc.hcplayground.utility.NameBinaryTagResolver;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
-import java.sql.DataTruncation;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
 public class PlayerManager {
-    private static final Map<UUID, PlayerData> PlayerDataMap;
+    private static final Map<UUID, PlayerData> mapPlayerData;
     private static final Plugin plugin = HCPlayground.getInstance();
 
     public static final float BASE_PLAYER_HEALTH = 20.0F;
 
     static {
-        PlayerDataMap = new HashMap<>();
+        mapPlayerData = new HashMap<>();
     }
 
     public PlayerManager() {
@@ -40,12 +38,12 @@ public class PlayerManager {
      */
     public static PlayerData getPlayerData(@NotNull Player player) throws IllegalAccessException, IOException, InvalidConfigurationException {
         UUID playerUuid = player.getUniqueId();
-        PlayerData pd = PlayerDataMap.get(playerUuid);
+        PlayerData pd = mapPlayerData.get(playerUuid);
 
         if (pd == null) {
             pd = new PlayerData(player);
             //Global.LogMessage(String.format("\033[1;35mgetPlayerData GameMode: \033[1;33m%s\033[0m", player.getGameMode()));
-            PlayerDataMap.put(playerUuid, pd);
+            mapPlayerData.put(playerUuid, pd);
         }
 
         return pd;
@@ -60,7 +58,7 @@ public class PlayerManager {
     public static void setPlayerData(@NotNull Player player, PlayerData data) {
         UUID playerUuid = player.getUniqueId();
         //Global.LogMessage(String.format("\033[1;35msetPlayerData GameMode: \033[1;33m%s\033[0m", data.GameMode));
-        PlayerDataMap.put(playerUuid, data);
+        mapPlayerData.put(playerUuid, data);
     }
 
     public static void removePlayerData(@NotNull Player player, PlayerData data) {
@@ -68,11 +66,11 @@ public class PlayerManager {
         player.removeAttachment(data.getAttachment());
         data.getAttachment().remove();
         //Global.LogMessage(String.format("\033[1;35mremovePlayerData GameMode: \033[1;33m%s\033[0m", data.GameMode));
-        PlayerDataMap.remove(playerUuid, data);
+        mapPlayerData.remove(playerUuid, data);
     }
 
     public static void clearAllPlayerData() {
-        PlayerDataMap.clear();
+        mapPlayerData.clear();
     }
 
     public static void getEquipmentData(Player player, ItemStack[] itemStacks) throws IllegalAccessException, IOException, InvalidConfigurationException {

@@ -42,11 +42,17 @@ public class LanguageManager {
     }
 
     public static String getString(String key) {
-        return messages.get(key).toString();
+        Object obj = messages.get(key);
+        if (obj == null) return "";
+
+        return obj.toString();
     }
 
     public static String getString(String key, CommandSender sender) {
-        String value = messages.get(key).toString();
+        Object obj = messages.get(key);
+        if (obj == null) return "";
+
+        String value = obj.toString();
         if (sender instanceof Player player) value = PlaceholderAPI.setPlaceholders(player, value);
         return value;
     }

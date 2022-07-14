@@ -7,14 +7,14 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-public class ScoreboardManager {
+public class SidebarManager {
 
     public static final String SCOREBOARD_CRITERIA_DEFAULT = "default";
     public static final String SCOREBOARD_CRITERIA_DUMMY = "dummy";
 
     private static List<ScoreboardItem> scoreboards;
 
-    public ScoreboardManager() {
+    public SidebarManager() {
 
     }
 
