@@ -215,6 +215,7 @@ public class CourseDesigner {
                 public void run() {
                     player.setGameMode(GameMode.CREATIVE);
                     player.sendMessage(LanguageManager.getString("courseDesignModeEntered", player));
+                    return;
                 }
             }.runTaskLater(plugin, waitFor * 20L);
             // 储存身上装备和背包物品
@@ -280,6 +281,7 @@ public class CourseDesigner {
                 @Override
                 public void run() {
                     player.sendMessage(LanguageManager.getString("courseDesignModeLeave", player));
+                    return;
                 }
             }.runTaskLater(plugin, waitFor * 20L);
         }

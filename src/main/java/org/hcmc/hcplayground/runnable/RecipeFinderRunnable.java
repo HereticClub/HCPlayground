@@ -45,7 +45,6 @@ public class RecipeFinderRunnable extends BukkitRunnable {
             inventory.setItem(i - 1, null);
         }
 
-
         for (int i = 0; i <= 53; i++) {
             ItemStack is = inventory.getItem(i);
             if (is == null) continue;

@@ -28,7 +28,7 @@ hcplayground:
     - hc
 quartermaster:
   permission: hc.quartermaster.*
-  runOnConsole: false
+  runOnConsole: true
   runOnPlayer: true
   args:
     1:

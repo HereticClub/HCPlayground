@@ -4,27 +4,26 @@ import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.permissions.PermissionAttachmentInfo;
 import org.bukkit.plugin.Plugin;
 import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.model.item.ItemBase;
 import org.hcmc.hcplayground.model.player.PlayerData;
+import org.hcmc.hcplayground.utility.Global;
 import org.hcmc.hcplayground.utility.NameBinaryTagResolver;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 public class PlayerManager {
     private static final Map<UUID, PlayerData> mapPlayerData;
-    private static final Plugin plugin = HCPlayground.getInstance();
-
-    public static final float BASE_PLAYER_HEALTH = 20.0F;
 
     static {
         mapPlayerData = new HashMap<>();
     }
+
+    private static final Plugin plugin = HCPlayground.getInstance();
 
     public PlayerManager() {
 
@@ -36,6 +35,7 @@ public class PlayerManager {
      * @param player 实体玩家实例
      * @return 该实体玩家的配置信息实例
      */
+    @NotNull
     public static PlayerData getPlayerData(@NotNull Player player) throws IllegalAccessException, IOException, InvalidConfigurationException {
         UUID playerUuid = player.getUniqueId();
         PlayerData pd = mapPlayerData.get(playerUuid);
@@ -63,13 +63,15 @@ public class PlayerManager {
 
     public static void removePlayerData(@NotNull Player player, PlayerData data) {
         UUID playerUuid = player.getUniqueId();
+
         player.removeAttachment(data.getAttachment());
         data.getAttachment().remove();
+
         //Global.LogMessage(String.format("\033[1;35mremovePlayerData GameMode: \033[1;33m%s\033[0m", data.GameMode));
         mapPlayerData.remove(playerUuid, data);
     }
 
-    public static void clearAllPlayerData() {
+    public static void purgePlayerData() {
         mapPlayerData.clear();
     }
 

@@ -13,12 +13,12 @@ import org.hcmc.hcplayground.enums.CrazyBlockType;
 
 import java.util.Arrays;
 
-public class Crazy extends ItemBaseA {
-
+public class Crazy extends CraftItemBase {
+    // 自定义方块类型
     @Expose
     @SerializedName(value = "type")
     private CrazyBlockType type;
-
+    // 自定义方块摆放后的材质
     @Expose
     @SerializedName(value = "block")
     private String block;
@@ -32,6 +32,11 @@ public class Crazy extends ItemBaseA {
     }
 
     @Override
+    public void updateAttributeLore() {
+
+    }
+
+    @Override
     public ItemStack toItemStack() {
         ItemStack is = new ItemStack(getMaterial().value, getAmount());
         // 判断物品只是简单的物品，即没有额外的Meta类型的数据
@@ -40,7 +45,7 @@ public class Crazy extends ItemBaseA {
         // 添加附魔效果
         if (this.getGlowing()) {
             im.addEnchant(Enchantment.MENDING, 1, true);
-            if (!Arrays.asList(this.getFlags()).contains(ItemFlag.HIDE_ENCHANTS))
+            if (!flags.contains(ItemFlag.HIDE_ENCHANTS))
                 im.addItemFlags(ItemFlag.HIDE_ENCHANTS);
         }
 

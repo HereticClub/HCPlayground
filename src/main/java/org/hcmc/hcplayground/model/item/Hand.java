@@ -20,17 +20,18 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
-public class Hand extends ItemBaseA {
+public class Hand extends CraftItemBase {
     // 幸运值
     @Expose
     @SerializedName(value = PERSISTENT_LUCK_KEY)
-    public float luck = 0.0f;
-    // 药水效果
-    @Expose
-    @SerializedName(value = PERSISTENT_POTIONS_KEY)
-    public PotionEffect[] potions;
+    private float luck = 0.0f;
 
     public Hand() {
+
+    }
+
+    @Override
+    public void updateAttributeLore() {
 
     }
 
@@ -39,11 +40,6 @@ public class Hand extends ItemBaseA {
         ItemMeta im = this.setBaseItemMeta(is);
 
         if (im != null) {
-            /*
-            获取已设置的lore
-            */
-            List<String> lore = im.getLore();
-            if (lore == null) lore = new ArrayList<>();
             /*
             添加AttributeModifier
             */
@@ -54,7 +50,7 @@ public class Hand extends ItemBaseA {
             */
             if (this.getGlowing()) {
                 im.addEnchant(Enchantment.DURABILITY, 10, true);
-                if (!Arrays.asList(this.getFlags()).contains(ItemFlag.HIDE_ENCHANTS))
+                if (!flags.contains(ItemFlag.HIDE_ENCHANTS))
                     im.addItemFlags(ItemFlag.HIDE_ENCHANTS);
             }
             /*
@@ -64,7 +60,6 @@ public class Hand extends ItemBaseA {
                 im.removeItemFlags(ItemFlag.HIDE_ATTRIBUTES);
             }
 
-            im.setLore(lore);
             SetPersistentData(im);
             is.setItemMeta(im);
         }

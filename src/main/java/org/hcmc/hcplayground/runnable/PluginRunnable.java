@@ -56,6 +56,16 @@ public class PluginRunnable extends BukkitRunnable {
         }
     }
 
+    @Override
+    public boolean isCancelled() {
+        return super.isCancelled();
+    }
+
+    @Override
+    public void cancel() {
+        super.cancel();
+    }
+
     private void doTrackWorldTime() {
         List<World> worlds = Bukkit.getWorlds();
         for (World w : worlds) {
@@ -150,7 +160,7 @@ public class PluginRunnable extends BukkitRunnable {
     /**
      * 检测和激活玩家身上装备的药水效果
      */
-    private void doPotionEffect(PlayerData pd) throws IllegalAccessException {
+    private void doPotionEffect(PlayerData pd) {
         int interval = (int) (totalSeconds - pd.loginTimeStamp) % Global.potion.refreshInterval + 1;
         if (interval < Global.potion.refreshInterval) return;
 
@@ -173,14 +183,7 @@ public class PluginRunnable extends BukkitRunnable {
 
             ItemBase itemX = ItemManager.findItemById(id);
             if (itemX == null) continue;
-
-            Field[] fields = itemX.getClass().getFields();
-            Field field = Arrays.stream(fields).filter(x -> x.getName().equalsIgnoreCase("potions")).findAny().orElse(null);
-            if (field == null) continue;
-            Object obj = field.get(itemX);
-            if (!(obj instanceof PotionEffect[] potions)) continue;
-
-            player.addPotionEffects(Arrays.asList(potions));
+            player.addPotionEffects(itemX.getPotions());
         }
     }
 

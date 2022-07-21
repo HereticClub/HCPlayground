@@ -1,5 +1,6 @@
 package org.hcmc.hcplayground.runnable;
 
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.hcmc.hcplayground.enums.CcmdActionType;
@@ -44,21 +45,25 @@ public class CcmdActionRunnable extends BukkitRunnable {
                 waiting = true;
                 Date current = new Date();
                 long diff = current.getTime() - lastTime.getTime();
-                if(diff >= action.getDuration() * 1000) {
+                if (diff >= action.getDuration() * 1000) {
                     waiting = false;
                     index++;
                 }
             }
             case Message -> {
+                index++;
+                waiting = false;
+
                 player.sendMessage(action.getText());
                 player.playSound(player.getLocation(), action.getSound(), 10, 1);
-                waiting = false;
-                index++;
             }
             case Teleport -> {
-                player.teleport(action.getLocation());
-                waiting = false;
                 index++;
+                waiting = false;
+
+                Location l = action.getLocation();
+                if (l.getWorld() == null) break;
+                player.teleport(action.getLocation());
             }
         }
     }

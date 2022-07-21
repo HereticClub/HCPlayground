@@ -11,4 +11,9 @@ public enum ItemFeatureType {
      * 非书本物品使用该特性会抛出异常
      */
     OPEN_BOOK_ON_JOIN,
+    /**
+     * 当玩家第一次进入服务器时
+     * 标识了该特性的物品会给予玩家
+     */
+    FIRST_JOIN,
 }

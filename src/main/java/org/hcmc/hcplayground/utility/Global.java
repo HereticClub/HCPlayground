@@ -33,6 +33,7 @@ import org.hcmc.hcplayground.manager.*;
 import org.hcmc.hcplayground.model.config.AuthmeConfiguration;
 import org.hcmc.hcplayground.model.config.CourseConfiguration;
 import org.hcmc.hcplayground.model.config.PotionConfiguration;
+import org.hcmc.hcplayground.model.enchantment.EnchantmentItem;
 import org.hcmc.hcplayground.model.item.ItemBase;
 import org.hcmc.hcplayground.model.menu.MenuItem;
 import org.hcmc.hcplayground.model.player.PlayerData;
@@ -60,14 +61,23 @@ import java.util.logging.Level;
  */
 public final class Global {
     private final static String[] childrenFolders;
+    /**
+     * 可配置的配置文档
+     */
     private final static String[] ymlConfigurable;
+    /**
+     * 可迁移的配置文档
+     */
     private final static String[] ymlMigratable;
     private final static JavaPlugin plugin;
+
     private final static Type mapCharInteger = new TypeToken<Map<Character, Integer>>() {
     }.getType();
     private final static Type mapCharItemBase = new TypeToken<Map<Character, ItemBase>>() {
     }.getType();
     private final static Type listMenuItem=new TypeToken<List<MenuItem>>(){}.getType();
+
+    public final static char CHAR_00A7 = '\u00a7';
 
     private final static String CONFIG_AUTHME = "authme";
     private final static String CONFIG_POTION = "potion";
@@ -155,6 +165,7 @@ public final class Global {
                 .registerTypeAdapter(CcmdActionType.class, new CcmdActionTypeSerialization())
                 .registerTypeAdapter(CrazyBlockType.class, new CrazyTypeSerialization())
                 .registerTypeAdapter(Enchantment.class, new EnchantmentSerialization())
+                .registerTypeAdapter(EnchantmentItem.class, new EnchantmentItemSerialization())
                 .registerTypeAdapter(EntityType.class, new EntityTypeSerialization())
                 .registerTypeAdapter(EquipmentSlot.class, new EquipmentSlotSerialization())
                 .registerTypeAdapter(GameMode.class, new GameModeSerialization())
@@ -241,16 +252,19 @@ public final class Global {
             PlayerData pd = PlayerManager.getPlayerData(player);
             pd.SaveConfig();
         }
+        LogMessage("Online player data saved");
         // 清除内存
-        PlayerManager.clearAllPlayerData();
+        PlayerManager.purgePlayerData();
+        LogMessage("Online player data purged");
         RecordManager.Save();
-        //RecordManager.saveCrazyRecord();
-        //RecordManager.saveMinionRecord();
+        LogMessage("Specific blocks saved");
         yamlMap.clear();
         // 关闭sqlite数据库
         if (!Sqlite.isClosed()) Sqlite.close();
-        // 停止所有runnable线程
+        LogMessage("Sqlite database closed");
+        // 停止全局runnable线程
         if (!runnable.isCancelled()) runnable.cancel();
+        LogMessage("Global runnable thread stopped");
     }
 
     /**

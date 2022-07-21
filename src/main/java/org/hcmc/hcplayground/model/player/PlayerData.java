@@ -21,6 +21,7 @@ import org.hcmc.hcplayground.manager.ItemManager;
 import org.hcmc.hcplayground.manager.LanguageManager;
 import org.hcmc.hcplayground.manager.SidebarManager;
 import org.hcmc.hcplayground.model.item.ItemBase;
+import org.hcmc.hcplayground.model.item.Join;
 import org.hcmc.hcplayground.model.scoreboard.ScoreboardItem;
 import org.hcmc.hcplayground.sqlite.SqliteManager;
 import org.hcmc.hcplayground.sqlite.table.BanPlayerDetail;
@@ -44,16 +45,15 @@ import java.text.DateFormat;
 import java.util.*;
 
 public class PlayerData {
-    private static final String Section_Key_BreakList = "breakList";
-    private static final String Section_Key_PlaceList = "placeList";
-    private static final String Section_Key_FishingList = "fishingList";
-    private static final String Section_Key_DropList = "dropList";
-    private static final String Section_Key_PickupList = "pickupList";
-    private static final String Section_Key_KillMobList = "killMobList";
+    //private static final String Section_Key_BreakList = "breakList";
+    //private static final String Section_Key_PlaceList = "placeList";
+    //private static final String Section_Key_FishingList = "fishingList";
+    //private static final String Section_Key_DropList = "dropList";
+    //private static final String Section_Key_PickupList = "pickupList";
+    //private static final String Section_Key_KillMobList = "killMobList";
     private static final String Section_Key_CcmdCooldownList = "ccmdCooldownList";
     private static final String Section_Key_Parkour_Design = "parkour.design";
     private static final String Section_Key_Parkour_List = "parkour.list";
-
     private static final String TYPE_JAVA_UTIL_MAP = "java.util.Map";
     public static final double BASE_HEALTH = 20.0F;
     public static final double BASE_MAX_HEALTH = 20.0F;
@@ -70,15 +70,18 @@ public class PlayerData {
      * 玩家档案文档的各种记录名称列表
      */
     private final String[] SectionKeys = new String[]{
+            /*
             Section_Key_BreakList,
             Section_Key_PlaceList,
             Section_Key_DropList,
             Section_Key_PickupList,
             Section_Key_KillMobList,
             Section_Key_FishingList,
+             */
             Section_Key_CcmdCooldownList,
     };
 
+    /*
     // 破坏方块记录
     @Expose
     @SerializedName(value = Section_Key_BreakList)
@@ -103,6 +106,7 @@ public class PlayerData {
     @Expose
     @SerializedName(value = Section_Key_KillMobList)
     public Map<EntityType, Integer> KillMobList = new HashMap<>();
+     */
     // Custom Command cooldown
     @Expose
     @SerializedName(value = Section_Key_CcmdCooldownList)
@@ -172,7 +176,6 @@ public class PlayerData {
         uuid = player.getUniqueId();
         gameMode = player.getGameMode();
         attachment = player.addAttachment(plugin);
-
         designer = new CourseDesigner(this);
         LoadConfig();
     }
@@ -356,6 +359,8 @@ public class PlayerData {
             player.setGameMode(gameMode);
             plugin.getServer().broadcastMessage(LanguageManager.getString("playerRegisterWelcome", player)
                     .replace("%player%", name));
+
+            doLoginSuccess();
         }
 
         return register;
@@ -390,14 +395,10 @@ public class PlayerData {
         } else {
             //Global.LogMessage(String.format("\033[1;35mPlayer Login gameMode: \033[1;33m%s\033[0m", gameMode));
             player.setGameMode(gameMode);
-            player.sendMessage(LanguageManager.getString("playerLoginWelcome", player).replace("&", "§").replace("%player%", name));
+            player.sendMessage(LanguageManager.getString("playerLoginWelcome", player)
+                    .replace("%player%", name));
 
-            List<ItemBase> books = ItemManager.getBooks();
-            for (ItemBase ib : books) {
-                if (Arrays.asList(ib.getFeature()).contains(ItemFeatureType.OPEN_BOOK_ON_JOIN)) {
-                    player.openBook(ib.toItemStack());
-                }
-            }
+            doLoginSuccess();
         }
 
         return login;
@@ -483,6 +484,22 @@ public class PlayerData {
         // 转换所有Map<Material, Integer>类型的玩家记录，成为Yaml格式字符串
         YamlConfiguration yaml = Map2Yaml();
         yaml.save(f);
+    }
+
+    private void doLoginSuccess() {
+        List<ItemBase> books = ItemManager.getBooks();
+        for (ItemBase ib : books) {
+            if (!(ib instanceof Join join)) continue;
+            if (!ib.getFeatures().contains(ItemFeatureType.OPEN_BOOK_ON_JOIN)) continue;
+            player.openBook(join.toBook(player));
+        }
+
+        if (!player.hasPlayedBefore()) {
+            List<ItemBase> firstJoins = ItemManager.getItems(ItemFeatureType.FIRST_JOIN);
+            for (ItemBase ib : firstJoins) {
+                player.getInventory().addItem(ib.toItemStack());
+            }
+        }
     }
 
     /**

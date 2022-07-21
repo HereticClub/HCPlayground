@@ -26,9 +26,11 @@ messages:
   # 当命令不能被玩家运行时的提示，可使用%command%占位符，代表当前指令名称
   player-message: '&4The command &e%command% &4can''t be run by a player'
   # 当命令不能当前世界执行时的提示
-  # 可使用%command%占位符，代表当前指令名称
-  # 可使用%world%占位符，代表当前执行指令时所在的世界
+  # 可使用%command%占位符，表示当前指令名称
+  # 可使用%world%占位符，表示当前执行指令时所在的世界
   world-message: '&cThe command &e%command% &ccan''t be run on the world: &f%world%'
+  # 当物品或者方块在不能使用的世界里尝试被使用时显示，可使用%world%占位符，表示当前执行指令时所在的世界
+  world-disabled: '&cThe item/block can''t be interacted at this world: %world%'
   # 当执行禁止玩家指令，并且玩家不存在时显示，可使用%player%占位符，代表被禁用玩家的名称
   playerNotExist: '&cPlayer &e%player% &cis not found'
   # 可使用%player%占位符，代表当前执行指令时所指向的玩家名称

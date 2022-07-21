@@ -13,7 +13,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.hcmc.hcplayground.model.item.DropItem;
 import org.hcmc.hcplayground.model.item.ItemBase;
-import org.hcmc.hcplayground.model.item.ItemBaseA;
+import org.hcmc.hcplayground.model.item.CraftItemBase;
 import org.hcmc.hcplayground.utility.Global;
 import org.hcmc.hcplayground.utility.RandomNumber;
 
@@ -90,12 +90,12 @@ public class DropManager {
         }
     }
 
-    public static void ExtraDrops(Location location, ItemBaseA[] itemBases) {
+    public static void ExtraDrops(Location location, CraftItemBase[] itemBases) {
         ItemStack is;
         World world = location.getWorld();
         if (world == null) return;
 
-        for (ItemBaseA ib : itemBases) {
+        for (CraftItemBase ib : itemBases) {
             if (ib.getId() == null) {
                 is = new ItemStack(ib.getMaterial().value);
             } else {

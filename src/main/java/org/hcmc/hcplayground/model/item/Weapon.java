@@ -11,65 +11,76 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
-import org.bukkit.potion.PotionEffect;
 import org.hcmc.hcplayground.utility.Global;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.UUID;
 
-public class Weapon extends ItemBaseA {
+public class Weapon extends CraftItemBase {
     /**
      * 攻击伤害
      */
     @Expose
     @SerializedName(value = PERSISTENT_ATTACK_DAMAGE_KEY)
-    public float attackDamage = 0.0F;
+    private float attackDamage = 0.0F;
     /**
      * 攻击距离，实验性内容，该版本暂不支持，保留属性
      */
     @Expose
     @SerializedName(value = ItemBase.PERSISTENT_ATTACK_REACH_KEY)
-    public float attackReach = 0;
+    private float attackReach = 0;
     /**
      * 攻击速度
      */
     @Expose
     @SerializedName(value = ItemBase.PERSISTENT_ATTACK_SPEED_KEY)
-    public float attackSpeed = 0.0F;
+    private float attackSpeed = 0.0F;
     /**
      * 暴击
      */
     @Expose
     @SerializedName(value = ItemBase.PERSISTENT_CRITICAL_KEY)
-    public float critical = 0.0F;
+    private float critical = 0.0F;
     /**
      * 爆伤
      */
     @Expose
     @SerializedName(value = ItemBase.PERSISTENT_CRITICAL_DAMAGE_KEY)
-    public float criticalDamage = 1.50F;
+    private float criticalDamage = 1.50F;
     /**
      * 吸血
      */
     @Expose
     @SerializedName(value = ItemBase.PERSISTENT_BLOOD_SUCKING_KEY)
-    public float bloodSucking = 0.0F;
+    private float bloodSucking = 0.0F;
     /**
      * 生命值
      */
     @Expose
     @SerializedName(value = ItemBase.PERSISTENT_HEALTH_KEY)
-    public float health = 0.0F;
-    /**
-     * 附加在武器上的药水效果
-     */
-    @Expose
-    @SerializedName(value = ItemBase.PERSISTENT_POTIONS_KEY)
-    public PotionEffect[] potions;
+    private float health = 0.0F;
 
     public Weapon() {
+
+    }
+
+    @Override
+    public void updateAttributeLore() {
+        attributeLore.clear();
+        attributeLore.add("§7在主手时:");
+        if (this.attackDamage != 0)
+            attributeLore.add(String.format("%s 攻击伤害", this.setWeaponLore(this.attackDamage, true, false)));
+        if (this.attackSpeed != 0)
+            attributeLore.add(String.format("%s 攻击速度", this.setWeaponLore(this.attackSpeed, true, false)));
+        /*
+        临时删除以下代码
+        if (this.attackReach != 0)
+            attributeLore.add(String.format("%s 攻击距离", this.setWeaponLore(this.attackReach, true, false)));
+         */
+        if (this.critical != 0) attributeLore.add(String.format("%s 暴击", this.setWeaponLore(this.critical, true, true)));
+        if (this.criticalDamage != 0)
+            attributeLore.add(String.format("%s 爆伤", this.setWeaponLore(this.criticalDamage, true, true)));
+        if (this.health != 0) attributeLore.add(String.format("%s 生命", this.setWeaponLore(this.health, true, false)));
+        if (this.bloodSucking != 0) attributeLore.add(String.format("%s 吸血", this.setWeaponLore(this.bloodSucking, true, true)));
 
     }
 
@@ -77,14 +88,10 @@ public class Weapon extends ItemBaseA {
         /*
         将Item Model转换为ItemStack对象，并且为ItemStack添加的新命名空间和新的物品ID
         */
-        ItemStack is = new ItemStack(this.getMaterial().value, getAmount());
+        ItemStack is = new ItemStack(this.getMaterial().value, amount);
         ItemMeta im = this.setBaseItemMeta(is);
 
         if (im != null) {
-            // 获取已设置的lore
-            List<String> lore = im.getLore();
-            if (lore == null) lore = new ArrayList<>();
-            lore.add("");
             /*
             玩家原始攻击伤害: 1.0
             玩家原始攻击速度: 4.0
@@ -92,23 +99,9 @@ public class Weapon extends ItemBaseA {
             actualAttackSpeed - 武器的实际攻击速度，需要减去玩家默认攻击伤害值4
             actualCrit - 武器暴击率，MC本身没有的特性，但需要按百分比显示
             */
-
             float actualAttackDamage = this.attackDamage - 1;
             float actualAttackSpeed = this.attackSpeed - 4;
             this.attackReach = 3 * (1 + this.attackReach);
-
-            lore.add("§7在主手时:");
-            if (this.attackDamage != 0)
-                lore.add(String.format("%s 攻击伤害", setLoreString(this.attackDamage, true, false)));
-            if (this.attackSpeed != 0)
-                lore.add(String.format("%s 攻击速度", setLoreString(this.attackSpeed, true, false)));
-            if (this.attackReach != 0)
-                lore.add(String.format("%s 攻击距离", setLoreString(this.attackReach, true, false)));
-            if (this.critical != 0) lore.add(String.format("%s 暴击", setLoreString(this.critical, true, true)));
-            if (this.criticalDamage != 0)
-                lore.add(String.format("%s 爆伤", setLoreString(this.criticalDamage, true, true)));
-            if (this.health != 0) lore.add(String.format("%s 生命", setLoreString(this.health, true, false)));
-            if (this.bloodSucking != 0) lore.add(String.format("%s 吸血", setLoreString(this.bloodSucking, true, true)));
             /*
             添加AttributeModifier
             GENERIC_ATTACK_REACH 为实验性内容，当前版本暂不支持，临时注释以下代码
@@ -125,11 +118,9 @@ public class Weapon extends ItemBaseA {
             /*
             强制添加隐藏属性标记
             */
-            if (!Arrays.asList(this.getFlags()).contains(ItemFlag.HIDE_ATTRIBUTES)) {
+            if (!flags.contains(ItemFlag.HIDE_ATTRIBUTES)) {
                 im.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
             }
-
-            im.setLore(lore);
             // 为物品添加额外特性信息，比如暴击等MC本身没有的特性
             SetPersistentData(im);
             is.setItemMeta(im);

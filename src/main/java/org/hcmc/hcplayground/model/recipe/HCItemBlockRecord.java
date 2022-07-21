@@ -7,7 +7,7 @@ import org.bukkit.Location;
 import org.bukkit.World;
 
 // 自定义可放置方块的摆放记录类
-public class CrazyBlockRecord {
+public class HCItemBlockRecord {
 
     @Expose
     @SerializedName(value = "name")
@@ -98,11 +98,11 @@ public class CrazyBlockRecord {
         this.name = name;
     }
 
-    public CrazyBlockRecord() {
+    public HCItemBlockRecord() {
 
     }
 
-    public CrazyBlockRecord(String name, Location location) {
+    public HCItemBlockRecord(String name, Location location) {
         this.name = name;
 
         x = location.getX();

@@ -1,5 +1,6 @@
 package org.hcmc.hcplayground.listener;
 
+import me.clip.placeholderapi.PlaceholderAPI;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
@@ -30,8 +31,9 @@ import org.hcmc.hcplayground.enums.RecipeType;
 import org.hcmc.hcplayground.event.PlayerEquipmentChangedEvent;
 import org.hcmc.hcplayground.event.WorldMorningEvent;
 import org.hcmc.hcplayground.manager.*;
+import org.hcmc.hcplayground.model.item.Join;
 import org.hcmc.hcplayground.model.minion.MinionRecord;
-import org.hcmc.hcplayground.model.recipe.CrazyBlockRecord;
+import org.hcmc.hcplayground.model.recipe.HCItemBlockRecord;
 import org.hcmc.hcplayground.model.mob.MobEntity;
 import org.hcmc.hcplayground.model.command.CommandItem;
 import org.hcmc.hcplayground.model.config.BanItemConfiguration;
@@ -45,6 +47,7 @@ import org.hcmc.hcplayground.runnable.RecipeFinderRunnable;
 import org.hcmc.hcplayground.sqlite.table.BanPlayerDetail;
 import org.hcmc.hcplayground.utility.Global;
 import org.hcmc.hcplayground.utility.RandomNumber;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -54,6 +57,7 @@ import java.util.*;
 public class PluginListener implements Listener {
     private final static String COMMAND_LOGIN = "login";
     private final static String COMMAND_REGISTER = "register";
+    private final static String COMMAND_ENCHANT = "enchant";
     private final static String SCOREBOARD_CRITERIA_HEALTH = "health";
     private final static String SCOREBOARD_CRITERIA_DUMMY = "dummy";
 
@@ -133,6 +137,7 @@ public class PluginListener implements Listener {
             return;
         }
         data.designer.EdgeDetection(player.getLocation());
+        PlayerManager.setPlayerData(player, data);
     }
 
     /**
@@ -197,12 +202,15 @@ public class PluginListener implements Listener {
             event.setCancelled(true);
             return;
         }
-        // op玩家可以绕过除登陆外的限制
-        if (player.isOp()) return;
         // 跑酷赛道设计状态下，非op玩家禁止执行除/course外的任何指令
-        if (data.isCourseDesigning && data.isLogin() && !command.getName().equalsIgnoreCase(CommandItem.COMMAND_COURSE)) {
+        if (data.isCourseDesigning && !player.isOp() && !command.getName().equalsIgnoreCase(CommandItem.COMMAND_COURSE)) {
             player.sendMessage(LanguageManager.getString("courseDenyCommandOnDesign", player));
             event.setCancelled(true);
+        }
+        // 使用/enchant指令为自定义物品附魔后，更新物品的说明
+        // 必须使用runnable方式
+        if (command.getName().equalsIgnoreCase(COMMAND_ENCHANT)) {
+            ItemManager.updateLoreOnRunnable(player);
         }
     }
 
@@ -213,7 +221,7 @@ public class PluginListener implements Listener {
      * @param event 玩家钓鱼时触发的事件实例
      */
     @EventHandler
-    private void onPlayerFished(PlayerFishEvent event) throws IllegalAccessException, IOException, InvalidConfigurationException {
+    private void onPlayerFished(PlayerFishEvent event) {
         if (event.isCancelled()) return;
         // 获取玩家实例
         Player player = event.getPlayer();
@@ -222,15 +230,6 @@ public class PluginListener implements Listener {
         // 仅仅当钓到任何物品时，getCaught()才会返回Item实例
         Item item = (Item) event.getCaught();
         if (item == null) return;
-        // 获取钓到的物品及数量
-        ItemStack is = item.getItemStack();
-        Material material = is.getType();
-        int amount = is.getAmount();
-        // 玩家的钓鱼记录
-        PlayerData playerData = PlayerManager.getPlayerData(player);
-        int count = playerData.FishingList.getOrDefault(material, 0);
-        playerData.FishingList.put(material, count + amount);
-        PlayerManager.setPlayerData(player, playerData);
         // 钓鱼时的额外掉落，额外掉落物品直接放入玩家背包
         DropManager.ExtraDrops(item, player);
     }
@@ -260,12 +259,54 @@ public class PluginListener implements Listener {
     }
 
     @EventHandler
+    private void onItemInteracted(PlayerInteractEvent event) {
+        ItemStack is = event.getItem();
+        Player player = event.getPlayer();
+        Action action = event.getAction();
+        EquipmentSlot slot = event.getHand();
+        String worldName = player.getWorld().getName();
+        List<String> commands = new ArrayList<>();
+        if (is == null) return;
+        // PlayerInteractEvent分别用HAND和OFF_HAND触发2次
+        // 如果使用右键点击，则需要过滤使用OFF_HAND触发的事件
+        if (Objects.equals(slot, EquipmentSlot.OFF_HAND)) {
+            // 不能简单返回，必须取消事件，否则物品会被使用，比如地图会被打开
+            event.setUseItemInHand(Event.Result.DENY);
+            return;
+        }
+
+        ItemBase ib = ItemManager.getItemBase(is);
+        if (!(ib instanceof Join join)) return;
+        if (!join.isInteractedItem()) {
+            event.setUseItemInHand(Event.Result.DENY);
+        }
+        // 过滤自定义方块在不可用世界
+        if (join.isDisabledWorld(player)) {
+            player.sendMessage(LanguageManager.getString("world-disabled", player).replace("%world%", worldName));
+            return;
+        }
+
+        if (Objects.equals(action, Action.RIGHT_CLICK_BLOCK) || Objects.equals(action, Action.RIGHT_CLICK_AIR)) {
+            commands.addAll(join.getMainHandRightClicks());
+        }
+        if (Objects.equals(action, Action.LEFT_CLICK_BLOCK) || Objects.equals(action, Action.LEFT_CLICK_AIR)) {
+            commands.addAll(join.getMainHandLeftClicks());
+        }
+        prepareCommandList(commands, player);
+    }
+
+    @EventHandler
     private void onCrazyBlockClicked(PlayerInteractEvent event) throws IOException, IllegalAccessException, InvalidConfigurationException {
         Block block = event.getClickedBlock();
         Player player = event.getPlayer();
         Action action = event.getAction();
         PlayerData data = PlayerManager.getPlayerData(player);
         String playerName = player.getName();
+        String worldName = player.getWorld().getName();
+        // PlayerInteractEvent分别用HAND和OFF_HAND触发2次
+        // 如果使用右键点击，则需要过滤使用OFF_HAND触发的事件
+        EquipmentSlot slot = event.getHand();
+        if (Objects.equals(slot, EquipmentSlot.OFF_HAND)) return;
         // 检测block是否null，比如右键点击了空气方块
         if (block == null) return;
         // 无论任何人包括op玩家，都必须先登录，才能进行任何互动
@@ -284,15 +325,24 @@ public class PluginListener implements Listener {
         // 获取玩家的潜行状态
         boolean sneaking = player.isSneaking();
         // 检测玩家是否sneaking(潜行)状态
+        // 玩家尝试在可互动方块上放置其他方块
+        // 潜行+右键=放置方块
         if (sneaking) return;
         // 非右键点击无效
         if (!action.equals(Action.RIGHT_CLICK_BLOCK)) return;
         // 获取自定义可放置方块的记录信息
-        CrazyBlockRecord record = RecordManager.findCrazyRecord(block.getLocation());
+        HCItemBlockRecord record = RecordManager.findHCItemRecord(block.getLocation());
         if (record == null) return;
         // 获取自定义可放置方块的物品信息
-        Crazy crazyItem = (Crazy) ItemManager.findItemById(record.getName());
-        if (crazyItem == null) return;
+        ItemBase ib = ItemManager.findItemById(record.getName());
+        if (!(ib instanceof Crazy crazyItem)) return;
+        // 判断自定义方块是否在不可用世界
+        if (crazyItem.isDisabledWorld(player)) {
+            player.sendMessage(LanguageManager.getString("world-disabled", player).replace("%world%", worldName));
+            return;
+        }
+        // 判断自定义方块是否可常规互动，比如吃，打开地图等
+        if (!crazyItem.isInteractedBlock()) event.setUseInteractedBlock(Event.Result.DENY);
         // 设置执行指令
         String crazyCommand = "";
         if (crazyItem.getType().equals(CrazyBlockType.CRAZY_CRAFTING_TABLE)) {
@@ -307,7 +357,6 @@ public class PluginListener implements Listener {
         // 执行指令，并且取消当前事件(防止弹出系统界面)
         if (!StringUtils.isEmpty(crazyCommand)) {
             runPlayerCommand(crazyCommand, player);
-            event.setCancelled(true);
         }
     }
 
@@ -334,9 +383,6 @@ public class PluginListener implements Listener {
 
     /**
      * 玩家的盔甲栏物品被改变后的事件
-     *
-     * @param event
-     * @throws IllegalAccessException
      */
     @EventHandler
     private void onPlayerEquipmentChanged(PlayerEquipmentChangedEvent event) throws IllegalAccessException, IOException, InvalidConfigurationException {
@@ -365,14 +411,6 @@ public class PluginListener implements Listener {
             event.setCancelled(true);
             return;
         }
-        // 获取玩家扔出去的物品及数量
-        Item item = event.getItemDrop();
-        ItemStack is = item.getItemStack();
-        int amount = is.getAmount();
-        Material material = item.getItemStack().getType();
-        // 记录玩家数据
-        int count = data.DropList.getOrDefault(material, 0);
-        data.DropList.put(material, count + amount);
         PlayerManager.setPlayerData(player, data);
     }
 
@@ -402,16 +440,7 @@ public class PluginListener implements Listener {
         if (!data.isLogin()) {
             player.sendMessage(LanguageManager.getString("playerNoLogin", player).replace("%player%", playerName));
             event.setCancelled(true);
-            return;
         }
-        // 获取拾取的物品，类型及数量
-        Item item = event.getItem();
-        ItemStack is = item.getItemStack();
-        Material material = is.getType();
-        int amount = is.getAmount();
-        // 记录玩家拾取物品的数据
-        int count = data.PickupList.getOrDefault(material, 0);
-        data.PickupList.put(material, count + amount);
         PlayerManager.setPlayerData(player, data);
     }
 
@@ -490,7 +519,7 @@ public class PluginListener implements Listener {
      * 实体死亡事件
      */
     @EventHandler
-    private void onEntityDeath(EntityDeathEvent event) throws IllegalAccessException, IOException, InvalidConfigurationException {
+    private void onEntityDeath(EntityDeathEvent event) {
         // 获取死亡的生物实例
         LivingEntity entity = event.getEntity();
         // 获取生物的类型及位置
@@ -505,13 +534,6 @@ public class PluginListener implements Listener {
         if (mob != null && RandomNumber.checkBingo(mob.spawnRate)) {
             DropManager.ExtraDrops(location, mob.drops);
         }
-        // 记录玩家杀死生物的数量
-        Player player = entity.getKiller();
-        if (player == null) return;
-        PlayerData playerData = PlayerManager.getPlayerData(player);
-        int count = playerData.KillMobList.getOrDefault(type, 0);
-        playerData.KillMobList.put(type, count + 1);
-        PlayerManager.setPlayerData(player, playerData);
     }
 
     /**
@@ -520,13 +542,11 @@ public class PluginListener implements Listener {
      * @param event 方块被破坏时触发的事件实例
      */
     @EventHandler
-    private void onBlockBroken(final BlockBreakEvent event) throws IllegalAccessException, IOException, InvalidConfigurationException {
+    private void onBlockBroken(final @NotNull BlockBreakEvent event) throws IllegalAccessException, IOException, InvalidConfigurationException {
         if (event.isCancelled()) return;
-
         Player player = event.getPlayer();
         PlayerData data = PlayerManager.getPlayerData(player);
         Block block = event.getBlock();
-        Material material = block.getType();
         // 检测玩家是否在跑酷设计状态，并且超出了跑酷设计范围
         if (!data.designer.RangeDetection(block.getLocation())) {
             event.setCancelled(true);
@@ -534,20 +554,18 @@ public class PluginListener implements Listener {
         }
         // 破坏方块时检测额外掉落
         DropManager.ExtraDrops(block);
-        // 记录破坏方块的种类和数量
-        int count = data.BreakList.getOrDefault(material, 0);
-        data.BreakList.put(material, count + 1);
-        PlayerManager.setPlayerData(player, data);
-        // 记录疯狂方块的位置
-        CrazyBlockRecord record = RecordManager.findCrazyRecord(block.getLocation());
+        // 获取可摆放的自定义方块的记录位置
+        HCItemBlockRecord record = RecordManager.findHCItemRecord(block.getLocation());
         if (record == null) return;
-        Crazy ib = (Crazy) ItemManager.findItemById(record.getName());
-        if (ib == null) return;
-        // 如果被破坏的方块是疯狂方块，则取消掉落，改为掉落疯狂方块相应的物品
-        event.setDropItems(false);
-        block.getWorld().dropItemNaturally(block.getLocation(), ib.toItemStack());
-        // 移除疯狂方块的摆放记录
-        RecordManager.removeCrazyRecord(record);
+        // 根据记录获取ItemBase实例
+        ItemBase ib = ItemManager.findItemById(record.getName());
+        if (ib != null) {
+            // 如果被破坏的方块是疯狂方块，则取消掉落，改为掉落疯狂方块相应的物品
+            event.setDropItems(false);
+            block.getWorld().dropItemNaturally(block.getLocation(), ib.toItemStack());
+            // 移除疯狂方块的摆放记录
+            RecordManager.removeHCItemRecord(record);
+        }
     }
 
     /**
@@ -562,8 +580,7 @@ public class PluginListener implements Listener {
         Player player = event.getPlayer();
         PlayerData data = PlayerManager.getPlayerData(player);
         Block block = event.getBlock();
-        Material material = block.getType();
-        World world = block.getWorld();
+        String worldName = player.getWorld().getName();
         // 被摆放方块的位置
         Location location = block.getLocation();
         // HandItem, 摆放方块时主手拿着的物品
@@ -586,17 +603,20 @@ public class PluginListener implements Listener {
             MinionRecord record = MinionManager.spawnArmorStand(minionLocation, handItem);
             if (record != null) RecordManager.addMinionRecord(record);
         }
-
-        // 计数玩家的各种方块摆放
-        int count = data.PlaceList.getOrDefault(material, 0);
-        data.PlaceList.put(material, count + 1);
-        PlayerManager.setPlayerData(player, data);
         // 自定义可放置方块的摆放记录
         ItemBase ib = ItemManager.getItemBase(handItem);
-        if (ib instanceof Crazy crazy) {
-            CrazyBlockRecord record = new CrazyBlockRecord(crazy.getId(), block.getLocation());
-            RecordManager.addCrazyRecord(record);
+        if (ib != null) {
+            if (ib.isDisabledWorld(player)) {
+                player.sendMessage(LanguageManager.getString("world-disabled", player).replace("%world%", worldName));
+                event.setCancelled(true);
+                return;
+            } else {
+                HCItemBlockRecord record = new HCItemBlockRecord(ib.getId(), block.getLocation());
+                RecordManager.addHCItemRecord(record);
+            }
         }
+
+        PlayerManager.setPlayerData(player, data);
     }
 
     @EventHandler
@@ -701,7 +721,7 @@ public class PluginListener implements Listener {
         // 获取鼠标点击类型，鼠标的左键，右键，中建点击
         if (clickType.equals(ClickType.LEFT)) commands = slot.leftCommands;
         if (clickType.equals(ClickType.RIGHT)) commands = slot.rightCommands;
-        runMenuItemCommand(commands, player);
+        prepareCommandList(commands, player);
         // 检查自定义合成公式并且在输入格子展示合成物品，让玩家拿取
         // TODO: 检查自定义合成公式并且在输入格子展示合成物品，让玩家拿取
         RecipeFinderRunnable finder = new RecipeFinderRunnable(inv);
@@ -755,7 +775,7 @@ public class PluginListener implements Listener {
         }
     }
 
-    private void runMenuItemCommand(List<String> commands, Player player) {
+    private void prepareCommandList(List<String> commands, Player player) {
         for (String s : commands) {
             int firstSpace = s.indexOf(" ");
             String key = firstSpace >= 1 ? s.substring(0, firstSpace) : s;
@@ -772,13 +792,15 @@ public class PluginListener implements Listener {
 
     private void runConsoleCommand(String command, Player player) {
         ConsoleCommandSender sender = Bukkit.getConsoleSender();
-        Bukkit.dispatchCommand(sender, command);
 
-        Global.LogMessage(String.format("%s issued a console command: %s", player.getName(), command));
+        String _command = PlaceholderAPI.setPlaceholders(player, command);
+        Bukkit.dispatchCommand(sender, _command);
+        Global.LogMessage(String.format("%s issued a console command: %s", player.getName(), _command));
     }
 
     private void runPlayerCommand(String command, Player player) {
-        player.performCommand(command);
-        Global.LogMessage(String.format("%s issued a player command: %s", player.getName(), command));
+        String _command = PlaceholderAPI.setPlaceholders(player, command);
+        player.performCommand(_command);
+        Global.LogMessage(String.format("%s issued a player command: %s", player.getName(), _command));
     }
 }

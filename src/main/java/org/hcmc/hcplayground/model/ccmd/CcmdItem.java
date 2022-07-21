@@ -23,6 +23,7 @@ import java.util.*;
 public class CcmdItem extends Command {
 
     private Plugin plugin = HCPlayground.getInstance();
+    @Expose(serialize = false, deserialize = false)
     public String id;
 
     @Expose

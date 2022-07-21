@@ -3,7 +3,7 @@ package org.hcmc.hcplayground.model.mob;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import org.bukkit.entity.EntityType;
-import org.hcmc.hcplayground.model.item.ItemBaseA;
+import org.hcmc.hcplayground.model.item.CraftItemBase;
 
 public class MobEntity {
 
@@ -30,7 +30,7 @@ public class MobEntity {
     public String[] displays;
     @Expose
     @SerializedName(value = "drops")
-    public ItemBaseA[] drops;
+    public CraftItemBase[] drops;
     @Expose
     @SerializedName(value = "spawnRate")
     public float spawnRate;

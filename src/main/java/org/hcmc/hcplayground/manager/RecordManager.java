@@ -11,10 +11,10 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.Plugin;
 import org.hcmc.hcplayground.HCPlayground;
+import org.hcmc.hcplayground.model.item.ItemBase;
 import org.hcmc.hcplayground.model.minion.MinionRecord;
 import org.hcmc.hcplayground.model.minion.MinionTemplate;
-import org.hcmc.hcplayground.model.recipe.CrazyBlockRecord;
-import org.hcmc.hcplayground.model.item.Crazy;
+import org.hcmc.hcplayground.model.recipe.HCItemBlockRecord;
 import org.hcmc.hcplayground.utility.Global;
 
 import java.io.IOException;
@@ -22,10 +22,10 @@ import java.lang.reflect.Field;
 import java.util.*;
 
 public class RecordManager {
-    private static final String SECTION_KEY_CRAZY = "crazy";
+    private static final String SECTION_KEY_HCITEM = "hcitem";
     private static final String SECTION_KEY_MINION = "minion";
 
-    private static List<CrazyBlockRecord> crazyBlockRecords = new ArrayList<>();
+    private static List<HCItemBlockRecord> hcItemBlockRecords = new ArrayList<>();
     private static List<MinionRecord> minionRecords = new ArrayList<>();
     //private static YamlConfiguration yamlRecord;
     private static final Plugin plugin = HCPlayground.getInstance();
@@ -35,16 +35,16 @@ public class RecordManager {
 
     }
 
-    public static List<CrazyBlockRecord> getCrazyRecords() {
-        return crazyBlockRecords;
+    public static List<HCItemBlockRecord> getHcItemBlockRecords() {
+        return hcItemBlockRecords;
     }
 
     public static List<MinionRecord> getMinionRecords() {
         return minionRecords;
     }
 
-    public static void addCrazyRecord(CrazyBlockRecord item) {
-        if (!existCrazyRecord(item.toLocation())) crazyBlockRecords.add(item);
+    public static void addHCItemRecord(HCItemBlockRecord item) {
+        if (!existHCItemRecord(item.toLocation())) hcItemBlockRecords.add(item);
     }
 
     public static void addMinionRecord(MinionRecord item) {
@@ -55,13 +55,13 @@ public class RecordManager {
         return minionRecords.stream().anyMatch(x -> x.getLocation().toVector().equals(location.toVector()));
     }
 
-    private static boolean existCrazyRecord(Location l) {
+    private static boolean existHCItemRecord(Location l) {
         World world = l.getWorld();
         String worldName = "";
         if (world != null) worldName = world.getName();
 
         String finalWorldName = worldName;
-        return crazyBlockRecords.stream().anyMatch(x -> x.getX() == l.getX()
+        return hcItemBlockRecords.stream().anyMatch(x -> x.getX() == l.getX()
                 && x.getY() == l.getY()
                 && x.getZ() == l.getZ()
                 && x.getWorld().equalsIgnoreCase(finalWorldName)
@@ -69,13 +69,13 @@ public class RecordManager {
                 && x.getYaw() == l.getYaw());
     }
 
-    public static CrazyBlockRecord findCrazyRecord(Location location) {
+    public static HCItemBlockRecord findHCItemRecord(Location location) {
         World world = location.getWorld();
         String worldName = "";
         if (world != null) worldName = world.getName();
 
         String finalWorldName = worldName;
-        return crazyBlockRecords.stream().filter(x -> x.getX() == location.getX()
+        return hcItemBlockRecords.stream().filter(x -> x.getX() == location.getX()
                 && x.getY() == location.getY()
                 && x.getZ() == location.getZ()
                 && x.getWorld().equalsIgnoreCase(finalWorldName)
@@ -83,18 +83,18 @@ public class RecordManager {
                 && x.getYaw() == location.getYaw()).findAny().orElse(null);
     }
 
-    public static void removeCrazyRecord(CrazyBlockRecord item) {
-        crazyBlockRecords.remove(item);
+    public static void removeHCItemRecord(HCItemBlockRecord item) {
+        hcItemBlockRecords.remove(item);
     }
 
     public static void Load(YamlConfiguration yaml) throws IllegalAccessException {
-        loadCrazyRecord(yaml);
+        loadHCItemRecord(yaml);
         loadMinionRecord(yaml);
     }
 
     public static void Save() throws IOException, IllegalAccessException {
         YamlConfiguration yaml = new YamlConfiguration();
-        yaml.createSection(SECTION_KEY_CRAZY, saveCrazyRecord());
+        yaml.createSection(SECTION_KEY_HCITEM, saveHCItemRecord());
         yaml.createSection(SECTION_KEY_MINION, saveMinionRecord());
         yaml.save(String.format("%s/%s", plugin.getDataFolder(), Global.FILE_RECORD));
     }
@@ -117,13 +117,13 @@ public class RecordManager {
         }
     }
 
-    private static void loadCrazyRecord(YamlConfiguration yaml) throws IllegalAccessException {
-        ConfigurationSection section = yaml.getConfigurationSection(SECTION_KEY_CRAZY);
+    private static void loadHCItemRecord(YamlConfiguration yaml) throws IllegalAccessException {
+        ConfigurationSection section = yaml.getConfigurationSection(SECTION_KEY_HCITEM);
         if (section == null) return;
 
-        crazyBlockRecords = Global.SetItemList(section, CrazyBlockRecord.class);
-        for (CrazyBlockRecord record : crazyBlockRecords) {
-            Crazy ib = (Crazy) ItemManager.findItemById(record.getName());
+        hcItemBlockRecords = Global.SetItemList(section, HCItemBlockRecord.class);
+        for (HCItemBlockRecord record : hcItemBlockRecords) {
+            ItemBase ib = ItemManager.findItemById(record.getName());
             if (ib == null) continue;
 
             World w = Bukkit.getWorld(record.getWorld());
@@ -144,9 +144,9 @@ public class RecordManager {
         return mapYaml;
     }
 
-    private static Map<UUID, Object> saveCrazyRecord() throws IllegalAccessException {
+    private static Map<UUID, Object> saveHCItemRecord() throws IllegalAccessException {
         Map<UUID, Object> mapYaml = new HashMap<>();
-        for (CrazyBlockRecord r : crazyBlockRecords) {
+        for (HCItemBlockRecord r : hcItemBlockRecords) {
             Map<String, Object> mapRecord = serializeRecord(r);
             mapYaml.put(UUID.randomUUID(), mapRecord);
         }

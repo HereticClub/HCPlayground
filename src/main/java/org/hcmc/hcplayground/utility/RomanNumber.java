@@ -26,18 +26,13 @@ public class RomanNumber {
         if (number >= 4000 || number <= 0) throw new Exception("Only support from 1 to 3999");
         StringBuilder sb = new StringBuilder();
 
-        arabic.sort(Comparator.reverseOrder());
-        roman.sort(Comparator.reverseOrder());
-
-        int index = 0;
         int _number = number;
 
-        while (_number > 0) {
-            int div = number / arabic.get(index);
-            sb.append(String.valueOf(roman.get(index)).repeat(Math.max(0, div)));
-
-            _number %= arabic.get(index);
-            index++;
+        for (int i = arabic.size() - 1; i >= 0; i--) {
+            while (_number >= arabic.get(i)) {
+                sb.append(roman.get(i));
+                _number -= arabic.get(i);
+            }
         }
 
         return sb.toString();

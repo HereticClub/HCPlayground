@@ -11,46 +11,60 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
-import org.bukkit.potion.PotionEffect;
 import org.hcmc.hcplayground.utility.Global;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
-public class Armor extends ItemBaseA {
+public class Armor extends CraftItemBase {
 
     @Expose
     @SerializedName(value = PERSISTENT_ARMOR_KEY)
-    public float armor = 0.0f;
+    private float armor = 0.0f;
     @Expose
     @SerializedName(value = PERSISTENT_HEALTH_KEY)
-    public float health = 0.0f;
+    private float health = 0.0f;
     @Expose
     @SerializedName(value = PERSISTENT_RECOVER_KEY)
-    public float recover = 0.0F;
+    private float recover = 0.0F;
     @Expose
     @SerializedName(value = PERSISTENT_ARMOR_TOUGHNESS_KEY)
-    public float armorToughness = 0.0f;
+    private float armorToughness = 0.0f;
     @Expose
     @SerializedName(value = PERSISTENT_KNOCKBACK_RESISTANCE_KEY)
-    public float knockBackResistance = 0.0f;
+    private float knockBackResistance = 0.0f;
     @Expose
     @SerializedName(value = PERSISTENT_MOVEMENT_SPEED_KEY)
-    public float movementSpeed = 0.0f;
+    private float movementSpeed = 0.0f;
     @Expose
     @SerializedName(value = PERSISTENT_EQUIPMENT_SLOT_KEY)
-    public EquipmentSlot equipmentSlot;
-    /**
-     * 附加在装备上的药水效果
-     */
-    @Expose
-    @SerializedName(value = ItemBase.PERSISTENT_POTIONS_KEY)
-    public PotionEffect[] potions;
+    private EquipmentSlot equipmentSlot;
 
     public Armor() {
 
+    }
+
+    @Override
+    public void updateAttributeLore() {
+        /*
+         添加装备属性说明
+         */
+        attributeLore.clear();
+        switch (this.equipmentSlot) {
+            case CHEST -> attributeLore.add("§7穿在身上时:");
+            case HEAD -> attributeLore.add("§7戴在头上时:");
+            case LEGS -> attributeLore.add("§7穿在腿上时:");
+            case FEET -> attributeLore.add("§7穿在脚上时:");
+        }
+
+        if (this.health != 0) attributeLore.add(String.format("%s 生命", this.setWeaponLore(this.health, false, false)));
+        if (this.recover != 0) attributeLore.add(String.format("%s 恢复生命", this.setWeaponLore(this.recover, false, false)));
+        if (this.armor != 0) attributeLore.add(String.format("%s 盔甲", this.setWeaponLore(this.armor, false, false)));
+        if (this.armorToughness != 0)
+            attributeLore.add(String.format("%s 盔甲韧性", this.setWeaponLore(this.armorToughness, false, false)));
+        if (this.knockBackResistance != 0)
+            attributeLore.add(String.format("%s 击退抗性", this.setWeaponLore(this.knockBackResistance, false, true)));
+        if (this.movementSpeed != 0)
+            attributeLore.add(String.format("%s 速度", this.setWeaponLore(this.movementSpeed, false, true)));
     }
 
     public ItemStack toItemStack() {
@@ -58,32 +72,6 @@ public class Armor extends ItemBaseA {
         ItemMeta im = this.setBaseItemMeta(is);
 
         if (im != null) {
-            List<String> lore = im.getLore();
-            if (lore == null) lore = new ArrayList<>();
-            lore.add("");
-            /*
-            添加装备属性说明
-            */
-            switch (this.equipmentSlot) {
-                case CHEST -> lore.add("§7穿在身上时:");
-                case HEAD -> lore.add("§7戴在头上时:");
-                case LEGS -> lore.add("§7穿在腿上时:");
-                case FEET -> lore.add("§7穿在脚上时:");
-            }
-            /*
-            float actualKnockbackResistance = this.knockBackResistance * 100;
-            float actualMovementSpeed = this.movementSpeed * 100;
-
-             */
-            if (this.health != 0) lore.add(String.format("%s 生命", setLoreString(this.health, false, false)));
-            if (this.recover != 0) lore.add(String.format("%s 恢复生命", setLoreString(this.recover, false, false)));
-            if (this.armor != 0) lore.add(String.format("%s 盔甲", setLoreString(this.armor, false, false)));
-            if (this.armorToughness != 0)
-                lore.add(String.format("%s 盔甲韧性", setLoreString(this.armorToughness, false, false)));
-            if (this.knockBackResistance != 0)
-                lore.add(String.format("%s 击退抗性", setLoreString(this.knockBackResistance, false, true)));
-            if (this.movementSpeed != 0)
-                lore.add(String.format("%s 速度", setLoreString(this.movementSpeed, false, true)));
             /*
             添加AttributeModifier
             */
@@ -100,11 +88,10 @@ public class Armor extends ItemBaseA {
             /*
             强制添加隐藏属性标记
             */
-            if (!Arrays.asList(this.getFlags()).contains(ItemFlag.HIDE_ATTRIBUTES)) {
+            if (!flags.contains(ItemFlag.HIDE_ATTRIBUTES)) {
                 im.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
             }
 
-            im.setLore(lore);
             SetPersistentData(im);
             is.setItemMeta(im);
         }

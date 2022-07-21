@@ -8,12 +8,15 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.BookMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.hcmc.hcplayground.HCPlayground;
+import org.hcmc.hcplayground.enums.ItemFeatureType;
 import org.hcmc.hcplayground.model.item.*;
+import org.hcmc.hcplayground.runnable.UpdateLoreRunnable;
 import org.hcmc.hcplayground.utility.Global;
 import org.hcmc.hcplayground.utility.MaterialData;
 
@@ -43,8 +46,15 @@ public class ItemManager {
 
     }
 
+    /**
+     * 获取整个自定义物品列表
+     */
     public static List<ItemBase> getItems() {
         return items;
+    }
+
+    public static List<ItemBase> getItems(ItemFeatureType type) {
+        return items.stream().filter(x -> Arrays.asList(x.getFeatures()).contains(type)).toList();
     }
 
     public static void Load(YamlConfiguration yaml) {
@@ -89,7 +99,7 @@ public class ItemManager {
                         int i = Integer.parseInt(index);
                         List<String> text = pageSection.getStringList(String.format("%s.content", index));
                         text.replaceAll(x -> x.replace("&", "§"));
-                        join.pages.put(i, text);
+                        join.getPages().put(i, text);
                     }
                 }
             }
@@ -105,11 +115,21 @@ public class ItemManager {
         }
     }
 
+    /**
+     * 判断物品是否书本
+     * @param itemStack 物品实例
+     * @return True: 物品是书本, False: 物品不是书本
+     */
+    public boolean isBook(ItemStack itemStack){
+        ItemMeta im = itemStack.getItemMeta();
+        return im instanceof BookMeta;
+    }
+
     public static List<String> getIdList() {
         List<String> list = new ArrayList<>();
 
         for (ItemBase ib : items) {
-            list.add(ib.getId());
+            list.add(ib.getId().toLowerCase());
         }
 
         return list;
@@ -117,8 +137,9 @@ public class ItemManager {
 
     /**
      * 创建一个id为null的ItemBase实例
+     *
      * @param material 物品的材质
-     * @param amount 物品的数量
+     * @param amount   物品的数量
      * @return ItemBase实例
      */
     public static ItemBase createItemBase(Material material, int amount) {
@@ -130,7 +151,19 @@ public class ItemManager {
         return x;
     }
 
-    public static List<ItemBase> getBooks(){
+    public static void updateLoreOnRunnable(Player player) {
+        UpdateLoreRunnable r = new UpdateLoreRunnable(player);
+        // 5 * 50 = 250毫秒后执行
+        r.runTaskLater(plugin, 5);
+    }
+
+    public static void updateLore(ItemStack stack) {
+        ItemBase ib = getItemBase(stack);
+        if (ib == null) return;
+        ib.updateLore(stack);
+    }
+
+    public static List<ItemBase> getBooks() {
         return items.stream().filter(ItemBase::isWrittenBook).toList();
     }
 
@@ -139,6 +172,7 @@ public class ItemManager {
     }
 
     public static ItemBase getItemBase(ItemStack is) {
+        if (is == null) return null;
         ItemMeta im = is.getItemMeta();
         if (im == null) return null;
 
@@ -164,16 +198,20 @@ public class ItemManager {
         }
 
         ItemBase ib = findItemById(itemId);
+        ItemStack is;
         if (ib == null) {
             sender.sendMessage(LanguageManager.getString("noSuchItem", player).replace("%item%", itemId));
             return;
         }
-        ItemStack is = ib.toItemStack();
-        is.setAmount(amount);
+        if (ib.isBook()) {
+            is = ((Join) ib).toBook(player);
+        } else {
+            is = ib.toItemStack();
+        }
         player.getInventory().setItem(player.getInventory().firstEmpty(), is);
     }
 
-    private static class CraftItemBase extends ItemBaseA {
+    private static class CraftItemBase extends org.hcmc.hcplayground.model.item.CraftItemBase {
 
         private final int amount;
 
@@ -182,8 +220,12 @@ public class ItemManager {
         }
 
         @Override
-        public ItemStack toItemStack() {
+        public void updateAttributeLore() {
 
+        }
+
+        @Override
+        public ItemStack toItemStack() {
             return new ItemStack(this.getMaterial().value, amount);
         }
     }
