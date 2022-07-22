@@ -604,6 +604,8 @@ public class PluginListener implements Listener {
             minionLocation.setDirection(player.getLocation().getDirection().multiply(-1));
             MinionEntity record = MinionManager.spawnMinion(minionLocation, MainHandItem);
             if (record == null) return;
+            // 放置该Minion的玩家
+            record.setOwner(player.getUniqueId());
             RecordManager.addMinionRecord(record);
         }
         // 自定义可放置方块的摆放记录

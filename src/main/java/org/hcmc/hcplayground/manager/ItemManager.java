@@ -202,6 +202,7 @@ public class ItemManager {
         if (ib.isBook()) {
             is = ((Join) ib).toBook(player);
         } else {
+            ib.setAmount(amount);
             is = ib.toItemStack();
         }
         player.getInventory().setItem(player.getInventory().firstEmpty(), is);

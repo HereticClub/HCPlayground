@@ -68,7 +68,7 @@ public class Armor extends CraftItemBase {
     }
 
     public ItemStack toItemStack() {
-        ItemStack is = new ItemStack(this.getMaterial().value, getAmount());
+        ItemStack is = new ItemStack(material.value, amount);
         ItemMeta im = this.setBaseItemMeta(is);
 
         if (im != null) {

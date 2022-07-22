@@ -51,6 +51,9 @@ public class MinionEntity {
     @Expose
     @SerializedName(value = "id")
     private UUID uuid;
+    @Expose
+    @SerializedName(value = "owner")
+    private UUID owner;
 
     @Expose(serialize = false, deserialize = false)
     private String id;
@@ -126,6 +129,14 @@ public class MinionEntity {
 
     public String getId() {
         return id;
+    }
+
+    public UUID getOwner() {
+        return owner;
+    }
+
+    public void setOwner(UUID owner) {
+        this.owner = owner;
     }
 
     public Map<Material, Integer> getSack() {

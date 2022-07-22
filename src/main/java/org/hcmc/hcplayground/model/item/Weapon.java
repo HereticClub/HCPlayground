@@ -88,7 +88,7 @@ public class Weapon extends CraftItemBase {
         /*
         将Item Model转换为ItemStack对象，并且为ItemStack添加的新命名空间和新的物品ID
         */
-        ItemStack is = new ItemStack(this.getMaterial().value, amount);
+        ItemStack is = new ItemStack(material.value, amount);
         ItemMeta im = this.setBaseItemMeta(is);
 
         if (im != null) {

@@ -87,7 +87,7 @@ public class PluginRunnable extends BukkitRunnable {
             if (template == null) continue;
             if (diff <= template.getPeriod()) continue;
 
-            new MinionAcquireRunnable(entity, template).runTaskLater(plugin, 20);
+            new MinionAcquireRunnable(entity, template).runTaskLater(plugin, 10);
             entity.setLastAcquireTime(new Date());
         }
     }

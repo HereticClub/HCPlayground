@@ -111,7 +111,7 @@ public class Join extends CraftItemBase {
     }
 
     public ItemStack toItemStack() {
-        ItemStack is = new ItemStack(getMaterial().value, getAmount());
+        ItemStack is = new ItemStack(material.value, amount);
         // 判断物品只是简单的物品，即没有额外的Meta类型的数据
         // 设置基本的ItemMeta
         ItemMeta im = this.setBaseItemMeta(is);

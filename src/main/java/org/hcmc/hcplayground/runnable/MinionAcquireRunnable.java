@@ -1,8 +1,10 @@
 package org.hcmc.hcplayground.runnable;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -17,6 +19,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 public class MinionAcquireRunnable extends BukkitRunnable {
 
@@ -75,10 +78,12 @@ public class MinionAcquireRunnable extends BukkitRunnable {
             Item item = block.getWorld().dropItemNaturally(block.getLocation(), is);
 
             new BukkitRunnable() {
-
                 @Override
                 public void run() {
-                    entity.getSack().put(is.getType(), is.getAmount());
+                    Map<Material, Integer> suck = entity.getSack();
+                    int amount = suck.get(is.getType());
+                    amount += is.getAmount();
+                    entity.getSack().put(is.getType(), amount);
                     item.remove();
                 }
             }.runTaskLater(plugin, 10);
