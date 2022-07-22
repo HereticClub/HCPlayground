@@ -1,21 +1,40 @@
+# Minion模板定义，固定每5秒修整它的工作平台，平台需求的方块由requirement属性决定，每隔period秒采集资源
+# Minion的类型，必须是MinionType名称
 COBBLESTONE:
+  # Minion等级，必须是数字，理论上等级没有限制
   1:
+    # Minion的小时名称，必须
     display: '&f圆石爪牙 I'
-    texture: 'eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOWZiYTY4ODk3MjhmMWJmNmI3OWM1ZTgzZTJlYjllYjMwNTkyZmFjMGMxNDg0YTUzNzA3ZjhiYWFiMTZmMTI4YiJ9fX0='
+    # Minion的说明文字
     lore:
-      - '&7aaaaaa'
-      - '&7bbbbbb'
+      - '&7圆石小帮手'
+      - '每隔12秒采集1次资源'
+    # Minion头部的素材，必须
+    texture: 'eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOWZiYTY4ODk3MjhmMWJmNmI3OWM1ZTgzZTJlYjllYjMwNTkyZmFjMGMxNDg0YTUzNzA3ZjhiYWFiMTZmMTI4YiJ9fX0='
+    # 工作平台的需求方块类型，必须
+    requirement: COBBLESTONE
+    # Minion的分类，必须是以下值之一，Farmer: 农民，Miner: 矿工，Lumberjack: 伐木工，Fisherman: 渔夫，Butcher: 屠夫，Fighter: 斗士
+    category: Miner
+    # 采集资源的周期，必须，单位: 秒
+    period: 12
+    # Minion的装束(盔甲架除了头部的装备)
     equipments:
+      # 手拿的装备，镐，斧子，剑，鱼竿等等
       hand:
         material: stone_pickaxe
-        color: c0c0c0
+      # 胸甲类型，必须是各种chestplate
       chest:
         material: leather_chestplate
+        # 表示胸甲的颜色，如果是皮革外套的话
         color: c0c0c0
+      # 护腿类型，必须是各种leggings
       legs:
         material: leather_leggings
+        # 表示护腿的颜色，如果是皮革护腿的话
         color: c0c0c0
+      # 靴子类型，必须是各种boots
       feet:
+        # 表示靴子的颜色，如果是皮革靴子的话
         material: leather_boots
         color: c0c0c0
   2:
@@ -52,6 +71,111 @@ COBBLESTONE:
   5:
     display: '&f圆石爪牙 V'
     texture: 'eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjY3ZTMxYzhmOTNlMDQ1MmZhN2M5NTJjMTI2Yjk1OTdhMmRlNjYxODZkOTY3ZDAwNDBlNzYzMjA5MzY0YmNjMSJ9fX0='
+    lore:
+      - '&7aaaaaa'
+      - '&7bbbbbb'
+  6:
+    display: '&f圆石爪牙 VI'
+    texture: 'eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjY3ZTMxYzhmOTNlMDQ1MmZhN2M5NTJjMTI2Yjk1OTdhMmRlNjYxODZkOTY3ZDAwNDBlNzYzMjA5MzY0YmNjMSJ9fX0='
+    equipments:
+      hand:
+        material: stone_pickaxe
+      chest:
+        material: leather_chestplate
+      legs:
+        material: leather_leggings
+      feet:
+        material: leather_boots
+    lore:
+      - '&7aaaaaa'
+      - '&7bbbbbb'
+  7:
+    display: '&f圆石爪牙 VII'
+    texture: 'eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjY3ZTMxYzhmOTNlMDQ1MmZhN2M5NTJjMTI2Yjk1OTdhMmRlNjYxODZkOTY3ZDAwNDBlNzYzMjA5MzY0YmNjMSJ9fX0='
+    equipments:
+      hand:
+        material: stone_pickaxe
+      chest:
+        material: leather_chestplate
+      legs:
+        material: leather_leggings
+      feet:
+        material: leather_boots
+    lore:
+      - '&7aaaaaa'
+      - '&7bbbbbb'
+  8:
+    display: '&f圆石爪牙 VIII'
+    texture: 'eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjY3ZTMxYzhmOTNlMDQ1MmZhN2M5NTJjMTI2Yjk1OTdhMmRlNjYxODZkOTY3ZDAwNDBlNzYzMjA5MzY0YmNjMSJ9fX0='
+    equipments:
+      hand:
+        material: stone_pickaxe
+      chest:
+        material: leather_chestplate
+      legs:
+        material: leather_leggings
+      feet:
+        material: leather_boots
+    lore:
+      - '&7aaaaaa'
+      - '&7bbbbbb'
+  9:
+    display: '&f圆石爪牙 IX'
+    texture: 'eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjY3ZTMxYzhmOTNlMDQ1MmZhN2M5NTJjMTI2Yjk1OTdhMmRlNjYxODZkOTY3ZDAwNDBlNzYzMjA5MzY0YmNjMSJ9fX0='
+    equipments:
+      hand:
+        material: stone_pickaxe
+      chest:
+        material: leather_chestplate
+      legs:
+        material: leather_leggings
+      feet:
+        material: leather_boots
+    lore:
+      - '&7aaaaaa'
+      - '&7bbbbbb'
+  10:
+    display: '&f圆石爪牙 X'
+    texture: 'eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjY3ZTMxYzhmOTNlMDQ1MmZhN2M5NTJjMTI2Yjk1OTdhMmRlNjYxODZkOTY3ZDAwNDBlNzYzMjA5MzY0YmNjMSJ9fX0='
+    equipments:
+      hand:
+        material: stone_pickaxe
+      chest:
+        material: leather_chestplate
+      legs:
+        material: leather_leggings
+      feet:
+        material: leather_boots
+    lore:
+      - '&7aaaaaa'
+      - '&7bbbbbb'
+  11:
+    display: '&f圆石爪牙 XI'
+    texture: 'eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjY3ZTMxYzhmOTNlMDQ1MmZhN2M5NTJjMTI2Yjk1OTdhMmRlNjYxODZkOTY3ZDAwNDBlNzYzMjA5MzY0YmNjMSJ9fX0='
+    equipments:
+      hand:
+        material: stone_pickaxe
+      chest:
+        material: leather_chestplate
+      legs:
+        material: leather_leggings
+      feet:
+        material: leather_boots
+    lore:
+      - '&7aaaaaa'
+      - '&7bbbbbb'
+  12:
+    display: '&f圆石爪牙 XII'
+    texture: 'eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjY3ZTMxYzhmOTNlMDQ1MmZhN2M5NTJjMTI2Yjk1OTdhMmRlNjYxODZkOTY3ZDAwNDBlNzYzMjA5MzY0YmNjMSJ9fX0='
+    equipments:
+      hand:
+        material: stone_pickaxe
+      chest:
+        material: leather_chestplate
+      legs:
+        material: leather_leggings
+      feet:
+        material: leather_boots
     lore:
       - '&7aaaaaa'
       - '&7bbbbbb'

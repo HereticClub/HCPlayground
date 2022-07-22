@@ -36,7 +36,7 @@ public class PlayerManager {
      * @return 该实体玩家的配置信息实例
      */
     @NotNull
-    public static PlayerData getPlayerData(@NotNull Player player) throws IllegalAccessException, IOException, InvalidConfigurationException {
+    public static PlayerData getPlayerData(@NotNull Player player) {
         UUID playerUuid = player.getUniqueId();
         PlayerData pd = mapPlayerData.get(playerUuid);
 

@@ -33,7 +33,7 @@ public class BroadcastManager {
     public static List<String> randomMessage() {
         List<String> result = new ArrayList<>();
 
-        int number = RandomNumber.getRandomNumber(Messages.size());
+        int number = RandomNumber.getRandomInteger(Messages.size());
         String message = Messages.get(number);
         List<String> multiline = MultilineMessages.get(message);
 

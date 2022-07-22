@@ -90,7 +90,7 @@ public class HCPlayground extends JavaPlugin {
             Global.LogMessage("All configuration files loaded");
             // 以下代码不需要在ReloadPlugin()中执行，只需要在插件启用时执行一次
             // 启动全局runnable线程，每秒循环执行一次
-            task = Global.runnable.runTaskTimer(this, 20, 20);
+            task = Global.runnable.runTaskTimer(this, 20, 2);
             Global.LogMessage("A global timer has been startup, refresh per second");
             // 注册Listener
             getServer().getPluginManager().registerEvents(new PluginListener(), this);
@@ -120,7 +120,7 @@ public class HCPlayground extends JavaPlugin {
             HCPluginExpansion.RegisterExpansion();
             Global.LogMessage(String.format("\033[1;32m%s v%s enabled\033[0m", this.getName(), this.getDescription().getVersion()));
         } catch (IllegalAccessException | NoSuchFieldException | SQLException | NoSuchAlgorithmException |
-                 InvalidKeySpecException | IOException | InvalidConfigurationException e) {
+                 InvalidKeySpecException | IOException e) {
             e.printStackTrace();
         }
     }

@@ -169,7 +169,7 @@ public class PlayerData {
     private double totalDiggingSpeed = BASE_DIGGING_SPEED;
     private double totalLoggingSpeed = BASE_LOGGING_SPEED;
 
-    public PlayerData(Player player) throws IllegalAccessException {
+    public PlayerData(Player player) {
         this.player = player;
 
         name = player.getName();
@@ -470,7 +470,7 @@ public class PlayerData {
         sidebar.Update(player);
     }
 
-    public void LoadConfig() throws IllegalAccessException {
+    public void LoadConfig() {
         UUID playerUuid = player.getUniqueId();
         File f = new File(plugin.getDataFolder(), String.format("profile/%s.yml", playerUuid));
         // 加载所有Map<Material, Integer>类型的玩家记录
@@ -505,30 +505,35 @@ public class PlayerData {
     /**
      * 将玩家档案内所有记录数据加载到类型为Map&lt;?, ?&gt;的属性
      */
-    private void Yaml2Map(YamlConfiguration yaml) throws IllegalAccessException {
-        // 循环检测SectionKeys字段内的字符串列表
-        for (String s : SectionKeys) {
-            // 根据字符串获取当前对象的属性的实例
-            Field[] fields = this.getClass().getFields();
-            Field field = Arrays.stream(fields).filter(x -> x.getName().equalsIgnoreCase(s)).findAny().orElse(null);
-            if (field == null) continue;
-            // 过滤类型不是Map<?, ?>的属性
-            ParameterizedType pType = (ParameterizedType) field.getGenericType();
-            String name = pType.getRawType().getTypeName();
-            if (!name.equalsIgnoreCase(TYPE_JAVA_UTIL_MAP)) continue;
-            // 根据字符串获取yaml格式文档内相应的节段及内容
-            ConfigurationSection section = yaml.getConfigurationSection(s);
-            if (section == null) continue;
-            // 使用Gson将Yaml内容转换到类型为Map<?, ?>的属性
-            String data = Global.GsonObject.toJson(section.getValues(false));
-            Type mapType = new TypeToken<Map<?, ?>>() {
-            }.getType();
-            Map<?, ?> value = Global.GsonObject.fromJson(data, mapType);
-            field.set(this, value);
+    private void Yaml2Map(YamlConfiguration yaml) {
+
+        try {
+            // 循环检测SectionKeys字段内的字符串列表
+            for (String s : SectionKeys) {
+                // 根据字符串获取当前对象的属性的实例
+                Field[] fields = this.getClass().getFields();
+                Field field = Arrays.stream(fields).filter(x -> x.getName().equalsIgnoreCase(s)).findAny().orElse(null);
+                if (field == null) continue;
+                // 过滤类型不是Map<?, ?>的属性
+                ParameterizedType pType = (ParameterizedType) field.getGenericType();
+                String name = pType.getRawType().getTypeName();
+                if (!name.equalsIgnoreCase(TYPE_JAVA_UTIL_MAP)) continue;
+                // 根据字符串获取yaml格式文档内相应的节段及内容
+                ConfigurationSection section = yaml.getConfigurationSection(s);
+                if (section == null) continue;
+                // 使用Gson将Yaml内容转换到类型为Map<?, ?>的属性
+                String data = Global.GsonObject.toJson(section.getValues(false));
+                Type mapType = new TypeToken<Map<?, ?>>() {
+                }.getType();
+                Map<?, ?> value = Global.GsonObject.fromJson(data, mapType);
+                field.set(this, value);
+            }
+            // 加载玩家的其他数据记录或者状态
+            isCourseDesigning = yaml.getBoolean(Section_Key_Parkour_Design);
+            courseIds = yaml.getStringList(Section_Key_Parkour_List);
+        } catch (IllegalAccessException ex) {
+            ex.printStackTrace();
         }
-        // 加载玩家的其他数据记录或者状态
-        isCourseDesigning = yaml.getBoolean(Section_Key_Parkour_Design);
-        courseIds = yaml.getStringList(Section_Key_Parkour_List);
     }
 
     /**

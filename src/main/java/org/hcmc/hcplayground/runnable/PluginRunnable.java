@@ -20,9 +20,12 @@ import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.event.WorldMorningEvent;
 import org.hcmc.hcplayground.manager.*;
 import org.hcmc.hcplayground.model.item.ItemBase;
+import org.hcmc.hcplayground.model.minion.MinionEntity;
+import org.hcmc.hcplayground.model.minion.MinionTemplate;
 import org.hcmc.hcplayground.model.player.PlayerData;
 import org.hcmc.hcplayground.utility.Global;
 
+import javax.xml.crypto.Data;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.*;
@@ -36,6 +39,8 @@ public class PluginRunnable extends BukkitRunnable {
     private Date lastBroadcastTime = new Date();
     private Date lastClearLagTime = new Date();
 
+    private final Date lastRunningTime = new Date();
+
     // 自1970年1月1日开始，至今的总秒数
     private long totalSeconds;
 
@@ -44,15 +49,46 @@ public class PluginRunnable extends BukkitRunnable {
         plugin = HCPlayground.getInstance();
     }
 
+    // 因为该runnable每100毫秒执行一次
+    // 因此只需要判断: 当前秒数(毫秒) % 间隔时间秒数(毫秒) <= 100
+    // 间隔时间秒数(毫秒)必须大于100
     @Override
     public void run() {
         try {
-            doOnlinePlayerTask();
-            doBroadcastTask();
-            doClearLag();
-            doTrackWorldTime();
+            // 每1秒求余
+            double delta1s = new Date().getTime() % 1000;
+            // 每3秒求余
+            double delta5s = new Date().getTime() % (MinionManager.DRESSING_PERIOD * 1000);
+
+            // 以下方法每100毫秒运行1次
+            doMinionAcquire();
+
+            // 以下方法每秒运行1次
+            if (delta1s <= 100) {
+                doOnlinePlayerTask();
+                doBroadcastTask();
+                doClearLag();
+                doTrackWorldTime();
+            }
+            // 以下方法每5秒运行1次
+            if (delta5s <= 100) {
+                doMinionDressingPlatform();
+            }
         } catch (NoSuchFieldException | IllegalAccessException | InvalidConfigurationException | IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    private void doMinionAcquire() {
+        List<MinionEntity> minions = RecordManager.getMinionRecords();
+        for (MinionEntity entity : minions) {
+            long diff = new Date().getTime() / 1000 - entity.getLastAcquireTime().getTime() / 1000;
+            MinionTemplate template = MinionManager.getMinionTemplate(entity.getType(), entity.getLevel());
+            if (template == null) continue;
+            if (diff <= template.getPeriod()) continue;
+
+            new MinionAcquireRunnable(entity, template).runTaskLater(plugin, 20);
+            entity.setLastAcquireTime(new Date());
         }
     }
 
@@ -64,6 +100,12 @@ public class PluginRunnable extends BukkitRunnable {
     @Override
     public void cancel() {
         super.cancel();
+    }
+
+    private void doMinionDressingPlatform() {
+        for (MinionEntity minion : RecordManager.getMinionRecords()) {
+            minion.dressingPlatform();
+        }
     }
 
     private void doTrackWorldTime() {
@@ -99,10 +141,11 @@ public class PluginRunnable extends BukkitRunnable {
         for (World w : worlds) {
             List<Entity> entities = w.getEntities();
             List<Entity> dropped = entities.stream().filter(x -> ClearLagManager.Types.contains(x.getType())).toList();
+            clearedCount += dropped.size();
             for (Entity item : dropped) {
                 item.remove();
-                clearedCount++;
             }
+
         }
         plugin.getServer().broadcastMessage(ClearLagManager.ClearMessage.replace("%removed%", String.valueOf(clearedCount)));
     }

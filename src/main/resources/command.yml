@@ -26,6 +26,22 @@ hcplayground:
   # 指令的别名
   aliases:
     - hc
+recordmanager:
+  permission: hc.recordmanager.*
+  runOnConsole: true
+  runOnPlayer: true
+  args:
+    1:
+      name: load
+      permission: hc.recordmanager.gui
+      index: 1
+    2:
+      name: save
+      permission: hc.recordmanager.give
+      index: 1
+  aliases:
+    - record
+    - rm
 quartermaster:
   permission: hc.quartermaster.*
   runOnConsole: true

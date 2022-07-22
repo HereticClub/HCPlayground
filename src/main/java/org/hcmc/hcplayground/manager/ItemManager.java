@@ -54,7 +54,7 @@ public class ItemManager {
     }
 
     public static List<ItemBase> getItems(ItemFeatureType type) {
-        return items.stream().filter(x -> Arrays.asList(x.getFeatures()).contains(type)).toList();
+        return items.stream().filter(x -> x.getFeatures().contains(type)).toList();
     }
 
     public static void Load(YamlConfiguration yaml) {
@@ -68,51 +68,47 @@ public class ItemManager {
         */
         ConfigurationSection section;
 
-        try {
-            // 获取weapons节段内容
-            section = yaml.getConfigurationSection("weapons");
-            if (section != null) itemWeapons = Global.SetItemList(section, Weapon.class);
-            // 获取armors节段内容
-            section = yaml.getConfigurationSection("armors");
-            if (section != null) itemArmors = Global.SetItemList(section, Armor.class);
-            // 获取hands节段内容
-            section = yaml.getConfigurationSection("hands");
-            if (section != null) itemHands = Global.SetItemList(section, Hand.class);
-            // 获取crazies节段内容
-            section = yaml.getConfigurationSection("crazies");
-            if (section != null) itemCrazies = Global.SetItemList(section, Crazy.class);
-            // 获取joins节段内容，需要处理作为书本的物品
-            section = yaml.getConfigurationSection("joins");
-            if (section != null) {
-                itemJoins = Global.SetItemList(section, Join.class);
-                for (Join join : itemJoins) {
-                    // 获取Join类物品的Id
-                    String[] keys = join.getId().split("\\.");
-                    ConfigurationSection pageSection = section.getConfigurationSection(String.format("%s.pages", keys[1]));
-                    if (pageSection == null) continue;
-                    // 获取作为书本类型的页码配置
-                    Set<String> indexes = pageSection.getKeys(false);
-                    Set<String> sorted = new TreeSet<>(Comparator.naturalOrder());
-                    sorted.addAll(indexes);
+        // 获取weapons节段内容
+        section = yaml.getConfigurationSection("weapons");
+        if (section != null) itemWeapons = Global.SetItemList(section, Weapon.class);
+        // 获取armors节段内容
+        section = yaml.getConfigurationSection("armors");
+        if (section != null) itemArmors = Global.SetItemList(section, Armor.class);
+        // 获取hands节段内容
+        section = yaml.getConfigurationSection("hands");
+        if (section != null) itemHands = Global.SetItemList(section, Hand.class);
+        // 获取crazies节段内容
+        section = yaml.getConfigurationSection("crazies");
+        if (section != null) itemCrazies = Global.SetItemList(section, Crazy.class);
+        // 获取joins节段内容，需要处理作为书本的物品
+        section = yaml.getConfigurationSection("joins");
+        if (section != null) {
+            itemJoins = Global.SetItemList(section, Join.class);
+            for (Join join : itemJoins) {
+                // 获取Join类物品的Id
+                String[] keys = join.getId().split("\\.");
+                ConfigurationSection pageSection = section.getConfigurationSection(String.format("%s.pages", keys[1]));
+                if (pageSection == null) continue;
+                // 获取作为书本类型的页码配置
+                Set<String> indexes = pageSection.getKeys(false);
+                Set<String> sorted = new TreeSet<>(Comparator.naturalOrder());
+                sorted.addAll(indexes);
 
-                    for (String index : sorted) {
-                        int i = Integer.parseInt(index);
-                        List<String> text = pageSection.getStringList(String.format("%s.content", index));
-                        text.replaceAll(x -> x.replace("&", "§"));
-                        join.getPages().put(i, text);
-                    }
+                for (String index : sorted) {
+                    int i = Integer.parseInt(index);
+                    List<String> text = pageSection.getStringList(String.format("%s.content", index));
+                    text.replaceAll(x -> x.replace("&", "§"));
+                    join.getPages().put(i, text);
                 }
             }
-
-            items.clear();
-            items.addAll(itemArmors);
-            items.addAll(itemHands);
-            items.addAll(itemWeapons);
-            items.addAll(itemJoins);
-            items.addAll(itemCrazies);
-        } catch (IllegalAccessException ex) {
-            ex.printStackTrace();
         }
+
+        items.clear();
+        items.addAll(itemArmors);
+        items.addAll(itemHands);
+        items.addAll(itemWeapons);
+        items.addAll(itemJoins);
+        items.addAll(itemCrazies);
     }
 
     /**

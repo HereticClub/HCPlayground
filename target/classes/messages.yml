@@ -303,6 +303,12 @@ messages:
     usage: |-
       &7<command> command usage:
       &9<command> give &7- Give a minion to a player
+  recordmanager:
+    description: Custom block and entity(item join) place/break Record Manager
+    usage: |-
+      &7<command> command usage:
+      &9<command> load &7- Load record from record.yml
+      &9<command> save &7- Save record to record.yml
   # 模板节段
   template:
     # 显示id，不能修改名称

@@ -27,6 +27,7 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.ScoreboardManager;
+import org.bukkit.util.Vector;
 import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.enums.*;
 import org.hcmc.hcplayground.manager.*;
@@ -107,7 +108,9 @@ public final class Global {
     private final static String FILE_HOLOGRAM = "hologram.yml";
     private final static String FILE_MINION = "minion.yml";
     public final static String FILE_COURSE = "database/course.yml";
-    public final static String FILE_RECORD = "database/record.yml";
+    //public final static String FILE_RECORD = "database/record.yml";
+    public final static String FILE_RECORD_MINION = "database/minions.json";
+    public final static String FILE_RECORD_BLOCK = "database/blocks.json";
 
     public static PluginRunnable runnable;
     public static Map<String, YamlConfiguration> yamlMap;
@@ -154,7 +157,7 @@ public final class Global {
                 FILE_MINION,
                 FILE_MOBS,
                 FILE_RECIPE,
-                FILE_RECORD,
+                //FILE_RECORD,
                 FILE_SIDEBAR,
         };
 
@@ -178,7 +181,9 @@ public final class Global {
                 .registerTypeAdapter(Location.class, new LocationSerialization())
                 .registerTypeAdapter(mapCharInteger, new MapCharIntegerSerialization())
                 .registerTypeAdapter(mapCharItemBase, new MapCharItemBaseSerialization())
+                .registerTypeAdapter(Material.class, new MaterialSerialization())
                 .registerTypeAdapter(MaterialData.class, new MaterialDataSerialization())
+                .registerTypeAdapter(MinionCategory.class, new MinionCategorySerialization())
                 .registerTypeAdapter(MinionType.class, new MinionTypeSerialization())
                 .registerTypeAdapter(NamespacedKey.class, new NamespacedKeySerialization())
                 .registerTypeAdapter(PotionEffect.class, new PotionEffectSerialization())
@@ -239,7 +244,8 @@ public final class Global {
         // 16.加载爪牙模板配置
         MinionManager.Load(getYamlConfiguration(FILE_MINION));
         // 99.加载自定义可放置方块的摆放记录
-        RecordManager.Load(getYamlConfiguration(FILE_RECORD));
+        //RecordManager.Load(getYamlConfiguration(FILE_RECORD));
+        RecordManager.Load();
     }
 
     /**
@@ -271,32 +277,36 @@ public final class Global {
      * 获取section内所有子节段，利用Gson反序列到每一个T对象，然后返回List&lt;T&gt;数组
      */
     @NotNull
-    public static <T> List<T> SetItemList(ConfigurationSection section, Class<T> tClass) throws IllegalAccessException {
+    public static <T> List<T> SetItemList(ConfigurationSection section, Class<T> tClass) {
         Set<String> keys = section.getKeys(false);
         String ClassName = tClass.getSimpleName();
         List<T> list = new ArrayList<>();
 
-        for (String s : keys) {
-            ConfigurationSection itemSection = section.getConfigurationSection(s);
-            if (itemSection == null) continue;
-            String value = GsonObject.toJson(itemSection.getValues(false)).replace('&', '§');
-            //System.out.println(value);
+        try {
+            for (String s : keys) {
+                ConfigurationSection itemSection = section.getConfigurationSection(s);
+                if (itemSection == null) continue;
+                String value = GsonObject.toJson(itemSection.getValues(false)).replace('&', '§');
+                //System.out.println(value);
 
-            T item = GsonObject.fromJson(value, tClass);
-            Class<?> findClass = tClass;
-            Field fieldId = null;
-            while (findClass != null) {
-                Field[] fields = findClass.getDeclaredFields();
-                fieldId = Arrays.stream(fields).filter(x -> x.getName().equalsIgnoreCase("id")).findAny().orElse(null);
-                if (fieldId != null) break;
-                findClass = findClass.getSuperclass();
-            }
+                T item = GsonObject.fromJson(value, tClass);
+                Class<?> findClass = tClass;
+                Field fieldId = null;
+                while (findClass != null) {
+                    Field[] fields = findClass.getDeclaredFields();
+                    fieldId = Arrays.stream(fields).filter(x -> x.getName().equalsIgnoreCase("id")).findAny().orElse(null);
+                    if (fieldId != null) break;
+                    findClass = findClass.getSuperclass();
+                }
 
-            if (fieldId != null) {
-                fieldId.setAccessible(true);
-                fieldId.set(item, String.format("%s.%s", ClassName, s));
+                if (fieldId != null) {
+                    fieldId.setAccessible(true);
+                    fieldId.set(item, String.format("%s.%s", ClassName, s));
+                }
+                list.add(item);
             }
-            list.add(item);
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
         }
 
         return list;
@@ -306,23 +316,27 @@ public final class Global {
      * 获取yml文档内所有子节段，利用Gson反序列到每一个T对象，然后返回List&lt;T&gt;数组
      */
     @NotNull
-    public static <T> List<T> SetItemList(YamlConfiguration yaml, Class<T> tClass) throws IllegalAccessException {
+    public static <T> List<T> SetItemList(YamlConfiguration yaml, Class<T> tClass) {
         Set<String> keys = yaml.getKeys(false);
         List<T> list = new ArrayList<>();
 
-        for (String s : keys) {
-            ConfigurationSection itemSection = yaml.getConfigurationSection(s);
-            if (itemSection == null) continue;
-            String value = GsonObject.toJson(itemSection.getValues(false)).replace('&', '§');
-            //System.out.println(value);
+        try {
+            for (String s : keys) {
+                ConfigurationSection itemSection = yaml.getConfigurationSection(s);
+                if (itemSection == null) continue;
+                String value = GsonObject.toJson(itemSection.getValues(false)).replace('&', '§');
+                //System.out.println(value);
 
-            T item = GsonObject.fromJson(value, tClass);
-            Field fieldId = Arrays.stream(tClass.getDeclaredFields()).filter(x -> x.getName().equalsIgnoreCase("id")).findAny().orElse(null);
-            if (fieldId != null) {
-                fieldId.setAccessible(true);
-                fieldId.set(item, s);
+                T item = GsonObject.fromJson(value, tClass);
+                Field fieldId = Arrays.stream(tClass.getDeclaredFields()).filter(x -> x.getName().equalsIgnoreCase("id")).findAny().orElse(null);
+                if (fieldId != null) {
+                    fieldId.setAccessible(true);
+                    fieldId.set(item, s);
+                }
+                list.add(item);
             }
-            list.add(item);
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
         }
 
         return list;
@@ -463,6 +477,16 @@ public final class Global {
         dateFormat = String.format("%s %s", df.format(date), tf.format(date));
 
         return dateFormat;
+    }
+
+    public static Location LookAt(Location source, Location target) {
+        Location l = source.clone();
+
+        l.setDirection(target.toVector());
+        System.out.println(l);
+
+
+        return l;
     }
 
     private static void SetVaultEconomy() {

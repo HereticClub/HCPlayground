@@ -13,6 +13,7 @@ import org.bukkit.command.CommandMap;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.configuration.InvalidConfigurationException;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -29,6 +30,7 @@ import org.jetbrains.annotations.NotNull;
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
+import java.io.File;
 import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
@@ -60,6 +62,9 @@ public class CommandItem extends Command {
     public static final String COMMAND_HCPLAYGROUND = "hcplayground";
     public static final String COMMAND_HC_RELOAD = "reload";
     public static final String COMMAND_HC_HELP = "help";
+    public static final String COMMAND_RECORD_MANAGER = "recordmanager";
+    public static final String COMMAND_RECORD_MANAGER_LOAD = "load";
+    public static final String COMMAND_RECORD_MANAGER_SAVE = "save";
     public static final String COMMAND_SCALE = "scale";
     public static final String COMMAND_CRAZY = "crazy";
     public static final String COMMAND_CRAZY_CRAFTING = "crafting";
@@ -262,7 +267,7 @@ public class CommandItem extends Command {
             if (commandText.equalsIgnoreCase(COMMAND_CHANGE_PASSWORD)) {
                 return RunChangePasswordCommand(sender, args);
             }
-            // 玩家查看另一个玩家的在线状态和时长
+            // 玩家查看另一个玩家的在线状态和时长 /seen
             if (commandText.equalsIgnoreCase(COMMAND_SEEN)) {
                 return RunSeenCommand(sender, args);
             }
@@ -294,6 +299,9 @@ public class CommandItem extends Command {
             if (commandText.equalsIgnoreCase(COMMAND_MINION)) {
                 return RunMinionCommand(sender, args);
             }
+            if (commandText.equalsIgnoreCase(COMMAND_RECORD_MANAGER)) {
+                return RunRecordManagerCommand(sender, args);
+            }
         } catch (SQLException | InvalidAlgorithmParameterException | NoSuchPaddingException |
                  IllegalBlockSizeException | NoSuchAlgorithmException | InvalidKeySpecException | BadPaddingException |
                  InvalidKeyException | NoSuchFieldException | IllegalAccessException | IOException |
@@ -304,6 +312,37 @@ public class CommandItem extends Command {
         }
 
         return false;
+    }
+
+    private boolean RunRecordManagerCommand(CommandSender sender, String[] args) throws IOException, IllegalAccessException {
+        // 该指令参数长度不能为0
+        if (args.length <= 0) {
+            return ShowCommandHelp(sender, 1);
+        }
+        // /recordmanager load
+        if (args[0].equalsIgnoreCase(COMMAND_RECORD_MANAGER_LOAD)) {
+            return RunRecordManagerLoadCommand(sender, args);
+        }
+        // /recordmanager save
+        if (args[0].equalsIgnoreCase(COMMAND_RECORD_MANAGER_SAVE)) {
+            return RunRecordManagerSaveCommand(sender, args);
+        }
+        return false;
+    }
+
+    private boolean RunRecordManagerLoadCommand(CommandSender sender, String[] args) throws IOException {
+        //File file = new File(String.format("%s/database/record.yml", plugin.getDataFolder()));
+        //YamlConfiguration yaml = YamlConfiguration.loadConfiguration(file);
+        RecordManager.Load();
+
+        return true;
+    }
+
+    private boolean RunRecordManagerSaveCommand(CommandSender sender, String[] args) throws IOException, IllegalAccessException {
+
+        RecordManager.Save();
+
+        return true;
     }
 
     private boolean RunMinionCommand(CommandSender sender, String[] args) {

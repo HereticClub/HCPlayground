@@ -3,18 +3,15 @@ package org.hcmc.hcplayground.manager;
 import org.bukkit.*;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.model.parkour.CourseInfo;
-import org.hcmc.hcplayground.model.player.PlayerData;
 import org.hcmc.hcplayground.utility.Global;
 import org.hcmc.hcplayground.utility.RandomNumber;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
 import java.util.*;
-import java.util.function.Predicate;
 
 public class CourseManager {
 
@@ -158,8 +155,8 @@ public class CourseManager {
         double z;
 
         while (true) {
-            x = RandomNumber.getRandomNumber(worldEdge) * signX * protectRange * 2 + 0.5;
-            z = RandomNumber.getRandomNumber(worldEdge) * signZ * protectRange * 2 + 0.5;
+            x = RandomNumber.getRandomInteger(worldEdge) * signX * protectRange * 2 + 0.5;
+            z = RandomNumber.getRandomInteger(worldEdge) * signZ * protectRange * 2 + 0.5;
             int finalX = (int) x;
             int finalZ = (int) z;
             boolean noneMatch = courses.stream().noneMatch(c -> (int) c.getX() == finalX && (int) c.getZ() == finalZ);

@@ -82,50 +82,46 @@ public class HCPluginExpansion extends PlaceholderExpansion {
         Player player = offlinePlayer.getPlayer();
         if (player == null) return "Unknown Player";
 
-        try {
-            PlayerData data = PlayerManager.getPlayerData(player);
+        PlayerData data = PlayerManager.getPlayerData(player);
 
-            if (params.equalsIgnoreCase(ItemBase.PERSISTENT_ARMOR_KEY))
-                return String.format("%.1f", data.getTotalArmor());
-            if (params.equalsIgnoreCase(ItemBase.PERSISTENT_ARMOR_TOUGHNESS_KEY))
-                return String.format("%.1f", data.getTotalArmorToughness());
-            if (params.equalsIgnoreCase(ItemBase.PERSISTENT_ATTACK_DAMAGE_KEY))
-                return String.format("%.1f", data.getTotalAttackDamage());
-            if (params.equalsIgnoreCase(ItemBase.PERSISTENT_ATTACK_REACH_KEY))
-                return String.format("%.1f", data.getTotalAttackReach());
-            if (params.equalsIgnoreCase(ItemBase.PERSISTENT_ATTACK_SPEED_KEY))
-                return String.format("%.1f", data.getTotalAttackSpeed());
-            if (params.equalsIgnoreCase(ItemBase.PERSISTENT_BLOOD_SUCKING_KEY))
-                return String.format("%.1f", data.getTotalBloodSucking());
-            if (params.equalsIgnoreCase(ItemBase.PERSISTENT_CRITICAL_KEY))
-                return String.format("%.1f", data.getTotalCritical());
-            if (params.equalsIgnoreCase(ItemBase.PERSISTENT_CRITICAL_PERCENTAGE_KEY))
-                return String.format("%.1f%%", data.getTotalCritical() * 100);
-            if (params.equalsIgnoreCase(ItemBase.PERSISTENT_CRITICAL_DAMAGE_KEY))
-                return String.format("%.1f", data.getTotalCriticalDamage());
-            if (params.equalsIgnoreCase(ItemBase.PERSISTENT_CRITICAL_DAMAGE_PERCENTAGE_KEY))
-                return String.format("%.1f%%", data.getTotalCriticalDamage() * 100);
-            if (params.equalsIgnoreCase(ItemBase.PERSISTENT_HEALTH_KEY))
-                return String.format("%.1f", data.getCurrentHealth());
-            if (params.equalsIgnoreCase(ItemBase.PERSISTENT_MAX_HEALTH_KEY))
-                return String.format("%.1f", data.getMaxHealth());
-            if (params.equalsIgnoreCase(ItemBase.PERSISTENT_KNOCKBACK_RESISTANCE_KEY))
-                return String.format("%.1f", data.getTotalKnockBackResistance());
-            if (params.equalsIgnoreCase(ItemBase.PERSISTENT_LUCK_KEY))
-                return String.format("%.1f", data.getTotalLuck());
-            if (params.equalsIgnoreCase(ItemBase.PERSISTENT_MOVEMENT_SPEED_KEY))
-                return String.format("%.1f", data.getTotalMovementSpeed());
-            if (params.equalsIgnoreCase(ItemBase.PERSISTENT_RECOVER_KEY))
-                return String.format("%.1f", data.getTotalRecover());
-            if (params.equalsIgnoreCase(ItemBase.PERSISTENT_INTELLIGENCE))
-                return String.format("%.1f", data.getTotalIntelligence());
-            if (params.equalsIgnoreCase(ItemBase.PERSISTENT_DIGGING_SPEED))
-                return String.format("%.1f", data.getTotalDiggingSpeed());
-            if (params.equalsIgnoreCase(ItemBase.PERSISTENT_LOGGING_SPEED))
-                return String.format("%.1f", data.getTotalLoggingSpeed());
-        } catch (IllegalAccessException | InvalidConfigurationException | IOException e) {
-            e.printStackTrace();
-        }
+        if (params.equalsIgnoreCase(ItemBase.PERSISTENT_ARMOR_KEY))
+            return String.format("%.1f", data.getTotalArmor());
+        if (params.equalsIgnoreCase(ItemBase.PERSISTENT_ARMOR_TOUGHNESS_KEY))
+            return String.format("%.1f", data.getTotalArmorToughness());
+        if (params.equalsIgnoreCase(ItemBase.PERSISTENT_ATTACK_DAMAGE_KEY))
+            return String.format("%.1f", data.getTotalAttackDamage());
+        if (params.equalsIgnoreCase(ItemBase.PERSISTENT_ATTACK_REACH_KEY))
+            return String.format("%.1f", data.getTotalAttackReach());
+        if (params.equalsIgnoreCase(ItemBase.PERSISTENT_ATTACK_SPEED_KEY))
+            return String.format("%.1f", data.getTotalAttackSpeed());
+        if (params.equalsIgnoreCase(ItemBase.PERSISTENT_BLOOD_SUCKING_KEY))
+            return String.format("%.1f", data.getTotalBloodSucking());
+        if (params.equalsIgnoreCase(ItemBase.PERSISTENT_CRITICAL_KEY))
+            return String.format("%.1f", data.getTotalCritical());
+        if (params.equalsIgnoreCase(ItemBase.PERSISTENT_CRITICAL_PERCENTAGE_KEY))
+            return String.format("%.1f%%", data.getTotalCritical() * 100);
+        if (params.equalsIgnoreCase(ItemBase.PERSISTENT_CRITICAL_DAMAGE_KEY))
+            return String.format("%.1f", data.getTotalCriticalDamage());
+        if (params.equalsIgnoreCase(ItemBase.PERSISTENT_CRITICAL_DAMAGE_PERCENTAGE_KEY))
+            return String.format("%.1f%%", data.getTotalCriticalDamage() * 100);
+        if (params.equalsIgnoreCase(ItemBase.PERSISTENT_HEALTH_KEY))
+            return String.format("%.1f", data.getCurrentHealth());
+        if (params.equalsIgnoreCase(ItemBase.PERSISTENT_MAX_HEALTH_KEY))
+            return String.format("%.1f", data.getMaxHealth());
+        if (params.equalsIgnoreCase(ItemBase.PERSISTENT_KNOCKBACK_RESISTANCE_KEY))
+            return String.format("%.1f", data.getTotalKnockBackResistance());
+        if (params.equalsIgnoreCase(ItemBase.PERSISTENT_LUCK_KEY))
+            return String.format("%.1f", data.getTotalLuck());
+        if (params.equalsIgnoreCase(ItemBase.PERSISTENT_MOVEMENT_SPEED_KEY))
+            return String.format("%.1f", data.getTotalMovementSpeed());
+        if (params.equalsIgnoreCase(ItemBase.PERSISTENT_RECOVER_KEY))
+            return String.format("%.1f", data.getTotalRecover());
+        if (params.equalsIgnoreCase(ItemBase.PERSISTENT_INTELLIGENCE))
+            return String.format("%.1f", data.getTotalIntelligence());
+        if (params.equalsIgnoreCase(ItemBase.PERSISTENT_DIGGING_SPEED))
+            return String.format("%.1f", data.getTotalDiggingSpeed());
+        if (params.equalsIgnoreCase(ItemBase.PERSISTENT_LOGGING_SPEED))
+            return String.format("%.1f", data.getTotalLoggingSpeed());
 
         return null;
     }

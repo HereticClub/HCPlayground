@@ -2,8 +2,10 @@ package org.hcmc.hcplayground.model.minion;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+import org.bukkit.Material;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
+import org.hcmc.hcplayground.enums.MinionCategory;
 
 import java.util.List;
 import java.util.Map;
@@ -19,7 +21,15 @@ public class MinionTemplate {
     @Expose
     @SerializedName(value = "lore")
     private List<String> lore;
-
+    @Expose
+    @SerializedName(value = "requirement")
+    private Material requirement;
+    @Expose
+    @SerializedName(value = "category")
+    private MinionCategory category;
+    @Expose
+    @SerializedName(value = "period")
+    private int period;
     @Expose
     @SerializedName(value = "equipments")
     private Map<EquipmentSlot, ItemStack> equipments;
@@ -28,7 +38,6 @@ public class MinionTemplate {
     private String id;
     @Expose(serialize = false, deserialize = false)
     private int level;
-
 
     public String getId() {
         return id;
@@ -52,6 +61,18 @@ public class MinionTemplate {
 
     public String getTexture() {
         return texture;
+    }
+
+    public int getPeriod() {
+        return period;
+    }
+
+    public Material getRequirement() {
+        return requirement;
+    }
+
+    public MinionCategory getCategory() {
+        return category;
     }
 
     public void setLevel(int level) {

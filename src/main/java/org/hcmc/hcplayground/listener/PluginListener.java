@@ -32,7 +32,7 @@ import org.hcmc.hcplayground.event.PlayerEquipmentChangedEvent;
 import org.hcmc.hcplayground.event.WorldMorningEvent;
 import org.hcmc.hcplayground.manager.*;
 import org.hcmc.hcplayground.model.item.Join;
-import org.hcmc.hcplayground.model.minion.MinionRecord;
+import org.hcmc.hcplayground.model.minion.MinionEntity;
 import org.hcmc.hcplayground.model.recipe.HCItemBlockRecord;
 import org.hcmc.hcplayground.model.mob.MobEntity;
 import org.hcmc.hcplayground.model.command.CommandItem;
@@ -58,8 +58,6 @@ public class PluginListener implements Listener {
     private final static String COMMAND_LOGIN = "login";
     private final static String COMMAND_REGISTER = "register";
     private final static String COMMAND_ENCHANT = "enchant";
-    private final static String SCOREBOARD_CRITERIA_HEALTH = "health";
-    private final static String SCOREBOARD_CRITERIA_DUMMY = "dummy";
 
     private final static int EQUIPMENT_SLOT_OFFHAND = 40;
     private final static int EQUIPMENT_SLOT_HELMET = 39;
@@ -78,7 +76,7 @@ public class PluginListener implements Listener {
      * @param event 玩家进入服务器事件
      */
     @EventHandler
-    private void onPlayerJoined(final PlayerJoinEvent event) throws SQLException, IllegalAccessException, IOException, InvalidConfigurationException {
+    private void onPlayerJoined(final PlayerJoinEvent event) throws SQLException {
         // 获取登陆玩家实例
         Player player = event.getPlayer();
         World world = player.getWorld();
@@ -125,7 +123,7 @@ public class PluginListener implements Listener {
      * @param event 玩家移动事件
      */
     @EventHandler
-    private void onPlayerMove(PlayerMoveEvent event) throws IllegalAccessException, IOException, InvalidConfigurationException {
+    private void onPlayerMove(PlayerMoveEvent event) {
         if (event.isCancelled()) return;
         // 获取玩家实例
         Player player = event.getPlayer();
@@ -165,7 +163,7 @@ public class PluginListener implements Listener {
      * 玩家的游戏模式被改变事件
      */
     @EventHandler
-    private void onPlayerGameModeChanged(PlayerGameModeChangeEvent event) throws IllegalAccessException, IOException, InvalidConfigurationException {
+    private void onPlayerGameModeChanged(PlayerGameModeChangeEvent event) {
         if (event.isCancelled()) return;
 
         Player player = event.getPlayer();
@@ -182,7 +180,7 @@ public class PluginListener implements Listener {
      * 在玩家成功登陆到游戏前，禁止执行除了/login, /register之外的任何指令
      */
     @EventHandler
-    private void onPlayerCommandPreprocess(PlayerCommandPreprocessEvent event) throws IllegalAccessException, IOException, InvalidConfigurationException {
+    private void onPlayerCommandPreprocess(PlayerCommandPreprocessEvent event) {
         if (event.isCancelled()) return;
 
         String message = event.getMessage();
@@ -253,9 +251,9 @@ public class PluginListener implements Listener {
     private void onArmorStandClicked(PlayerInteractAtEntityEvent event) {
         if (event.isCancelled()) return;
         Entity entity = event.getRightClicked();
-        if(!(entity instanceof ArmorStand)) return;
-        System.out.println(entity);
-        // TODO: 实施取消玩家右键点击作为minion的盔甲架事件
+        if (!(entity instanceof ArmorStand)) return;
+        MinionEntity r = RecordManager.findMinionRecord(entity.getLocation());
+
     }
 
     @EventHandler
@@ -296,7 +294,7 @@ public class PluginListener implements Listener {
     }
 
     @EventHandler
-    private void onCrazyBlockClicked(PlayerInteractEvent event) throws IOException, IllegalAccessException, InvalidConfigurationException {
+    private void onCrazyBlockClicked(PlayerInteractEvent event)  {
         Block block = event.getClickedBlock();
         Player player = event.getPlayer();
         Action action = event.getAction();
@@ -399,7 +397,7 @@ public class PluginListener implements Listener {
      * @param event 玩家扔掉物品时触发的事件实例
      */
     @EventHandler
-    private void onItemDropped(PlayerDropItemEvent event) throws IllegalAccessException, IOException, InvalidConfigurationException {
+    private void onItemDropped(PlayerDropItemEvent event) {
         if (event.isCancelled()) return;
         // 获取玩家及UUID
         Player player = event.getPlayer();
@@ -415,7 +413,7 @@ public class PluginListener implements Listener {
     }
 
     @EventHandler
-    private void onPlayerChangedWorld(PlayerChangedWorldEvent event) throws IOException, IllegalAccessException, InvalidConfigurationException {
+    private void onPlayerChangedWorld(PlayerChangedWorldEvent event) {
         Player player = event.getPlayer();
         PlayerData data = PlayerManager.getPlayerData(player);
         World world = player.getWorld();
@@ -428,7 +426,7 @@ public class PluginListener implements Listener {
      * 生物(包括玩家)拾起物品事件
      */
     @EventHandler
-    private void onItemPickup(EntityPickupItemEvent event) throws IllegalAccessException, IOException, InvalidConfigurationException {
+    private void onItemPickup(EntityPickupItemEvent event) {
         if (event.isCancelled()) return;
         // 获取拾取物品的生物，并且忽略非人类拾取事件
         LivingEntity entity = event.getEntity();
@@ -461,7 +459,7 @@ public class PluginListener implements Listener {
         if (mobEntity == null) return;
         if (!RandomNumber.checkBingo(mobEntity.spawnRate)) return;
 
-        int randomHealth = (int) Math.round(RandomNumber.getRandomNumber(mobEntity.minHealth, mobEntity.maxHealth));
+        int randomHealth = (int) Math.round(RandomNumber.getRandomDouble(mobEntity.minHealth, mobEntity.maxHealth));
         AttributeInstance attributeInstance = monster.getAttribute(Attribute.GENERIC_MAX_HEALTH);
         if (attributeInstance != null) {
             int baseHealth = (int) attributeInstance.getBaseValue();
@@ -471,10 +469,10 @@ public class PluginListener implements Listener {
         }
 
         if (mobEntity.displays != null && mobEntity.displays.length >= 1) {
-            display = mobEntity.displays[RandomNumber.getRandomNumber(mobEntity.displays.length)];
+            display = mobEntity.displays[RandomNumber.getRandomInteger(mobEntity.displays.length)];
         }
         if (mobEntity.prefix != null && mobEntity.prefix.length >= 1) {
-            prefix = mobEntity.prefix[RandomNumber.getRandomNumber(mobEntity.prefix.length)];
+            prefix = mobEntity.prefix[RandomNumber.getRandomInteger(mobEntity.prefix.length)];
         }
         if (prefix.length() >= 1 && display.length() >= 1) {
             String customName = String.format("%s%s", prefix, display);
@@ -493,8 +491,12 @@ public class PluginListener implements Listener {
         if (event.isCancelled()) return;
         Entity entity = event.getEntity();
         if (!(entity instanceof ArmorStand)) return;
+        MinionEntity r = RecordManager.findMinionRecord(entity.getLocation());
+        if (r != null) {
+            event.setCancelled(true);
+            return;
+        }
 
-        event.setCancelled(true);
         //TODO: 实施取消作为minion的盔甲架的伤害
     }
 
@@ -511,7 +513,7 @@ public class PluginListener implements Listener {
         MobEntity mob = MobManager.MobEntities.stream().filter(x -> x.type.equals(type)).findAny().orElse(null);
         if (mob == null) return;
 
-        int damage = (int) Math.round(RandomNumber.getRandomNumber(mob.minDamage, mob.maxDamage));
+        int damage = (int) Math.round(RandomNumber.getRandomDouble(mob.minDamage, mob.maxDamage));
         event.setDamage(event.getDamage() + damage);
     }
 
@@ -542,7 +544,7 @@ public class PluginListener implements Listener {
      * @param event 方块被破坏时触发的事件实例
      */
     @EventHandler
-    private void onBlockBroken(final @NotNull BlockBreakEvent event) throws IllegalAccessException, IOException, InvalidConfigurationException {
+    private void onBlockBroken(final @NotNull BlockBreakEvent event) {
         if (event.isCancelled()) return;
         Player player = event.getPlayer();
         PlayerData data = PlayerManager.getPlayerData(player);
@@ -574,7 +576,7 @@ public class PluginListener implements Listener {
      * @param event 方块被放置时触发的事件实例
      */
     @EventHandler
-    private void onBlockPlaced(final BlockPlaceEvent event) throws IllegalAccessException, IOException, InvalidConfigurationException {
+    private void onBlockPlaced(final BlockPlaceEvent event) {
         if (event.isCancelled()) return;
 
         Player player = event.getPlayer();
@@ -583,28 +585,29 @@ public class PluginListener implements Listener {
         String worldName = player.getWorld().getName();
         // 被摆放方块的位置
         Location location = block.getLocation();
-        // HandItem, 摆放方块时主手拿着的物品
-        // 从行为上，当方块被摆放后，HandItem就已经被消灭
-        // 因此在此处HandItem只能被某些判断逻辑使用
-        // 而不是对HandItem进行处理，比如更改其材质，数量等
-        ItemStack handItem = event.getItemInHand().clone();
+        // MainHandItem, 摆放方块时主手拿着的物品
+        // 从行为上，当方块被摆放后，MainHandItem就已经被消灭
+        // 因此在此处MainHandItem只能被某些判断逻辑使用
+        // 而不是对MainHandItem进行处理，比如更改其材质，数量等
+        ItemStack MainHandItem = event.getItemInHand().clone();
         // 检测玩家是否在跑酷设计状态，并且超出了跑酷设计范围
         if (!data.designer.RangeDetection(block.getLocation())) {
             event.setCancelled(true);
             return;
         }
-        if (MinionManager.isMinion(handItem)) {
-            handItem.setAmount(1);
+        if (MinionManager.isMinion(MainHandItem)) {
+            MainHandItem.setAmount(1);
             block.setType(Material.AIR);
 
             Location minionLocation = new Location(location.getWorld(), (int) location.getX(), (int) location.getY(), (int) location.getZ());
             minionLocation.add(0.5, 0, 0.5);
             minionLocation.setDirection(player.getLocation().getDirection().multiply(-1));
-            MinionRecord record = MinionManager.spawnArmorStand(minionLocation, handItem);
-            if (record != null) RecordManager.addMinionRecord(record);
+            MinionEntity record = MinionManager.spawnMinion(minionLocation, MainHandItem);
+            if (record == null) return;
+            RecordManager.addMinionRecord(record);
         }
         // 自定义可放置方块的摆放记录
-        ItemBase ib = ItemManager.getItemBase(handItem);
+        ItemBase ib = ItemManager.getItemBase(MainHandItem);
         if (ib != null) {
             if (ib.isDisabledWorld(player)) {
                 player.sendMessage(LanguageManager.getString("world-disabled", player).replace("%world%", worldName));
