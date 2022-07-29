@@ -21,6 +21,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.enums.MinionType;
 import org.hcmc.hcplayground.manager.*;
+import org.hcmc.hcplayground.model.minion.MinionTemplate;
 import org.hcmc.hcplayground.model.parkour.CourseInfo;
 import org.hcmc.hcplayground.model.player.PlayerData;
 import org.hcmc.hcplayground.utility.Global;
@@ -199,7 +200,9 @@ public class CommandItem extends Command {
             }
             if (index == 4 && getName().equalsIgnoreCase(COMMAND_MINION)) {
                 if (args[0].equalsIgnoreCase(COMMAND_MINION_GIVE)) {
-                    tabs = getMinionLevelList();
+                    MinionType _type = MinionManager.getMinionType(args[2]);
+
+                    tabs = _type == null ? org : getMinionLevelList(_type);
                 }
             }
             if (index == 3 && getName().equalsIgnoreCase(COMMAND_QUARTERMASTER)) {
@@ -339,9 +342,7 @@ public class CommandItem extends Command {
     }
 
     private boolean RunRecordManagerSaveCommand(CommandSender sender, String[] args) throws IOException, IllegalAccessException {
-
         RecordManager.Save();
-
         return true;
     }
 
@@ -384,8 +385,8 @@ public class CommandItem extends Command {
         if (level <= 0) level = 1;
         int amount = Integer.parseInt(args[4]);
 
-        MinionType minion = MinionType.valueOf(args[2]);
-        ItemStack is = minion.getMinion(level, amount);
+        MinionType minion = MinionManager.getMinionType(args[2]);
+        ItemStack is = MinionManager.getMinion(minion, level, amount);
 
         target.getInventory().addItem(is);
 
@@ -404,17 +405,21 @@ public class CommandItem extends Command {
     }
 
     private List<String> getMinionTypeList() {
+        /*
         List<String> tabs = new ArrayList<>();
         MinionType[] types = MinionType.values();
 
         for (MinionType type : types) {
-            tabs.add(type.name());
+            tabs.add(type.name().toLowerCase());
         }
 
-        return tabs;
+         */
+
+        return MinionManager.getDeclaredTypes();
     }
 
-    private List<String> getMinionLevelList() {
+    private List<String> getMinionLevelList(MinionType type) {
+        /*
         List<String> tabs = new ArrayList<>();
 
         tabs.add("I");
@@ -430,7 +435,9 @@ public class CommandItem extends Command {
         tabs.add("XI");
         tabs.add("XII");
 
-        return tabs;
+         */
+
+        return MinionManager.getLevels(type);
     }
 
     private List<String> getCheckpointList(Player player) throws IOException, IllegalAccessException, InvalidConfigurationException {

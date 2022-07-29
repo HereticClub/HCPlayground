@@ -32,14 +32,11 @@ import java.util.*;
 
 public class PluginRunnable extends BukkitRunnable {
 
-    private PotionEffect[] effects;
+    private static final int CPU_TIMER = 100;
     private final JavaPlugin plugin;
-
     // 上一次发送随机公告的时间
     private Date lastBroadcastTime = new Date();
     private Date lastClearLagTime = new Date();
-
-    private final Date lastRunningTime = new Date();
 
     // 自1970年1月1日开始，至今的总秒数
     private long totalSeconds;
@@ -55,37 +52,47 @@ public class PluginRunnable extends BukkitRunnable {
     @Override
     public void run() {
         try {
-            // 每1秒求余
+            // 每1秒钟求余
             double delta1s = new Date().getTime() % 1000;
-            // 每3秒求余
+            // 每3秒钟求余
             double delta5s = new Date().getTime() % (MinionManager.DRESSING_PERIOD * 1000);
+            // 每10分钟求余
+            double delta10m = new Date().getTime() % (RecordManager.ARCHIVE_PERIOD * 1000);
 
             // 以下方法每100毫秒运行1次
             doMinionAcquire();
-
             // 以下方法每秒运行1次
-            if (delta1s <= 100) {
+            if (delta1s <= CPU_TIMER) {
                 doOnlinePlayerTask();
                 doBroadcastTask();
                 doClearLag();
                 doTrackWorldTime();
             }
             // 以下方法每5秒运行1次
-            if (delta5s <= 100) {
+            if (delta5s <= CPU_TIMER) {
                 doMinionDressingPlatform();
+            }
+            // 以下方法每10分钟运行1次
+            if (delta10m <= CPU_TIMER) {
+                doRecordArchive();
             }
         } catch (NoSuchFieldException | IllegalAccessException | InvalidConfigurationException | IOException e) {
             e.printStackTrace();
         }
     }
 
+    private void doRecordArchive() throws IOException {
+        RecordManager.Save();
+    }
+
     private void doMinionAcquire() {
         List<MinionEntity> minions = RecordManager.getMinionRecords();
         for (MinionEntity entity : minions) {
+            if (entity.getType() == null) continue;
+
             long diff = new Date().getTime() / 1000 - entity.getLastAcquireTime().getTime() / 1000;
             MinionTemplate template = MinionManager.getMinionTemplate(entity.getType(), entity.getLevel());
-            if (template == null) continue;
-            if (diff <= template.getPeriod()) continue;
+            if (template == null || diff <= template.getPeriod()) continue;
 
             new MinionAcquireRunnable(entity, template).runTaskLater(plugin, 10);
             entity.setLastAcquireTime(new Date());

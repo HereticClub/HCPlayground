@@ -59,6 +59,8 @@ messages:
   playerLoginFailed: '&7Player %player% login failed, make sure your password is correctly'
   # 玩家进入服务器后，在登录成功前使用了任何指令时显示，可以使用%player%占位符，代表当前正在登录的玩家
   playerNoLogin: '&e%player%, &4You must login for first before doing something'
+  # 当玩家的背包满载并且尝试拾取物品时显示
+  playerInventoryFull: '&cInventory is full!'
   # 玩家登出服务器时显示
   playerLogout: '&fMy dear &c%player%&f, thank you for your playing, hope you come back soon'
   # 当前玩家已经成功登录后再次使用登录指令时显示，可以使用%player%占位符，代表执行该指令的玩家
@@ -175,6 +177,16 @@ messages:
   menuWorldProhibited: '&c不能在&e%world%&c世界打开%menu%&c菜单'
   # 不能获得爪牙类型时显示，可以使用%minion_type%占位符，表示要测试的爪牙类型
   minionUnknownType: '&cUnknown minion type: %minion_type%'
+  # 当爪牙的等级升级到最大时显示
+  # 可以使用%current_level%，表示爪牙的当前等级
+  # 可以使用%current_period%，表示爪牙的采集周期
+  # 可以使用%current_storage%，表示爪牙的存储槽位数
+  minionMaxLevel:
+    - '&b&lMinion level has been reached to its maximum'
+    - '&6&lGood Job !!!'
+    - '&7Level: &a%current_level%'
+    - '&7Period: &a%current_period%'
+    - '&7Storage: &a%current_storage%'
   # 异族游乐场主菜单指令说明，必须与定义的指令名称一致
   menu:
     # 指令说明，当使用/help menu时显示

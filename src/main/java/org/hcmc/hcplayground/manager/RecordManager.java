@@ -1,26 +1,22 @@
 package org.hcmc.hcplayground.manager;
 
-import com.google.gson.annotations.Expose;
-import com.google.gson.annotations.SerializedName;
 import com.google.gson.reflect.TypeToken;
-import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.hcmc.hcplayground.HCPlayground;
-import org.hcmc.hcplayground.enums.MinionType;
 import org.hcmc.hcplayground.model.item.ItemBase;
 import org.hcmc.hcplayground.model.minion.MinionEntity;
 import org.hcmc.hcplayground.model.recipe.HCItemBlockRecord;
 import org.hcmc.hcplayground.utility.Global;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -28,13 +24,14 @@ import java.nio.file.Paths;
 import java.util.*;
 
 public class RecordManager {
-    private static final String SECTION_KEY_HCITEM = "hcitem";
-    private static final String SECTION_KEY_MINION = "minion";
-
     private static List<HCItemBlockRecord> hcItemBlockRecords = new ArrayList<>();
     private static List<MinionEntity> minionEntities = new ArrayList<>();
-    //private static YamlConfiguration yamlRecord;
     private static final Plugin plugin = HCPlayground.getInstance();
+
+    /**
+     * 各种记录的存档周期，单位: 秒
+     */
+    public static final int ARCHIVE_PERIOD = 600;
 
     public RecordManager() {
 
@@ -56,8 +53,12 @@ public class RecordManager {
         if (!existMinionRecord(item.getLocation())) minionEntities.add(item);
     }
 
-    private static boolean existMinionRecord(Location location) {
+    public static boolean existMinionRecord(Location location) {
         return minionEntities.stream().anyMatch(x -> x.getLocation().toVector().equals(location.toVector()));
+    }
+
+    public static boolean existMinionRecord(UUID armorstandUuid) {
+        return minionEntities.stream().anyMatch(x -> x.getUuid().equals(armorstandUuid));
     }
 
     private static boolean existHCItemRecord(Location l) {
@@ -74,7 +75,7 @@ public class RecordManager {
                 && x.getYaw() == l.getYaw());
     }
 
-    public static HCItemBlockRecord findHCItemRecord(Location location) {
+    public static HCItemBlockRecord getHCItemRecord(Location location) {
         World world = location.getWorld();
         String worldName = "";
         if (world != null) worldName = world.getName();
@@ -88,7 +89,7 @@ public class RecordManager {
                 && x.getYaw() == location.getYaw()).findAny().orElse(null);
     }
 
-    public static MinionEntity findMinionRecord(Location location) {
+    public static MinionEntity getMinionRecord(Location location) {
         World world = location.getWorld();
         String worldName = "";
         if (world != null) worldName = world.getName();
@@ -98,6 +99,10 @@ public class RecordManager {
                 && x.getY() == location.getY()
                 && x.getZ() == location.getZ()
                 && x.getWorld().equalsIgnoreCase(finalWorldName)).findAny().orElse(null);
+    }
+
+    public static MinionEntity getMinionRecord(UUID armorstandUuid) {
+        return minionEntities.stream().filter(x -> x.getUuid().equals(armorstandUuid)).findAny().orElse(null);
     }
 
     public static void removeHCItemRecord(HCItemBlockRecord item) {
@@ -110,10 +115,12 @@ public class RecordManager {
     }
 
     public static void Save() throws IOException {
+        Global.LogMessage("Saving Minion Records ...");
         String jsonMinions = Global.GsonObject.toJson(minionEntities);
         Path pMinion = Paths.get(String.format("%s/%s", plugin.getDataFolder(), Global.FILE_RECORD_MINION));
         Files.write(pMinion, jsonMinions.getBytes());
 
+        Global.LogMessage("Saving Crazy Block Records ...");
         String jsonBlocks = Global.GsonObject.toJson(hcItemBlockRecords);
         Path pBlock = Paths.get(String.format("%s/%s", plugin.getDataFolder(), Global.FILE_RECORD_BLOCK));
         Files.write(pBlock, jsonBlocks.getBytes());
@@ -121,7 +128,7 @@ public class RecordManager {
 
     private static void loadMinionRecord() throws IOException {
         Path p = Paths.get(String.format("%s/%s", plugin.getDataFolder(), Global.FILE_RECORD_MINION));
-        if(!p.toFile().exists()) return;
+        if (!p.toFile().exists()) return;
         String jsonMinion = new String(Files.readAllBytes(p));
         Type _type = new TypeToken<List<MinionEntity>>() {
         }.getType();
@@ -135,14 +142,16 @@ public class RecordManager {
             List<Entity> entities = w.getNearbyEntities(record.getLocation(), 0.001, 0.001, 0.001, x -> x.getType().equals(EntityType.ARMOR_STAND)).stream().toList();
             if (entities.size() >= 1) {
                 // 获取第一个ArmorStand实体
-                record.setArmorStand(entities.get(0));
+                record.setArmorStand((ArmorStand) entities.get(0));
+                record.setUuid((entities.get(0).getUniqueId()));
             } else {
                 // 生成ArmorStand实体
-                MinionType minion = record.getType();
-                ItemStack is = minion.getMinion(record.getLevel(), 1);
+                //MinionType minion = record.getType();
+                ItemStack is = MinionManager.getMinion(record.getType(), record.getLevel(), 1);
                 MinionEntity tmp = MinionManager.spawnMinion(record.getLocation(), is);
                 if (tmp != null) {
                     record.setArmorStand(tmp.getArmorStand());
+                    record.setUuid(tmp.getUuid());
                 }
             }
         }

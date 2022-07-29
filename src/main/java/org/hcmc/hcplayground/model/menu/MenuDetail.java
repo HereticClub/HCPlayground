@@ -34,6 +34,10 @@ public class MenuDetail implements InventoryHolder {
     @Expose(serialize = false, deserialize = false)
     private Inventory inventory;
 
+    public MenuDetail() {
+
+    }
+
     public void setInventory(Inventory inventory) {
         this.inventory = inventory;
     }

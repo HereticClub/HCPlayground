@@ -1,188 +1,389 @@
+# 1超强型物品 = 320增强型物品，1增强型物品 = 320自然掉落物品
 # Minion模板定义，固定每5秒修整它的工作平台，平台需求的方块由requirement属性决定，每隔period秒采集资源
-# Minion的类型，必须是MinionType名称
-COBBLESTONE:
-  # Minion等级，必须是数字，理论上等级没有限制
-  1:
-    # Minion的小时名称，必须
-    display: '&f圆石爪牙 I'
-    # Minion的说明文字
+# Minion实体可在玩家离线时工作，每X秒自动采集属于自己专长的物品，根据给予的物品可增加工作能力，比如自动冶炼等
+minion_template:
+  # Minion的类型，必须是MinionType名称
+  COBBLESTONE:
+    # Minion等级，必须是数字，理论上等级没有限制
+    1:
+      # Minion的名称，必须
+      display: '&f圆石爪牙 I'
+      # Minion的说明文字
+      # %period%占位符: 表示period属性的设置值
+      # %storage%占位符: 表示storage属性的设置值
+      lore:
+        - '&7自动采集周期: &b%period%&7秒'
+        - '&7可存放槽位: &b%storage%个'
+      # Minion头部的素材，必须
+      texture: 'eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOWZiYTY4ODk3MjhmMWJmNmI3OWM1ZTgzZTJlYjllYjMwNTkyZmFjMGMxNDg0YTUzNzA3ZjhiYWFiMTZmMTI4YiJ9fX0='
+      # 可存放物品的格子数量，最大值: 15，默认值: 1
+      storage: 1
+      # 采集资源的周期，必须，单位: 秒
+      period: 12
+      # 工作平台的需求方块类型，必须
+      platform: COBBLESTONE
+      # /!\爪牙升到下一级所需要物品和数量
+      # /!\爪牙的最大级别不需要设置这个属性
+      # /!\可以使用自定义物品，key设置为自定义物品的id
+      upgrade:
+        # 普通物品的Material名称和数量
+        COBBLESTONE: 160
+        # /!\自定义物品的id包含"."字符
+        # /!\必须将其替换为"@"字符
+        #join@enhanced_cobblestone: 8
+      # Minion的分类，必须是以下值之一，FARMER: 农民，MINER: 矿工，LUMBERJACK: 伐木工，FISHERMAN: 渔夫，BUTCHER: 屠夫，FIGHTER: 斗士
+      category: MINER
+      # Minion的装束(盔甲架除了头部的装备)
+      equipments:
+        # 手拿的装备，镐、斧子、剑、鱼竿等等
+        hand:
+          material: stone_pickaxe
+        # 胸甲类型，必须是各种chestplate
+        chest:
+          material: leather_chestplate
+          # 表示皮甲胸甲的颜色
+          color: c0c0c0
+        # 护腿类型，必须是各种leggings
+        legs:
+          material: leather_leggings
+          # 表示皮甲护腿的颜色
+          color: c0c0c0
+        # 靴子类型，必须是各种boots
+        feet:
+          material: leather_boots
+          # 表示皮甲靴子的颜色
+          color: c0c0c0
+    # Minion等级，必须是数字，理论上等级没有限制
+    2:
+      display: '&f圆石爪牙 II'
+      lore:
+        - '&7自动采集周期: &b%period%&7秒'
+        - '&7可存放槽位: &b%storage%个'
+      texture: 'eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOWZiYTY4ODk3MjhmMWJmNmI3OWM1ZTgzZTJlYjllYjMwNTkyZmFjMGMxNDg0YTUzNzA3ZjhiYWFiMTZmMTI4YiJ9fX0='
+      storage: 4
+      period: 12
+      platform: COBBLESTONE
+      upgrade:
+        COBBLESTONE: 320
+      category: MINER
+      equipments:
+        hand:
+          material: stone_pickaxe
+        chest:
+          material: leather_chestplate
+          color: c0c0c0
+        legs:
+          material: leather_leggings
+          color: c0c0c0
+        feet:
+          material: leather_boots
+          color: c0c0c0
+    3:
+      display: '&f圆石爪牙 III'
+      lore:
+        - '&7自动采集周期: &b%period%&7秒'
+        - '&7可存放槽位: &b%storage%个'
+      texture: 'eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOWZiYTY4ODk3MjhmMWJmNmI3OWM1ZTgzZTJlYjllYjMwNTkyZmFjMGMxNDg0YTUzNzA3ZjhiYWFiMTZmMTI4YiJ9fX0='
+      storage: 4
+      period: 11
+      platform: COBBLESTONE
+      upgrade:
+        COBBLESTONE: 512
+      category: MINER
+      equipments:
+        hand:
+          material: stone_pickaxe
+        chest:
+          material: leather_chestplate
+          color: c0c0c0
+        legs:
+          material: leather_leggings
+          color: c0c0c0
+        feet:
+          material: leather_boots
+          color: c0c0c0
+    4:
+      display: '&f圆石爪牙 IV'
+      lore:
+        - '&7自动采集周期: &b%period%&7秒'
+        - '&7可存放槽位: &b%storage%个'
+      texture: 'eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOWZiYTY4ODk3MjhmMWJmNmI3OWM1ZTgzZTJlYjllYjMwNTkyZmFjMGMxNDg0YTUzNzA3ZjhiYWFiMTZmMTI4YiJ9fX0='
+      storage: 7
+      period: 11
+      platform: COBBLESTONE
+      upgrade:
+        join@enhanced_cobblestone: 8
+      category: MINER
+      equipments:
+        hand:
+          material: stone_pickaxe
+        chest:
+          material: leather_chestplate
+          color: c0c0c0
+        legs:
+          material: leather_leggings
+          color: c0c0c0
+        feet:
+          material: leather_boots
+          color: c0c0c0
+    5:
+      display: '&f圆石爪牙 V'
+      lore:
+        - '&7自动采集周期: &b%period%&7秒'
+        - '&7可存放槽位: &b%storage%个'
+      texture: 'eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOWZiYTY4ODk3MjhmMWJmNmI3OWM1ZTgzZTJlYjllYjMwNTkyZmFjMGMxNDg0YTUzNzA3ZjhiYWFiMTZmMTI4YiJ9fX0='
+      storage: 7
+      period: 10
+      platform: COBBLESTONE
+      upgrade:
+        join@enhanced_cobblestone: 16
+      category: MINER
+      equipments:
+        hand:
+          material: stone_pickaxe
+        chest:
+          material: leather_chestplate
+          color: c0c0c0
+        legs:
+          material: leather_leggings
+          color: c0c0c0
+        feet:
+          material: leather_boots
+          color: c0c0c0
+  IRON_ORE:
+    1:
+      display: '&f铁矿爪牙 I'
+      texture: 'eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYTc5YzUyYzJiYjgwOGQyZTQ2ZThlNGU0ZGI1MDZmOTQwNmU5ZGZhMjBhZWU0MTlhZDkwZWFjZmIwMjE2YzE2OSJ9fX0='
+      lore:
+        - '&7自动采集周期: &b%period%&7秒'
+        - '&7可存放槽位: &b%storage%个'
+      platform: iron_ore
+      category: MINER
+      period: 22
+      storage: 1
+      equipments:
+        hand:
+          material: golden_pickaxe
+        chest:
+          material: iron_chestplate
+        legs:
+          material: iron_leggings
+        feet:
+          material: iron_boots
+    2:
+      display: '&f铁矿爪牙 II'
+      texture: 'eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYTc5YzUyYzJiYjgwOGQyZTQ2ZThlNGU0ZGI1MDZmOTQwNmU5ZGZhMjBhZWU0MTlhZDkwZWFjZmIwMjE2YzE2OSJ9fX0='
+      lore:
+        - '&7自动采集周期: &b%period%&7秒'
+        - '&7可存放槽位: &b%storage%个'
+      platform: iron_ore
+      category: MINER
+      period: 21
+      storage: 4
+      equipments:
+        hand:
+          material: iron_pickaxe
+        chest:
+          material: iron_chestplate
+        legs:
+          material: iron_leggings
+        feet:
+          material: iron_boots
+  COAL_ORE:
+    1:
+      display: '&f煤炭爪牙 I'
+      texture: 'eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYTc5YzUyYzJiYjgwOGQyZTQ2ZThlNGU0ZGI1MDZmOTQwNmU5ZGZhMjBhZWU0MTlhZDkwZWFjZmIwMjE2YzE2OSJ9fX0='
+      platform: deepslate_coal_ore
+      category: MINER
+      storage: 1
+      period: 22
+      lore:
+        - '&7自动采集周期: &b%period%&7秒'
+        - '&7可存放槽位: &b%storage%个'
+      equipments:
+        hand:
+          material: stone_pickaxe
+        chest:
+          material: leather_chestplate
+          color: 696969
+        legs:
+          material: leather_leggings
+          color: 696969
+        feet:
+          material: leather_boots
+          color: 696969
+    2:
+      display: '&f煤炭爪牙 II'
+      texture: 'eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYTc5YzUyYzJiYjgwOGQyZTQ2ZThlNGU0ZGI1MDZmOTQwNmU5ZGZhMjBhZWU0MTlhZDkwZWFjZmIwMjE2YzE2OSJ9fX0='
+      storage: 4
+      period: 21
+      platform: deepslate_coal_ore
+      category: MINER
+      lore:
+        - '&7自动采集周期: &b%period%&7秒'
+        - '&7可存放槽位: &b%storage%个'
+      equipments:
+        hand:
+          material: stone_pickaxe
+        chest:
+          material: leather_chestplate
+          color: 696969
+        legs:
+          material: leather_leggings
+          color: 696969
+        feet:
+          material: leather_boots
+          color: 696969
+  OAK_LOG:
+    1:
+      display: '&f橡木爪牙 I'
+      texture: 'eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYTc5YzUyYzJiYjgwOGQyZTQ2ZThlNGU0ZGI1MDZmOTQwNmU5ZGZhMjBhZWU0MTlhZDkwZWFjZmIwMjE2YzE2OSJ9fX0='
+      lore:
+        - '&7自动采集周期: &b%period%&7秒'
+        - '&7可存放槽位: &b%storage%个'
+      platform: DIRT
+      category: Lumberjack
+      period: 15
+      storage: 1
+      equipments:
+        hand:
+          material: stone_axe
+        chest:
+          material: leather_chestplate
+          color: 228B22
+        legs:
+          material: leather_leggings
+          color: 228B22
+        feet:
+          material: leather_boots
+          color: 228B22
+    2:
+      display: '&f橡木爪牙 II'
+      texture: 'eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYTc5YzUyYzJiYjgwOGQyZTQ2ZThlNGU0ZGI1MDZmOTQwNmU5ZGZhMjBhZWU0MTlhZDkwZWFjZmIwMjE2YzE2OSJ9fX0='
+      lore:
+        - '&7自动采集周期: &b%period%&7秒'
+        - '&7可存放槽位: &b%storage%个'
+      platform: DIRT
+      category: Lumberjack
+      period: 14
+      storage: 4
+      equipments:
+        hand:
+          material: stone_axe
+        chest:
+          material: leather_chestplate
+          color: 228B22
+        legs:
+          material: leather_leggings
+          color: 228B22
+        feet:
+          material: leather_boots
+          color: 228B22
+# Minion 控制面板
+minion_panel:
+  # 控制面板的功能按钮类型(箱子界面的每个格子的点击功能)
+  # 必须是MinionPanelType的值之一
+  # INACTIVE - 非活动，该插槽不会做任何事情
+  # STORAGE - 爪牙采集物品的储存位置
+  # ENERGY - 能量插槽，为爪牙提速
+  # PERKS - 赚外快，自动售卖多余的采集物品
+  # COMPACT - 压缩，自动把采集得到的物品压缩为增强型物品和超强型物品
+  # SMELT - 冶炼，自动冶炼物品
+  # PICKUP - 拾取，将所有已采集的物品放到玩家的背包
+  # UPGRADE - 升级，提升爪牙等级，将具有更快的采集速度和更多的可存放位置
+  # BRIEFING - 玩法说明
+  # RECLAIM - 回收，回收当前爪牙
+  # 装饰插槽
+  inactive:
+    name: '&8'
+    slots: [0, 1, 2, 3, 4, 6, 7, 8, 9, 10, 16, 17, 18, 19, 25, 26, 27, 28, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 51]
+    material: BLACK_STAINED_GLASS_PANE
+  # 升级槽
+  upgrade:
+    name: '&d升级'
     lore:
-      - '&7圆石小帮手'
-      - '每隔12秒采集1次资源'
-    # Minion头部的素材，必须
-    texture: 'eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOWZiYTY4ODk3MjhmMWJmNmI3OWM1ZTgzZTJlYjllYjMwNTkyZmFjMGMxNDg0YTUzNzA3ZjhiYWFiMTZmMTI4YiJ9fX0='
-    # 工作平台的需求方块类型，必须
-    requirement: COBBLESTONE
-    # Minion的分类，必须是以下值之一，Farmer: 农民，Miner: 矿工，Lumberjack: 伐木工，Fisherman: 渔夫，Butcher: 屠夫，Fighter: 斗士
-    category: Miner
-    # 采集资源的周期，必须，单位: 秒
-    period: 12
-    # Minion的装束(盔甲架除了头部的装备)
-    equipments:
-      # 手拿的装备，镐，斧子，剑，鱼竿等等
-      hand:
-        material: stone_pickaxe
-      # 胸甲类型，必须是各种chestplate
-      chest:
-        material: leather_chestplate
-        # 表示胸甲的颜色，如果是皮革外套的话
-        color: c0c0c0
-      # 护腿类型，必须是各种leggings
-      legs:
-        material: leather_leggings
-        # 表示护腿的颜色，如果是皮革护腿的话
-        color: c0c0c0
-      # 靴子类型，必须是各种boots
-      feet:
-        # 表示靴子的颜色，如果是皮革靴子的话
-        material: leather_boots
-        color: c0c0c0
-  2:
-    display: '&f圆石爪牙 II'
-    texture: 'eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvM2EyMWJlYTczY2U1Y2UxMGRhMmM0NGU5MjhmOTVhZGJiOTVkNzdjNTIxMjgxY2ViMDY3YjU3MzQxNDhjM2UzMiJ9fX0='
+      - '&7等级: &a%current_level% &7➩ &e%next_level%'
+      - '&7采集周期: &a%current_period% &7➩ &e%next_period%'
+      - '&7存储数量: &a%current_storage% &7➩ &e%next_storage%'
+      - '&7'
+      - '&d升级需求:'
+    upgrade_template: '&a %name% &7x &e%amount%'
+    slots:
+      - 5
+    material: experience_bottle
+  storage:
+    name: '&8升级后解锁'
+    slots: [11,12,13,14,15,20,21,22,23,24,29,30,31,32,33]
+    material: WHITE_STAINED_GLASS_PANE
+  # 能量槽
+  energy:
+    name: '&e能量插槽'
     lore:
-      - '&7aaaaaa'
-      - '&7bbbbbb'
-    equipments:
-      hand:
-        material: diamond_pickaxe
-        color: c0c0c0
-      chest:
-        material: diamond_chestplate
-        color: c0c0c0
-      legs:
-        material: diamond_leggings
-        color: c0c0c0
-      feet:
-        material: diamond_boots
-        color: c0c0c0
-  3:
-    display: '&f圆石爪牙 III'
-    texture: 'eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZWRhYTJmZWJhNzI3NGEyMzU2Y2JiYWIzMGRhODM3Y2RjYTljNjYzZjMwYTgyNGY1ZGJlYWRiNDljZTA4ODVhNiJ9fX0='
+      - '&7放入燃料物品为小助手提速'
+    slots: [45]
+    material: YELLOW_STAINED_GLASS_PANE
+  # 外快槽
+  perks:
+    name: '&6自动售卖'
     lore:
-      - '&7aaaaaa'
-      - '&7bbbbbb'
-  4:
-    display: '&f圆石爪牙 IV'
-    texture: 'eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjBjZTVhOWMyZmMwYjQ5OTVmMDZlMWIwMmVjOTA5NzdlM2M1Y2U1N2Q4MTUyMDUzNDJmYjhkNGQ1MTcyOTA5YyJ9fX0='
+      - '&7放入售卖漏斗让小助手为你赚外快'
+    slots:
+      - 46
+    material: ORANGE_STAINED_GLASS_PANE
+  # 冶炼槽
+  smelt:
+    name: '&c自动冶炼'
     lore:
-      - '&7aaaaaa'
-      - '&7bbbbbb'
-  5:
-    display: '&f圆石爪牙 V'
-    texture: 'eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjY3ZTMxYzhmOTNlMDQ1MmZhN2M5NTJjMTI2Yjk1OTdhMmRlNjYxODZkOTY3ZDAwNDBlNzYzMjA5MzY0YmNjMSJ9fX0='
+      - '&7放入助手专用熔炉'
+      - '&7为你自动熔炼物品'
+    slots:
+      - 47
+    material: RED_STAINED_GLASS_PANE
+  # 压缩槽
+  compact:
+    name: '&a自动打包'
     lore:
-      - '&7aaaaaa'
-      - '&7bbbbbb'
-  6:
-    display: '&f圆石爪牙 VI'
-    texture: 'eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjY3ZTMxYzhmOTNlMDQ1MmZhN2M5NTJjMTI2Yjk1OTdhMmRlNjYxODZkOTY3ZDAwNDBlNzYzMjA5MzY0YmNjMSJ9fX0='
-    equipments:
-      hand:
-        material: stone_pickaxe
-      chest:
-        material: leather_chestplate
-      legs:
-        material: leather_leggings
-      feet:
-        material: leather_boots
+      - '&7放入助手专用打包机'
+      - '&7将物品打包成为&a增强型&7和&9附魔型'
+    slots:
+      - 48
+    material: LIME_STAINED_GLASS_PANE
+  # 压块
+  block:
+    name: '&a自动压块'
     lore:
-      - '&7aaaaaa'
-      - '&7bbbbbb'
-  7:
-    display: '&f圆石爪牙 VII'
-    texture: 'eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjY3ZTMxYzhmOTNlMDQ1MmZhN2M5NTJjMTI2Yjk1OTdhMmRlNjYxODZkOTY3ZDAwNDBlNzYzMjA5MzY0YmNjMSJ9fX0='
-    equipments:
-      hand:
-        material: stone_pickaxe
-      chest:
-        material: leather_chestplate
-      legs:
-        material: leather_leggings
-      feet:
-        material: leather_boots
+      - '&7放入助手专用压块机'
+      - '&7将物品转换成为&b块&7物品'
+      - '&7比如: &f煤炭 &7➩ &f煤炭块'
+    slots:
+      - 49
+    material: LIME_STAINED_GLASS_PANE
+  # 拾取槽
+  pickup:
+    name: '&b拾取所有'
+    slots:
+      - 50
+    material: CHEST
+  # 玩法说明
+  briefing:
+    name: '&b&n玩法说明'
     lore:
-      - '&7aaaaaa'
-      - '&7bbbbbb'
-  8:
-    display: '&f圆石爪牙 VIII'
-    texture: 'eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjY3ZTMxYzhmOTNlMDQ1MmZhN2M5NTJjMTI2Yjk1OTdhMmRlNjYxODZkOTY3ZDAwNDBlNzYzMjA5MzY0YmNjMSJ9fX0='
-    equipments:
-      hand:
-        material: stone_pickaxe
-      chest:
-        material: leather_chestplate
-      legs:
-        material: leather_leggings
-      feet:
-        material: leather_boots
-    lore:
-      - '&7aaaaaa'
-      - '&7bbbbbb'
-  9:
-    display: '&f圆石爪牙 IX'
-    texture: 'eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjY3ZTMxYzhmOTNlMDQ1MmZhN2M5NTJjMTI2Yjk1OTdhMmRlNjYxODZkOTY3ZDAwNDBlNzYzMjA5MzY0YmNjMSJ9fX0='
-    equipments:
-      hand:
-        material: stone_pickaxe
-      chest:
-        material: leather_chestplate
-      legs:
-        material: leather_leggings
-      feet:
-        material: leather_boots
-    lore:
-      - '&7aaaaaa'
-      - '&7bbbbbb'
-  10:
-    display: '&f圆石爪牙 X'
-    texture: 'eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjY3ZTMxYzhmOTNlMDQ1MmZhN2M5NTJjMTI2Yjk1OTdhMmRlNjYxODZkOTY3ZDAwNDBlNzYzMjA5MzY0YmNjMSJ9fX0='
-    equipments:
-      hand:
-        material: stone_pickaxe
-      chest:
-        material: leather_chestplate
-      legs:
-        material: leather_leggings
-      feet:
-        material: leather_boots
-    lore:
-      - '&7aaaaaa'
-      - '&7bbbbbb'
-  11:
-    display: '&f圆石爪牙 XI'
-    texture: 'eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjY3ZTMxYzhmOTNlMDQ1MmZhN2M5NTJjMTI2Yjk1OTdhMmRlNjYxODZkOTY3ZDAwNDBlNzYzMjA5MzY0YmNjMSJ9fX0='
-    equipments:
-      hand:
-        material: stone_pickaxe
-      chest:
-        material: leather_chestplate
-      legs:
-        material: leather_leggings
-      feet:
-        material: leather_boots
-    lore:
-      - '&7aaaaaa'
-      - '&7bbbbbb'
-  12:
-    display: '&f圆石爪牙 XII'
-    texture: 'eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjY3ZTMxYzhmOTNlMDQ1MmZhN2M5NTJjMTI2Yjk1OTdhMmRlNjYxODZkOTY3ZDAwNDBlNzYzMjA5MzY0YmNjMSJ9fX0='
-    equipments:
-      hand:
-        material: stone_pickaxe
-      chest:
-        material: leather_chestplate
-      legs:
-        material: leather_leggings
-      feet:
-        material: leather_boots
-    lore:
-      - '&7aaaaaa'
-      - '&7bbbbbb'
-OAK_LOG:
-  1:
-    display: '&f橡木爪牙 I'
-    texture: 'eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYTc5YzUyYzJiYjgwOGQyZTQ2ZThlNGU0ZGI1MDZmOTQwNmU5ZGZhMjBhZWU0MTlhZDkwZWFjZmIwMjE2YzE2OSJ9fX0='
-    lore:
-      - '&7111111'
-      - '&7222222'
+      - '&f自动采集机器人，可在玩家离线时工作'
+      - '&f每个采集机器人都可以升级，最高11级'
+      - '&f每个机器人都有若干功能插槽'
+      - '&f可放入相应物品以增强机器人的能力'
+      - '&f工作顺序: &6自动售卖&7➩&c冶炼&7➩&a打包&7➩&a压块'
+      - '&e能量插槽 &f- 为机器人提速'
+      - '&6自动售卖 &f- 溢出的采集物品会被自动售卖'
+      - '&c自动冶炼 &f- 立即对采集物品进行冶炼'
+      - '&a自动打包 &f- 自动打包物品为&a增强&f/&9附魔&f型'
+      - '&a自动压块 &f- 自动将物品压为&b块&f物品'
+    slots:
+      - 52
+    material: redstone_torch
+  # 回收槽
+  reclaim:
+    name: '&4回收'
+    slots:
+      - 53
+    material: RED_BANNER

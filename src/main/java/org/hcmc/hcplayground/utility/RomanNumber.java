@@ -17,13 +17,12 @@ public class RomanNumber {
      * 阿拉伯数字转换罗马数字
      * @param number 要转换的阿拉伯数字
      * @return 罗马数字
-     * @throws Exception 当阿拉伯数字小于1或大于3999时抛出异常<br>
      * 常规罗马数字只能支持从 I(1) 到 MMMCMXCIX(3999)<br>
      * 常规罗马数字没有0的表示方式<br>
      * 需要用特殊的方式以表示大于4000的罗马数字
      */
-    public static String fromInteger(int number) throws Exception {
-        if (number >= 4000 || number <= 0) throw new Exception("Only support from 1 to 3999");
+    public static String fromInteger(int number) {
+        //if (number >= 4000 || number <= 0) throw new Exception("Only support from 1 to 3999");
         StringBuilder sb = new StringBuilder();
 
         int _number = number;

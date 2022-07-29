@@ -33,6 +33,8 @@ import org.hcmc.hcplayground.event.WorldMorningEvent;
 import org.hcmc.hcplayground.manager.*;
 import org.hcmc.hcplayground.model.item.Join;
 import org.hcmc.hcplayground.model.minion.MinionEntity;
+import org.hcmc.hcplayground.model.minion.MinionPanel;
+import org.hcmc.hcplayground.model.minion.MinionPanelSlot;
 import org.hcmc.hcplayground.model.recipe.HCItemBlockRecord;
 import org.hcmc.hcplayground.model.mob.MobEntity;
 import org.hcmc.hcplayground.model.command.CommandItem;
@@ -248,13 +250,19 @@ public class PluginListener implements Listener {
      * 玩家右键点击盔甲架事件
      */
     @EventHandler
-    private void onArmorStandClicked(PlayerInteractAtEntityEvent event) {
+    private void onMinionPanelOpened(PlayerInteractAtEntityEvent event) {
         if (event.isCancelled()) return;
+        // 获取被点击的Entity实体
         Entity entity = event.getRightClicked();
-        if (!(entity instanceof ArmorStand)) return;
-        MinionEntity r = RecordManager.findMinionRecord(entity.getLocation());
-
+        Player player = event.getPlayer();
+        // 判断非ArmorStand
+        if (!(entity instanceof ArmorStand armorStand)) return;
+        MinionEntity minion = RecordManager.getMinionRecord(armorStand.getUniqueId());
+        if (minion == null) return;
+        player.openInventory(minion.openControlPanel());
+        minion.refreshSack();
     }
+
 
     @EventHandler
     private void onItemInteracted(PlayerInteractEvent event) {
@@ -329,7 +337,7 @@ public class PluginListener implements Listener {
         // 非右键点击无效
         if (!action.equals(Action.RIGHT_CLICK_BLOCK)) return;
         // 获取自定义可放置方块的记录信息
-        HCItemBlockRecord record = RecordManager.findHCItemRecord(block.getLocation());
+        HCItemBlockRecord record = RecordManager.getHCItemRecord(block.getLocation());
         if (record == null) return;
         // 获取自定义可放置方块的物品信息
         ItemBase ib = ItemManager.findItemById(record.getName());
@@ -484,23 +492,6 @@ public class PluginListener implements Listener {
     }
 
     /**
-     * 玩家尝试左键点击一个盔甲架事件
-     */
-    @EventHandler
-    private void onMinionDamaged(EntityDamageByEntityEvent event) {
-        if (event.isCancelled()) return;
-        Entity entity = event.getEntity();
-        if (!(entity instanceof ArmorStand)) return;
-        MinionEntity r = RecordManager.findMinionRecord(entity.getLocation());
-        if (r != null) {
-            event.setCancelled(true);
-            return;
-        }
-
-        //TODO: 实施取消作为minion的盔甲架的伤害
-    }
-
-    /**
      * 实体攻击另一个实体事件
      */
     @EventHandler
@@ -516,6 +507,20 @@ public class PluginListener implements Listener {
         int damage = (int) Math.round(RandomNumber.getRandomDouble(mob.minDamage, mob.maxDamage));
         event.setDamage(event.getDamage() + damage);
     }
+
+    /**
+     * Cancel an entity try to damage on an armorstand(Minion)
+     */
+    @EventHandler
+    private void onDamageArmorstand(EntityDamageByEntityEvent event) {
+        if (event.isCancelled()) return;
+        Entity entity = event.getEntity();
+        boolean exist = RecordManager.existMinionRecord(entity.getUniqueId());
+        if (exist) {
+            event.setCancelled(true);
+        }
+    }
+
 
     /**
      * 实体死亡事件
@@ -557,7 +562,7 @@ public class PluginListener implements Listener {
         // 破坏方块时检测额外掉落
         DropManager.ExtraDrops(block);
         // 获取可摆放的自定义方块的记录位置
-        HCItemBlockRecord record = RecordManager.findHCItemRecord(block.getLocation());
+        HCItemBlockRecord record = RecordManager.getHCItemRecord(block.getLocation());
         if (record == null) return;
         // 根据记录获取ItemBase实例
         ItemBase ib = ItemManager.findItemById(record.getName());
@@ -676,27 +681,42 @@ public class PluginListener implements Listener {
     }
 
     @EventHandler
-    private void onMenuClosed(InventoryCloseEvent event) {
-        // 获取打开的箱子界面并且当前箱子是否属于InventoryDetail实例
-        Inventory inv = event.getInventory();
-        HumanEntity human = event.getPlayer();
-        InventoryHolder holder = inv.getHolder();
-        // 检测是否打开了属于InventoryDetail实例创建的箱子
-        if (!(holder instanceof MenuDetail detail)) return;
-        // 检测点击箱子界面的实体是否为玩家
-        if (!(human instanceof Player player)) return;
-        // 检测箱子界面的每个格子
-        for (int i = 0; i < 54; i++) {
-            // 获取格子的物品及数量
-            ItemStack is = inv.getItem(i);
-            // 获取格子的额外信息
-            MenuItem mi = detail.getSlot(i + 1);
-            // 格子内没有物品或者物品没有额外信息则忽略
-            if (is == null) continue;
-            if (mi == null) continue;
-            // 除了成品输出格子外，如果格子设置为可放入或者可拿取，则返还格子的物品给玩家
-            if ((mi.draggable || mi.droppable) && !mi.result) player.getInventory().addItem(is);
+    private void onMinionPanelClicked(InventoryClickEvent event) {
+        if (event.isCancelled()) return;
+        Inventory inventory = event.getInventory();
+        if (!(inventory.getHolder() instanceof MinionPanel panel)) return;
+        if (!(event.getWhoClicked() instanceof Player player)) return;
+        if (event.getRawSlot() >= 54 || event.getAction().equals(InventoryAction.MOVE_TO_OTHER_INVENTORY))
+        {
+            event.setCancelled(true);
+            return;
         }
+
+        MinionEntity minion = panel.getOwner();
+        ItemStack current = event.getCurrentItem();
+        if (current == null || !minion.isItemInSack(current)) {
+            event.setCancelled(true);
+            return;
+        }
+        // 拿一组
+        panel.pickone(player, current);
+
+        List<MinionPanelSlot> slots = panel.getSlots();
+        int rawIndex = event.getRawSlot();
+        MinionPanelSlot slot = slots.stream().filter(x -> Arrays.stream(x.getSlots()).anyMatch(y -> y == rawIndex)).findAny().orElse(null);
+        if (slot == null) return;
+
+        switch (slot.getType()) {
+            case PERKS -> panel.removePerksDevice();
+            case SMELT -> panel.removeSmeltDevice();
+            case ENERGY -> panel.removeEnergyDevice();
+            case COMPACT -> panel.removeCompactDevice();
+            case PICKUP -> panel.pickup(player);
+            case RECLAIM -> panel.Reclaim();
+            case UPGRADE -> panel.Upgrade();
+        }
+
+        event.setCancelled(true);
     }
 
     @EventHandler
@@ -742,12 +762,41 @@ public class PluginListener implements Listener {
     }
 
     @EventHandler
+    private void onMenuClosed(InventoryCloseEvent event) {
+        // 获取打开的箱子界面并且当前箱子是否属于InventoryDetail实例
+        Inventory inv = event.getInventory();
+        HumanEntity human = event.getPlayer();
+        InventoryHolder holder = inv.getHolder();
+        // 检测是否打开了属于InventoryDetail实例创建的箱子
+        if (!(holder instanceof MenuDetail detail)) return;
+        // 检测点击箱子界面的实体是否为玩家
+        if (!(human instanceof Player player)) return;
+        // 检测箱子界面的每个格子
+        for (int i = 0; i < 54; i++) {
+            // 获取格子的物品及数量
+            ItemStack is = inv.getItem(i);
+            // 获取格子的额外信息
+            MenuItem mi = detail.getSlot(i + 1);
+            // 格子内没有物品或者物品没有额外信息则忽略
+            if (is == null) continue;
+            if (mi == null) continue;
+            // 除了成品输出格子外，如果格子设置为可放入或者可拿取，则返还格子的物品给玩家
+            if ((mi.draggable || mi.droppable) && !mi.result) player.getInventory().addItem(is);
+        }
+    }
+
+    @EventHandler
     private void onItemDragging(InventoryDragEvent event) {
         if (event.isCancelled()) return;
         // 获取打开的箱子界面并且当前箱子是否属于InventoryDetail实例
         Inventory inv = event.getInventory();
         InventoryHolder holder = inv.getHolder();
         HumanEntity human = event.getWhoClicked();
+        // 如果是Minion的控制面板，取消事件并且返回
+        if (holder instanceof MinionPanel) {
+            event.setCancelled(true);
+            return;
+        }
         // 检测是否打开了属于InventoryDetail实例创建的箱子
         if (!(holder instanceof MenuDetail detail)) return;
         // 检测点击箱子界面的实体是否为玩家

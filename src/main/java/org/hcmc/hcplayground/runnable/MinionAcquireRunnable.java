@@ -1,10 +1,8 @@
 package org.hcmc.hcplayground.runnable;
 
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -13,11 +11,11 @@ import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.enums.MinionCategory;
 import org.hcmc.hcplayground.model.minion.MinionEntity;
 import org.hcmc.hcplayground.model.minion.MinionTemplate;
+import org.hcmc.hcplayground.utility.Global;
 import org.hcmc.hcplayground.utility.RandomNumber;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -29,25 +27,25 @@ public class MinionAcquireRunnable extends BukkitRunnable {
     private final JavaPlugin plugin;
 
     public MinionAcquireRunnable(@NotNull MinionEntity entity, @NotNull MinionTemplate template) {
-        this.entity=entity;
-        this.template=template;
+        this.entity = entity;
+        this.template = template;
         plugin = HCPlayground.getInstance();
     }
 
     @Override
     public void run() {
-        if (template.getRequirement() == null) return;
+        if (template.getPlatform() == null) return;
 
         MinionCategory category = template.getCategory();
         if (category == null) return;
 
         switch (category) {
-            case Miner -> digging();
-            case Farmer -> farming();
-            case Butcher -> breeding();
-            case Fighter -> killing();
-            case Fisherman -> fishing();
-            case Lumberjack -> logging();
+            case MINER -> digging();
+            case FARMER -> farming();
+            case BUTCHER -> breeding();
+            case FIGHTER -> killing();
+            case FISHERMAN -> fishing();
+            case LUMBERJACK -> logging();
         }
     }
 
@@ -58,7 +56,7 @@ public class MinionAcquireRunnable extends BukkitRunnable {
         List<Block> blocks = new ArrayList<>();
         for (Location l : entity.getPlatform()) {
             Block b = l.getBlock();
-            if (!b.getType().equals(template.getRequirement())) continue;
+            if (!b.getType().equals(template.getPlatform())) continue;
 
             blocks.add(b);
         }
@@ -81,18 +79,17 @@ public class MinionAcquireRunnable extends BukkitRunnable {
                 @Override
                 public void run() {
                     Map<Material, Integer> suck = entity.getSack();
-                    int amount = suck.get(is.getType());
+                    int amount = suck.getOrDefault(is.getType(), 0);
                     amount += is.getAmount();
                     entity.getSack().put(is.getType(), amount);
+                    entity.refreshSack();
                     item.remove();
                 }
             }.runTaskLater(plugin, 10);
         }
 
-        Location l = entity.getArmorStand().getLocation().clone();
-        l.setY(0);
-        l.setPitch(0);
-        l.setDirection(block.getLocation().toVector());
+        Location l = Global.LookAt(entity.getLocation(), block.getLocation());
+        //System.out.println(l);
         entity.getArmorStand().setRotation(l.getPitch(), l.getYaw());
     }
 

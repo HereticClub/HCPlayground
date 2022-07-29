@@ -184,6 +184,7 @@ public final class Global {
                 .registerTypeAdapter(Material.class, new MaterialSerialization())
                 .registerTypeAdapter(MaterialData.class, new MaterialDataSerialization())
                 .registerTypeAdapter(MinionCategory.class, new MinionCategorySerialization())
+                .registerTypeAdapter(MinionPanelSlotType.class, new MinionPanelTypeSerialization())
                 .registerTypeAdapter(MinionType.class, new MinionTypeSerialization())
                 .registerTypeAdapter(NamespacedKey.class, new NamespacedKeySerialization())
                 .registerTypeAdapter(PotionEffect.class, new PotionEffectSerialization())
@@ -394,6 +395,16 @@ public final class Global {
     }
 
     /**
+     * Get YamlConfiguration instance special by filename parameter
+     *
+     * @param filename The .yml format file without path
+     * @return The instance of YamlConfiguration was loaded by filename parameter
+     */
+    public static YamlConfiguration getYamlConfiguration(String filename) {
+        return yamlMap.get(filename);
+    }
+
+    /**
      * 从config.yml加载插件的基本设置
      */
     private static void LoadConfig() throws IllegalAccessException {
@@ -480,13 +491,26 @@ public final class Global {
     }
 
     public static Location LookAt(Location source, Location target) {
-        Location l = source.clone();
+        Vector v = source.toVector().subtract(target.toVector());
+        Location _s = source.clone();
 
-        l.setDirection(target.toVector());
-        System.out.println(l);
+        double x = v.getX();
+        double y = v.getY();
+        double z = v.getZ();
 
+        double dXZ = Math.sqrt(x * x + z * z);
+        double dY = Math.sqrt(dXZ * dXZ + y * y);
 
-        return l;
+        double newYaw = Math.acos(x / dXZ) * 180 / Math.PI;
+        double newPitch = Math.acos(y / dY) * 180 / Math.PI - 90;
+        if (z < 0.0)
+            newYaw = newYaw + Math.abs(180 - newYaw) * 2;
+        newYaw = (newYaw - 90);
+
+        _s.setYaw((float) newYaw);
+        _s.setPitch((float) newPitch);
+
+        return _s;
     }
 
     private static void SetVaultEconomy() {
@@ -508,16 +532,6 @@ public final class Global {
         if (rsp == null) return;
 
         permissionApi = rsp.getProvider();
-    }
-
-    /**
-     * Get YamlConfiguration instance special by filename parameter
-     *
-     * @param filename The .yml format file without path
-     * @return The instance of YamlConfiguration was loaded by filename parameter
-     */
-    private static YamlConfiguration getYamlConfiguration(String filename) {
-        return yamlMap.get(filename);
     }
 
     @NotNull

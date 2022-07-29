@@ -7,25 +7,25 @@ public enum MinionCategory {
     /**
      * 农民
      */
-    Farmer,
+    FARMER,
     /**
      * 矿工
      */
-    Miner,
+    MINER,
     /**
      * 伐木工
      */
-    Lumberjack,
+    LUMBERJACK,
     /**
      * 渔夫
      */
-    Fisherman,
+    FISHERMAN,
     /**
      * 屠夫
      */
-    Butcher,
+    BUTCHER,
     /**
      * 斗士
      */
-    Fighter,
+    FIGHTER,
 }
