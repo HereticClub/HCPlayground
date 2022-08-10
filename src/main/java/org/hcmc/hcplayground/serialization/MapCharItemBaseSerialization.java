@@ -22,8 +22,7 @@ public class MapCharItemBaseSerialization implements JsonDeserializer<Map<Charac
         for (int i = 0; i < elements.size(); i++) {
             String[] keys = elements.get(i).getAsString().split(",");
             ItemBase ib = ItemManager.findItemById(keys[1].trim());
-            if (ib == null)
-                ib = ItemManager.createItemBase(Material.valueOf(keys[1].toUpperCase().trim()), 1);
+            if (ib == null) ib = ItemManager.createItemBase(Material.valueOf(keys[1].toUpperCase().trim()), 1);
 
             map.put(keys[0].charAt(0), ib);
         }

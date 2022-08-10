@@ -48,7 +48,7 @@ public class Hand extends CraftItemBase {
             /*
             添加附魔效果
             */
-            if (this.getGlowing()) {
+            if (this.isGlowing()) {
                 im.addEnchant(Enchantment.DURABILITY, 10, true);
                 if (!flags.contains(ItemFlag.HIDE_ENCHANTS))
                     im.addItemFlags(ItemFlag.HIDE_ENCHANTS);

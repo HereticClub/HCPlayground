@@ -73,6 +73,7 @@ public class MinionAcquireRunnable extends BukkitRunnable {
         block.setType(Material.AIR);
         for (Integer i : dropList) {
             ItemStack is = dropStacks.get(i).clone();
+            if (is.getType().equals(Material.AIR)) continue;
             Item item = block.getWorld().dropItemNaturally(block.getLocation(), is);
 
             new BukkitRunnable() {

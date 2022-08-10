@@ -1,21 +1,34 @@
 package org.hcmc.hcplayground.manager;
 
+import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.Recipe;
 import org.bukkit.inventory.ShapedRecipe;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.hcmc.hcplayground.enums.PanelSlotType;
+import org.hcmc.hcplayground.model.recipe.CraftPanel;
+import org.hcmc.hcplayground.model.recipe.CraftPanelSlot;
 import org.hcmc.hcplayground.model.item.ItemBase;
 import org.hcmc.hcplayground.model.recipe.CrazyShapedRecipe;
+import org.hcmc.hcplayground.serialization.PanelSlotTypeSerialization;
 import org.hcmc.hcplayground.utility.Global;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class RecipeManager {
 
     private static List<CrazyShapedRecipe> recipes = new ArrayList<>();
+    private static ConfigurationSection craftPanelSection;
+    private static ConfigurationSection anvilPanelSection;
+    private static ConfigurationSection enchantPanelSection;
+    private static ConfigurationSection barrierItemSection;
+
 
     public RecipeManager() {
 
@@ -26,16 +39,141 @@ public class RecipeManager {
     }
 
     public static void Load(YamlConfiguration yaml) throws IllegalAccessException {
-        recipes = Global.SetItemList(yaml, CrazyShapedRecipe.class);
+        ConfigurationSection recipeSection = yaml.getConfigurationSection("recipes");
+        if (recipeSection != null) recipes = Global.SetItemList(recipeSection, CrazyShapedRecipe.class);
+
+        craftPanelSection = yaml.getConfigurationSection("crafting_panel");
+        anvilPanelSection = yaml.getConfigurationSection("anvil_panel");
+        enchantPanelSection = yaml.getConfigurationSection("enchanting_panel");
+        barrierItemSection = yaml.getConfigurationSection("barrier_item");
+
         for (CrazyShapedRecipe r : recipes) {
             Map<Character, ItemBase> ingredients = r.getIngredients();
             List<ItemBase> itemBases = ingredients.values().stream().toList();
-            if (itemBases.stream().allMatch(x -> x.getId() == null) && r.getIngredientShape().length <= 3) {
+            // 全部成分都是普通Material
+            // 所有成分数量=1
+            // 成分形状边长<=3
+            // 则添加到传统配方
+            if (itemBases.stream().allMatch(x -> x.getId() == null)
+                    && r.getIngredientAmount().values().stream().allMatch(x -> x == 1)
+                    && r.getIngredientShape().size() <= 3) {
                 setLegacyRecipe(r);
             } else {
-                r.setMatrix();
+                r.prepareCrazyRecipe();
             }
         }
+    }
+
+    public static ItemStack getBarrierItem() {
+        String _material = barrierItemSection.getString("material");
+        String _title = barrierItemSection.getString("name");
+        List<String> _lore = barrierItemSection.getStringList("lore");
+        _lore.replaceAll(x -> x.replace("&", "§"));
+
+        _material = StringUtils.isBlank(_material) ? "BARRIER" : _material.toUpperCase();
+        _title = StringUtils.isBlank(_title) ? "§4Crazy Item" : _title.replace("&", "§");
+
+        Material material = Material.valueOf(_material);
+        ItemStack result = new ItemStack(material, 1);
+        ItemMeta meta = result.getItemMeta();
+        if (meta == null) return result;
+
+        meta.setDisplayName(_title);
+        meta.setLore(_lore);
+        result.setItemMeta(meta);
+        return result;
+    }
+
+    public static Inventory createEnchantingPanel() {
+        ConfigurationSection buttonsSection = enchantPanelSection.getConfigurationSection("buttons");
+        if (buttonsSection == null) return null;
+        String title = enchantPanelSection.getString("title");
+        title = StringUtils.isBlank(title) ? "&6&lCrazy &9Enchanting Table" : title.replace("&", "§");
+        int size = 54;
+
+        Inventory inventory = Bukkit.createInventory(null, size, title);
+        // TODO: Create enchanting table here
+        System.out.println("Create enchanting table here");
+
+
+        return inventory;
+    }
+
+    public static Inventory createAnvilPanel() {
+        ConfigurationSection buttonsSection = anvilPanelSection.getConfigurationSection("buttons");
+        if (buttonsSection == null) return null;
+        String title = anvilPanelSection.getString("title");
+        title = StringUtils.isBlank(title) ? "&6&lCrazy &9Anvil Table" : title.replace("&", "§");
+        int size = 54;
+
+        Inventory inventory = Bukkit.createInventory(null, size, title);
+        // TODO: Create anvil table here
+        System.out.println("Create anvil table here");
+
+
+        return inventory;
+    }
+
+    /**
+     * 创建疯狂合成(6x6)菜单(箱子界面)
+     */
+    public static Inventory createCraftPanel() {
+        ConfigurationSection decorationSection = craftPanelSection.getConfigurationSection("decoration");
+        if (decorationSection == null) return null;
+        String title = craftPanelSection.getString("title");
+        title = StringUtils.isBlank(title) ? "&6&lCrazy &9Crafting Table" : title.replace("&", "§");
+        int size = 54;
+
+        CraftPanel panel = new CraftPanel();
+        Inventory inventory = Bukkit.createInventory(panel, size, title);
+        List<String> previewLore = craftPanelSection.getStringList("preview_extra_lore");
+        List<CraftPanelSlot> slots = Global.SetItemList(decorationSection, CraftPanelSlot.class);
+        previewLore.replaceAll(x -> x.replace("&", "§"));
+
+        panel.setInventory(inventory);
+        panel.setPreviewLore(previewLore);
+        panel.setSlots(slots);
+
+        for (CraftPanelSlot slot : slots) {
+            // id 的第二段表示slot的动作类型
+            String[] id = slot.getId().split("\\.");
+            PanelSlotType type = PanelSlotTypeSerialization.resolveType(id[1]);
+            slot.setType(type == null ? PanelSlotType.INACTIVE : type);
+            // 根据slots定义转换成为ItemStack
+            Map<Integer, ItemStack> maps = slot.toItemStacks();
+            // 摆放箱子界面
+            Set<Integer> keys = maps.keySet();
+            for (int key : keys) {
+                inventory.setItem(key, maps.get(key));
+            }
+        }
+
+        return inventory;
+    }
+
+    public static CrazyShapedRecipe getRecipe(@NotNull Inventory inventory) {
+        List<ItemStack> requirements = getRequirements(inventory);
+        if (requirements.size() <= 0) return null;
+
+        List<CrazyShapedRecipe> filterRecipes = recipes.stream().filter(x -> x.getRequirements().size() == requirements.size()).toList();
+        for (CrazyShapedRecipe recipe : filterRecipes) {
+            List<ItemStack> ingredients = recipe.getRequirements();
+            int count = ingredients.size();
+            boolean assumeFound = true;
+            for (int i = 0; i < count; i++) {
+                ItemStack isIngredient = ingredients.get(i);
+                ItemStack isRequirement = requirements.get(i);
+
+                boolean similar = isIngredient.isSimilar(isRequirement);
+                int delta = isRequirement.getAmount() - isIngredient.getAmount();
+                assumeFound = similar && delta >= 0;
+                if (!assumeFound) break;
+            }
+
+            if (assumeFound) return recipe;
+        }
+
+        return null;
     }
 
     private static void setLegacyRecipe(CrazyShapedRecipe crazyRecipe) {
@@ -44,7 +182,7 @@ public class RecipeManager {
         if (r != null) Bukkit.removeRecipe(crazyRecipe.getKey());
 
         ShapedRecipe recipe = new ShapedRecipe(crazyRecipe.getKey(), crazyRecipe.getResult());
-        recipe.shape(crazyRecipe.getIngredientShape());
+        recipe.shape(crazyRecipe.getIngredientShape().toArray(new String[0]));
         Set<Character> symbols = crazyRecipe.getIngredients().keySet();
         for (Character c : symbols) {
             ItemBase ib = crazyRecipe.getIngredients().get(c);
@@ -52,5 +190,45 @@ public class RecipeManager {
             recipe.setGroup(crazyRecipe.getGroup());
         }
         Bukkit.addRecipe(recipe);
+    }
+
+    @NotNull
+    private static List<ItemStack> getRequirements(@NotNull Inventory inventory) {
+        if (!(inventory.getHolder() instanceof CraftPanel panel)) return new ArrayList<>();
+
+        int top = 54;
+        int left = 54;
+        int bottom = -1;
+        int right = -1;
+        for (int i = 0; i <= 53; i++) {
+            ItemStack is = inventory.getItem(i);
+            if (is == null) continue;
+            if (i % 9 >= 6) continue;
+
+            int row = i / 9;
+            int column = i % 9;
+            if (top > row) top = row;
+            if (left > column) left = column;
+            if (bottom < row) bottom = row;
+            if (right < column) right = column;
+        }
+
+        int columnLength = right - left + 1;
+        int rowLength = bottom - top + 1;
+        int cornerTopLeft = top * 9 + left;
+        List<ItemStack> requirements = new ArrayList<>();
+        Map<Integer, ItemStack> ingredients = new HashMap<>();
+        for (int r = 0; r < rowLength; r++) {
+            for (int c = 0; c < columnLength; c++) {
+                int rc = cornerTopLeft + c + r * 9;
+
+                ItemStack itemStack = inventory.getItem(rc);
+                if (itemStack == null) itemStack = new ItemStack(Material.AIR, 1);
+                requirements.add(itemStack);
+                ingredients.put(rc, itemStack);
+            }
+        }
+        panel.setPlacedIngredients(ingredients);
+        return requirements;
     }
 }

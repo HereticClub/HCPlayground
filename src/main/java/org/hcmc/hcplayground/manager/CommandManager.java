@@ -1,8 +1,12 @@
 package org.hcmc.hcplayground.manager;
 
+import me.clip.placeholderapi.PlaceholderAPI;
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandMap;
+import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.model.command.CommandArgument;
@@ -35,5 +39,19 @@ public class CommandManager {
             if (section == null) continue;
             item.args = Global.SetItemList(section, CommandArgument.class);
         }
+    }
+
+    public static void runConsoleCommand(String command, Player player) {
+        ConsoleCommandSender sender = Bukkit.getConsoleSender();
+
+        String _command = PlaceholderAPI.setPlaceholders(player, command);
+        Bukkit.dispatchCommand(sender, _command);
+        Global.LogMessage(String.format("%s issued a console command: %s", player.getName(), _command));
+    }
+
+    public static void runPlayerCommand(String command, Player player) {
+        String _command = PlaceholderAPI.setPlaceholders(player, command);
+        player.performCommand(_command);
+        Global.LogMessage(String.format("%s issued a player command: %s", player.getName(), _command));
     }
 }

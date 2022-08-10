@@ -105,6 +105,10 @@ public class RecordManager {
         return minionEntities.stream().filter(x -> x.getUuid().equals(armorstandUuid)).findAny().orElse(null);
     }
 
+    public static void removeMinionRecord(UUID armorstandUuid) {
+        minionEntities.removeIf(x -> x.getUuid().equals(armorstandUuid));
+    }
+
     public static void removeHCItemRecord(HCItemBlockRecord item) {
         hcItemBlockRecords.remove(item);
     }
@@ -146,8 +150,8 @@ public class RecordManager {
                 record.setUuid((entities.get(0).getUniqueId()));
             } else {
                 // 生成ArmorStand实体
-                //MinionType minion = record.getType();
-                ItemStack is = MinionManager.getMinion(record.getType(), record.getLevel(), 1);
+                //MinionType minion = record.getInventoryType();
+                ItemStack is = MinionManager.getMinionStack(record.getType(), record.getLevel(), 1);
                 MinionEntity tmp = MinionManager.spawnMinion(record.getLocation(), is);
                 if (tmp != null) {
                     record.setArmorStand(tmp.getArmorStand());

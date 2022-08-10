@@ -5,12 +5,12 @@ import com.google.gson.annotations.SerializedName;
 import com.google.gson.reflect.TypeToken;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
+import org.bukkit.Statistic;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.permissions.PermissionAttachment;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -19,6 +19,7 @@ import org.hcmc.hcplayground.enums.ItemFeatureType;
 import org.hcmc.hcplayground.enums.PlayerBannedState;
 import org.hcmc.hcplayground.manager.ItemManager;
 import org.hcmc.hcplayground.manager.LanguageManager;
+import org.hcmc.hcplayground.manager.MMOSkillManager;
 import org.hcmc.hcplayground.manager.SidebarManager;
 import org.hcmc.hcplayground.model.item.ItemBase;
 import org.hcmc.hcplayground.model.item.Join;
@@ -45,12 +46,6 @@ import java.text.DateFormat;
 import java.util.*;
 
 public class PlayerData {
-    //private static final String Section_Key_BreakList = "breakList";
-    //private static final String Section_Key_PlaceList = "placeList";
-    //private static final String Section_Key_FishingList = "fishingList";
-    //private static final String Section_Key_DropList = "dropList";
-    //private static final String Section_Key_PickupList = "pickupList";
-    //private static final String Section_Key_KillMobList = "killMobList";
     private static final String Section_Key_CcmdCooldownList = "ccmdCooldownList";
     private static final String Section_Key_Parkour_Design = "parkour.design";
     private static final String Section_Key_Parkour_List = "parkour.list";
@@ -70,52 +65,20 @@ public class PlayerData {
      * 玩家档案文档的各种记录名称列表
      */
     private final String[] SectionKeys = new String[]{
-            /*
-            Section_Key_BreakList,
-            Section_Key_PlaceList,
-            Section_Key_DropList,
-            Section_Key_PickupList,
-            Section_Key_KillMobList,
-            Section_Key_FishingList,
-             */
             Section_Key_CcmdCooldownList,
     };
 
-    /*
-    // 破坏方块记录
-    @Expose
-    @SerializedName(value = Section_Key_BreakList)
-    public Map<Material, Integer> BreakList = new HashMap<>();
-    // 摆放方块记录
-    @Expose
-    @SerializedName(value = Section_Key_PlaceList)
-    public Map<Material, Integer> PlaceList = new HashMap<>();
-    // 钓鱼记录
-    @Expose
-    @SerializedName(value = Section_Key_FishingList)
-    public Map<Material, Integer> FishingList = new HashMap<>();
-    // 扔掉物品记录
-    @Expose
-    @SerializedName(value = Section_Key_DropList)
-    public Map<Material, Integer> DropList = new HashMap<>();
-    // 拾取物品记录
-    @Expose
-    @SerializedName(value = Section_Key_PickupList)
-    public Map<Material, Integer> PickupList = new HashMap<>();
-    // 杀掉生物记录
-    @Expose
-    @SerializedName(value = Section_Key_KillMobList)
-    public Map<EntityType, Integer> KillMobList = new HashMap<>();
+    /**
+     * Custom Command with cooldown-able
      */
-    // Custom Command cooldown
     @Expose
     @SerializedName(value = Section_Key_CcmdCooldownList)
     public Map<String, Double> CcmdCooldownList = new HashMap<>();
     @Expose
-    @SerializedName(value = "parkour.design")
+    @SerializedName(value = Section_Key_Parkour_Design)
     public boolean isCourseDesigning = false;
     @Expose
-    @SerializedName(value = "parkour.list")
+    @SerializedName(value = Section_Key_Parkour_List)
     public List<String> courseIds = new ArrayList<>();
     /**
      * 玩家的背包和装备物品的记录
@@ -157,7 +120,6 @@ public class PlayerData {
     private final PermissionAttachment attachment;
     private Date loginTime = new Date();
     private ScoreboardItem sidebar;
-
     private double totalArmor = BASE_ARMOR;
     private double totalAttackReach = BASE_ATTACK_REACH;
     private double totalBloodSucking = BASE_BLOOD_SUCKING;
@@ -380,6 +342,7 @@ public class PlayerData {
 
     /**
      * 玩家登陆，如果之前玩家已经登陆成功，之后再调用这个函数，则直接判断玩家无需要再登陆
+     *
      * @param password 玩家的密码
      * @return True: 玩家登陆成功，False: 玩家登陆失败
      */
@@ -478,12 +441,376 @@ public class PlayerData {
         Yaml2Map(yaml);
     }
 
-    public void SaveConfig() throws IOException, IllegalAccessException, InvalidConfigurationException {
+    public void SaveConfig() throws IOException, InvalidConfigurationException {
         UUID playerUuid = player.getUniqueId();
         File f = new File(plugin.getDataFolder(), String.format("profile/%s.yml", playerUuid));
         // 转换所有Map<Material, Integer>类型的玩家记录，成为Yaml格式字符串
         YamlConfiguration yaml = Map2Yaml();
         yaml.save(f);
+    }
+
+    public int statisticPickupFeather() {
+        return player.getStatistic(Statistic.PICKUP, Material.FEATHER);
+    }
+    public int statisticPickupLeather() {
+        return player.getStatistic(Statistic.PICKUP, Material.LEATHER);
+    }
+    public int statisticPickupMutton() {
+        return player.getStatistic(Statistic.PICKUP, Material.MUTTON);
+    }
+    public int statisticPickupRabbitHide() {
+        return player.getStatistic(Statistic.PICKUP, Material.RABBIT_HIDE);
+    }
+    public int statisticPickupRabbitFoot() {
+        return player.getStatistic(Statistic.PICKUP, Material.RABBIT_FOOT);
+    }
+    public int statisticPickupBeef() {
+        return player.getStatistic(Statistic.PICKUP, Material.BEEF);
+    }
+    public int statisticPickupChicken() {
+        return player.getStatistic(Statistic.PICKUP, Material.CHICKEN);
+    }
+    public int statisticPickupPorkchop() {
+        return player.getStatistic(Statistic.PICKUP, Material.PORKCHOP);
+    }
+    public int statisticPickupRabbit() {
+        return player.getStatistic(Statistic.PICKUP, Material.RABBIT);
+    }
+    public int statisticPickupCactus() {
+        return player.getStatistic(Statistic.PICKUP, Material.CACTUS);
+    }
+    public int statisticPickupCarrot() {
+        return player.getStatistic(Statistic.PICKUP, Material.CARROT);
+    }
+    public int statisticPickupCocoaBeans() {
+        return player.getStatistic(Statistic.PICKUP, Material.COCOA_BEANS);
+    }
+    public int statisticPickupMelon() {
+        return player.getStatistic(Statistic.PICKUP, Material.MELON);
+    }
+    public int statisticPickupRedMushroom() {
+        return player.getStatistic(Statistic.PICKUP, Material.RED_MUSHROOM);
+    }
+    public int statisticPickupBrownMushroom() {
+        return player.getStatistic(Statistic.PICKUP, Material.BROWN_MUSHROOM);
+    }
+    public int statisticPickupNetherWart() {
+        return player.getStatistic(Statistic.PICKUP, Material.NETHER_WART);
+    }
+    public int statisticPickupPotato() {
+        return player.getStatistic(Statistic.PICKUP, Material.POTATO);
+    }
+    public int statisticPickupPumpkin() {
+        return player.getStatistic(Statistic.PICKUP, Material.PUMPKIN);
+    }
+    public int statisticPickupSugarCane() {
+        return player.getStatistic(Statistic.PICKUP, Material.SUGAR_CANE);
+    }
+    public int statisticPickupWheat() {
+        return player.getStatistic(Statistic.PICKUP, Material.WHEAT);
+    }
+    public int statisticPickupWheatSeeds() {
+        return player.getStatistic(Statistic.PICKUP, Material.WHEAT_SEEDS);
+    }
+    public int statisticPickupCoal() {
+        return player.getStatistic(Statistic.PICKUP, Material.COAL);
+    }
+    public int statisticPickupCobblestone() {
+        return player.getStatistic(Statistic.PICKUP, Material.COBBLESTONE);
+    }
+    public int statisticPickupDiamond() {
+        return player.getStatistic(Statistic.PICKUP, Material.DIAMOND);
+    }
+    public int statisticPickupEmerald() {
+        return player.getStatistic(Statistic.PICKUP, Material.EMERALD);
+    }
+    public int statisticPickupEndStone() {
+        return player.getStatistic(Statistic.PICKUP, Material.END_STONE);
+    }
+    public int statisticPickupGlowStoneDust() {
+        return player.getStatistic(Statistic.PICKUP, Material.GLOWSTONE_DUST);
+    }
+    public int statisticPickupGoldIngot() {
+        return player.getStatistic(Statistic.PICKUP, Material.GOLD_INGOT);
+    }
+    public int statisticPickupIronIngot() {
+        return player.getStatistic(Statistic.PICKUP, Material.IRON_INGOT);
+    }
+    public int statisticPickupGravel() {
+        return player.getStatistic(Statistic.PICKUP, Material.GRAVEL);
+    }
+    public int statisticPickupIce() {
+        return player.getStatistic(Statistic.PICKUP, Material.ICE);
+    }
+    public int statisticPickupLapisLazuli() {
+        return player.getStatistic(Statistic.PICKUP, Material.LAPIS_LAZULI);
+    }
+    public int statisticPickupQuartz() {
+        return player.getStatistic(Statistic.PICKUP, Material.QUARTZ);
+    }
+    public int statisticPickupNetherrack() {
+        return player.getStatistic(Statistic.PICKUP, Material.NETHERRACK);
+    }
+    public int statisticPickupObsidian() {
+        return player.getStatistic(Statistic.PICKUP, Material.OBSIDIAN);
+    }
+    public int statisticPickupRedSend() {
+        return player.getStatistic(Statistic.PICKUP, Material.RED_SAND);
+    }
+    public int statisticPickupSand() {
+        return player.getStatistic(Statistic.PICKUP, Material.SAND);
+    }
+    public int statisticPickupRedstone() {
+        return player.getStatistic(Statistic.PICKUP, Material.REDSTONE);
+    }
+    public int statisticPickupAcaciaLog() {
+        return player.getStatistic(Statistic.PICKUP, Material.ACACIA_LOG);
+    }
+    public int statisticPickupBirchLog() {
+        return player.getStatistic(Statistic.PICKUP, Material.BIRCH_LOG);
+    }
+    public int statisticPickupDarkOakLog() {
+        return player.getStatistic(Statistic.PICKUP, Material.DARK_OAK_LOG);
+    }
+    public int statisticPickupJungleLog() {
+        return player.getStatistic(Statistic.PICKUP, Material.JUNGLE_LOG);
+    }
+    public int statisticPickupMangroveLog() {
+        return player.getStatistic(Statistic.PICKUP, Material.MANGROVE_LOG);
+    }
+    public int statisticPickupOakLog() {
+        return player.getStatistic(Statistic.PICKUP, Material.OAK_LOG);
+    }
+    public int statisticPickupSpruceLog() {
+        return player.getStatistic(Statistic.PICKUP, Material.SPRUCE_LOG);
+    }
+    public int statisticPickupCrimsonStem() {
+        return player.getStatistic(Statistic.PICKUP, Material.CRIMSON_STEM);
+    }
+    public int statisticPickupWarpedStem() {
+        return player.getStatistic(Statistic.PICKUP, Material.WARPED_STEM);
+    }
+    public int statisticPickupAcaciaSapling() {
+        return player.getStatistic(Statistic.PICKUP, Material.ACACIA_SAPLING);
+    }
+    public int statisticPickupBirchSapling() {
+        return player.getStatistic(Statistic.PICKUP, Material.BIRCH_SAPLING);
+    }
+    public int statisticPickupDarkOakSapling() {
+        return player.getStatistic(Statistic.PICKUP, Material.DARK_OAK_SAPLING);
+    }
+    public int statisticPickupJungleSapling() {
+        return player.getStatistic(Statistic.PICKUP, Material.JUNGLE_SAPLING);
+    }
+    public int statisticPickupMangrovePropagule() {
+        return player.getStatistic(Statistic.PICKUP, Material.MANGROVE_PROPAGULE);
+    }
+    public int statisticPickupOakSapling() {
+        return player.getStatistic(Statistic.PICKUP, Material.OAK_SAPLING);
+    }
+    public int statisticPickupSpruceSapling() {
+        return player.getStatistic(Statistic.PICKUP, Material.SPRUCE_SAPLING);
+    }
+    public int statisticPickupApple() {
+        return player.getStatistic(Statistic.PICKUP, Material.APPLE);
+    }
+    public int statisticPickupTropicalFish() {
+        return player.getStatistic(Statistic.PICKUP, Material.TROPICAL_FISH);
+    }
+    public int statisticPickupInkSac() {
+        return player.getStatistic(Statistic.PICKUP, Material.INK_SAC);
+    }
+    public int statisticPickupLilyPad() {
+        return player.getStatistic(Statistic.PICKUP, Material.LILY_PAD);
+    }
+    public int statisticPickupPrismarineCrystals() {
+        return player.getStatistic(Statistic.PICKUP, Material.PRISMARINE_CRYSTALS);
+    }
+    public int statisticPickupPrismarineShard() {
+        return player.getStatistic(Statistic.PICKUP, Material.PRISMARINE_SHARD);
+    }
+    public int statisticPickupPufferFish() {
+        return player.getStatistic(Statistic.PICKUP, Material.PUFFERFISH);
+    }
+    public int statisticPickupCod() {
+        return player.getStatistic(Statistic.PICKUP, Material.COD);
+    }
+    public int statisticPickupSalmon() {
+        return player.getStatistic(Statistic.PICKUP, Material.SALMON);
+    }
+    public int statisticPickupSponge() {
+        return player.getStatistic(Statistic.PICKUP, Material.SPONGE);
+    }
+    public int statisticPickupClay() {
+        return player.getStatistic(Statistic.PICKUP, Material.CLAY);
+    }
+    public int statisticPickupBlazeRod() {
+        return player.getStatistic(Statistic.PICKUP, Material.BLAZE_ROD);
+    }
+    public int statisticPickupBone() {
+        return player.getStatistic(Statistic.PICKUP, Material.BONE);
+    }
+    public int statisticPickupEnderPearl() {
+        return player.getStatistic(Statistic.PICKUP, Material.ENDER_PEARL);
+    }
+    public int statisticPickupGhastTear() {
+        return player.getStatistic(Statistic.PICKUP, Material.GHAST_TEAR);
+    }
+    public int statisticPickupGunpowder() {
+        return player.getStatistic(Statistic.PICKUP, Material.GUNPOWDER);
+    }
+    public int statisticPickupMagmaCream() {
+        return player.getStatistic(Statistic.PICKUP, Material.MAGMA_CREAM);
+    }
+    public int statisticPickupRottenFlesh() {
+        return player.getStatistic(Statistic.PICKUP, Material.ROTTEN_FLESH);
+    }
+    public int statisticPickupSlimeBall() {
+        return player.getStatistic(Statistic.PICKUP, Material.SLIME_BALL);
+    }
+    public int statisticPickupSpiderEye() {
+        return player.getStatistic(Statistic.PICKUP, Material.SPIDER_EYE);
+    }
+    public int statisticPickupString() {
+        return player.getStatistic(Statistic.PICKUP, Material.STRING);
+    }
+
+    public int statisticPickupCombat() {
+        int total = 0;
+
+        for (Material m : MMOSkillManager.combatStatistics) {
+            total += player.getStatistic(Statistic.PICKUP, m);
+        }
+        /*
+        total += statisticPickupBlazeRod();
+        total += statisticPickupBone();
+        total += statisticPickupEnderPearl();
+        total += statisticPickupGhastTear();
+        total += statisticPickupGunpowder();
+        total += statisticPickupMagmaCream();
+        total += statisticPickupRottenFlesh();
+        total += statisticPickupSlimeBall();
+        total += statisticPickupSpiderEye();
+        total += statisticPickupString();
+
+         */
+        return total;
+    }
+
+    public int statisticPickupFishing() {
+        int total = 0;
+        for (Material m : MMOSkillManager.fishingStatistics) {
+            total += player.getStatistic(Statistic.PICKUP, m);
+        }
+        /*
+        total += statisticPickupTropicalFish();
+        total += statisticPickupInkSac();
+        total += statisticPickupLilyPad();
+        total += statisticPickupPrismarineCrystals();
+        total += statisticPickupPrismarineShard();
+        total += statisticPickupPufferFish();
+        total += statisticPickupCod();
+        total += statisticPickupSalmon();
+        total += statisticPickupSponge();
+        total += statisticPickupClay();
+
+         */
+        return total;
+    }
+
+    public int statisticPickupLumbering() {
+        int total = 0;
+        for (Material m : MMOSkillManager.lumberingStatistics) {
+            total += player.getStatistic(Statistic.PICKUP, m);
+        }
+        /*
+        total += statisticPickupAcaciaLog();
+        total += statisticPickupBirchLog();
+        total += statisticPickupDarkOakLog();
+        total += statisticPickupJungleLog();
+        total += statisticPickupMangroveLog();
+        total += statisticPickupOakLog();
+        total += statisticPickupSpruceLog();
+        total += statisticPickupCrimsonStem();
+        total += statisticPickupWarpedStem();
+        total += statisticPickupAcaciaSapling();
+        total += statisticPickupBirchSapling();
+        total += statisticPickupDarkOakSapling();
+        total += statisticPickupJungleSapling();
+        total += statisticPickupMangrovePropagule();
+        total += statisticPickupOakSapling();
+        total += statisticPickupSpruceSapling();
+        total += statisticPickupApple();
+
+         */
+        return total;
+    }
+
+    /**
+     * 拾取矿物的总数量
+     */
+    public int statisticPickupMineral(){
+        int total = 0;
+        for (Material m : MMOSkillManager.miningStatistics) {
+            total += player.getStatistic(Statistic.PICKUP, m);
+        }
+        /*
+        total += statisticPickupCoal();
+        total += statisticPickupCobblestone();
+        total += statisticPickupDiamond();
+        total += statisticPickupEmerald();
+        total += statisticPickupEndStone();
+        total += statisticPickupGlowStoneDust();
+        total += statisticPickupGoldIngot();
+        total += statisticPickupIronIngot();
+        total += statisticPickupGravel();
+        total += statisticPickupIce();
+        total += statisticPickupLapisLazuli();
+        total += statisticPickupQuartz();
+        total += statisticPickupNetherrack();
+        total += statisticPickupObsidian();
+        total += statisticPickupRedSend();
+        total += statisticPickupSand();
+        total += statisticPickupRedstone();
+
+         */
+        return total;
+    }
+
+    /**
+     * 拾取农作物及家禽产物的总数量<br>
+     * TODO: 需要实施家禽产物的总数量
+     */
+    public int statisticPickupCrops() {
+        int total = 0;
+        for (Material m : MMOSkillManager.farmingStatistics) {
+            total += player.getStatistic(Statistic.PICKUP, m);
+        }
+        /*
+        total += statisticPickupFeather();
+        total += statisticPickupLeather();
+        total += statisticPickupMutton();
+        total += statisticPickupRabbitHide();
+        total += statisticPickupRabbitFoot();
+        total += statisticPickupBeef();
+        total += statisticPickupChicken();
+        total += statisticPickupPorkchop();
+        total += statisticPickupRabbit();
+        total += statisticPickupBrownMushroom();
+        total += statisticPickupCocoaBeans();
+        total += statisticPickupCactus();
+        total += statisticPickupPotato();
+        total += statisticPickupCarrot();
+        total += statisticPickupMelon();
+        total += statisticPickupRedMushroom();
+        total += statisticPickupNetherWart();
+        total += statisticPickupPumpkin();
+        total += statisticPickupSugarCane();
+        total += statisticPickupWheat();
+        total += statisticPickupWheatSeeds();
+
+         */
+        return total;
     }
 
     private void doLoginSuccess() {

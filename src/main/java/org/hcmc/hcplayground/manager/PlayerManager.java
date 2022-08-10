@@ -1,8 +1,11 @@
 package org.hcmc.hcplayground.manager;
 
+import com.comphenix.protocol.PacketType;
 import org.bukkit.configuration.InvalidConfigurationException;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.permissions.PermissionAttachmentInfo;
 import org.bukkit.plugin.Plugin;
@@ -42,6 +45,7 @@ public class PlayerManager {
 
         if (pd == null) {
             pd = new PlayerData(player);
+            // Don't delete the code as below
             //Global.LogMessage(String.format("\033[1;35mgetPlayerData GameMode: \033[1;33m%s\033[0m", player.getGameMode()));
             mapPlayerData.put(playerUuid, pd);
         }

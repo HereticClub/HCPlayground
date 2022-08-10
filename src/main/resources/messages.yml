@@ -100,6 +100,9 @@ messages:
     &7Reason: &e%reason%
   # 重新加载插件配置时显示，可以使用%time_escaped%占位符，表示重新加载插件所使用的时间，单位: 毫秒
   reload: '&aConfiguration reload completed, time escaped: &e%time_escaped% &ams'
+  # 当尝试获取MMOSkillType枚举值失败时显示
+  # 可以使用%skill%占位符，表示要尝试获取MMOSkillType枚举值的名称
+  skillTypeInvalid: '&cSkill &e%skill% &cis invalid.'
   # 玩家在线状态信息
   onlineStatusMessage:
     # 玩家在线时信息提示
@@ -171,46 +174,42 @@ messages:
   enterCourseRange: '&aYou just entered course range'
   # 当玩家设置赛道的跑酷大厅，但跑酷大厅的名字不存在时显示
   lobbyNotExist: '&aLobby &e%lobby% &cis not exist'
-  # 当菜单不能在某个世界打开时显示
-  # 可以使用%world%占位符，表示禁止打开菜单的世界名称
-  # 可以使用%menu%占位符，表示正在打开的菜单标题
-  menuWorldProhibited: '&c不能在&e%world%&c世界打开%menu%&c菜单'
   # 不能获得爪牙类型时显示，可以使用%minion_type%占位符，表示要测试的爪牙类型
   minionUnknownType: '&cUnknown minion type: %minion_type%'
+  # 当玩家尝试使用非自己拥有的Minion时显示
+  minionInvalidOwner: 'This minion is not your owned'
+  # 当玩家尝试升级Minion但失败时显示
+  minionUpgradeFailed: '&cUpgrade failed, the required items are not enough.'
+  # 当玩家尝试升级Minion，但Minion已经到达最高级时显示时显示
+  minionMaxLevel: |-
+    &6&lGood Job !!!
+    &b&lMinion level has been reached to its maximum'
   # 当爪牙的等级升级到最大时显示
   # 可以使用%current_level%，表示爪牙的当前等级
   # 可以使用%current_period%，表示爪牙的采集周期
   # 可以使用%current_storage%，表示爪牙的存储槽位数
-  minionMaxLevel:
+  minionMaxLevelLore:
     - '&b&lMinion level has been reached to its maximum'
     - '&6&lGood Job !!!'
     - '&7Level: &a%current_level%'
     - '&7Period: &a%current_period%'
     - '&7Storage: &a%current_storage%'
+  # 当菜单不能在某个世界打开时显示
+  # 可以使用%world%占位符，表示禁止打开菜单的世界名称
+  # 可以使用%menu%占位符，表示正在打开的菜单标题
+  menuWorldProhibited: '&c不能在&e%world%&c世界打开%menu%&c菜单'
+  # 当玩家尝试打开一个不存在的菜单时显示
+  # 可以使用%menu%占位符，表示要尝试打开菜单的名称
+  menuNotExist: '&cThe menu &e%menu% &cyou opened is not exist'
   # 异族游乐场主菜单指令说明，必须与定义的指令名称一致
-  menu:
-    # 指令说明，当使用/help menu时显示
-    description: Open the main menu for a player
-    # 指令的帮助提示，当使用/help menu时显示
+  playgroundmenus:
+    # 指令说明，当使用/help playgroundmenus时显示
+    description: Open the menu for a player
+    # 指令的帮助提示，当使用/help playgroundmenus时显示
     usage: |-
       §f<command> command usage:
-      §9/<command> §7- §fOpen the main menu for a player
-  # 异族游乐场主菜单指令说明，必须与定义的指令名称一致
-  profile:
-    # 指令说明，当使用/help profile时显示
-    description: Open the player profile menu
-    # 指令的帮助提示，当使用/help profile时显示
-    usage: |-
-      §f<command> command usage:
-      §9/<command> §7- §fOpen the player profile menu
-  # 异族游乐场主菜单指令说明，必须与定义的指令名称一致
-  recipebook:
-    # 指令说明，当使用/help profile时显示
-    description: Open the player recipe book menu
-    # 指令的帮助提示，当使用/help profile时显示
-    usage: |-
-      §f<command> command usage:
-      §9/<command> §7- §fOpen the player recipe book menu
+      §9/<command> open {menu_name} [player] §7- §fOpen the specific menu for a player
+      §9/<command> list §7- §fList all available menu
   # 军需官指令说明，必须与定义的指令名称一致
   quartermaster:
     description: The quartermaster, who manages weapons, off-hand items, armor, accessories
@@ -321,6 +320,12 @@ messages:
       &7<command> command usage:
       &9<command> load &7- Load record from record.yml
       &9<command> save &7- Save record to record.yml
+  skillmanager:
+    description: Manage the skill experience, give player the skill experience or take it from player
+    usage: |-
+      &7<command> command usage:
+      &9<command> give <skill_name> <player> <points> &7- Give a player the points of skill experience
+      &9<command> take <skill_name> <player> <points> &7- Take the points of skill experience from a player
   # 模板节段
   template:
     # 显示id，不能修改名称

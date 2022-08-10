@@ -8,14 +8,17 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.hcmc.hcplayground.enums.MinionPanelSlotType;
+import org.hcmc.hcplayground.enums.PanelSlotType;
 import org.hcmc.hcplayground.enums.MinionType;
 import org.hcmc.hcplayground.manager.ItemManager;
 import org.hcmc.hcplayground.manager.LanguageManager;
 import org.hcmc.hcplayground.manager.MinionManager;
+import org.hcmc.hcplayground.manager.RecordManager;
 import org.hcmc.hcplayground.model.item.ItemBase;
 import org.hcmc.hcplayground.utility.RandomNumber;
 import org.hcmc.hcplayground.utility.RomanNumber;
@@ -107,6 +110,9 @@ public class MinionEntity {
         }
     }
 
+    /**
+     * Minion 修整平台，将Minion的工作平台修整为所需要的方块
+     */
     public void dressingPlatform() {
         MinionTemplate template = MinionManager.getMinionTemplate(type, level);
         if (template == null || template.getPlatform() == null) return;
@@ -133,13 +139,24 @@ public class MinionEntity {
         }
     }
 
+    public ItemStack reclaim() {
+        EntityEquipment equipment = armorStand.getEquipment();
+        if (equipment == null) return null;
+
+        ItemStack helmet = equipment.getHelmet();
+        RecordManager.removeMinionRecord(armorStand.getUniqueId());
+        armorStand.remove();
+
+        return helmet;
+    }
+
     public void reduceItemInSack(Material material, int amount) {
         if (!sack.containsKey(material)) return;
         int rest = sack.get(material) - amount;
         sack.replace(material, Math.max(rest, 0));
     }
 
-    public void setItemInSack(ItemStack... itemStacks){
+    public void setItemInSack(ItemStack... itemStacks) {
         for (ItemStack is : itemStacks) {
             Material material = is.getType();
             int amount = is.getAmount();
@@ -150,6 +167,23 @@ public class MinionEntity {
     public void setItemInSack(Material material, int amount) {
         if (!sack.containsKey(material)) return;
         sack.replace(material, amount);
+    }
+
+    public void clearSack() {
+        Set<Material> materials = sack.keySet();
+        for (Material material : materials) {
+            sack.remove(material);
+        }
+    }
+
+    public void upgrade() {
+        ItemStack helmet = MinionManager.getMinionStack(this.type, level + 1, 1);
+        if (helmet == null) return;
+        EntityEquipment equipment = armorStand.getEquipment();
+        if (equipment == null) return;
+
+        level = level + 1;
+        equipment.setHelmet(helmet);
     }
 
     public void refreshSack() {
@@ -167,6 +201,7 @@ public class MinionEntity {
         for (Material m : keys) {
             remainder.put(m, sack.get(m));
         }
+
         // 按照物品的最大叠堆数量拆分采集物品
         outer:
         do {
@@ -196,7 +231,7 @@ public class MinionEntity {
         // 清空可用储存槽位
         if (inventory == null) return;
         if (!(inventory.getHolder() instanceof MinionPanel panel)) return;
-        MinionPanelSlot slot = panel.getSlots().stream().filter(x -> x.getType().equals(MinionPanelSlotType.STORAGE)).findAny().orElse(null);
+        MinionPanelSlot slot = panel.getSlots().stream().filter(x -> x.getType().equals(PanelSlotType.STORAGE)).findAny().orElse(null);
         if (slot == null) return;
         for (int i = 0; i < storageAmount; i++) {
             ItemStack air = new ItemStack(Material.AIR, 1);
@@ -221,7 +256,7 @@ public class MinionEntity {
         Inventory inventory = MinionManager.createBasePanel(title, this);
         if (!(inventory.getHolder() instanceof MinionPanel panel)) return null;
         // 获取储存插槽实例
-        MinionPanelSlot slotStorage = panel.getSlots().stream().filter(x -> x.getType().equals(MinionPanelSlotType.STORAGE)).findAny().orElse(null);
+        MinionPanelSlot slotStorage = panel.getSlots().stream().filter(x -> x.getType().equals(PanelSlotType.STORAGE)).findAny().orElse(null);
         if (slotStorage == null) return null;
         int[] slotIndexes = slotStorage.getSlots();
         Arrays.sort(slotIndexes);
@@ -230,7 +265,7 @@ public class MinionEntity {
             inventory.setItem(slotIndexes[i], new ItemStack(Material.AIR, 1));
         }
         // 设置升级槽位的爪牙升级信息
-        MinionPanelSlot slotUpgrade = panel.getSlots().stream().filter(x -> x.getType().equals(MinionPanelSlotType.UPGRADE)).findAny().orElse(null);
+        MinionPanelSlot slotUpgrade = panel.getSlots().stream().filter(x -> x.getType().equals(PanelSlotType.UPGRADE)).findAny().orElse(null);
         if (slotUpgrade == null) return null;
         MinionTemplate nextLevel = MinionManager.getMinionTemplate(type, level + 1);
         for (int i : slotUpgrade.getSlots()) {
@@ -243,7 +278,7 @@ public class MinionEntity {
             if (lore == null) continue;
             // 下一级的模板为null，则认为已经升级至最大级别
             if (nextLevel == null) {
-                lore = LanguageManager.getStringList("minionMaxLevel");
+                lore = LanguageManager.getStringList("minionMaxLevelLore");
                 lore.replaceAll(x -> x.replace("%current_level%", RomanNumber.fromInteger(level))
                         .replace("%current_period%", String.valueOf(template.getPeriod()))
                         .replace("%current_storage%", String.valueOf(template.getStorageAmount())));
@@ -256,12 +291,11 @@ public class MinionEntity {
                         .replace("%next_storage%", String.valueOf(nextLevel.getStorageAmount())));
 
                 String upgradeLore = slotUpgrade.getUpgradeLore();
-                Map<ItemStack, Integer> upgrade = template.getUpgrade();
-                for (Map.Entry<ItemStack, Integer> entry : upgrade.entrySet()) {
-                    ItemStack isUpgrade = entry.getKey();
+                List<ItemStack> upgrade = template.getUpgrade();
+                for (ItemStack isUpgrade : upgrade) {
                     ItemBase ib = ItemManager.getItemBase(isUpgrade);
                     lore.add(upgradeLore.replace("%name%", ib == null ? isUpgrade.getType().name() : ib.getName())
-                            .replace("%amount%", String.valueOf(entry.getValue())));
+                            .replace("%amount%", String.valueOf(isUpgrade.getAmount())));
                 }
             }
 
@@ -270,7 +304,7 @@ public class MinionEntity {
         }
 
         // 获取爪牙的头盔ItemStack，必须是player_head
-        ItemStack helmet = MinionManager.getMinion(type, level, 1);
+        ItemStack helmet = MinionManager.getMinionStack(type, level, 1);
         inventory.setItem(4, helmet);
 
         this.inventory = inventory;
@@ -368,11 +402,27 @@ public class MinionEntity {
         return new Location(w, x, y, z, yaw, pitch);
     }
 
+    public void setLocation(Location location) {
+        this.location = location;
+    }
+
     public int getLevel() {
         return level;
     }
 
+    public void setLevel(int level) {
+        this.level = level;
+    }
+
     public MinionType getType() {
         return type;
+    }
+
+    public void setType(MinionType type) {
+        this.type = type;
+    }
+
+    public boolean isNonOwner(Player player) {
+        return !owner.equals(player.getUniqueId());
     }
 }

@@ -282,7 +282,7 @@ minion_template:
 # Minion 控制面板
 minion_panel:
   # 控制面板的功能按钮类型(箱子界面的每个格子的点击功能)
-  # 必须是MinionPanelType的值之一
+  # 必须是PanelSlotType的值之一
   # INACTIVE - 非活动，该插槽不会做任何事情
   # STORAGE - 爪牙采集物品的储存位置
   # ENERGY - 能量插槽，为爪牙提速
@@ -295,8 +295,11 @@ minion_panel:
   # RECLAIM - 回收，回收当前爪牙
   # 装饰插槽
   inactive:
+    # 显示名称
     name: '&8'
-    slots: [0, 1, 2, 3, 4, 6, 7, 8, 9, 10, 16, 17, 18, 19, 25, 26, 27, 28, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 51]
+    # 插槽号，从0开始
+    slots: [ 0, 1, 2, 3, 4, 6, 7, 8, 9, 10, 16, 17, 18, 19, 25, 26, 27, 28, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 51 ]
+    # 插槽的材质
     material: BLACK_STAINED_GLASS_PANE
   # 升级槽
   upgrade:
@@ -313,14 +316,14 @@ minion_panel:
     material: experience_bottle
   storage:
     name: '&8升级后解锁'
-    slots: [11,12,13,14,15,20,21,22,23,24,29,30,31,32,33]
+    slots: [ 11,12,13,14,15,20,21,22,23,24,29,30,31,32,33 ]
     material: WHITE_STAINED_GLASS_PANE
   # 能量槽
   energy:
     name: '&e能量插槽'
     lore:
       - '&7放入燃料物品为小助手提速'
-    slots: [45]
+    slots: [ 45 ]
     material: YELLOW_STAINED_GLASS_PANE
   # 外快槽
   perks:

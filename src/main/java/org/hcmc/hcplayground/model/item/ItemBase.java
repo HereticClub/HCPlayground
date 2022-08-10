@@ -121,9 +121,9 @@ public interface ItemBase {
 
     int getAmount();
 
-    boolean getUnbreakable();
+    boolean isUnbreakable();
 
-    boolean getGlowing();
+    boolean isGlowing();
 
     List<PotionEffect> getPotions();
 
@@ -147,13 +147,13 @@ public interface ItemBase {
 
     void setWorlds(List<String> worlds);
 
-    void setGlowing(Boolean glowing);
+    void setGlowing(boolean glowing);
 
     void setInteractedBlock(boolean interactedBlock);
 
     void setInteractedItem(boolean interactedItem);
 
-    void setUnbreakable(Boolean unbreakable);
+    void setUnbreakable(boolean unbreakable);
 
     void setAmount(int value);
 
@@ -162,10 +162,6 @@ public interface ItemBase {
     void setName(String value);
 
     void setMaterial(MaterialData value);
-
-    void setUnbreakable(boolean value);
-
-    void setGlowing(boolean value);
 
     void setBasicLore(List<String> value);
 
@@ -184,6 +180,8 @@ public interface ItemBase {
     boolean isDisabledWorld(Player player);
 
     boolean isWrittenBook();
+
+    boolean isNativeItemStack();
 
     ItemMeta setBaseItemMeta(ItemStack is);
 
@@ -206,4 +204,6 @@ public interface ItemBase {
     void setPotions(List<PotionEffect> potions);
 
     ItemStack toItemStack();
+
+    String toString();
 }

@@ -36,7 +36,7 @@ import org.hcmc.hcplayground.model.config.CourseConfiguration;
 import org.hcmc.hcplayground.model.config.PotionConfiguration;
 import org.hcmc.hcplayground.model.enchantment.EnchantmentItem;
 import org.hcmc.hcplayground.model.item.ItemBase;
-import org.hcmc.hcplayground.model.menu.MenuItem;
+import org.hcmc.hcplayground.model.menu.MenuPanelSlot;
 import org.hcmc.hcplayground.model.player.PlayerData;
 import org.hcmc.hcplayground.runnable.PluginRunnable;
 import org.hcmc.hcplayground.serialization.*;
@@ -63,20 +63,30 @@ import java.util.logging.Level;
 public final class Global {
     private final static String[] childrenFolders;
     /**
-     * 可配置的配置文档
+     * 可配置的配置文档<br>
+     * 从本地的插件文件夹加载<br>
+     * 如果不存在则从资源区复制<br>
+     * 但永远不会从资源文档更新<br>
      */
     private final static String[] ymlConfigurable;
     /**
-     * 可迁移的配置文档
+     * 可迁移的配置文档<br>
+     * 每次插件启动，先检测资源区和本地文件夹的差异
+     * 将差异更新到本地的配置文档，再加载本地配置文档<br>
      */
     private final static String[] ymlMigratable;
+    /**
+     * 仅从资源加载配置文档
+     * 永远不会将资源文档复制到本地
+     */
+    private final static String[] ymlResources;
     private final static JavaPlugin plugin;
 
     private final static Type mapCharInteger = new TypeToken<Map<Character, Integer>>() {
     }.getType();
     private final static Type mapCharItemBase = new TypeToken<Map<Character, ItemBase>>() {
     }.getType();
-    private final static Type listMenuItem=new TypeToken<List<MenuItem>>(){}.getType();
+    private final static Type listMenuItem=new TypeToken<List<MenuPanelSlot>>(){}.getType();
 
     public final static char CHAR_00A7 = '\u00a7';
 
@@ -95,7 +105,6 @@ public final class Global {
     private final static String FILE_ITEMS = "items.yml";
     private final static String FILE_DROPS = "drops.yml";
     private final static String FILE_MESSAGES = "messages.yml";
-    private final static String FILE_LEVELS = "levels.yml";
     private final static String FILE_COMMANDS = "command.yml";
     private final static String FILE_MENU = "menu.yml";
     private final static String FILE_PERMISSION = "permission.yml";
@@ -107,8 +116,8 @@ public final class Global {
     private final static String FILE_SIDEBAR = "scoreboard.yml";
     private final static String FILE_HOLOGRAM = "hologram.yml";
     private final static String FILE_MINION = "minion.yml";
+    private final static String FILE_MMO_LEVEL="level.yml";
     public final static String FILE_COURSE = "database/course.yml";
-    //public final static String FILE_RECORD = "database/record.yml";
     public final static String FILE_RECORD_MINION = "database/minions.json";
     public final static String FILE_RECORD_BLOCK = "database/blocks.json";
 
@@ -140,10 +149,8 @@ public final class Global {
         };
         ymlMigratable = new String[]{
                 FILE_CLEARLAG,
-                FILE_COMMANDS,
                 FILE_CONFIG,
                 FILE_MESSAGES,
-                FILE_PERMISSION,
         };
         ymlConfigurable = new String[]{
                 FILE_BROADCAST,
@@ -152,13 +159,16 @@ public final class Global {
                 FILE_DROPS,
                 FILE_HOLOGRAM,
                 FILE_ITEMS,
-                FILE_LEVELS,
                 FILE_MENU,
                 FILE_MINION,
                 FILE_MOBS,
                 FILE_RECIPE,
-                //FILE_RECORD,
                 FILE_SIDEBAR,
+                FILE_MMO_LEVEL,
+        };
+        ymlResources = new String[]{
+                FILE_COMMANDS,
+                FILE_PERMISSION,
         };
 
         GsonObject = new GsonBuilder()
@@ -177,18 +187,19 @@ public final class Global {
                 .registerTypeAdapter(ItemFeatureType.class, new ItemFeatureTypeSerialization())
                 .registerTypeAdapter(ItemFlag.class, new ItemFlagsSerialization())
                 .registerTypeAdapter(ItemStack.class, new ItemStackSerialization())
-                .registerTypeAdapter(listMenuItem, new MenuItemListSerialization())
+                .registerTypeAdapter(listMenuItem, new MenuPanelSlotSerialization())
                 .registerTypeAdapter(Location.class, new LocationSerialization())
                 .registerTypeAdapter(mapCharInteger, new MapCharIntegerSerialization())
                 .registerTypeAdapter(mapCharItemBase, new MapCharItemBaseSerialization())
                 .registerTypeAdapter(Material.class, new MaterialSerialization())
                 .registerTypeAdapter(MaterialData.class, new MaterialDataSerialization())
                 .registerTypeAdapter(MinionCategory.class, new MinionCategorySerialization())
-                .registerTypeAdapter(MinionPanelSlotType.class, new MinionPanelTypeSerialization())
                 .registerTypeAdapter(MinionType.class, new MinionTypeSerialization())
+                .registerTypeAdapter(MMOSkillType.class, new MMOLevelTypeSerialization())
                 .registerTypeAdapter(NamespacedKey.class, new NamespacedKeySerialization())
-                .registerTypeAdapter(PotionEffect.class, new PotionEffectSerialization())
+                .registerTypeAdapter(PanelSlotType.class, new PanelSlotTypeSerialization())
                 .registerTypeAdapter(PermissionDefault.class, new PermissionDefaultSerialization())
+                .registerTypeAdapter(PotionEffect.class, new PotionEffectSerialization())
                 .registerTypeAdapter(RecipeType.class, new RecipeTypeSerialization())
                 .registerTypeAdapter(Sound.class, new SoundSerialization())
                 .serializeNulls()
@@ -223,7 +234,7 @@ public final class Global {
         // 5.加载破坏方块的自定义掉落列表，可掉落自定义物品
         DropManager.Load(getYamlConfiguration(FILE_DROPS));
         // 6.加载等级设置列表
-        LevelManager.Load(getYamlConfiguration(FILE_LEVELS));
+        MMOSkillManager.Load(getYamlConfiguration(FILE_MMO_LEVEL));
         // 7.加载各种菜单(箱子)模板
         MenuManager.Load(getYamlConfiguration(FILE_MENU));
         // 8.加载各种可生成的生物列表
@@ -232,8 +243,8 @@ public final class Global {
         BroadcastManager.Load(getYamlConfiguration(FILE_BROADCAST));
         // 10.加载清除垃圾物品设置
         ClearLagManager.Load(getYamlConfiguration(FILE_CLEARLAG));
-        // 11.加载配方列表
-        RecipeManager.Load(getYamlConfiguration(FILE_RECIPE));
+        // 11.加载爪牙模板配置
+        MinionManager.Load(getYamlConfiguration(FILE_MINION));
         // 12.加载跑酷赛道信息
         CourseManager.Load(getYamlConfiguration(FILE_COURSE));
         // 13.加载自定义命令列表
@@ -242,8 +253,8 @@ public final class Global {
         SidebarManager.Load(getYamlConfiguration(FILE_SIDEBAR));
         // 15.加载漂浮字体定义列表
         HologramManager.Load(getYamlConfiguration(FILE_HOLOGRAM));
-        // 16.加载爪牙模板配置
-        MinionManager.Load(getYamlConfiguration(FILE_MINION));
+        // 98.加载配方列表
+        RecipeManager.Load(getYamlConfiguration(FILE_RECIPE));
         // 99.加载自定义可放置方块的摆放记录
         //RecordManager.Load(getYamlConfiguration(FILE_RECORD));
         RecordManager.Load();
@@ -439,24 +450,30 @@ public final class Global {
     public static void SaveYamlResource() throws IOException {
 
         yamlMap.clear();
-
+        // 只加载资源区的配置文档
+        // 不会复制到本地插件文件夹
+        for (String s : ymlResources) {
+            yamlMap.put(s, loadResource(s));
+        }
+        // 对比资源区和插件文件夹的配置文档
+        // 将差异复制到插件文件夹的配置文档
         for (String s : ymlMigratable) {
             String ext = s.substring(s.length() - 3);
             if (!ext.equalsIgnoreCase("yml")) {
                 plugin.saveResource(s, false);
             } else {
-                YamlConfiguration yaml = MigrateConfiguration(s);
+                YamlConfiguration yaml = migrateConfiguration(s);
                 yaml.save(String.format("%s/%s", plugin.getDataFolder(), s));
                 yamlMap.put(s, yaml);
             }
         }
-
+        // 加载插件文件夹的配置文档
+        // 如果不存在则先从资源区复制
         for (String s : ymlConfigurable) {
             File f = new File(String.format("%s/%s", plugin.getDataFolder(), s));
             if (plugin.getResource(s) != null && !f.exists()) plugin.saveResource(s, false);
 
-            YamlConfiguration yaml = YamlConfiguration.loadConfiguration(f);
-            yamlMap.put(s, yaml);
+            yamlMap.put(s, YamlConfiguration.loadConfiguration(f));
         }
     }
 
@@ -534,18 +551,24 @@ public final class Global {
         permissionApi = rsp.getProvider();
     }
 
-    @NotNull
-    private static YamlConfiguration MigrateConfiguration(String filename) {
-        YamlConfiguration yamlResource, yamlPlugin;
-
+    private static YamlConfiguration loadResource(String filename) {
+        YamlConfiguration yaml;
         InputStream stream = plugin.getResource(filename);
         if (stream == null) {
-            yamlResource = new YamlConfiguration();
+            yaml = new YamlConfiguration();
         } else {
             InputStreamReader reader = new InputStreamReader(stream, StandardCharsets.UTF_8);
-            yamlResource = YamlConfiguration.loadConfiguration(reader);
+            yaml = YamlConfiguration.loadConfiguration(reader);
         }
+        return yaml;
+    }
 
+    @NotNull
+    private static YamlConfiguration migrateConfiguration(String filename) {
+        YamlConfiguration yamlResource, yamlPlugin;
+        // 从资源区加载配置文档
+        yamlResource = loadResource(filename);
+        // 从本地插件文件夹加载配置文档
         File f = new File(String.format("%s/%s", plugin.getDataFolder(), filename));
         yamlPlugin = YamlConfiguration.loadConfiguration(f);
 

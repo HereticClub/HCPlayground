@@ -6,13 +6,16 @@ import org.bukkit.Material;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.hcmc.hcplayground.enums.MinionCategory;
-import org.hcmc.hcplayground.model.item.ItemBase;
+import org.hcmc.hcplayground.enums.MinionType;
+import org.hcmc.hcplayground.manager.MinionManager;
+import org.hcmc.hcplayground.model.item.CraftItemBase;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class MinionTemplate {
+public class MinionTemplate extends CraftItemBase {
 
     @Expose
     @SerializedName(value = "display")
@@ -20,9 +23,6 @@ public class MinionTemplate {
     @Expose
     @SerializedName(value = "texture")
     private String texture;
-    @Expose
-    @SerializedName(value = "lore")
-    private List<String> lore;
     @Expose
     @SerializedName(value = "platform")
     private Material platform;
@@ -39,14 +39,15 @@ public class MinionTemplate {
     @SerializedName(value = "storage")
     private int storageAmount = 1;
     /**
-     * 爪牙升级需求
+     * 爪牙升级需求，包含所需要物品的升级数量
      */
     @Expose(serialize = false, deserialize = false)
-    private Map<ItemStack, Integer> upgrade = new HashMap<>();
-    @Expose(serialize = false, deserialize = false)
-    private String id;
+    private List<ItemStack> upgrade = new ArrayList<>();
+
     @Expose(serialize = false, deserialize = false)
     private int level;
+    @Expose(serialize = false, deserialize = false)
+    private MinionType type;
 
     public int getStorageAmount() {
         return storageAmount;
@@ -56,8 +57,31 @@ public class MinionTemplate {
         return id;
     }
 
+    @Override
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    @Override
+    public void updateAttributeLore() {
+
+    }
+
+    @Override
+    public ItemStack toItemStack() {
+        return MinionManager.getMinionStack(type, level, amount);
+    }
+
+    public MinionType getType() {
+        return type;
+    }
+
+    public void setType(MinionType type) {
+        this.type = type;
+    }
+
     public List<String> getLore() {
-        return lore;
+        return basicLore;
     }
 
     public String getDisplay() {
@@ -80,11 +104,12 @@ public class MinionTemplate {
         return category;
     }
 
-    public Map<ItemStack, Integer> getUpgrade() {
+
+    public List<ItemStack> getUpgrade() {
         return upgrade;
     }
 
-    public void setUpgrade(Map<ItemStack, Integer> upgrade) {
+    public void setUpgrade(List<ItemStack> upgrade) {
         this.upgrade = upgrade;
     }
 
@@ -102,6 +127,11 @@ public class MinionTemplate {
 
     public void setEquipments(Map<EquipmentSlot, ItemStack> equipments) {
         this.equipments = equipments;
+    }
+
+    @Override
+    public String toString() {
+        return id;
     }
 
     public MinionTemplate() {

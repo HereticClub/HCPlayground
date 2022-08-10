@@ -1,5 +1,6 @@
 package org.hcmc.hcplayground.manager;
 
+import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -7,6 +8,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BookMeta;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -15,10 +17,15 @@ import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.enums.ItemFeatureType;
+import org.hcmc.hcplayground.enums.PanelSlotType;
 import org.hcmc.hcplayground.model.item.*;
+import org.hcmc.hcplayground.model.minion.MinionEntity;
+import org.hcmc.hcplayground.model.minion.MinionTemplate;
 import org.hcmc.hcplayground.runnable.UpdateLoreRunnable;
+import org.hcmc.hcplayground.serialization.PanelSlotTypeSerialization;
 import org.hcmc.hcplayground.utility.Global;
 import org.hcmc.hcplayground.utility.MaterialData;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
@@ -31,6 +38,7 @@ public class ItemManager {
     private static List<Hand> itemHands;
     private static List<Join> itemJoins;
     private static List<Crazy> itemCrazies;
+    private static List<MinionTemplate> itemMinions;
 
     static {
         itemWeapons = new ArrayList<>();
@@ -38,6 +46,7 @@ public class ItemManager {
         itemHands = new ArrayList<>();
         itemJoins = new ArrayList<>();
         itemCrazies = new ArrayList<>();
+        itemMinions = new ArrayList<>();
         items = new ArrayList<>();
         plugin = HCPlayground.getInstance();
     }
@@ -57,6 +66,16 @@ public class ItemManager {
         return items.stream().filter(x -> x.getFeatures().contains(type)).toList();
     }
 
+    public static List<MinionTemplate> getItemMinions() {
+        return itemMinions;
+    }
+
+    public static void setItemMinions(List<MinionTemplate> itemMinions) {
+        ItemManager.itemMinions = itemMinions;
+        items.removeIf(x -> x instanceof MinionTemplate);
+        items.addAll(itemMinions);
+    }
+
     public static void Load(YamlConfiguration yaml) {
         /*
          在items.yml文档中
@@ -67,7 +86,6 @@ public class ItemManager {
          crazies - 疯狂物品，玩家可互动方块，比如：疯狂合成台、疯狂锻造台，疯狂附魔台等
         */
         ConfigurationSection section;
-
         // 获取weapons节段内容
         section = yaml.getConfigurationSection("weapons");
         if (section != null) itemWeapons = Global.SetItemList(section, Weapon.class);
@@ -113,10 +131,11 @@ public class ItemManager {
 
     /**
      * 判断物品是否书本
+     *
      * @param itemStack 物品实例
      * @return True: 物品是书本, False: 物品不是书本
      */
-    public boolean isBook(ItemStack itemStack){
+    public boolean isBook(ItemStack itemStack) {
         ItemMeta im = itemStack.getItemMeta();
         return im instanceof BookMeta;
     }
@@ -132,19 +151,14 @@ public class ItemManager {
     }
 
     /**
-     * 创建一个id为null的ItemBase实例
+     * 创建一个id为null的ItemBase实例(普通的包含数量的ItemStack实例)
      *
      * @param material 物品的材质
      * @param amount   物品的数量
      * @return ItemBase实例
      */
     public static ItemBase createItemBase(Material material, int amount) {
-        CraftItemBase x = new CraftItemBase(amount);
-        MaterialData md = new MaterialData();
-        md.setData(material, material.name());
-        x.setId(null);
-        x.setMaterial(md);
-        return x;
+        return new CraftItemBase(material, amount);
     }
 
     public static void updateLoreOnRunnable(Player player) {
@@ -167,10 +181,12 @@ public class ItemManager {
         return items.stream().filter(x -> x.getId().equalsIgnoreCase(id)).findAny().orElse(null);
     }
 
-    public static ItemBase getItemBase(ItemStack is) {
-        if (is == null) return null;
+    /**
+     * 从ItemStack实例获取ItemBase实例信息
+     */
+    public static ItemBase getItemBase(@NotNull ItemStack is) {
         ItemMeta im = is.getItemMeta();
-        if (im == null) return null;
+        if (im == null) return new CraftItemBase(is.getType(), is.getAmount());
 
         NamespacedKey mainKey = new NamespacedKey(plugin, ItemBase.PERSISTENT_MAIN_KEY);
         PersistentDataContainer mainContainer = im.getPersistentDataContainer();
@@ -179,7 +195,7 @@ public class ItemManager {
         return findItemById(id);
     }
 
-    public static void Give(CommandSender sender, String playerName, String itemId, int amount) {
+    public static void give(CommandSender sender, String playerName, String itemId, int amount) {
         Player[] players = Bukkit.getOnlinePlayers().toArray(new Player[0]);
         Player player = Arrays.stream(players).filter(x -> x.getName().equalsIgnoreCase(playerName)).findAny().orElse(null);
 
@@ -210,11 +226,15 @@ public class ItemManager {
 
     private static class CraftItemBase extends org.hcmc.hcplayground.model.item.CraftItemBase {
 
-        private final int amount;
+        private int amount;
+        private MaterialData material;
 
-        public CraftItemBase(int amount) {
+        public CraftItemBase(Material material, int amount) {
+            this.material = new MaterialData();
+            this.material.setData(material, material.name());
             this.amount = amount;
         }
+
 
         @Override
         public void updateAttributeLore() {
@@ -222,8 +242,28 @@ public class ItemManager {
         }
 
         @Override
+        public MaterialData getMaterial() {
+            return material;
+        }
+
+        public void setMaterial(Material material) {
+            this.material = new MaterialData();
+            this.material.setData(material, material.name());
+        }
+
+        @Override
+        public int getAmount() {
+            return amount;
+        }
+
+        @Override
+        public void setAmount(int amount) {
+            this.amount = amount;
+        }
+
+        @Override
         public ItemStack toItemStack() {
-            return new ItemStack(this.getMaterial().value, amount);
+            return new ItemStack(material.value, amount);
         }
     }
 }

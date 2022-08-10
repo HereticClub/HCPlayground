@@ -19,6 +19,43 @@ permissions:
       - hc.scale
       - hc.quartermaster.*
       - hc.banplayer.*
+      - hc.playgroundmenus.*
+
+  permissionSkillManager:
+    name: hc.skillmanager.*
+    default: op
+    description: Permission to manage the player skill experience
+    children:
+      - hc.skillmanager.give
+      - hc.skillmanager.take
+  permissionSkillManager1:
+    name: hc.skillmanager.give
+    description: Give a player skill experience
+    default: op
+  permissionSkillManager2:
+    name: hc.skillmanager.take
+    description: Take skill experience from player
+    default: op
+  permissionPlaygroundMenus:
+    name: hc.playgroundmenus.*
+    default: op
+    description: Permission to manage the hcplayground menus
+    children:
+      - hc.playgroundmenus.open
+      - hc.playgroundmenus.close
+      - hc.playgroundmenus.list
+  permissionPlaygroundMenus1:
+    name: hc.playgroundmenus.open
+    description: Open the specific menu for a player
+    default: op
+  permissionPlaygroundMenus2:
+    name: hc.playgroundmenus.close
+    description: Close the specific menu for a player
+    default: op
+  permissionPlaygroundMenus3:
+    name: hc.playgroundmenus.list
+    description: List all available menu
+    default: op
 
   permissionQuartermaster:
     name: hc.quartermaster.*
@@ -28,23 +65,6 @@ permissions:
       - hc.quartermaster.give
       - hc.quartermaster.take
       - hc.quartermaster.gui
-  permissionMinion:
-    name: hc.minion.*
-    default: op
-    description: Minion administration
-    children:
-      - hc.minion.give
-
-  permissionReload:
-    name: hc.reload
-    description: Permission to reload this plugin
-    default: op
-
-  permissionMinion1:
-    name: hc.minion.give
-    default: op
-    description: Give a minion to a player
-
   permissionQuartermaster1:
     name: hc.quartermaster.gui
     description: Grant permission to player to use
@@ -58,6 +78,22 @@ permissions:
     description: Grant permission to player to manage armor
     default: op
 
+  permissionMinion:
+    name: hc.minion.*
+    default: op
+    description: Minion administration
+    children:
+      - hc.minion.give
+  permissionMinion1:
+    name: hc.minion.give
+    default: op
+    description: give a minion to a player
+
+  permissionReload:
+    name: hc.reload
+    description: Permission to reload this plugin
+    default: op
+
   permissionBanplayer:
     name: hc.banplayer.*
     description: Grant permission to the player to ban or unban other players
@@ -65,7 +101,6 @@ permissions:
     children:
       - hc.banplayer.ban
       - hc.banplayer.unban
-
   permissionBanplayer1:
     name: hc.banplayer.ban
     description: Grant permission to the player to ban other players

@@ -3,6 +3,7 @@ package org.hcmc.hcplayground.model.item;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+import org.apache.commons.lang.StringUtils;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.enchantments.Enchantment;
@@ -58,7 +59,7 @@ public abstract class CraftItemBase implements ItemBase {
      */
     @Expose
     @SerializedName(value = "unbreakable")
-    protected Boolean unbreakable = false;
+    protected boolean unbreakable = false;
     /**
      * 物品是否可互动，比如打开地图，吃食物等
      */
@@ -76,7 +77,7 @@ public abstract class CraftItemBase implements ItemBase {
      */
     @Expose
     @SerializedName(value = "glowing")
-    protected Boolean glowing = false;
+    protected boolean glowing = false;
     /**
      * 物品的说明，可以用&字符代替颜色代码
      */
@@ -130,169 +131,17 @@ public abstract class CraftItemBase implements ItemBase {
     @Expose(serialize = false, deserialize = false)
     protected JavaPlugin plugin = HCPlayground.getInstance();
     /**
-     * 物品的ID，以hccraft为命名空间写入PersistentData
+     * 物品的ID，以hccraft为命名空间写入PersistentData<br>
+     * 如果id属性为null，表示当前ItemBase实例为普通的ItemStack
      */
     @Expose(serialize = false, deserialize = false)
-    private String id = "";
+    protected String id = null;
+
+
 
     @Override
     public List<EnchantmentItem> getEnchantments() {
         return enchantments;
-    }
-
-    @Override
-    public List<String> getAttributeLore() {
-        return attributeLore;
-    }
-
-    @Override
-    public List<String> getEquipmentLore() {
-        return equipmentLore;
-    }
-
-    @Override
-    public List<String> getEnchantLore() {
-        return enchantLore;
-    }
-
-    @Override
-    public List<String> getPotionLore() {
-        return potionLore;
-    }
-
-    @Override
-    public int getAmount() {
-        return amount;
-    }
-
-    @Override
-    public String getId() {
-        return id;
-    }
-
-    @Override
-    public String getName() {
-        return name;
-    }
-
-    @Override
-    public MaterialData getMaterial() {
-        return material;
-    }
-
-    @Override
-    public boolean getUnbreakable() {
-        return unbreakable;
-    }
-
-    @Override
-    public boolean getGlowing() {
-        return glowing;
-    }
-
-    @Override
-    public List<String> getBasicLore() {
-        return basicLore;
-    }
-
-    @Override
-    public List<ItemFeatureType> getFeatures() {
-        return features;
-    }
-
-    @Override
-    public List<ItemFlag> getFlags() {
-        return flags;
-    }
-
-    @Override
-    public List<String> getWorlds() {
-        return worlds;
-    }
-
-    @Override
-    public List<PotionEffect> getPotions() {
-        return potions;
-    }
-
-    @Override
-    public void setWorlds(List<String> worlds) {
-        this.worlds = worlds;
-    }
-
-    @Override
-    public void setGlowing(Boolean glowing) {
-        this.glowing = glowing;
-    }
-
-    @Override
-    public void setInteractedBlock(boolean interactedBlock) {
-        this.interactedBlock = interactedBlock;
-    }
-
-    @Override
-    public void setInteractedItem(boolean interactedItem) {
-        this.interactedItem = interactedItem;
-    }
-
-    @Override
-    public void setUnbreakable(Boolean unbreakable) {
-        this.unbreakable = unbreakable;
-    }
-
-    @Override
-    public void setFeatures(List<ItemFeatureType> features) {
-        this.features = features;
-    }
-
-    @Override
-    public void setAmount(int value) {
-        amount = value;
-    }
-
-    @Override
-    public void setId(String value) {
-        id = value;
-    }
-
-    @Override
-    public void setName(String value) {
-        name = value;
-    }
-
-    @Override
-    public void setMaterial(MaterialData value) {
-        material = value;
-    }
-
-    @Override
-    public void setUnbreakable(boolean value) {
-        unbreakable = value;
-    }
-
-    @Override
-    public void setGlowing(boolean value) {
-        glowing = value;
-    }
-
-    @Override
-    public void setBasicLore(List<String> value) {
-        basicLore = value;
-    }
-
-    @Override
-    public void setFlags(List<ItemFlag> value) {
-        flags = value;
-    }
-
-    @Override
-    public void setAttributeLore(List<String> attributeLore) {
-        this.attributeLore = attributeLore;
-    }
-
-    @Override
-    public void setEnchantLore(List<String> enchantLore) {
-        this.enchantLore = enchantLore;
     }
 
     @Override
@@ -301,8 +150,38 @@ public abstract class CraftItemBase implements ItemBase {
     }
 
     @Override
+    public List<String> getAttributeLore() {
+        return attributeLore;
+    }
+
+    @Override
+    public void setAttributeLore(List<String> attributeLore) {
+        this.attributeLore = attributeLore;
+    }
+
+    @Override
+    public List<String> getEquipmentLore() {
+        return equipmentLore;
+    }
+
+    @Override
     public void setEquipmentLore(List<String> equipmentLore) {
         this.equipmentLore = equipmentLore;
+    }
+
+    @Override
+    public List<String> getEnchantLore() {
+        return enchantLore;
+    }
+
+    @Override
+    public void setEnchantLore(List<String> enchantLore) {
+        this.enchantLore = enchantLore;
+    }
+
+    @Override
+    public List<String> getPotionLore() {
+        return potionLore;
     }
 
     @Override
@@ -311,14 +190,114 @@ public abstract class CraftItemBase implements ItemBase {
     }
 
     @Override
-    public void setPotions(List<PotionEffect> potions) {
-        this.potions = potions;
+    public int getAmount() {
+        return amount;
     }
 
     @Override
-    public boolean isBook() {
-        ItemStack is = new ItemStack(getMaterial().value, 1);
-        return is.getItemMeta() instanceof BookMeta;
+    public void setAmount(int amount) {
+        this.amount = amount;
+    }
+
+    @Override
+    public String getId() {
+        return id;
+    }
+
+    @Override
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    @Override
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    @Override
+    public MaterialData getMaterial() {
+        return material;
+    }
+
+    @Override
+    public void setMaterial(MaterialData material) {
+        this.material = material;
+    }
+
+    @Override
+    public boolean isUnbreakable() {
+        return unbreakable;
+    }
+
+    @Override
+    public void setUnbreakable(boolean unbreakable) {
+        this.unbreakable = unbreakable;
+    }
+
+
+    @Override
+    public boolean isGlowing() {
+        return glowing;
+    }
+
+    @Override
+    public void setGlowing(boolean glowing) {
+        this.glowing = glowing;
+    }
+
+    @Override
+    public List<String> getBasicLore() {
+        return basicLore;
+    }
+
+    @Override
+    public void setBasicLore(List<String> basicLore) {
+        this.basicLore = basicLore;
+    }
+
+    @Override
+    public List<ItemFeatureType> getFeatures() {
+        return features;
+    }
+
+    @Override
+    public void setFeatures(List<ItemFeatureType> features) {
+        this.features = features;
+    }
+
+    @Override
+    public List<ItemFlag> getFlags() {
+        return flags;
+    }
+
+    @Override
+    public void setFlags(List<ItemFlag> flags) {
+        this.flags = flags;
+    }
+
+    @Override
+    public List<String> getWorlds() {
+        return worlds;
+    }
+
+    @Override
+    public void setWorlds(List<String> worlds) {
+        this.worlds = worlds;
+    }
+
+    @Override
+    public List<PotionEffect> getPotions() {
+        return potions;
+    }
+
+    @Override
+    public void setPotions(List<PotionEffect> potions) {
+        this.potions = potions;
     }
 
     @Override
@@ -336,7 +315,15 @@ public abstract class CraftItemBase implements ItemBase {
     }
 
     @Override
+    public boolean isBook() {
+        if (material == null || material.value == null) return false;
+        ItemStack is = new ItemStack(material.value, 1);
+        return is.getItemMeta() instanceof BookMeta;
+    }
+
+    @Override
     public boolean isWrittenBook() {
+        if (material == null) return false;
         return material.value.equals(Material.WRITTEN_BOOK);
     }
 
@@ -346,8 +333,18 @@ public abstract class CraftItemBase implements ItemBase {
     }
 
     @Override
+    public void setInteractedItem(boolean interactedItem) {
+        this.interactedItem = interactedItem;
+    }
+
+    @Override
     public boolean isInteractedBlock() {
         return interactedBlock;
+    }
+
+    @Override
+    public void setInteractedBlock(boolean interactedBlock) {
+        this.interactedBlock = interactedBlock;
     }
 
     @Override
@@ -412,6 +409,14 @@ public abstract class CraftItemBase implements ItemBase {
         itemStack.setItemMeta(meta);
     }
 
+    /**
+     * 标识当前ItemBase实例是否普通的ItemStack
+     */
+    @Override
+    public boolean isNativeItemStack(){
+        return StringUtils.isBlank(id);
+    }
+
     @Override
     public String setWeaponLore(float value, boolean isWeapon, boolean isPercentage) {
         String result;
@@ -426,6 +431,11 @@ public abstract class CraftItemBase implements ItemBase {
         result = String.format("%s %s%.2f%s", colorCode, sign, v, percentage);
 
         return result;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%s x %s", name, amount);
     }
 
     private void updateEnchantLore(ItemMeta meta) {

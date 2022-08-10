@@ -22,30 +22,34 @@ import org.bukkit.event.inventory.*;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.*;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Scoreboard;
 import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.enums.CrazyBlockType;
+import org.hcmc.hcplayground.enums.PanelSlotType;
 import org.hcmc.hcplayground.enums.RecipeType;
 import org.hcmc.hcplayground.event.PlayerEquipmentChangedEvent;
 import org.hcmc.hcplayground.event.WorldMorningEvent;
 import org.hcmc.hcplayground.manager.*;
-import org.hcmc.hcplayground.model.item.Join;
+import org.hcmc.hcplayground.model.item.*;
+import org.hcmc.hcplayground.model.menu.MenuPanel;
+import org.hcmc.hcplayground.model.menu.MenuPanelSlot;
 import org.hcmc.hcplayground.model.minion.MinionEntity;
 import org.hcmc.hcplayground.model.minion.MinionPanel;
 import org.hcmc.hcplayground.model.minion.MinionPanelSlot;
+import org.hcmc.hcplayground.model.recipe.CraftPanel;
+import org.hcmc.hcplayground.model.recipe.CraftPanelSlot;
+import org.hcmc.hcplayground.model.recipe.CrazyShapedRecipe;
 import org.hcmc.hcplayground.model.recipe.HCItemBlockRecord;
 import org.hcmc.hcplayground.model.mob.MobEntity;
 import org.hcmc.hcplayground.model.command.CommandItem;
 import org.hcmc.hcplayground.model.config.BanItemConfiguration;
-import org.hcmc.hcplayground.model.item.Crazy;
-import org.hcmc.hcplayground.model.item.ItemBase;
-import org.hcmc.hcplayground.model.menu.MenuDetail;
-import org.hcmc.hcplayground.model.menu.MenuItem;
 import org.hcmc.hcplayground.model.player.PlayerData;
 import org.hcmc.hcplayground.runnable.EquipmentMonitorRunnable;
-import org.hcmc.hcplayground.runnable.RecipeFinderRunnable;
+import org.hcmc.hcplayground.runnable.RecipeSearchRunnable;
+import org.hcmc.hcplayground.runnable.StatisticPickupDecrement;
 import org.hcmc.hcplayground.sqlite.table.BanPlayerDetail;
 import org.hcmc.hcplayground.utility.Global;
 import org.hcmc.hcplayground.utility.RandomNumber;
@@ -362,7 +366,7 @@ public class PluginListener implements Listener {
         }
         // 执行指令，并且取消当前事件(防止弹出系统界面)
         if (!StringUtils.isEmpty(crazyCommand)) {
-            runPlayerCommand(crazyCommand, player);
+            CommandManager.runPlayerCommand(crazyCommand, player);
         }
     }
 
@@ -384,6 +388,39 @@ public class PluginListener implements Listener {
             inv.setRepairCost((int) Math.pow(2, 31) - 1);
             ItemStack is = banItem.toBarrierItem();
             event.setResult(is);
+        }
+    }
+
+    @EventHandler
+    private void onItemCrafting(PrepareItemCraftEvent event) {
+        if (event.getRecipe() == null) return;
+        CraftingInventory inventory = event.getInventory();
+        ItemStack[] itemStacks = inventory.getMatrix();
+
+        for (ItemStack itemStack : itemStacks) {
+            if (itemStack == null) continue;
+            ItemBase ib = ItemManager.getItemBase(itemStack);
+            if (ib == null) continue;
+
+            ItemStack result = RecipeManager.getBarrierItem();
+            inventory.setResult(result);
+            break;
+        }
+    }
+
+    @EventHandler
+    private void onItemCrafted(CraftItemEvent event) {
+        if (event.isCancelled()) return;
+        CraftingInventory inventory = event.getInventory();
+        ItemStack[] itemStacks = inventory.getMatrix();
+
+        for (ItemStack itemStack : itemStacks) {
+            if (itemStack == null) continue;
+            ItemBase ib = ItemManager.getItemBase(itemStack);
+            if (ib == null) continue;
+
+            event.setCancelled(true);
+            break;
         }
     }
 
@@ -446,8 +483,19 @@ public class PluginListener implements Listener {
         if (!data.isLogin()) {
             player.sendMessage(LanguageManager.getString("playerNoLogin", player).replace("%player%", playerName));
             event.setCancelled(true);
+            return;
         }
-        PlayerManager.setPlayerData(player, data);
+        // 获取掉落物品
+        Item item = event.getItem();
+        // 物品的掉落者
+        UUID thrower = item.getThrower();
+        if (thrower == null) return;
+        // 拾取任何玩家(包含自己)扔出来的物品不在统计内
+        boolean isPlayer = Arrays.stream(Bukkit.getOfflinePlayers()).anyMatch(x -> x.getUniqueId().equals(thrower));
+        if (isPlayer) {
+            StatisticPickupDecrement decrement = new StatisticPickupDecrement(player, item.getItemStack());
+            decrement.runTask(plugin);
+        }
     }
 
     /**
@@ -521,7 +569,6 @@ public class PluginListener implements Listener {
         }
     }
 
-
     /**
      * 实体死亡事件
      */
@@ -545,7 +592,6 @@ public class PluginListener implements Listener {
 
     /**
      * 方块被破坏时触发的事件
-     *
      * @param event 方块被破坏时触发的事件实例
      */
     @EventHandler
@@ -600,7 +646,7 @@ public class PluginListener implements Listener {
             event.setCancelled(true);
             return;
         }
-        if (MinionManager.isMinion(MainHandItem)) {
+        if (MinionManager.isMinionStack(MainHandItem)) {
             MainHandItem.setAmount(1);
             block.setType(Material.AIR);
 
@@ -681,25 +727,50 @@ public class PluginListener implements Listener {
     }
 
     @EventHandler
-    private void onMinionPanelClicked(InventoryClickEvent event) {
+    private void onMenuPanelClicked(InventoryClickEvent event) {
         if (event.isCancelled()) return;
         Inventory inventory = event.getInventory();
-        if (!(inventory.getHolder() instanceof MinionPanel panel)) return;
+        InventoryAction action = event.getAction();
+        ClickType click = event.getClick();
+
+        int rawSlotIndex = event.getRawSlot();
+        if (!(inventory.getHolder() instanceof MenuPanel panel)) return;
         if (!(event.getWhoClicked() instanceof Player player)) return;
-        if (event.getRawSlot() >= 54 || event.getAction().equals(InventoryAction.MOVE_TO_OTHER_INVENTORY))
-        {
+        if (rawSlotIndex >= 54) {
+            if (action.equals(InventoryAction.MOVE_TO_OTHER_INVENTORY)) event.setCancelled(true);
+            return;
+        }
+
+        MenuPanelSlot slot = panel.getSlot(rawSlotIndex + 1);
+        if (slot == null) {
             event.setCancelled(true);
             return;
         }
 
-        MinionEntity minion = panel.getOwner();
+        if (click.isLeftClick()) slot.runLeftClickCommands(player);
+        if (click.isRightClick()) slot.runRightClickCommands(player);
+
+        event.setCancelled(true);
+    }
+
+    @EventHandler
+    private void onMinionPanelClicked(InventoryClickEvent event) {
+        if (event.isCancelled()) return;
+        Inventory inventory = event.getInventory();
         ItemStack current = event.getCurrentItem();
-        if (current == null || !minion.isItemInSack(current)) {
+        if (!(inventory.getHolder() instanceof MinionPanel panel)) return;
+        MinionEntity minion = panel.getMinion();
+        if (!(event.getWhoClicked() instanceof Player player)) return;
+        // 判断点击了箱子界面以外
+        // 判断是否SHIFT+CLICK
+        // 判断点击了空白格子
+        if (event.getRawSlot() >= 54 || event.getAction().equals(InventoryAction.MOVE_TO_OTHER_INVENTORY) || current == null) {
             event.setCancelled(true);
             return;
         }
+
         // 拿一组
-        panel.pickone(player, current);
+        if (minion.isItemInSack(current)) panel.pickone(player, current);
 
         List<MinionPanelSlot> slots = panel.getSlots();
         int rawIndex = event.getRawSlot();
@@ -712,76 +783,100 @@ public class PluginListener implements Listener {
             case ENERGY -> panel.removeEnergyDevice();
             case COMPACT -> panel.removeCompactDevice();
             case PICKUP -> panel.pickup(player);
-            case RECLAIM -> panel.Reclaim();
-            case UPGRADE -> panel.Upgrade();
+            case RECLAIM -> panel.Reclaim(player);
+            case UPGRADE -> panel.Upgrade(player);
         }
 
         event.setCancelled(true);
     }
 
     @EventHandler
-    private void onMenuOrRecipeClicked(InventoryClickEvent event) {
+    private void onCrazyCrafting(InventoryClickEvent event) {
         if (event.isCancelled()) return;
-        // 获取打开的箱子界面并且当前箱子是否属于InventoryDetail实例
-        Inventory inv = event.getInventory();
-        InventoryHolder holder = inv.getHolder();
-        HumanEntity human = event.getWhoClicked();
-        ClickType clickType = event.getClick();
-        // 检测是否打开了属于InventoryDetail实例创建的箱子
-        if (!(holder instanceof MenuDetail detail)) return;
-        // 检测点击箱子界面的实体是否为玩家
-        if (!(human instanceof Player player)) return;
-        // 检测玩家点击的箱子界面是否属于玩家的背包或快捷栏
-        Inventory pInv = event.getClickedInventory();
-        if (pInv instanceof PlayerInventory && !clickType.isShiftClick()) return;
-        // 获得玩家点击箱子中某个格子的InventorySlot实例
-        int slotIndex = event.getSlot();
-        MenuItem slot = detail.getSlot(slotIndex + 1);
-        if (slot == null) {
+        Inventory inventory = event.getInventory();
+        InventoryAction action = event.getAction();
+        ClickType click = event.getClick();
+
+        if (!(inventory.getHolder() instanceof CraftPanel panel)) return;
+        if (!(event.getWhoClicked() instanceof Player player)) return;
+
+        int rawSlot = event.getRawSlot();
+        CraftPanelSlot slot = panel.getPanelSlot(rawSlot);
+        CrazyShapedRecipe recipe = panel.getRecipe();
+
+        // 检测玩家使用鼠标Double Click叠堆物品
+        // 不允许叠堆配方的成品输出
+        // 叠堆和配方有关的物品后，需要重新检测配方
+        if (rawSlot >= 54) {
+            if (action.equals(InventoryAction.COLLECT_TO_CURSOR)) {
+                CraftPanelSlot slotStorage = panel.getSlots().stream().filter(x -> x.getType().equals(PanelSlotType.STORAGE)).findAny().orElse(null);
+                if (slotStorage == null) return;
+                List<ItemStack> stacksStorage = new ArrayList<>();
+                for (int i : slotStorage.getSlots()) {
+                    stacksStorage.add(inventory.getItem(i));
+                }
+                if (stacksStorage.stream().anyMatch(x -> x != null && x.isSimilar(event.getCursor()))) {
+                    RecipeSearchRunnable finder = new RecipeSearchRunnable(inventory);
+                    finder.runTask(plugin);
+                }
+            }
+            if (action.equals(InventoryAction.MOVE_TO_OTHER_INVENTORY)) {
+                RecipeSearchRunnable finder = new RecipeSearchRunnable(inventory);
+                finder.runTask(plugin);
+            }
+            return;
+        }
+        // 点击了没有定义的插槽，或者点击了INACTIVE类型的插槽，取消事件
+        if (slot == null || slot.getType().equals(PanelSlotType.INACTIVE)) {
             event.setCancelled(true);
             return;
         }
-        // 执行自定义菜单的鼠标点击指令
-        List<String> commands = new ArrayList<>();
-        // 获取鼠标点击类型，鼠标的左键，右键，中建点击
-        if (clickType.equals(ClickType.LEFT)) commands = slot.leftCommands;
-        if (clickType.equals(ClickType.RIGHT)) commands = slot.rightCommands;
-        prepareCommandList(commands, player);
-        // 检查自定义合成公式并且在输入格子展示合成物品，让玩家拿取
-        // TODO: 检查自定义合成公式并且在输入格子展示合成物品，让玩家拿取
-        RecipeFinderRunnable finder = new RecipeFinderRunnable(inv);
-        finder.runTask(plugin);
+        // 当有配方成品输出，并且点击了成品输出槽
+        if (slot.getType().equals(PanelSlotType.OUTPUT)) {
+            if (recipe == null) {
+                event.setCancelled(true);
+                return;
+            }
+            if (action.equals(InventoryAction.PICKUP_ALL)
+                    || action.equals(InventoryAction.PICKUP_SOME)
+                    || action.equals(InventoryAction.PICKUP_ONE)
+                    || action.equals(InventoryAction.PICKUP_HALF)
+                    || action.equals(InventoryAction.SWAP_WITH_CURSOR)) {
+                recipe.claimResult(player, inventory);
+            }
+            if (action.equals(InventoryAction.MOVE_TO_OTHER_INVENTORY)) {
+                recipe.claimAll(player, inventory);
+            }
+            event.setCancelled(true);
+        }
 
-        // 过滤不可放置格子和不可拿取格子的动作
-        InventoryAction action = event.getAction();
-        boolean placeFlag = action.equals(InventoryAction.PLACE_ALL) || action.equals(InventoryAction.PLACE_ONE) || action.equals(InventoryAction.PLACE_SOME) || event.isShiftClick();
-        boolean pickupFlag = action.equals(InventoryAction.PICKUP_ALL) || action.equals(InventoryAction.PICKUP_ONE) || action.equals(InventoryAction.PICKUP_HALF) || event.isShiftClick();
-        if (action.equals(InventoryAction.SWAP_WITH_CURSOR)) event.setCancelled(true);
-        if (!slot.droppable && placeFlag) event.setCancelled(true);
-        if (!slot.draggable && pickupFlag) event.setCancelled(true);
+        RecipeSearchRunnable search = new RecipeSearchRunnable(inventory);
+        search.runTask(plugin);
     }
 
     @EventHandler
-    private void onMenuClosed(InventoryCloseEvent event) {
-        // 获取打开的箱子界面并且当前箱子是否属于InventoryDetail实例
-        Inventory inv = event.getInventory();
-        HumanEntity human = event.getPlayer();
-        InventoryHolder holder = inv.getHolder();
-        // 检测是否打开了属于InventoryDetail实例创建的箱子
-        if (!(holder instanceof MenuDetail detail)) return;
+    private void onCraftPanelClosed(InventoryCloseEvent event) {
+        // 获取打开的箱子界面并且当前箱子是否属于CraftPanel实例
+        Inventory inventory = event.getInventory();
+        // 检测是否打开了属于CraftPanel实例创建的箱子
+        if (!(inventory.getHolder() instanceof CraftPanel panel)) return;
         // 检测点击箱子界面的实体是否为玩家
-        if (!(human instanceof Player player)) return;
+        if (!(event.getPlayer() instanceof Player player)) return;
         // 检测箱子界面的每个格子
-        for (int i = 0; i < 54; i++) {
-            // 获取格子的物品及数量
-            ItemStack is = inv.getItem(i);
-            // 获取格子的额外信息
-            MenuItem mi = detail.getSlot(i + 1);
-            // 格子内没有物品或者物品没有额外信息则忽略
-            if (is == null) continue;
-            if (mi == null) continue;
-            // 除了成品输出格子外，如果格子设置为可放入或者可拿取，则返还格子的物品给玩家
-            if ((mi.draggable || mi.droppable) && !mi.result) player.getInventory().addItem(is);
+        CraftPanelSlot slot = panel.getSlots().stream().filter(x -> x.getType().equals(PanelSlotType.STORAGE)).findAny().orElse(null);
+        if (slot == null) return;
+
+        List<ItemStack> inChest = new ArrayList<>();
+        for (int index : slot.getSlots()) {
+            ItemStack stack = inventory.getItem(index);
+            if (stack == null) continue;
+
+            inChest.add(stack);
+        }
+
+        List<ItemStack> remainder = player.getInventory().addItem(inChest.toArray(new ItemStack[0])).values().stream().toList();
+        for (ItemStack itemStack : remainder) {
+            player.getWorld().dropItemNaturally(player.getLocation(), itemStack);
         }
     }
 
@@ -793,25 +888,27 @@ public class PluginListener implements Listener {
         InventoryHolder holder = inv.getHolder();
         HumanEntity human = event.getWhoClicked();
         // 如果是Minion的控制面板，取消事件并且返回
-        if (holder instanceof MinionPanel) {
+        if ((holder instanceof MinionPanel)) {
+            event.setCancelled(true);
+            return;
+        }
+        if ((holder instanceof MenuPanel) && event.getRawSlots().stream().anyMatch(x -> x <= 53)) {
             event.setCancelled(true);
             return;
         }
         // 检测是否打开了属于InventoryDetail实例创建的箱子
-        if (!(holder instanceof MenuDetail detail)) return;
+        if (!(holder instanceof CraftPanel panel)) return;
         // 检测点击箱子界面的实体是否为玩家
         if (!(human instanceof Player player)) return;
         // 检测玩家点击的箱子界面是否属于玩家的背包或快捷栏
-        Set<Integer> slots = event.getRawSlots();
-        for (Integer index : slots) {
-            if (index >= 54) continue;
-            MenuItem slot = detail.getSlot(index + 1);
-            if (slot == null || !slot.droppable) {
-                event.setCancelled(true);
-                break;
-            }
+        CraftPanelSlot slot = panel.getSlots().stream().filter(x -> x.getType().equals(PanelSlotType.OUTPUT)).findAny().orElse(null);
+        if (slot == null) return;
+        if (event.getRawSlots().stream().anyMatch(x -> Arrays.stream(slot.getSlots()).anyMatch(y -> y == x))) {
+            event.setCancelled(true);
+            return;
         }
-        RecipeFinderRunnable finder = new RecipeFinderRunnable(inv);
+
+        RecipeSearchRunnable finder = new RecipeSearchRunnable(inv);
         finder.runTask(plugin);
     }
 
@@ -836,25 +933,11 @@ public class PluginListener implements Listener {
             String command = firstSpace >= 1 ? s.substring(firstSpace + 1) : s;
             command = command.replace("%player%", player.getName()).trim();
             if (key.contains("[console]") || !key.contains("[") || !key.contains("]")) {
-                runConsoleCommand(command, player);
+                CommandManager.runConsoleCommand(command, player);
             }
             if (key.contains("[player]")) {
-                runPlayerCommand(command, player);
+                CommandManager.runPlayerCommand(command, player);
             }
         }
-    }
-
-    private void runConsoleCommand(String command, Player player) {
-        ConsoleCommandSender sender = Bukkit.getConsoleSender();
-
-        String _command = PlaceholderAPI.setPlaceholders(player, command);
-        Bukkit.dispatchCommand(sender, _command);
-        Global.LogMessage(String.format("%s issued a console command: %s", player.getName(), _command));
-    }
-
-    private void runPlayerCommand(String command, Player player) {
-        String _command = PlaceholderAPI.setPlaceholders(player, command);
-        player.performCommand(_command);
-        Global.LogMessage(String.format("%s issued a player command: %s", player.getName(), _command));
     }
 }

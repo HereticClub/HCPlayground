@@ -2,6 +2,7 @@
 # 指令，在聊天栏中输入/<command>
 # /menu指令，打开异族游乐场主菜单
 hcplayground:
+  # 执行指令所需要的权限
   permission: hc.*
   # True or False，控制台是否可执行该命令，默认值: False
   runOnConsole: true
@@ -26,6 +27,21 @@ hcplayground:
   # 指令的别名
   aliases:
     - hc
+skillmanager:
+  permission: hc.skillmanager.*
+  runOnConsole: true
+  runOnPlayer: true
+  args:
+    1:
+      name: give
+      permission: hc.skillmanager.give
+      index: 1
+    2:
+      name: take
+      permission: hc.skillmanager.take
+      index: 1
+  aliases: []
+  worlds: []
 recordmanager:
   permission: hc.recordmanager.*
   runOnConsole: true
@@ -33,11 +49,11 @@ recordmanager:
   args:
     1:
       name: load
-      permission: hc.recordmanager.gui
+      permission: hc.recordmanager.load
       index: 1
     2:
       name: save
-      permission: hc.recordmanager.give
+      permission: hc.recordmanager.save
       index: 1
   aliases:
     - record
@@ -87,21 +103,28 @@ minion:
       name: give
       permission: hc.minion.give
       index: 1
-menu:
-  permission: ''
-  runOnConsole: false
-  runOnPlayer: true
-  worlds: []
-profile:
-  permission: ''
-  runOnConsole: false
-  runOnPlayer: true
-  worlds: []
-recipebook:
-  runOnConsole: false
+playgroundmenus:
+  permission: hc.playgroundmenus.*
+  runOnConsole: true
   runOnPlayer: true
   aliases:
-    - book
+    - playgroundmenu
+    - pmenu
+    - hm
+  worlds: []
+  args:
+    1:
+      name: open
+      permission: hc.playgroundmenus.open
+      index: 1
+    2:
+      name: close
+      permission: hc.playgroundmenus.close
+      index: 1
+    3:
+      name: list
+      permission: hc.playgroundmenus.list
+      index: 1
 login:
   runOnConsole: false
   runOnPlayer: true

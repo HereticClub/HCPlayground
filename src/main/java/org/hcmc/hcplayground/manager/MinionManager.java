@@ -18,14 +18,14 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
 import org.hcmc.hcplayground.HCPlayground;
-import org.hcmc.hcplayground.enums.MinionPanelSlotType;
+import org.hcmc.hcplayground.enums.PanelSlotType;
 import org.hcmc.hcplayground.enums.MinionType;
 import org.hcmc.hcplayground.model.item.ItemBase;
 import org.hcmc.hcplayground.model.minion.MinionEntity;
 import org.hcmc.hcplayground.model.minion.MinionPanel;
 import org.hcmc.hcplayground.model.minion.MinionPanelSlot;
 import org.hcmc.hcplayground.model.minion.MinionTemplate;
-import org.hcmc.hcplayground.serialization.MinionPanelTypeSerialization;
+import org.hcmc.hcplayground.serialization.PanelSlotTypeSerialization;
 import org.hcmc.hcplayground.utility.Global;
 import org.hcmc.hcplayground.utility.PlayerHeaderUtil;
 import org.hcmc.hcplayground.utility.RomanNumber;
@@ -42,7 +42,7 @@ public class MinionManager {
      */
     public final static int DRESSING_PERIOD = 5;
     private final static Plugin plugin = HCPlayground.getInstance();
-    private static Map<String, List<MinionTemplate>> mapMinions = new HashMap<>();
+    private static List<MinionTemplate> minions = new ArrayList<>();
     private static ConfigurationSection panelSection;
 
     public MinionManager() {
@@ -53,12 +53,14 @@ public class MinionManager {
         ConfigurationSection _template = yaml.getConfigurationSection("minion_template");
         panelSection = yaml.getConfigurationSection("minion_panel");
 
-        if(_template == null) return;
-        mapMinions = loadMinionTemplates(_template);
+        if (_template == null) return;
+        minions = loadMinionTemplates(_template);
+        ItemManager.setItemMinions(minions);
     }
 
     /**
      * 创建一个爪牙的控制面板模板视图
+     *
      * @param title 控制面板的标题
      * @return 摆放好的Minion控制面板实例(箱子界面)
      */
@@ -74,8 +76,8 @@ public class MinionManager {
         for (MinionPanelSlot slot : slots) {
             // id 的第二段表示slot的动作类型
             String[] id = slot.getId().split("\\.");
-            MinionPanelSlotType type = MinionPanelTypeSerialization.resolvePanelType(id[1]);
-            slot.setType(type == null ? MinionPanelSlotType.INACTIVE : type);
+            PanelSlotType type = PanelSlotTypeSerialization.resolveType(id[1]);
+            slot.setType(type == null ? PanelSlotType.INACTIVE : type);
             // 根据slots定义转换成为ItemStack
             Map<Integer, ItemStack> maps = slot.toItemStacks();
             // 摆放箱子界面
@@ -89,12 +91,12 @@ public class MinionManager {
     }
 
     public static MinionTemplate getMinionTemplate(String type, int level) {
-        List<MinionTemplate> minions = mapMinions.get(type);
-        return minions.stream().filter(x -> x.getLevel() == level).findAny().orElse(null);
+        MinionType t = MinionType.valueOf(type.toUpperCase());
+        return getMinionTemplate(t, level);
     }
 
     public static MinionTemplate getMinionTemplate(MinionType type, int level) {
-        return getMinionTemplate(type.name(), level);
+        return minions.stream().filter(x -> x.getLevel() == level && x.getType().equals(type)).findAny().orElse(null);
     }
 
     public static MinionTemplate getMinionTemplate(ItemStack item) {
@@ -118,7 +120,7 @@ public class MinionManager {
         return getMinionTemplate(minionType, level);
     }
 
-    public static ItemStack getMinion(MinionType name, int level, int amount) {
+    public static ItemStack getMinionStack(MinionType name, int level, int amount) {
         ItemStack is = new ItemStack(Material.PLAYER_HEAD, amount);
         MinionTemplate template = MinionManager.getMinionTemplate(name, level);
         if (template == null) return null;
@@ -155,6 +157,7 @@ public class MinionManager {
         if (type == null) return null;
         // 生成ArmorStand
         ArmorStand armorStand = (ArmorStand) world.spawnEntity(location, EntityType.ARMOR_STAND);
+
         // 没有重力，重要，不至于脚下方块被挖了之后掉下
         armorStand.setGravity(false);
         // 看见手臂，重要，能拿工具、武器、鱼竿等
@@ -190,14 +193,14 @@ public class MinionManager {
         return value != null;
     }
 
-    public static boolean isMinion(ItemStack item) {
+    public static boolean isMinionStack(ItemStack item) {
         MinionType type = getMinionType(item);
         return type != null;
     }
 
     public static List<String> getLevels(MinionType minionType) {
         List<String> levels = new ArrayList<>();
-        List<MinionTemplate> templates = mapMinions.get(minionType.name());
+        List<MinionTemplate> templates = minions.stream().filter(x -> x.getType().equals(minionType)).toList();
 
         for (MinionTemplate t : templates) {
             levels.add(RomanNumber.fromInteger(t.getLevel()));
@@ -210,7 +213,13 @@ public class MinionManager {
      * 获取一定义胡MinionType
      */
     public static List<String> getDeclaredTypes() {
-        return mapMinions.keySet().stream().map(String::toLowerCase).toList();
+        List<String> values = new ArrayList<>();
+        for (MinionTemplate template : minions) {
+            String type = template.getType().name().toLowerCase();
+            if (values.stream().noneMatch(x -> x.equalsIgnoreCase(type))) values.add(type);
+        }
+
+        return values;
     }
 
     public static MinionType getMinionType(ItemStack item) {
@@ -231,48 +240,55 @@ public class MinionManager {
         return Arrays.stream(values).filter(x -> x.name().equalsIgnoreCase(name)).findAny().orElse(null);
     }
 
-    private static Map<String, List<MinionTemplate>> loadMinionTemplates(ConfigurationSection section) {
-        Map<String, List<MinionTemplate>> maps = new HashMap<>();
+    private static List<MinionTemplate> loadMinionTemplates(ConfigurationSection section) {
+        List<MinionTemplate> templates = new ArrayList<>();
         Set<String> keys = section.getKeys(false);
         // 遍历每个MinionType
-        for (String key : keys) {
-            ConfigurationSection _section = section.getConfigurationSection(key);
+        for (String type : keys) {
+            ConfigurationSection _section = section.getConfigurationSection(type);
             if (_section == null) continue;
 
-            List<MinionTemplate> templates = Global.SetItemList(_section, MinionTemplate.class);
-            maps.put(key, templates);
+            List<MinionTemplate> levels = Global.SetItemList(_section, MinionTemplate.class);
             // 遍历每个MinionType的每个Level
-            for (MinionTemplate template : templates) {
+            for (MinionTemplate template : levels) {
+                templates.add(template);
+
                 String[] ss = template.getId().split("\\.");
                 int level = Integer.parseInt(ss[1]);
+                String id = String.format("%s.%s", type, level);
 
                 if (template.getPlatform() == null)
-                    Global.LogWarning(String.format("%s level %s has no define PLATFORM property", key, level));
+                    Global.LogWarning(String.format("%s level %s has no define PLATFORM property", type, level));
                 if (template.getPeriod() <= 0)
-                    Global.LogWarning(String.format("%s level %s has no define PERIOD property", key, level));
+                    Global.LogWarning(String.format("%s level %s has no define PERIOD property", type, level));
 
-                String upgradeKey = String.format("%s.%s.upgrade", key, level);
+                String upgradeKey = String.format("%s.%s.upgrade", type, level);
                 template.getUpgrade().clear();
                 MemorySection sectionUpgrade = (MemorySection) section.get(upgradeKey);
                 if (sectionUpgrade != null) {
                     Map<String, Object> mapUpgrade = sectionUpgrade.getValues(false);
-                    Map<ItemStack, Integer> setUpgrade = new HashMap<>();
+                    List<ItemStack> setUpgrade = new ArrayList<>();
                     template.setUpgrade(setUpgrade);
                     for (Map.Entry<String, Object> entry : mapUpgrade.entrySet()) {
-                        ItemBase ib = ItemManager.findItemById(entry.getKey().replace("@", "."));
-                        ItemStack is = ib == null ? new ItemStack(Material.valueOf(entry.getKey().toUpperCase()), 1) : ib.toItemStack();
                         int amount = (int) entry.getValue();
-                        setUpgrade.put(is, amount);
+
+                        ItemBase ib = ItemManager.findItemById(entry.getKey().replace("@", "."));
+                        if (ib != null) ib.setAmount(amount);
+
+                        ItemStack is = ib == null ? new ItemStack(Material.valueOf(entry.getKey().toUpperCase()), amount) : ib.toItemStack();
+                        setUpgrade.add(is);
                     }
                 }
                 // 设置MinionType的Level
                 template.setLevel(level);
+                template.setId(id);
+                template.setType(MinionType.valueOf(type.toUpperCase()));
                 Map<EquipmentSlot, ItemStack> equipments = new HashMap<>();
                 template.setEquipments(equipments);
 
                 EquipmentSlot[] slots = EquipmentSlot.values();
                 for (EquipmentSlot slot : slots) {
-                    String equipKey = String.format("%s.%s.equipments.%s", key, level, slot.toString().toLowerCase());
+                    String equipKey = String.format("%s.%s.equipments.%s", type, level, slot.toString().toLowerCase());
                     String m = section.getString(equipKey + ".material");
                     String c = section.getString(equipKey + ".color");
                     if (StringUtils.isBlank(m)) continue;
@@ -289,6 +305,6 @@ public class MinionManager {
             }
         }
 
-        return maps;
+        return templates;
     }
 }

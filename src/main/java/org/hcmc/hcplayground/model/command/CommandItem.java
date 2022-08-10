@@ -13,17 +13,18 @@ import org.bukkit.command.CommandMap;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.configuration.InvalidConfigurationException;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.hcmc.hcplayground.HCPlayground;
+import org.hcmc.hcplayground.enums.MMOSkillType;
 import org.hcmc.hcplayground.enums.MinionType;
 import org.hcmc.hcplayground.manager.*;
-import org.hcmc.hcplayground.model.minion.MinionTemplate;
+import org.hcmc.hcplayground.model.menu.MenuPanel;
 import org.hcmc.hcplayground.model.parkour.CourseInfo;
 import org.hcmc.hcplayground.model.player.PlayerData;
+import org.hcmc.hcplayground.serialization.MMOLevelTypeSerialization;
 import org.hcmc.hcplayground.utility.Global;
 import org.hcmc.hcplayground.utility.RomanNumber;
 import org.jetbrains.annotations.NotNull;
@@ -31,7 +32,6 @@ import org.jetbrains.annotations.NotNull;
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
-import java.io.File;
 import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
@@ -45,6 +45,9 @@ import java.util.regex.Pattern;
 public class CommandItem extends Command {
 
     private final static Pattern patternNumber = Pattern.compile("-?\\d+(\\.\\d+)?");
+    public static final String COMMAND_SKILL_MANAGER = "skillmanager";
+    public static final String COMMAND_SKILL_MANAGER_GIVE = "give";
+    public static final String COMMAND_SKILL_MANAGER_TAKE = "take";
     public static final String COMMAND_REGISTER = "register";
     public static final String COMMAND_UNREGISTER = "unregister";
     public static final String COMMAND_LOGIN = "login";
@@ -53,9 +56,10 @@ public class CommandItem extends Command {
     public static final String COMMAND_SEEN = "seen";
     public static final String COMMAND_BAN_PLAYER = "banplayer";
     public static final String COMMAND_UNBAN_PLAYER = "unbanplayer";
-    public static final String COMMAND_PROFILE = "profile";
-    public static final String COMMAND_MENU = "menu";
-    public static final String COMMAND_RECIPE_BOOK = "recipebook";
+    public static final String COMMAND_PLAYGROUND_MENUS = "playgroundmenus";
+    public static final String COMMAND_PLAYGROUND_MENUS_OPEN = "open";
+    public static final String COMMAND_PLAYGROUND_MENUS_CLOSE = "close";
+    public static final String COMMAND_PLAYGROUND_MENUS_LIST = "list";
     public static final String COMMAND_QUARTERMASTER = "quartermaster";
     public static final String COMMAND_QM_GIVE = "give";
     public static final String COMMAND_QM_HELP = "help";
@@ -193,6 +197,17 @@ public class CommandItem extends Command {
                     tabs = ParkourApiManager.getLobbyNames();
                 }
             }
+            if (index == 2 && getName().equalsIgnoreCase(COMMAND_SKILL_MANAGER)) {
+                tabs = MMOSkillManager.getIdList();
+            }
+            if (index == 2 && getName().equalsIgnoreCase(COMMAND_PLAYGROUND_MENUS)) {
+                if (args[0].equalsIgnoreCase(COMMAND_PLAYGROUND_MENUS_OPEN)) {
+                    tabs = MenuManager.getIdList();
+                }
+                if (args[0].equalsIgnoreCase(COMMAND_PLAYGROUND_MENUS_CLOSE)) {
+                    tabs = MenuManager.getIdList();
+                }
+            }
             if (index == 3 && getName().equalsIgnoreCase(COMMAND_MINION)) {
                 if (args[0].equalsIgnoreCase(COMMAND_MINION_GIVE)) {
                     tabs = getMinionTypeList();
@@ -231,20 +246,12 @@ public class CommandItem extends Command {
         if (!ValidateCommand(sender, args)) return false;
 
         try {
-            // 打开主菜单指令 - /menu
-            if (commandText.equalsIgnoreCase(COMMAND_MENU)) {
-                return RunOpenChestMenuCommand((Player) sender, COMMAND_MENU);
+            // 打开主菜单指令 - /playgroundmenus
+            if (commandText.equalsIgnoreCase(COMMAND_PLAYGROUND_MENUS)) {
+                return RunPlaygroundMenusCommand(sender, args);
             }
-            // 打开玩家档案菜单指令 - /profile
-            if (commandText.equalsIgnoreCase(COMMAND_PROFILE)) {
-                return RunOpenChestMenuCommand((Player) sender, COMMAND_PROFILE);
-            }
-            // 打开玩家档案菜单指令 - /profile
-            if (commandText.equalsIgnoreCase(COMMAND_RECIPE_BOOK)) {
-                return RunOpenChestMenuCommand((Player) sender, COMMAND_RECIPE_BOOK);
-            }
-            if (commandText.equalsIgnoreCase(COMMAND_CRAZY)) {
-                return RunCrazyCommand(sender, args);
+            if (commandText.equalsIgnoreCase(COMMAND_SKILL_MANAGER)) {
+                return RunSkillManagerCommand(sender, args);
             }
             // 军需官指令 - /quatermaster
             if (commandText.equalsIgnoreCase(COMMAND_QUARTERMASTER)) {
@@ -294,6 +301,10 @@ public class CommandItem extends Command {
             if (commandText.equalsIgnoreCase(COMMAND_COURSE)) {
                 return RunCourseCommand(sender, args);
             }
+            // /crazy
+            if (commandText.equalsIgnoreCase((COMMAND_CRAZY))) {
+                return RunCrazyCommand(sender, args);
+            }
             // 执行broadcastplus指令 /broadcastplus /bp
             if (commandText.equalsIgnoreCase(COMMAND_BROADCAST_PLUS)) {
                 return RunBroadcastPlusCommand(sender, args);
@@ -317,6 +328,67 @@ public class CommandItem extends Command {
         return false;
     }
 
+    private boolean RunSkillManagerCommand(CommandSender sender, String[] args) {
+        if (args.length <= 3) {
+            return ShowCommandHelp(sender, 4);
+        }
+        if (args[0].equalsIgnoreCase(COMMAND_SKILL_MANAGER_GIVE)) {
+            return RunSkillManagerGiveCommand(sender, args);
+        }
+        if (args[0].equalsIgnoreCase(COMMAND_SKILL_MANAGER_TAKE)) {
+            return RunSkillManagerTakeCommand(sender, args);
+        }
+        return false;
+    }
+
+    private boolean RunSkillManagerGiveCommand(CommandSender sender, String[] args) {
+        String playerName = args[2];
+        String points = args[3];
+        Player target = Bukkit.getPlayer(playerName);
+        MMOSkillType type = MMOLevelTypeSerialization.getType(args[1]);
+        if (type == null) {
+            sender.sendMessage(LanguageManager.getString("skillTypeInvalid").replace("%skill%", args[1]));
+            return false;
+        }
+        if (target == null) {
+            sender.sendMessage(LanguageManager.getString("playerNotExist").replace("%player%", playerName));
+            return false;
+        }
+        if (!StringUtils.isNumeric(points)) {
+            sender.sendMessage(LanguageManager.getString("numberFormatInvalid"));
+            return false;
+        }
+
+        int p = Integer.parseInt(points);
+        MMOSkillManager.incrementStatisticPoint(target, type, p);
+
+        return true;
+    }
+
+    private boolean RunSkillManagerTakeCommand(CommandSender sender, String[] args) {
+        String playerName = args[2];
+        String points = args[3];
+        Player target = Bukkit.getPlayer(playerName);
+        MMOSkillType type = MMOLevelTypeSerialization.getType(args[1]);
+        if (type == null) {
+            sender.sendMessage(LanguageManager.getString("skillTypeInvalid").replace("%skill%", args[1]));
+            return false;
+        }
+        if (target == null) {
+            sender.sendMessage(LanguageManager.getString("playerNotExist").replace("%player%", playerName));
+            return false;
+        }
+        if (!StringUtils.isNumeric(points)) {
+            sender.sendMessage(LanguageManager.getString("numberFormatInvalid"));
+            return false;
+        }
+
+        int p = Integer.parseInt(points);
+        MMOSkillManager.decrementStatisticPoint(target, type, p);
+
+        return true;
+    }
+
     private boolean RunRecordManagerCommand(CommandSender sender, String[] args) throws IOException, IllegalAccessException {
         // 该指令参数长度不能为0
         if (args.length <= 0) {
@@ -334,10 +406,7 @@ public class CommandItem extends Command {
     }
 
     private boolean RunRecordManagerLoadCommand(CommandSender sender, String[] args) throws IOException {
-        //File file = new File(String.format("%s/database/record.yml", plugin.getDataFolder()));
-        //YamlConfiguration yaml = YamlConfiguration.loadConfiguration(file);
         RecordManager.Load();
-
         return true;
     }
 
@@ -386,7 +455,7 @@ public class CommandItem extends Command {
         int amount = Integer.parseInt(args[4]);
 
         MinionType minion = MinionManager.getMinionType(args[2]);
-        ItemStack is = MinionManager.getMinion(minion, level, amount);
+        ItemStack is = MinionManager.getMinionStack(minion, level, amount);
 
         target.getInventory().addItem(is);
 
@@ -419,24 +488,6 @@ public class CommandItem extends Command {
     }
 
     private List<String> getMinionLevelList(MinionType type) {
-        /*
-        List<String> tabs = new ArrayList<>();
-
-        tabs.add("I");
-        tabs.add("II");
-        tabs.add("III");
-        tabs.add("IV");
-        tabs.add("V");
-        tabs.add("VI");
-        tabs.add("VII");
-        tabs.add("VIII");
-        tabs.add("IX");
-        tabs.add("X");
-        tabs.add("XI");
-        tabs.add("XII");
-
-         */
-
         return MinionManager.getLevels(type);
     }
 
@@ -921,14 +972,12 @@ public class CommandItem extends Command {
     }
 
     private boolean RunCrazyCraftingCommand(CommandSender sender) throws IOException, IllegalAccessException, InvalidConfigurationException {
-        String menuId = String.format("%s%s", COMMAND_CRAZY, COMMAND_CRAZY_CRAFTING);
         Player player = (Player) sender;
-        Inventory inv = MenuManager.CreateMenu(menuId, player);
-        if (inv == null) return false;
+        Inventory inventory = RecipeManager.createCraftPanel();
+        if (inventory == null) return false;
 
-        player.openInventory(inv);
-
-        return false;
+        player.openInventory(inventory);
+        return true;
     }
 
     private boolean RunCrazyEnchantingCommand(CommandSender sender) {
@@ -1010,11 +1059,54 @@ public class CommandItem extends Command {
         return false;
     }
 
-    private boolean RunOpenChestMenuCommand(Player player, String menuId) throws IOException, IllegalAccessException, InvalidConfigurationException {
-        Inventory inv = MenuManager.CreateMenu(menuId, player);
-        if (inv == null) return false;
-        player.openInventory(inv);
+    private boolean RunPlaygroundMenusCommand(@NotNull CommandSender sender, String @NotNull [] args) throws IOException, IllegalAccessException, InvalidConfigurationException {
+        if (args.length <= 1) {
+            return ShowCommandHelp(sender, 2);
+        }
+        if (!(sender instanceof Player) && args.length <= 2) {
+            return false;
+        }
 
+        if (args[0].equalsIgnoreCase(COMMAND_PLAYGROUND_MENUS_OPEN)) {
+            return RunPlaygroundMenusOpenCommand(sender, args);
+        }
+        if (args[0].equalsIgnoreCase(COMMAND_PLAYGROUND_MENUS_CLOSE)) {
+            return RunPlaygroundMenusCloseCommand(sender, args);
+        }
+
+        return true;
+    }
+
+    private boolean RunPlaygroundMenusOpenCommand(@NotNull CommandSender sender, String @NotNull [] args) throws InvalidConfigurationException {
+        String menuId = args[1];
+        String target = args.length >= 3 ? args[2] : sender.getName();
+        Player targetPlayer = Bukkit.getPlayer(target);
+        if (targetPlayer == null) return false;
+
+        MenuPanel menu = MenuManager.getMenuPanel(menuId, targetPlayer);
+        if (menu == null) {
+            targetPlayer.sendMessage(LanguageManager.getString("menuNotExist").replace("%menu%", menuId));
+            return false;
+        }
+
+        menu.open(targetPlayer);
+        return true;
+    }
+
+    private boolean RunPlaygroundMenusCloseCommand(@NotNull CommandSender sender, String @NotNull [] args) throws InvalidConfigurationException {
+
+        String menuId = args[1];
+        String target = args.length >= 3 ? args[2] : sender.getName();
+        Player targetPlayer = Bukkit.getPlayer(target);
+        if (targetPlayer == null) return false;
+
+        MenuPanel menu = MenuManager.getMenuPanel(menuId, targetPlayer);
+        if (menu == null) {
+            targetPlayer.sendMessage(LanguageManager.getString("menuNotExist").replace("%menu%", menuId));
+            return false;
+        }
+
+        menu.close(targetPlayer);
         return true;
     }
 
@@ -1192,7 +1284,7 @@ public class CommandItem extends Command {
             return false;
         }
 
-        ItemManager.Give(sender, args[1], args[2], amount);
+        ItemManager.give(sender, args[1], args[2], amount);
         return true;
     }
 

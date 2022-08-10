@@ -116,7 +116,7 @@ public class Join extends CraftItemBase {
         // 设置基本的ItemMeta
         ItemMeta im = this.setBaseItemMeta(is);
         // 添加附魔效果
-        if (getGlowing()) {
+        if (isGlowing()) {
             im.addEnchant(Enchantment.MENDING, 1, true);
             if (!flags.contains(ItemFlag.HIDE_ENCHANTS))
                 im.addItemFlags(ItemFlag.HIDE_ENCHANTS);
