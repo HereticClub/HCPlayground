@@ -1,6 +1,5 @@
 package org.hcmc.hcplayground.manager;
 
-import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -8,7 +7,6 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BookMeta;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -17,12 +15,10 @@ import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.enums.ItemFeatureType;
-import org.hcmc.hcplayground.enums.PanelSlotType;
 import org.hcmc.hcplayground.model.item.*;
-import org.hcmc.hcplayground.model.minion.MinionEntity;
 import org.hcmc.hcplayground.model.minion.MinionTemplate;
 import org.hcmc.hcplayground.runnable.UpdateLoreRunnable;
-import org.hcmc.hcplayground.serialization.PanelSlotTypeSerialization;
+import org.hcmc.hcplayground.serialization.MaterialSerialization;
 import org.hcmc.hcplayground.utility.Global;
 import org.hcmc.hcplayground.utility.MaterialData;
 import org.jetbrains.annotations.NotNull;
@@ -88,20 +84,20 @@ public class ItemManager {
         ConfigurationSection section;
         // 获取weapons节段内容
         section = yaml.getConfigurationSection("weapons");
-        if (section != null) itemWeapons = Global.SetItemList(section, Weapon.class);
+        if (section != null) itemWeapons = Global.deserializeList(section, Weapon.class);
         // 获取armors节段内容
         section = yaml.getConfigurationSection("armors");
-        if (section != null) itemArmors = Global.SetItemList(section, Armor.class);
+        if (section != null) itemArmors = Global.deserializeList(section, Armor.class);
         // 获取hands节段内容
         section = yaml.getConfigurationSection("hands");
-        if (section != null) itemHands = Global.SetItemList(section, Hand.class);
+        if (section != null) itemHands = Global.deserializeList(section, Hand.class);
         // 获取crazies节段内容
         section = yaml.getConfigurationSection("crazies");
-        if (section != null) itemCrazies = Global.SetItemList(section, Crazy.class);
+        if (section != null) itemCrazies = Global.deserializeList(section, Crazy.class);
         // 获取joins节段内容，需要处理作为书本的物品
         section = yaml.getConfigurationSection("joins");
         if (section != null) {
-            itemJoins = Global.SetItemList(section, Join.class);
+            itemJoins = Global.deserializeList(section, Join.class);
             for (Join join : itemJoins) {
                 // 获取Join类物品的Id
                 String[] keys = join.getId().split("\\.");
@@ -158,6 +154,9 @@ public class ItemManager {
      * @return ItemBase实例
      */
     public static ItemBase createItemBase(Material material, int amount) {
+        return new CraftItemBase(material, amount);
+    }
+    public static ItemBase createItemBase(String material, int amount) {
         return new CraftItemBase(material, amount);
     }
 
@@ -232,6 +231,13 @@ public class ItemManager {
         public CraftItemBase(Material material, int amount) {
             this.material = new MaterialData();
             this.material.setData(material, material.name());
+            this.amount = amount;
+        }
+
+        public CraftItemBase(String material, int amount) {
+            Material m = MaterialSerialization.parse(material);
+            this.material = new MaterialData();
+            this.material.setData(m, m.name());
             this.amount = amount;
         }
 

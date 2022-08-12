@@ -23,7 +23,7 @@ public class SidebarManager {
     }
 
     public static void Load(YamlConfiguration yaml) throws IllegalAccessException {
-        scoreboards = Global.SetItemList(yaml, ScoreboardItem.class);
+        scoreboards = Global.deserializeList(yaml, ScoreboardItem.class);
     }
 
     /**

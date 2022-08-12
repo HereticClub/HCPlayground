@@ -25,7 +25,7 @@ import org.hcmc.hcplayground.manager.LanguageManager;
 import org.hcmc.hcplayground.manager.MMOSkillManager;
 import org.hcmc.hcplayground.manager.MenuManager;
 import org.hcmc.hcplayground.manager.PlayerManager;
-import org.hcmc.hcplayground.model.level.MMOSkill;
+import org.hcmc.hcplayground.model.mmo.MMOSkill;
 import org.hcmc.hcplayground.model.player.PlayerData;
 import org.hcmc.hcplayground.utility.MaterialData;
 import org.hcmc.hcplayground.utility.PlayerHeaderUtil;
@@ -33,7 +33,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
-public class MenuPanel extends Command implements InventoryHolder {
+public class MenuPanel implements InventoryHolder {
 
     private static final String COMMAND_ARGS_OPEN = "open";
     private static final String COMMAND_ARGS_CLOSE = "close";
@@ -78,9 +78,12 @@ public class MenuPanel extends Command implements InventoryHolder {
     @Expose
     @SerializedName(value = "title")
     private String title;
+    /*
     @Expose
     @SerializedName(value = "permission")
     private String permission;
+
+     */
     @Expose
     @SerializedName(value = "inventory-type")
     private InventoryType inventoryType = InventoryType.CHEST;
@@ -93,9 +96,12 @@ public class MenuPanel extends Command implements InventoryHolder {
     @Expose
     @SerializedName(value = "worlds")
     private List<String> enableWorlds = new ArrayList<>();
+    /*
     @Expose
     @SerializedName(value = "aliases")
     private List<String> aliases = new ArrayList<>();
+
+     */
 
     @Expose(deserialize = false)
     private List<MenuPanelSlot> decorates = new ArrayList<>();
@@ -106,47 +112,36 @@ public class MenuPanel extends Command implements InventoryHolder {
     @Expose(serialize = false, deserialize = false)
     private JavaPlugin plugin = HCPlayground.getInstance();
 
-    public MenuPanel(String text) {
-        super(text);
-    }
+    public MenuPanel() {
 
-    @Override
-    public boolean execute(@NotNull CommandSender sender, @NotNull String label, @NotNull String[] args) {
-        Player player = (Player) sender;
-
-        try {
-            this.setDecorates(MenuManager.setPlaceholders(this, player));
-            this.open(player);
-        } catch (InvalidConfigurationException e) {
-            throw new RuntimeException(e);
-        }
-
-        return true;
     }
 
     public MenuPanelSlot getPanelSlot(int index) {
         return decorates.stream().filter(x -> x.getSlots().contains(index)).findAny().orElse(null);
     }
 
-    public void initialCommand() {
-        if (plugin == null) plugin = HCPlayground.getInstance();
-        // 以下两个属性必须设置为指令的名称
-        this.setLabel(this.id);
-        this.setName(this.id);
-        // 以下所有属性值都不能为null
-        if (aliases == null) aliases = new ArrayList<>();
-        if (permission == null) permission = "";
-
-        if (!this.permission.equalsIgnoreCase("")) this.setPermission(this.permission);
-        this.setAliases(this.aliases);
-        this.setPermissionMessage(LanguageManager.getString("permission-message").replace("%permission%", permission));
-        this.setUsage(LanguageManager.getString(String.format("%s.usage", id)));
-        this.setDescription(LanguageManager.getString(String.format("%s.description", id)));
-    }
-
     public String getId() {
         return id;
     }
+
+    /*
+    public List<String> getAliases() {
+        return aliases;
+    }
+
+    public void setAliases(List<String> aliases) {
+        this.aliases = aliases;
+    }
+
+    public String getPermission() {
+        return permission;
+    }
+
+    public void setPermission(String permission) {
+        this.permission = permission;
+    }
+
+     */
 
     public String getTitle() {
         return title;
@@ -204,10 +199,6 @@ public class MenuPanel extends Command implements InventoryHolder {
                     .replace("%world%", worldName)
                     .replace("%menu%", title)
             );
-            return;
-        }
-        if (!StringUtils.isBlank(permission) && !player.hasPermission(permission) && !player.isOp()) {
-            player.sendMessage(LanguageManager.getString("permission-message").replace("%permission%", permission));
             return;
         }
 
@@ -316,7 +307,8 @@ public class MenuPanel extends Command implements InventoryHolder {
 
                 im.addItemFlags(slot.getFlags().toArray(new ItemFlag[0]));
                 im.setLore(slot.getLore());
-                im.setDisplayName(slot.getDisplay().replace("%player%", player.getName()));
+                if (!StringUtils.isBlank(slot.getDisplay()))
+                    im.setDisplayName(slot.getDisplay().replace("%player%", player.getName()));
 
                 if (slot.isGlowing()) {
                     im.addEnchant(Enchantment.MENDING, 1, true);

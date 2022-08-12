@@ -27,9 +27,9 @@ public class CommandManager {
 
     public static void Load(YamlConfiguration yaml) throws IllegalAccessException, NoSuchFieldException {
         // 从command.yml获取可执行的指令集
-        Commands = Global.SetItemList(yaml, CommandItem.class);
+        Commands = Global.deserializeList(yaml, CommandItem.class);
         // 从CommandMap字段获取CommandMap实例
-        CommandMap commandMap = Global.CommandMap;
+        CommandMap commandMap = Global.getCommandMap();
         // 注册自定义命令，这些命令无需在plugin.yml中定义
         for (CommandItem item : Commands) {
             item.Enroll(commandMap);
@@ -37,7 +37,7 @@ public class CommandManager {
             String path = String.format("%s.args", item.id);
             ConfigurationSection section = yaml.getConfigurationSection(path);
             if (section == null) continue;
-            item.args = Global.SetItemList(section, CommandArgument.class);
+            item.args = Global.deserializeList(section, CommandArgument.class);
         }
     }
 

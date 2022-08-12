@@ -56,21 +56,21 @@ public class MinionEntity {
     @SerializedName(value = "sack")
     private Map<Material, Integer> sack = new HashMap<>();
     @Expose
-    @SerializedName(value = "id")
+    @SerializedName(value = "uuid")
     private UUID uuid;
     @Expose
     @SerializedName(value = "owner")
     private UUID owner;
 
-    @Expose(serialize = false, deserialize = false)
+    @Expose(deserialize = false)
     private String id;
-    @Expose(serialize = false, deserialize = false)
+    @Expose(deserialize = false)
     private Location location;
-    @Expose(serialize = false, deserialize = false)
+    @Expose(deserialize = false)
     private List<Location> platform = new ArrayList<>();
-    @Expose(serialize = false, deserialize = false)
+    @Expose(deserialize = false)
     private Date lastAcquireTime = new Date();
-    @Expose(serialize = false, deserialize = false)
+    @Expose(deserialize = false)
     private ArmorStand armorStand;
     @Expose(serialize = false, deserialize = false)
     private Inventory inventory;

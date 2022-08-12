@@ -1,20 +1,14 @@
 package org.hcmc.hcplayground.manager;
 
-import com.google.gson.reflect.TypeToken;
 import org.bukkit.command.CommandMap;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.hcmc.hcplayground.model.ccmd.CcmdAction;
 import org.hcmc.hcplayground.model.ccmd.CcmdItem;
-import org.hcmc.hcplayground.model.command.CommandItem;
-import org.hcmc.hcplayground.model.item.ItemBase;
 import org.hcmc.hcplayground.utility.Global;
 
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 public class CcmdManager {
 
@@ -25,16 +19,16 @@ public class CcmdManager {
     }
 
     public static void Load(YamlConfiguration yaml) throws IllegalAccessException {
-        CommandMap commandMap = Global.CommandMap;
+        CommandMap commandMap = Global.getCommandMap();
 
-        commands = Global.SetItemList(yaml, CcmdItem.class);
+        commands = Global.deserializeList(yaml, CcmdItem.class);
         for (CcmdItem cc : commands) {
             cc.Enroll(commandMap);
 
-            String path = String.format("%s.actions", cc.id);
+            String path = String.format("%s.actions", cc.getId());
             ConfigurationSection section = yaml.getConfigurationSection(path);
             if (section == null) continue;
-            cc.actions = Global.SetItemList(section, CcmdAction.class);
+            cc.actions = Global.deserializeList(section, CcmdAction.class);
         }
     }
 

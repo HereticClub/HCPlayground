@@ -6,8 +6,8 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.hcmc.hcplayground.enums.MMOSkillType;
-import org.hcmc.hcplayground.model.level.MMOSkill;
-import org.hcmc.hcplayground.model.level.MMOSkillLevel;
+import org.hcmc.hcplayground.model.mmo.MMOSkill;
+import org.hcmc.hcplayground.model.mmo.MMOSkillLevel;
 import org.hcmc.hcplayground.utility.Global;
 
 import java.util.ArrayList;
@@ -114,16 +114,14 @@ public class MMOSkillManager {
     }
 
     public static void Load(YamlConfiguration yaml) {
-        skills = Global.SetItemList(yaml, MMOSkill.class);
-        idList.clear();
+        skills = Global.deserializeList(yaml, MMOSkill.class);
+        idList = yaml.getKeys(false).stream().toList();
 
         for (MMOSkill skill : skills) {
-            idList.add(skill.getId());
-
             String path = String.format("%s.levels", skill.getId());
             ConfigurationSection section = yaml.getConfigurationSection(path);
             if (section == null) continue;
-            skill.setLevels(Global.SetItemList(section, MMOSkillLevel.class));
+            skill.setLevels(Global.deserializeList(section, MMOSkillLevel.class));
         }
     }
 

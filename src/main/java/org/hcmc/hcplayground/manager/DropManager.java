@@ -46,7 +46,7 @@ public class DropManager {
         ConfigurationSection section = yaml.getConfigurationSection("dropList");
         if (section == null) return;
         // 获取额外掉落物品列表
-        dropItemList = Global.SetItemList(section, DropItem.class);
+        dropItemList = Global.deserializeList(section, DropItem.class);
     }
 
     // 钓鱼时的额外掉落

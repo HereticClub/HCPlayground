@@ -22,10 +22,6 @@ import java.util.*;
 
 public class CcmdItem extends Command {
 
-    private Plugin plugin = HCPlayground.getInstance();
-    @Expose(serialize = false, deserialize = false)
-    public String id;
-
     @Expose
     @SerializedName(value = "permission")
     public String permission;
@@ -45,7 +41,16 @@ public class CcmdItem extends Command {
     @SerializedName(value = "worlds")
     public List<String> worlds = new ArrayList<>();
 
+    @Expose(deserialize = false)
+    private String id;
+    @Expose(deserialize = false)
     public List<CcmdAction> actions = new ArrayList<>();
+    @Expose(deserialize = false, serialize = false)
+    private Plugin plugin = HCPlayground.getInstance();
+
+    public String getId() {
+        return id;
+    }
 
     public CcmdItem(@NotNull String name) {
         super(name);

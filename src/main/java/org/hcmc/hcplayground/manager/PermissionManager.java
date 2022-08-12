@@ -4,10 +4,7 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
-import org.bukkit.permissions.Permissible;
 import org.bukkit.permissions.Permission;
-import org.bukkit.permissions.PermissionAttachment;
-import org.bukkit.permissions.PermissionAttachmentInfo;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.hcmc.hcplayground.HCPlayground;
@@ -35,7 +32,7 @@ public class PermissionManager {
     public static void Load(YamlConfiguration yaml) throws IllegalAccessException {
         ConfigurationSection section = yaml.getConfigurationSection("permissions");
         if (section == null) return;
-        Permissions = Global.SetItemList(section, PermissionItem.class);
+        Permissions = Global.deserializeList(section, PermissionItem.class);
 
         Set<Permission> bukkitPerms = pluginManager.getPermissions();
         for (Permission p : bukkitPerms) {

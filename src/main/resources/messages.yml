@@ -18,6 +18,7 @@
 # %hcplayground_intelligence%: 获得玩家智力值
 # %hcplayground_digging_speed%: 获得玩家挖掘速度值
 # %hcplayground_logging_speed%: 获得玩家伐木速度值
+# %hcplayground_balance%: 获得玩家拥有的金钱
 messages:
   # 没有权限运行该指令时的提示，可使用%permission%占位符，代表当前需要的权限
   permission-message: '&4You need &e%permission% &4to run this command.'
@@ -98,28 +99,6 @@ messages:
     &cYour account &e%player% &chas been banned by %master%
     &7please contact game master if any question
     &7Reason: &e%reason%
-  # 重新加载插件配置时显示，可以使用%time_escaped%占位符，表示重新加载插件所使用的时间，单位: 毫秒
-  reload: '&aConfiguration reload completed, time escaped: &e%time_escaped% &ams'
-  # 当尝试获取MMOSkillType枚举值失败时显示
-  # 可以使用%skill%占位符，表示要尝试获取MMOSkillType枚举值的名称
-  skillTypeInvalid: '&cSkill &e%skill% &cis invalid.'
-  # 玩家在线状态信息
-  onlineStatusMessage:
-    # 玩家在线时信息提示
-    true: '&aOnline'
-    # 玩家离线时信息提示
-    false: '&cOffline'
-  # 当系统出现错误时显示，一般情况下只有当系统出错时才会显示此信息，可以使用%player%占位符，代表执行该指令的玩家
-  systemError: '&4Oooooooops!!! Something went wrong!'
-  # 系统管理员的名字，当使用控制台指令时以此名称代替执行指令的玩家名称
-  systemAdminName: '&eSystem Administrator'
-  numberFormatInvalid: '&cNumber format not right!'
-  # 当玩家尝试在冷却时间内运行自定义指令时显示
-  # 可以使用%cooldown%占位符，表示该指令的剩余冷却时间，单位: 秒
-  # 可以使用%command%占位符，表示该指令的名称
-  customCommandCooldown: '&cYou have to wait for &e%remain% &csecond to run this command: &e%command%'
-  # 当玩法或者功能正在开发中，并且被玩家尝试使用时显示
-  UnderConstruction: '&eThis feature is under construction and will be available soon'
   # 当玩家准备进入赛道设计模式时显示，可以使用%second%占位符，表示需要等待的秒数
   courseEnteringDesignMode: '&fYou are coming into course design mode, please waiting for &e%second% &fsecond'
   # 当玩家正式进入赛道设计模式后显示
@@ -164,16 +143,30 @@ messages:
   courseNoAssetInName: '&fThere are no course asset in your name'
   # 玩家拥有某些赛道
   courseHasAssetInName: '&6The course(s) you owned as below'
-  # 当玩家尝试创建跑酷赛道，但该赛道已经存在时显示，可以使用%course%占位符，表示要创建的赛道名称
-  courseExist: |- 
-    &cThe course &e%course% &cis already exists
-    &cUse &e/course modify %course% &ccommand to modify
   # 当玩家在设计跑酷赛道，并且玩家的位置超出了跑酷赛道的设计范围时显示
   outOfCourseRange: '&cYou are out of course range'
   # 当玩家在设计跑酷赛道，并且玩家的位置进入了跑酷赛道的设计范围时显示
   enterCourseRange: '&aYou just entered course range'
   # 当玩家设置赛道的跑酷大厅，但跑酷大厅的名字不存在时显示
   lobbyNotExist: '&aLobby &e%lobby% &cis not exist'
+  # 当玩家尝试创建跑酷赛道，但该赛道已经存在时显示，可以使用%course%占位符，表示要创建的赛道名称
+  courseExist: |-
+    &cThe course &e%course% &cis already exists
+    &cUse &e/course modify %course% &ccommand to modify
+  # 当尝试获取MMOSkillType枚举值失败时显示
+  # 可以使用%skill%占位符，表示要尝试获取MMOSkillType枚举值的名称
+  skillTypeInvalid: '&cSkill &e%skill% &cis invalid.'
+  reword:
+    money: '&6 Money: '
+    point: '&e Honor: '
+    recipe: '&f Recipe: '
+    particle: '&9 Particle: '
+    health: '&c Health: '
+    armor: '&1 Armor: '
+    damage: '&4 Damage: '
+    crit: '&d Critical: '
+    crit-damage: '&d Critical Damage: '
+    fortune: '&6 Fortune: '
   # 不能获得爪牙类型时显示，可以使用%minion_type%占位符，表示要测试的爪牙类型
   minionUnknownType: '&cUnknown minion type: %minion_type%'
   # 当玩家尝试使用非自己拥有的Minion时显示
@@ -339,3 +332,23 @@ messages:
       line: '&f%player%: &%course% -> %time%'
       #模板的footer，不配置则不显示
       footer: ''
+  # 玩家在线状态信息
+  onlineStatusMessage:
+    # 玩家在线时信息提示
+    true: '&aOnline'
+    # 玩家离线时信息提示
+    false: '&cOffline'
+  # 重新加载插件配置时显示，可以使用%time_escaped%占位符，表示重新加载插件所使用的时间，单位: 毫秒
+  reload: '&aConfiguration reload completed, time escaped: &e%time_escaped% &ams'
+  # 当系统出现错误时显示，一般情况下只有当系统出错时才会显示此信息，可以使用%player%占位符，代表执行该指令的玩家
+  systemError: '&4Oooooooops!!! Something went wrong!'
+  # 系统管理员的名字，当使用控制台指令时以此名称代替执行指令的玩家名称
+  systemAdminName: '&eSystem Administrator'
+  # 尝试解析字符串为数字但失败时显示，可以使用%numeric%，表示要尝试解析的字符串
+  numberFormatInvalid: '&cNumber format not right!: %numeric%'
+  # 当玩家尝试在冷却时间内运行自定义指令时显示
+  # 可以使用%cooldown%占位符，表示该指令的剩余冷却时间，单位: 秒
+  # 可以使用%command%占位符，表示该指令的名称
+  customCommandCooldown: '&cYou have to wait for &e%remain% &csecond to run this command: &e%command%'
+  # 当玩法或者功能正在开发中，并且被玩家尝试使用时显示
+  UnderConstruction: '&eThis feature is under construction and will be available soon'

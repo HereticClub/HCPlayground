@@ -192,7 +192,7 @@ public class PluginListener implements Listener {
         String message = event.getMessage();
         String[] keys = message.split(" ");
         String commandText = keys[0].substring(1);
-        CommandMap commandMap = Global.CommandMap;
+        CommandMap commandMap = Global.getCommandMap();
         Command command = commandMap.getCommand(commandText);
         if (command == null) return;
 

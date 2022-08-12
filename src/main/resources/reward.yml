@@ -1,0 +1,13 @@
+deluxe:
+  money: 10000
+  point: 500
+  lore:
+    - '&7等级奖励:'
+  items:
+    - weapon.兵主的开罐器,1
+    - diamond_block,64
+    - join.enchanted_cobblestone,64
+  recipes:
+    - enhance_cobblestone1
+    - enhance_cobblestone2
+  particles: []

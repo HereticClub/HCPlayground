@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import com.sk89q.worldguard.WorldGuard;
+import me.clip.placeholderapi.PlaceholderAPI;
 import net.milkbowl.vault.chat.Chat;
 import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.permission.Permission;
@@ -49,11 +50,13 @@ import java.io.InputStreamReader;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.*;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.logging.Level;
 
@@ -97,6 +100,7 @@ public final class Global {
     private final static String FIELD_NAME_COMMANDMAP = "commandMap";
     private final static String DATE_TIME_FORMAT = "yyyy/MM/dd HH:mm:ss";
 
+    private final static String FOLDER_DEBUG = "debug";
     private final static String FOLDER_PROFILE = "profile";
     private final static String FOLDER_DATABASE = "database";
     private final static String FOLDER_DESIGNER = "designer";
@@ -116,7 +120,8 @@ public final class Global {
     private final static String FILE_SIDEBAR = "scoreboard.yml";
     private final static String FILE_HOLOGRAM = "hologram.yml";
     private final static String FILE_MINION = "minion.yml";
-    private final static String FILE_MMO_LEVEL="level.yml";
+    private final static String FILE_MMO_LEVEL = "level.yml";
+    private final static String FILE_MMO_REWARD = "reward.yml";
     public final static String FILE_COURSE = "database/course.yml";
     public final static String FILE_RECORD_MINION = "database/minions.json";
     public final static String FILE_RECORD_BLOCK = "database/blocks.json";
@@ -134,7 +139,6 @@ public final class Global {
     public static Economy economyApi = null;
     public static Chat chatApi = null;
     public static Permission permissionApi = null;
-    public static CommandMap CommandMap = null;
 
     static {
         plugin = JavaPlugin.getPlugin(HCPlayground.class);
@@ -142,6 +146,7 @@ public final class Global {
         yamlMap = new HashMap<>();
         HealthScoreboard = CreateScoreboard();
         childrenFolders = new String[]{
+                FOLDER_DEBUG,
                 FOLDER_DATABASE,
                 FOLDER_DESIGNER,
                 FOLDER_PROFILE,
@@ -165,6 +170,7 @@ public final class Global {
                 FILE_RECIPE,
                 FILE_SIDEBAR,
                 FILE_MMO_LEVEL,
+                FILE_MMO_REWARD,
         };
         ymlResources = new String[]{
                 FILE_COMMANDS,
@@ -176,6 +182,7 @@ public final class Global {
                 .enableComplexMapKeySerialization()
                 .excludeFieldsWithoutExposeAnnotation()
                 .registerTypeAdapter(CcmdActionType.class, new CcmdActionTypeSerialization())
+                .registerTypeAdapter(CompareType.class, new CompareTypeSerialization())
                 .registerTypeAdapter(CrazyBlockType.class, new CrazyTypeSerialization())
                 .registerTypeAdapter(Enchantment.class, new EnchantmentSerialization())
                 .registerTypeAdapter(EnchantmentItem.class, new EnchantmentItemSerialization())
@@ -197,6 +204,7 @@ public final class Global {
                 .registerTypeAdapter(MinionType.class, new MinionTypeSerialization())
                 .registerTypeAdapter(MMOSkillType.class, new MMOLevelTypeSerialization())
                 .registerTypeAdapter(NamespacedKey.class, new NamespacedKeySerialization())
+                .registerTypeAdapter(OperatorType.class, new OperatorTypeSerialization())
                 .registerTypeAdapter(PanelSlotType.class, new PanelSlotTypeSerialization())
                 .registerTypeAdapter(PermissionDefault.class, new PermissionDefaultSerialization())
                 .registerTypeAdapter(PotionEffect.class, new PotionEffectSerialization())
@@ -206,12 +214,6 @@ public final class Global {
                 .setDateFormat(DATE_TIME_FORMAT)
                 .setPrettyPrinting()
                 .create();
-
-        try {
-            CommandMap = getCommandMap();
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            e.printStackTrace();
-        }
     }
 
     public static void ReloadConfiguration() throws IllegalAccessException, NoSuchFieldException, SQLException, NoSuchAlgorithmException, InvalidKeySpecException, IOException {
@@ -221,43 +223,58 @@ public final class Global {
         // 兼容前版本的配置，并且添加新版本的配置
         SaveYamlResource();
         // 加载插件的基本设置config.yml
-        LoadConfig();
+        LoadPluginConfig();
         // 从yml格式文档加载配置到实例，必须按照指定的加载顺序
-        // 1.加载本地化文档
+        // 1.加载本地化文档，所有加载项的依赖，必须最优先加载
         LanguageManager.Load(getYamlConfiguration(FILE_MESSAGES));
         // 2.加载权限列表
         PermissionManager.Load(getYamlConfiguration(FILE_PERMISSION));
         // 3.加载指令
         CommandManager.Load(getYamlConfiguration(FILE_COMMANDS));
         // 4.加载自定义物品
+        // 无依赖，可优先加载
         ItemManager.Load(getYamlConfiguration(FILE_ITEMS));
-        // 5.加载破坏方块的自定义掉落列表，可掉落自定义物品
-        DropManager.Load(getYamlConfiguration(FILE_DROPS));
-        // 6.加载等级设置列表
-        MMOSkillManager.Load(getYamlConfiguration(FILE_MMO_LEVEL));
-        // 7.加载各种菜单(箱子)模板
-        MenuManager.Load(getYamlConfiguration(FILE_MENU));
-        // 8.加载各种可生成的生物列表
-        MobManager.Load(getYamlConfiguration(FILE_MOBS));
-        // 9.加载随机公告消息列表
-        BroadcastManager.Load(getYamlConfiguration(FILE_BROADCAST));
-        // 10.加载清除垃圾物品设置
-        ClearLagManager.Load(getYamlConfiguration(FILE_CLEARLAG));
-        // 11.加载爪牙模板配置
+        // 5.加载爪牙模板配置
+        // 无依赖，可优先加载
         MinionManager.Load(getYamlConfiguration(FILE_MINION));
-        // 12.加载跑酷赛道信息
+        // 6.加载跑酷赛道信息
+        // 无依赖，可优先加载
         CourseManager.Load(getYamlConfiguration(FILE_COURSE));
-        // 13.加载自定义命令列表
+        // 7.加载各种菜单(箱子)模板
+        // 无依赖，可优先加载
+        MenuManager.Load(getYamlConfiguration(FILE_MENU));
+        // 8.加载自定义命令列表
+        // 无依赖，可优先加载
         CcmdManager.Load(getYamlConfiguration(FILE_CCMD));
-        // 14.加载计分板定义列表
+        // 9.加载计分板定义列表
+        // 无依赖，可优先加载
         SidebarManager.Load(getYamlConfiguration(FILE_SIDEBAR));
-        // 15.加载漂浮字体定义列表
-        HologramManager.Load(getYamlConfiguration(FILE_HOLOGRAM));
-        // 98.加载配方列表
+        // 10.加载随机公告消息列表
+        // 无依赖，可优先加载
+        BroadcastManager.Load(getYamlConfiguration(FILE_BROADCAST));
+        // 11.加载清除垃圾物品设置
+        // 无依赖，可优先加载
+        ClearLagManager.Load(getYamlConfiguration(FILE_CLEARLAG));
+        // 12.加载破坏方块的自定义掉落列表，可掉落自定义物品
+        // 依赖ItemManager
+        DropManager.Load(getYamlConfiguration(FILE_DROPS));
+        // 13.加载各种可生成的生物列表
+        // 依赖ItemManager
+        MobManager.Load(getYamlConfiguration(FILE_MOBS));
+        // 14.加载配方列表
+        // 依赖ItemManager
         RecipeManager.Load(getYamlConfiguration(FILE_RECIPE));
-        // 99.加载自定义可放置方块的摆放记录
-        //RecordManager.Load(getYamlConfiguration(FILE_RECORD));
+        // 15.加载奖励配置
+        // 依赖ItemManager, RecipeManager
+        RewardManager.Load(getYamlConfiguration(FILE_MMO_REWARD));
+        // 16.加载等级设置列表
+        // 依赖ItemManager, RecipeManager, RewardManager
+        MMOSkillManager.Load(getYamlConfiguration(FILE_MMO_LEVEL));
+        // 101.加载自定义可放置方块的摆放记录
+        // 依赖ItemManager, MinionManager
         RecordManager.Load();
+        // 201.加载漂浮字体定义列表
+        HologramManager.Load(getYamlConfiguration(FILE_HOLOGRAM));
     }
 
     /**
@@ -286,10 +303,79 @@ public final class Global {
     }
 
     /**
-     * 获取section内所有子节段，利用Gson反序列到每一个T对象，然后返回List&lt;T&gt;数组
+     * 获取section节段内容，使用Gson反序列到T对象，并且设置placeholder，然后返回T对象
+     */
+    public static <T> T deserialize(@NotNull ConfigurationSection section, @NotNull Player player, @NotNull Class<T> tClass) {
+        T item = null;
+
+        try {
+            String ClassName = tClass.getSimpleName();
+            String value = GsonObject.toJson((section).getValues(false)).replace('&', '§');
+            value = PlaceholderAPI.setPlaceholders(player, value);
+            item = GsonObject.fromJson(value, tClass);
+
+            Class<?> findClass = tClass;
+            Field fieldId = null;
+            while (findClass != null) {
+                Field[] fields = findClass.getDeclaredFields();
+                fieldId = Arrays.stream(fields).filter(x -> x.getName().equalsIgnoreCase("id")).findAny().orElse(null);
+                if (fieldId != null) break;
+                findClass = findClass.getSuperclass();
+            }
+
+            if (fieldId != null) {
+                fieldId.setAccessible(true);
+                fieldId.set(item, String.format("%s.%s", ClassName, section.getName()));
+            }
+
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+
+        return item;
+    }
+
+    @NotNull
+    public static <T> List<T> deserializeList(@NotNull ConfigurationSection section, @NotNull Player player, @NotNull Class<T> tClass) {
+        Set<String> keys = section.getKeys(false);
+        String ClassName = tClass.getSimpleName();
+        List<T> list = new ArrayList<>();
+
+        try {
+            for (String s : keys) {
+                ConfigurationSection itemSection = section.getConfigurationSection(s);
+                if (itemSection == null) continue;
+                String value = GsonObject.toJson(itemSection.getValues(false)).replace('&', '§');
+                value = PlaceholderAPI.setPlaceholders(player, value);
+                //System.out.println(value);
+
+                T item = GsonObject.fromJson(value, tClass);
+                Class<?> findClass = tClass;
+                Field fieldId = null;
+                while (findClass != null) {
+                    Field[] fields = findClass.getDeclaredFields();
+                    fieldId = Arrays.stream(fields).filter(x -> x.getName().equalsIgnoreCase("id")).findAny().orElse(null);
+                    if (fieldId != null) break;
+                    findClass = findClass.getSuperclass();
+                }
+
+                if (fieldId != null) {
+                    fieldId.setAccessible(true);
+                    fieldId.set(item, String.format("%s.%s", ClassName, s));
+                }
+                list.add(item);
+            }
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+
+        return list;
+    }
+    /**
+     * 获取section内所有子节段，使用Gson反序列到每一个T对象，然后返回List&lt;T&gt;数组
      */
     @NotNull
-    public static <T> List<T> SetItemList(ConfigurationSection section, Class<T> tClass) {
+    public static <T> List<T> deserializeList(ConfigurationSection section, Class<T> tClass) {
         Set<String> keys = section.getKeys(false);
         String ClassName = tClass.getSimpleName();
         List<T> list = new ArrayList<>();
@@ -325,10 +411,10 @@ public final class Global {
     }
 
     /**
-     * 获取yml文档内所有子节段，利用Gson反序列到每一个T对象，然后返回List&lt;T&gt;数组
+     * 获取yml文档内所有子节段，使用Gson反序列到每一个T对象，然后返回List&lt;T&gt;数组
      */
     @NotNull
-    public static <T> List<T> SetItemList(YamlConfiguration yaml, Class<T> tClass) {
+    public static <T> List<T> deserializeList(YamlConfiguration yaml, Class<T> tClass) {
         Set<String> keys = yaml.getKeys(false);
         List<T> list = new ArrayList<>();
 
@@ -395,13 +481,19 @@ public final class Global {
 
         File dataFolder = plugin.getDataFolder();
 
-        if (!dataFolder.exists()) {
-            boolean flag = dataFolder.mkdir();
-        }
+        try {
+            if (!dataFolder.exists()) {
+                Files.createDirectory(dataFolder.toPath());
+            }
 
-        for (String s : childrenFolders) {
-            File f = new File(String.format("%s/%s", dataFolder, s));
-            boolean flag = f.mkdir();
+            for (String s : childrenFolders) {
+                File f = new File(String.format("%s/%s", dataFolder, s));
+                if (!f.exists()) {
+                    Files.createDirectory(f.toPath());
+                }
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -418,7 +510,7 @@ public final class Global {
     /**
      * 从config.yml加载插件的基本设置
      */
-    private static void LoadConfig() throws IllegalAccessException {
+    private static void LoadPluginConfig() throws IllegalAccessException {
         String value;
         ConfigurationSection section;
         YamlConfiguration config = getYamlConfiguration(FILE_CONFIG);
@@ -496,6 +588,23 @@ public final class Global {
     public static void LogWarning(String message) {
         plugin.getLogger().log(Level.WARNING, message);
     }
+    public static void LogDebug(Date date, String className, String methodMand, Level level, String... messages) {
+
+        try {
+            SimpleDateFormat df = new SimpleDateFormat("yyyyMMdd");
+            String filename = String.format("%s/%s/debug-%s.log", plugin.getDataFolder(), FOLDER_DEBUG, df.format(date));
+            Path path = Paths.get(filename);
+
+            List<String> lines = new ArrayList<>();
+            for (String line : messages) {
+                lines.add(String.format("[%s, %s, %s, %s] %s", date, className, methodMand, level.getLocalizedName(), line));
+            }
+            if (!Files.exists(path)) Files.createFile(path);
+            Files.write(path, lines, StandardOpenOption.APPEND);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     public static String getDateFormat(Date date, int format, Locale locale) {
         String dateFormat;
@@ -528,6 +637,22 @@ public final class Global {
         _s.setPitch((float) newPitch);
 
         return _s;
+    }
+
+    public static CommandMap getCommandMap() {
+        CommandMap commandMap = null;
+
+        try {
+            // 获取Bukkit.Server.CommandMap字段
+            Field fieldCommandMap = Bukkit.getServer().getClass().getDeclaredField(FIELD_NAME_COMMANDMAP);
+            // 设置CommandMap字段为可访问
+            fieldCommandMap.setAccessible(true);
+            // 从CommandMap字段获取CommandMap实例
+            commandMap = (CommandMap) fieldCommandMap.get(Bukkit.getServer());
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+        return commandMap;
     }
 
     private static void SetVaultEconomy() {
@@ -586,15 +711,6 @@ public final class Global {
             }
         }
         return yamlPlugin;
-    }
-
-    private static CommandMap getCommandMap() throws NoSuchFieldException, IllegalAccessException {
-        // 获取Bukkit.Server.CommandMap字段
-        Field fieldCommandMap = plugin.getServer().getClass().getDeclaredField(FIELD_NAME_COMMANDMAP);
-        // 设置CommandMap字段为可访问
-        fieldCommandMap.setAccessible(true);
-        // 从CommandMap字段获取CommandMap实例
-        return (CommandMap) fieldCommandMap.get(plugin.getServer());
     }
 
     private static Scoreboard CreateScoreboard() {

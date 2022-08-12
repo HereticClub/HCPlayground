@@ -16,6 +16,6 @@ public class MobManager {
     }
 
     public static void Load(YamlConfiguration yml) throws IllegalAccessException {
-        MobEntities = Global.SetItemList(yml, MobEntity.class);
+        MobEntities = Global.deserializeList(yml, MobEntity.class);
     }
 }

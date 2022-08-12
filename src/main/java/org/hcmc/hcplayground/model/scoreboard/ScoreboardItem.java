@@ -37,9 +37,9 @@ public class ScoreboardItem {
     /**
      * id，内置属性
      */
-    @Expose(serialize = false, deserialize = false)
+    @Expose(deserialize = false)
     private String id;
-    @Expose(serialize = false, deserialize = false)
+    @Expose(deserialize = false)
     private Map<String, String> mapTeamLayout;
 
     public String getId() {
@@ -73,7 +73,7 @@ public class ScoreboardItem {
         Scoreboard scoreboard = manager.getNewScoreboard();
         player.setScoreboard(scoreboard);
         // 计分板的计分项目
-        Objective objective = scoreboard.registerNewObjective(player.getName(), _dummy, _title);
+        Objective objective = scoreboard.registerNewObjective(player.getName(), Criteria.DUMMY, _title);
         objective.setDisplaySlot(DisplaySlot.SIDEBAR);
 
         int layoutSize = layout.size();

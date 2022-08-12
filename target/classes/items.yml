@@ -493,7 +493,8 @@ crazies:
     glowing: true
     # 物品的说明
     lore:
-      - '&7普通的工作台已经不能满足你的需求'
+      - '&7普通的工作台已经不能'
+      - '&7跟上世界的发展步伐'
     # 物品的可用世界列表，没有设置则表示任何世界可用
     worlds: []
     # 物品标签
@@ -504,28 +505,6 @@ crazies:
     # HIDE_PLACED_ON - 设置显示/隐藏哪些ItemStack可以被放置.
     # HIDE_POTION_EFFECTS - 设置显示/隐藏ItemStack的药水效果.
     # HIDE_UNBREAKABLE - 设置显示/隐藏不可破坏属性.
-    flags:
-      - HIDE_ATTRIBUTES
-      - HIDE_ENCHANTS
-  crazy_stone:
-    name: '&d疯狂的石头'
-    material: stone
-    type: CRAZY_CRAFTING_TABLE
-    glowing: true
-    lore:
-      - '&7一块疯狂的石头'
-    worlds: []
-    flags:
-      - HIDE_ATTRIBUTES
-      - HIDE_ENCHANTS
-  crazy_dirt:
-    name: '&e魔法泥土'
-    material: dirt
-    type: CRAZY_CRAFTING_TABLE
-    glowing: true
-    lore:
-      - '&7一块带有魔法的泥土'
-    worlds: []
     flags:
       - HIDE_ATTRIBUTES
       - HIDE_ENCHANTS

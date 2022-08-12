@@ -70,7 +70,7 @@ public class MinionManager {
         Inventory inv = Bukkit.createInventory(holder, 54, title);
         holder.setInventory(inv);
         // 获取在minion.yml中minion_panel的所有slots定义
-        List<MinionPanelSlot> slots = Global.SetItemList(panelSection, MinionPanelSlot.class);
+        List<MinionPanelSlot> slots = Global.deserializeList(panelSection, MinionPanelSlot.class);
         holder.setSlots(slots);
         // 按照slots定义摆放控制面板
         for (MinionPanelSlot slot : slots) {
@@ -248,7 +248,7 @@ public class MinionManager {
             ConfigurationSection _section = section.getConfigurationSection(type);
             if (_section == null) continue;
 
-            List<MinionTemplate> levels = Global.SetItemList(_section, MinionTemplate.class);
+            List<MinionTemplate> levels = Global.deserializeList(_section, MinionTemplate.class);
             // 遍历每个MinionType的每个Level
             for (MinionTemplate template : levels) {
                 templates.add(template);

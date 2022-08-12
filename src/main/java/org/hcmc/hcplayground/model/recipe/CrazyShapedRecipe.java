@@ -2,13 +2,16 @@ package org.hcmc.hcplayground.model.recipe;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.Recipe;
+import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -42,6 +45,12 @@ public class CrazyShapedRecipe implements Recipe {
     @SerializedName(value = "name")
     private NamespacedKey key;
     /**
+     * 配方的显示名称
+     */
+    @Expose
+    @SerializedName(value = "display")
+    private String display;
+    /**
      * 成分排列形状
      */
     @Expose
@@ -67,9 +76,9 @@ public class CrazyShapedRecipe implements Recipe {
     private final String group = "";
 
     // 以下变量不会参与序列化和反序列化
-    @Expose(serialize = false, deserialize = false)
+    @Expose(deserialize = false)
     private String id;
-    @Expose(serialize = false, deserialize = false)
+    @Expose(deserialize = false, serialize = false)
     private final Plugin plugin = HCPlayground.getInstance();
     /**
      * 配方的成分及数量的需求列表，由ingredients属性转换
@@ -78,6 +87,14 @@ public class CrazyShapedRecipe implements Recipe {
 
     public CrazyShapedRecipe() {
 
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public String getDisplay() {
+        return display;
     }
 
     public Map<Character, ItemBase> getIngredients() {
@@ -112,6 +129,15 @@ public class CrazyShapedRecipe implements Recipe {
         return group;
     }
 
+    public boolean isLegacy() {
+        List<ItemBase> itemBases = ingredients.values().stream().toList();
+
+        return itemBases.stream().allMatch(x -> StringUtils.isBlank(x.getId()))
+                && ingredientAmount.values().stream().allMatch(x -> x == 1)
+                && ingredientShape.get(0).length() <= 3
+                && ingredientShape.size() <= 3;
+    }
+
     public void prepareCrazyRecipe() {
         // 验证，成分摆放形状不能null
         int rowLength = -1;
@@ -119,6 +145,7 @@ public class CrazyShapedRecipe implements Recipe {
         Validate.isTrue(ingredientShape.size() >= 1 && ingredientShape.size() <= 6, "Crazy Crafting Recipes should be 1, 2, 3, 4, 5, 6 rows, not ", ingredientShape.size());
 
         this.requirements.clear();
+        if (StringUtils.isBlank(display)) display = key.getKey();
 
         // 验证，成分摆放形状必须是矩形
         for (String line : ingredientShape) {
@@ -238,5 +265,21 @@ public class CrazyShapedRecipe implements Recipe {
         is.setItemMeta(meta);
 
         return is;
+    }
+
+    public void setLegacyRecipe() {
+
+        Recipe r = Bukkit.getRecipe(key);
+        if (r != null) Bukkit.removeRecipe(key);
+
+        ShapedRecipe recipe = new ShapedRecipe(key, getResult());
+        recipe.shape(ingredientShape.toArray(new String[0]));
+        Set<Character> symbols = ingredients.keySet();
+        for (Character c : symbols) {
+            ItemBase ib = ingredients.get(c);
+            recipe.setIngredient(c, ib.toItemStack().getType());
+            recipe.setGroup(group);
+        }
+        Bukkit.addRecipe(recipe);
     }
 }

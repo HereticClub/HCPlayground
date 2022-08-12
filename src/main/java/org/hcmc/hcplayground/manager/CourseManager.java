@@ -16,7 +16,6 @@ import java.util.*;
 public class CourseManager {
 
     private static List<CourseInfo> courses = new ArrayList<>();
-    //private static String courseId;
     private static final Plugin plugin = HCPlayground.getInstance();
 
 
@@ -29,7 +28,7 @@ public class CourseManager {
     }
 
     public static void Load(YamlConfiguration yaml) throws IllegalAccessException {
-        courses = Global.SetItemList(yaml, CourseInfo.class);
+        courses = Global.deserializeList(yaml, CourseInfo.class);
         Collections.sort(courses);
     }
 

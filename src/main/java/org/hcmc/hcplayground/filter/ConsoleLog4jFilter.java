@@ -67,7 +67,7 @@ public class ConsoleLog4jFilter extends AbstractFilter {
         if (commandText == null) return Result.NEUTRAL;
 
         commandText = commandText.substring(1);
-        Command command = Global.CommandMap.getCommand(commandText);
+        Command command = Global.getCommandMap().getCommand(commandText);
         if (command == null) return Result.NEUTRAL;
 
         if (command.getName().equalsIgnoreCase(CommandItem.COMMAND_LOGIN)) return Result.DENY;

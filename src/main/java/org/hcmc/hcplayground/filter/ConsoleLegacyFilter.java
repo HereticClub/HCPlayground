@@ -46,7 +46,7 @@ public class ConsoleLegacyFilter implements Filter {
         if (commandText == null) return true;
 
         commandText = commandText.substring(1);
-        Command command = Global.CommandMap.getCommand(commandText);
+        Command command = Global.getCommandMap().getCommand(commandText);
         if (command == null) return true;
 
         if (command.getName().equalsIgnoreCase(CommandItem.COMMAND_LOGIN)) return false;

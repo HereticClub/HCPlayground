@@ -40,7 +40,7 @@ public class RecipeManager {
 
     public static void Load(YamlConfiguration yaml) throws IllegalAccessException {
         ConfigurationSection recipeSection = yaml.getConfigurationSection("recipes");
-        if (recipeSection != null) recipes = Global.SetItemList(recipeSection, CrazyShapedRecipe.class);
+        if (recipeSection != null) recipes = Global.deserializeList(recipeSection, CrazyShapedRecipe.class);
 
         craftPanelSection = yaml.getConfigurationSection("crafting_panel");
         anvilPanelSection = yaml.getConfigurationSection("anvil_panel");
@@ -48,16 +48,12 @@ public class RecipeManager {
         barrierItemSection = yaml.getConfigurationSection("barrier_item");
 
         for (CrazyShapedRecipe r : recipes) {
-            Map<Character, ItemBase> ingredients = r.getIngredients();
-            List<ItemBase> itemBases = ingredients.values().stream().toList();
             // 全部成分都是普通Material
             // 所有成分数量=1
             // 成分形状边长<=3
             // 则添加到传统配方
-            if (itemBases.stream().allMatch(x -> x.getId() == null)
-                    && r.getIngredientAmount().values().stream().allMatch(x -> x == 1)
-                    && r.getIngredientShape().size() <= 3) {
-                setLegacyRecipe(r);
+            if (r.isLegacy()) {
+                r.setLegacyRecipe();
             } else {
                 r.prepareCrazyRecipe();
             }
@@ -127,7 +123,7 @@ public class RecipeManager {
         CraftPanel panel = new CraftPanel();
         Inventory inventory = Bukkit.createInventory(panel, size, title);
         List<String> previewLore = craftPanelSection.getStringList("preview_extra_lore");
-        List<CraftPanelSlot> slots = Global.SetItemList(decorationSection, CraftPanelSlot.class);
+        List<CraftPanelSlot> slots = Global.deserializeList(decorationSection, CraftPanelSlot.class);
         previewLore.replaceAll(x -> x.replace("&", "§"));
 
         panel.setInventory(inventory);
@@ -149,6 +145,10 @@ public class RecipeManager {
         }
 
         return inventory;
+    }
+
+    public static CrazyShapedRecipe getRecipe(String id) {
+        return recipes.stream().filter(x -> x.getId().equalsIgnoreCase(id)).findAny().orElse(null);
     }
 
     public static CrazyShapedRecipe getRecipe(@NotNull Inventory inventory) {
@@ -174,22 +174,6 @@ public class RecipeManager {
         }
 
         return null;
-    }
-
-    private static void setLegacyRecipe(CrazyShapedRecipe crazyRecipe) {
-
-        Recipe r = Bukkit.getRecipe(crazyRecipe.getKey());
-        if (r != null) Bukkit.removeRecipe(crazyRecipe.getKey());
-
-        ShapedRecipe recipe = new ShapedRecipe(crazyRecipe.getKey(), crazyRecipe.getResult());
-        recipe.shape(crazyRecipe.getIngredientShape().toArray(new String[0]));
-        Set<Character> symbols = crazyRecipe.getIngredients().keySet();
-        for (Character c : symbols) {
-            ItemBase ib = crazyRecipe.getIngredients().get(c);
-            recipe.setIngredient(c, ib.toItemStack().getType());
-            recipe.setGroup(crazyRecipe.getGroup());
-        }
-        Bukkit.addRecipe(recipe);
     }
 
     @NotNull

@@ -21,7 +21,7 @@ public class HologramManager {
     }
 
     public static void Load(YamlConfiguration yaml) throws IllegalAccessException, SQLException {
-        holograms = Global.SetItemList(yaml, HologramItem.class);
+        holograms = Global.deserializeList(yaml, HologramItem.class);
         /*
         TODO: 实施利用盔甲架创建漂浮字体
         for (HologramItem hologram : holograms) {

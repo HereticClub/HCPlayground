@@ -81,7 +81,6 @@ public class HCPluginExpansion extends PlaceholderExpansion {
     public String onRequest(OfflinePlayer offlinePlayer, @NotNull String params) {
         Player player = offlinePlayer.getPlayer();
         if (player == null) return "Unknown Player";
-
         PlayerData data = PlayerManager.getPlayerData(player);
 
         if (params.equalsIgnoreCase(ItemBase.PERSISTENT_ARMOR_KEY))
@@ -122,6 +121,8 @@ public class HCPluginExpansion extends PlaceholderExpansion {
             return String.format("%.1f", data.getTotalDiggingSpeed());
         if (params.equalsIgnoreCase(ItemBase.PERSISTENT_LOGGING_SPEED))
             return String.format("%.1f", data.getTotalLoggingSpeed());
+        if (params.equalsIgnoreCase(PlayerData.ECONOMY_BALANCE_KEY))
+            return String.format("%.2f", data.getBalance());
 
         return null;
     }

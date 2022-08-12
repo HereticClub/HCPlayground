@@ -1081,8 +1081,12 @@ public class CommandItem extends Command {
         String menuId = args[1];
         String target = args.length >= 3 ? args[2] : sender.getName();
         Player targetPlayer = Bukkit.getPlayer(target);
-        if (targetPlayer == null) return false;
-
+        // 显示目标玩家不存在信息
+        if (targetPlayer == null) {
+            sender.sendMessage(LanguageManager.getString("playerNotExist").replace("%player%", target));
+            return false;
+        }
+        // 显示菜单实例不存在信息
         MenuPanel menu = MenuManager.getMenuPanel(menuId, targetPlayer);
         if (menu == null) {
             targetPlayer.sendMessage(LanguageManager.getString("menuNotExist").replace("%menu%", menuId));
@@ -1113,6 +1117,7 @@ public class CommandItem extends Command {
 
     private boolean RunHCReloadCommand(CommandSender sender) throws SQLException, NoSuchAlgorithmException, InvalidKeySpecException, NoSuchFieldException, IllegalAccessException, IOException {
         long a = new Date().getTime();
+        RecordManager.Save();
         Global.ReloadConfiguration();
 
         long b = new Date().getTime();

@@ -3,9 +3,8 @@ package org.hcmc.hcplayground.model.player;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.reflect.TypeToken;
-import org.bukkit.GameMode;
-import org.bukkit.Material;
-import org.bukkit.Statistic;
+import net.milkbowl.vault.economy.EconomyResponse;
+import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.configuration.ConfigurationSection;
@@ -50,6 +49,7 @@ public class PlayerData {
     private static final String Section_Key_Parkour_Design = "parkour.design";
     private static final String Section_Key_Parkour_List = "parkour.list";
     private static final String TYPE_JAVA_UTIL_MAP = "java.util.Map";
+    public static final String ECONOMY_BALANCE_KEY = "balance";
     public static final double BASE_HEALTH = 20.0F;
     public static final double BASE_MAX_HEALTH = 20.0F;
     public static final double BASE_CRITICAL = 0.05F;
@@ -102,6 +102,10 @@ public class PlayerData {
      */
     private final Player player;
     /**
+     * 玩家的OfflinePlayer实例
+     */
+    private final OfflinePlayer offline;
+    /**
      * 玩家的UUID
      */
     private final UUID uuid;
@@ -139,11 +143,37 @@ public class PlayerData {
         gameMode = player.getGameMode();
         attachment = player.addAttachment(plugin);
         designer = new CourseDesigner(this);
+        offline = Bukkit.getOfflinePlayer(uuid);
+
         LoadConfig();
     }
 
     public PermissionAttachment getAttachment() {
         return attachment;
+    }
+
+    /**
+     * 获取当前玩家的金钱
+     * @return 玩家拥有的金钱
+     */
+    public double getBalance() {
+        return Global.economyApi.getBalance(offline);
+    }
+
+    /**
+     * 给予玩家的钱
+     * @param money 给予玩家钱的数量
+     */
+    public void deposit(double money) {
+        EconomyResponse response = Global.economyApi.depositPlayer(player, money);
+    }
+
+    /**
+     * 拿走玩家的钱
+     * @param money 拿走玩家钱的数量
+     */
+    public void withdraw(double money) {
+        EconomyResponse response = Global.economyApi.withdrawPlayer(player, money);
     }
 
     public double getCurrentHealth() {
@@ -441,7 +471,7 @@ public class PlayerData {
         Yaml2Map(yaml);
     }
 
-    public void SaveConfig() throws IOException, InvalidConfigurationException {
+    public void SaveConfig() throws IOException {
         UUID playerUuid = player.getUniqueId();
         File f = new File(plugin.getDataFolder(), String.format("profile/%s.yml", playerUuid));
         // 转换所有Map<Material, Integer>类型的玩家记录，成为Yaml格式字符串
@@ -681,19 +711,6 @@ public class PlayerData {
         for (Material m : MMOSkillManager.combatStatistics) {
             total += player.getStatistic(Statistic.PICKUP, m);
         }
-        /*
-        total += statisticPickupBlazeRod();
-        total += statisticPickupBone();
-        total += statisticPickupEnderPearl();
-        total += statisticPickupGhastTear();
-        total += statisticPickupGunpowder();
-        total += statisticPickupMagmaCream();
-        total += statisticPickupRottenFlesh();
-        total += statisticPickupSlimeBall();
-        total += statisticPickupSpiderEye();
-        total += statisticPickupString();
-
-         */
         return total;
     }
 
@@ -702,19 +719,6 @@ public class PlayerData {
         for (Material m : MMOSkillManager.fishingStatistics) {
             total += player.getStatistic(Statistic.PICKUP, m);
         }
-        /*
-        total += statisticPickupTropicalFish();
-        total += statisticPickupInkSac();
-        total += statisticPickupLilyPad();
-        total += statisticPickupPrismarineCrystals();
-        total += statisticPickupPrismarineShard();
-        total += statisticPickupPufferFish();
-        total += statisticPickupCod();
-        total += statisticPickupSalmon();
-        total += statisticPickupSponge();
-        total += statisticPickupClay();
-
-         */
         return total;
     }
 
@@ -723,57 +727,17 @@ public class PlayerData {
         for (Material m : MMOSkillManager.lumberingStatistics) {
             total += player.getStatistic(Statistic.PICKUP, m);
         }
-        /*
-        total += statisticPickupAcaciaLog();
-        total += statisticPickupBirchLog();
-        total += statisticPickupDarkOakLog();
-        total += statisticPickupJungleLog();
-        total += statisticPickupMangroveLog();
-        total += statisticPickupOakLog();
-        total += statisticPickupSpruceLog();
-        total += statisticPickupCrimsonStem();
-        total += statisticPickupWarpedStem();
-        total += statisticPickupAcaciaSapling();
-        total += statisticPickupBirchSapling();
-        total += statisticPickupDarkOakSapling();
-        total += statisticPickupJungleSapling();
-        total += statisticPickupMangrovePropagule();
-        total += statisticPickupOakSapling();
-        total += statisticPickupSpruceSapling();
-        total += statisticPickupApple();
-
-         */
         return total;
     }
 
     /**
      * 拾取矿物的总数量
      */
-    public int statisticPickupMineral(){
+    public int statisticPickupMineral() {
         int total = 0;
         for (Material m : MMOSkillManager.miningStatistics) {
             total += player.getStatistic(Statistic.PICKUP, m);
         }
-        /*
-        total += statisticPickupCoal();
-        total += statisticPickupCobblestone();
-        total += statisticPickupDiamond();
-        total += statisticPickupEmerald();
-        total += statisticPickupEndStone();
-        total += statisticPickupGlowStoneDust();
-        total += statisticPickupGoldIngot();
-        total += statisticPickupIronIngot();
-        total += statisticPickupGravel();
-        total += statisticPickupIce();
-        total += statisticPickupLapisLazuli();
-        total += statisticPickupQuartz();
-        total += statisticPickupNetherrack();
-        total += statisticPickupObsidian();
-        total += statisticPickupRedSend();
-        total += statisticPickupSand();
-        total += statisticPickupRedstone();
-
-         */
         return total;
     }
 
@@ -786,30 +750,7 @@ public class PlayerData {
         for (Material m : MMOSkillManager.farmingStatistics) {
             total += player.getStatistic(Statistic.PICKUP, m);
         }
-        /*
-        total += statisticPickupFeather();
-        total += statisticPickupLeather();
-        total += statisticPickupMutton();
-        total += statisticPickupRabbitHide();
-        total += statisticPickupRabbitFoot();
-        total += statisticPickupBeef();
-        total += statisticPickupChicken();
-        total += statisticPickupPorkchop();
-        total += statisticPickupRabbit();
-        total += statisticPickupBrownMushroom();
-        total += statisticPickupCocoaBeans();
-        total += statisticPickupCactus();
-        total += statisticPickupPotato();
-        total += statisticPickupCarrot();
-        total += statisticPickupMelon();
-        total += statisticPickupRedMushroom();
-        total += statisticPickupNetherWart();
-        total += statisticPickupPumpkin();
-        total += statisticPickupSugarCane();
-        total += statisticPickupWheat();
-        total += statisticPickupWheatSeeds();
 
-         */
         return total;
     }
 
@@ -868,11 +809,16 @@ public class PlayerData {
      *
      * @return YamlConfiguration实例
      */
-    private YamlConfiguration Map2Yaml() throws InvalidConfigurationException {
-        YamlConfiguration yaml = new YamlConfiguration();
-        String v = Global.GsonObject.toJson(this);
-        yaml.loadFromString(v);
-        return yaml;
+    private YamlConfiguration Map2Yaml() {
+
+        try {
+            YamlConfiguration yaml = new YamlConfiguration();
+            String v = Global.GsonObject.toJson(this);
+            yaml.loadFromString(v);
+            return yaml;
+        } catch (InvalidConfigurationException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private double getGenericAttribute(Attribute attribute, double defaultValue) {

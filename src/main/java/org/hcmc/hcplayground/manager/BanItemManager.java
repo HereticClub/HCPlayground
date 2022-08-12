@@ -22,7 +22,7 @@ public class BanItemManager {
     }
 
     public static void Load(ConfigurationSection section) throws IllegalAccessException {
-        banItems = Global.SetItemList(section, BanItemConfiguration.class);
+        banItems = Global.deserializeList(section, BanItemConfiguration.class);
     }
 
     public static BanItemConfiguration getBanItem(RecipeType type) {

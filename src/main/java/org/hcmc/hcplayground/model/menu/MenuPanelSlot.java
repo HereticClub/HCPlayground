@@ -2,6 +2,7 @@ package org.hcmc.hcplayground.model.menu;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFlag;
 import org.hcmc.hcplayground.manager.CommandManager;
@@ -9,11 +10,14 @@ import org.hcmc.hcplayground.utility.MaterialData;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class MenuPanelSlot {
 
     private final static String COMMAND_PERFORM_CONSOLE = "[console]";
     private final static String COMMAND_PERFORM_PLAYER = "[player]";
+    private final static String COMMAND_PERFORM_MESSAGE = "[message]";
+    private final static String COMMAND_PERFORM_CLOSE = "[close]";
 
     @Expose
     @SerializedName(value = "display")
@@ -46,8 +50,22 @@ public class MenuPanelSlot {
     @SerializedName(value = "glowing")
     private boolean glowing = false;
 
-    @Expose(serialize = false, deserialize = false)
+    @Expose(deserialize = false)
     private String id;
+    @Expose(deserialize = false)
+    private List<String> leftDenyMessage = new ArrayList<>();
+    @Expose(deserialize = false)
+    private List<String> rightDenyMessage = new ArrayList<>();
+    /**
+     * 左键点击条件，所有条件必须判断为true，才被判断为成功
+     */
+    @Expose(deserialize = false)
+    private List<SlotClickCondition> leftConditions = new ArrayList<>();
+    /**
+     * 右键点击条件，所有条件必须判断为true，才被判断为成功
+     */
+    @Expose(deserialize = false)
+    private List<SlotClickCondition> rightConditions = new ArrayList<>();
 
     public String getId() {
         return id;
@@ -97,6 +115,38 @@ public class MenuPanelSlot {
         return glowing;
     }
 
+    public List<String> getLeftDenyMessage() {
+        return leftDenyMessage;
+    }
+
+    public void setLeftDenyMessage(List<String> leftDenyMessage) {
+        this.leftDenyMessage = leftDenyMessage;
+    }
+
+    public List<String> getRightDenyMessage() {
+        return rightDenyMessage;
+    }
+
+    public void setRightDenyMessage(List<String> rightDenyMessage) {
+        this.rightDenyMessage = rightDenyMessage;
+    }
+
+    public List<SlotClickCondition> getLeftConditions() {
+        return leftConditions;
+    }
+
+    public void setLeftConditions(List<SlotClickCondition> leftConditions) {
+        this.leftConditions = leftConditions;
+    }
+
+    public List<SlotClickCondition> getRightConditions() {
+        return rightConditions;
+    }
+
+    public void setRightConditions(List<SlotClickCondition> rightConditions) {
+        this.rightConditions = rightConditions;
+    }
+
     public MenuPanelSlot() {
 
     }
@@ -107,32 +157,47 @@ public class MenuPanelSlot {
     }
 
     public void runLeftClickCommands(Player player) {
-        runCommands(player, leftCommands);
+        runCommands(player, leftCommands, leftConditions, leftDenyMessage);
     }
 
     public void runRightClickCommands(Player player) {
-        runCommands(player, rightCommands);
+        runCommands(player, rightCommands, rightConditions, rightDenyMessage);
     }
 
-    private void runCommands(Player player, List<String> commands) {
-        for (String command : commands) {
+    private boolean getConditionResult(Player player, List<SlotClickCondition> conditions) {
+        boolean result = true;
+        for (SlotClickCondition condition : conditions) {
+            result = condition.getResult(player);
+            if (!result) break;
+        }
+        return result;
+    }
 
+    private void runCommands(Player player, List<String> commands, List<SlotClickCondition> conditions, List<String> denyMessage) {
+        if (!getConditionResult(player, conditions)) {
+            player.sendMessage(denyMessage.toArray(new String[0]));
+            return;
+        }
+
+        for (String command : commands) {
             int location = command.indexOf(" ");
             if (location <= -1) {
-                CommandManager.runPlayerCommand(command, player);
+                if (command.equalsIgnoreCase(COMMAND_PERFORM_CLOSE)) {
+                    player.getOpenInventory().close();
+                } else {
+                    CommandManager.runPlayerCommand(command, player);
+                }
                 return;
             }
 
-            String prefix = command.substring(0, location);
+            String _prefix = command.substring(0, location);
             String _command = command.substring(location + 1);
-            if (prefix.equalsIgnoreCase(COMMAND_PERFORM_CONSOLE)) {
-                CommandManager.runConsoleCommand(_command, player);
-            }
-            if (prefix.equalsIgnoreCase(COMMAND_PERFORM_PLAYER)) {
-                CommandManager.runPlayerCommand(_command, player);
-            }
-            if (!prefix.equalsIgnoreCase(COMMAND_PERFORM_PLAYER) && !prefix.equalsIgnoreCase(COMMAND_PERFORM_CONSOLE)) {
-                CommandManager.runPlayerCommand(command, player);
+            switch (_prefix.toLowerCase()) {
+                case COMMAND_PERFORM_MESSAGE -> player.sendMessage(_command);
+                case COMMAND_PERFORM_CONSOLE -> CommandManager.runConsoleCommand(_command, player);
+                case COMMAND_PERFORM_PLAYER -> CommandManager.runPlayerCommand(_command, player);
+                case COMMAND_PERFORM_CLOSE -> player.getOpenInventory().close();
+                default -> CommandManager.runPlayerCommand(command, player);
             }
         }
     }

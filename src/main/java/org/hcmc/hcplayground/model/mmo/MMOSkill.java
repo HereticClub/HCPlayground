@@ -1,4 +1,4 @@
-package org.hcmc.hcplayground.model.level;
+package org.hcmc.hcplayground.model.mmo;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
@@ -110,10 +110,10 @@ public class MMOSkill {
         ItemMeta meta = itemStack.getItemMeta();
         if (meta == null) return itemStack;
         meta.setDisplayName(level.getDisplay());
-        List<String> lore = level.getLore();
+        List<String> lore = new ArrayList<>(level.getLore());
         lore.replaceAll(x -> x.replace("%skill_points%", String.valueOf(currentPoints))
                 .replace("%threshold%", String.valueOf(level.getThreshold()))
-                .replace("percent", String.format("%.2f%%", percent)));
+                .replace("%percent%", String.format("%.2f%%", percent)));
         if (flag == 1) {
             pass.append("=".repeat(Math.max(0, progress)));
             left.append("-".repeat(progressBarCount - progress - 1));

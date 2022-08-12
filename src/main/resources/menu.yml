@@ -129,7 +129,6 @@ mmomenu:
         - '[player] recipebook'
       lore:
         - '&7查看已经解锁的配方'
-
 profile:
   title: '&8玩家档案 &7- &b&l%player%'
   size: 54

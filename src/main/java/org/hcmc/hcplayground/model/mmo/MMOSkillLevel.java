@@ -1,9 +1,10 @@
-package org.hcmc.hcplayground.model.level;
+package org.hcmc.hcplayground.model.mmo;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.Material;
+import org.hcmc.hcplayground.manager.RewardManager;
 import org.hcmc.hcplayground.utility.RomanNumber;
 
 import java.util.ArrayList;
@@ -16,6 +17,12 @@ public class MMOSkillLevel {
     @Expose
     @SerializedName(value = "display")
     private String display;
+    /**
+     * 奖励id
+     */
+    @Expose
+    @SerializedName(value = "reward")
+    private String reward;
     /**
      * 已达成等级的显示物品，通常是绿色玻璃板
      */
@@ -62,12 +69,12 @@ public class MMOSkillLevel {
     /**
      * 等级id，包含等级数值
      */
-    @Expose(serialize = false, deserialize = false)
+    @Expose(deserialize = false)
     private String id;
     /**
      * 等级数值，由id拆解
      */
-    @Expose(serialize = false, deserialize = false)
+    @Expose(deserialize = false)
     private int level = -1;
 
     public String getId() {
@@ -110,6 +117,10 @@ public class MMOSkillLevel {
 
     public void initialize(MMOSkill skill) {
         level = -1;
+        MMOReward reward = RewardManager.getReward(this.reward);
+        if (reward != null) {
+            lore.addAll(reward.getLore());
+        }
 
         if (StringUtils.isBlank(id)) return;
         String[] keys = id.split("\\.");
