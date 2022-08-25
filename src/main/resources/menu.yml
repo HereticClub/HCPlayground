@@ -1,14 +1,17 @@
 # 菜单id，必须唯一
 # 可以使用pmenu open指令打开，同时本身也是指令
-# 可以使用%player%占位符，表示打开当前菜单的玩家名称
+# 可以使用%player_name%占位符，表示打开当前菜单的玩家名称
+# 可以使用%menu_id%占位符，表示打开当前菜单的id
 mmomenu:
   # 打开这个菜单的别名指令
   aliases:
-    - mm
+    - mmo
   # 打开这个菜单所需要的权限，留空或者不设置该属性则不需要权限
   permission: ''
-  # 箱子界面的显示标题，可以使用颜色代码，可以使用%player%占位符，表示打开箱子界面的玩家名称
-  title: '&f主菜单 &8- &b异族游乐场'
+  # 是否注册当前菜单id作为命令
+  register: true
+  # 箱子界面的显示标题，可以使用颜色代码，可以使用%player_name%占位符，表示打开箱子界面的玩家名称
+  title: '&1&l异族游乐场'
   # 当前菜单可用的世界列表，如果不设置则所有世界都可用，但作为op身份的玩家忽略这个属性的设置
   worlds: []
   # 箱子界面的大小，最多填写54
@@ -41,7 +44,10 @@ mmomenu:
   # SMOKER - A smoker inventory, with a RESULT slot, a CRAFTING slot, and a FUEL slot.
   # STONECUTTER - Stonecutter inventory with 1 CRAFTING slot, and 1 RESULT slot.
   # WORKBENCH - A workbench inventory, with 9 CRAFTING slots and a RESULT slot.
-  type: chest
+  inventory-type: chest
+  # MMO技能等级界面类型，必须是MMOLevelType的值之一
+  # 如果定义了UNDEFINED值，或者没有设置这个属性，表示这只是一个普通的菜单界面而非MMO技能等级界面
+  level-type: UNDEFINED
   # 物品栏的填充内容
   # 各种颜色玻璃板的名称
   # WHITE_STAINED_GLASS_PANE - 白色染色玻璃板
@@ -61,21 +67,23 @@ mmomenu:
   # RED_STAINED_GLASS_PANE - 红色染色玻璃板
   # BLACK_STAINED_GLASS_PANE - 黑色染色玻璃板
   decorates:
-    '1':
+    profile:
       # slots: 物品插槽位置，基于1为开始的序列号，最大值54
       slots:
         - 5
       # display: 要显示的标题
-      display: '&b%player%&f的个人档案'
+      display: '&b%player_name%&f的个人档案'
       # lore: 要显示的说明，一般不会设置该属性
-      lore: []
+      lore:
+        - '&7点击查看您的个人档案'
+        - '&7指令: &a/profile'
       # amount: 物品的数量，最大值: 64
       amount: 1
-      # material: 要显示的材质，如果该名称以字符串"head_"作为前缀，则材质表示为玩家头，后缀必须以玩家名称结尾，可以使用%player%占位符作为当前玩家
+      # material: 要显示的材质，如果该名称以字符串"head_"作为前缀，则材质表示为玩家头，后缀必须以玩家名称结尾，可以使用%player_name%占位符作为当前玩家
       # 例子: head_TerryNG9527，当前材质会显示名称为TerryNG9527的玩家头
-      # 例子: head_%player%，当前材质会显示为当前打开这个箱子界面的玩家的玩家头
+      # 例子: head_%player_name%，当前材质会显示为当前打开这个箱子界面的玩家的玩家头
       # 如果设置了customSkull属性，则忽略material属性的玩家名称，但必须仍然以"head_"前缀为开头，以customSkull属性值作为玩家头材质
-      material: head_%player%
+      material: head_%player_name%
       # customSkull: 自定义玩家头材质，必须是BASE64格式字符串，如果该属性值不为空，则取代material属性以玩家作为玩家头的材质，但material属性必须仍然以"head_"前缀为开头
       customSkull: ''
       # LEFT_CLICK和RIGHT_CLICK: 玩家点击当前物品可以执行命令
@@ -84,10 +92,42 @@ mmomenu:
       # 中括号内可使用以下关键字: CONSOLE, PLAYER
       # PLAYER: 表示以当前玩家身份和权限执行命令
       # CONSOLE: 表示以控制台为角色执行命令，如果没有设置中括号的值则作为默认值
-      # 可以使用%player%占位符，表示当前执行命令的玩家名称
-      # 例子: '[CONSOLE] give %player% stone 1' - 以控制台身份执行give命令，给予%player%玩家1个石头
-      left_click: []
-      right_click: []
+      # 可以使用%player_name%占位符，表示当前执行命令的玩家名称
+      # 例子: '[CONSOLE] give %player_name% stone 1' - 以控制台身份执行give命令，给予%player_name%玩家1个石头
+      left_click:
+        # 点击指令的插槽号，及可执行指令的列表
+        # 由于属性slots定义的是插槽号集合，因此需要指明具体的点击插槽号以执行相应的指令集合
+        5:
+          - '[console] playgroundmenus open profilemenu %player_name%'
+      right_click: {}
+      # 菜单项点击执行条件
+      left_conditions: []
+      #  # 条件节段，必须是conditions
+      #  conditions:
+      #    # 条件id，唯一
+      #    # 所有定义的条件为"与"关系
+      #    sample1:
+      #      # 对比操作符，必须是OperatorType的值之一
+      #      # EQUAL: 等于，用于任何对比类型
+      #      # NOT_EQUAL: 不等于，用于任何对比类型
+      #      # GREATER: 大于，仅用于数值类型对比
+      #      # GREATER_AND_EQUAL: 大于等于，仅用于数值类型对比
+      #      # LESS: 小于，仅用于数值类型对比
+      #      # LESS_AND_EQUAL: 小于等于，仅用于数值类型对比
+      #      operator-type: EQUAL
+      #      # 对比类型，必须是CompareType的值之一
+      #      # COMPARE_PERMISSION: 玩家是否拥有权限
+      #      # COMPARE_NUMERIC: 数值对比
+      #      # COMPARE_STRING: 字符串对比，不区分大小写
+      #      # COMPARE_BOOLEAN: 不二对比
+      #      compare-type: COMPARE_NUMERIC
+      #      # 对比变量，一般使用placeholder
+      #      source-value: %some-placeholder%
+      #      # 对比具体值，按照compare-type属性自动转换其数值类型
+      #      # 如果compare-type属性设置为COMPARE_PERMISSION，则忽略target-value属性
+      #      target-value: 100
+      #  # 判断失败时显示的消息
+      #  deny-message: []
       # glowing: 如果设置为true，物品会带有附魔效果，默认值: false
       # player_head类型的物品无效
       glowing: false
@@ -100,156 +140,230 @@ mmomenu:
       # HIDE_POTION_EFFECTS - 设置显示/隐藏ItemStack的药水效果.
       # HIDE_UNBREAKABLE - 设置显示/隐藏不可破坏属性.
       flags: []
-    '2':
+    skill:
       slots:
-        - 20
+        - 21
       display: '&e&l技能'
       material: diamond_sword
       left_click:
-        - '[console] pmenu open skill %player%'
+        21:
+          - '[console] playgroundmenus open skillmenu %player_name%'
       flags:
         - HIDE_ATTRIBUTES
       lore:
         - '&7查看技能进度和奖励'
-    '3':
+        - '&7指令: &a/skillmenu'
+    collection:
       slots:
-        - 21
+        - 22
       display: '&e&l收集'
       material: painting
       left_click:
-        - '[player] pmenu open collections %player%'
+        22:
+          - '[console] playgroundmenus open collectionmenu %player_name%'
       lore:
         - '&7查看各种物品收集进度'
-    '4':
+        - '&7指令: &a/collectionmenu'
+    recipe:
       slots:
-        - 22
+        - 23
       display: '&e&l配方'
       material: book
       left_click:
-        - '[player] recipebook'
+        23:
+          - '[console] playgroundmenus open recipemenu %player_name%'
       lore:
         - '&7查看已经解锁的配方'
-profile:
-  title: '&8玩家档案 &7- &b&l%player%'
-  size: 54
-  type: chest
-  decorates:
-    '1':
-      slots:
-        - 5
-      display: '&f玩家档案'
-      amount: 1
-      material: head_%player%
-      glowing: true
-      left_click:
-        - '[player] menu'
-      right_click: []
-      lore:
-        - '&7这里展示了玩家的所有属性'
-    '2':
-      slots:
-        - 21
-      display: 生命
-      material: apple
-      lore:
-        - '%hcplayground_health%'
-    '3':
-      slots:
-        - 22
-      display: 攻击
-      material: diamond_sword
-      lore:
-        - '%hcplayground_attack_damage%'
-    '4':
-      slots:
-        - 23
-      display: 防御
-      material: diamond_chestplate
-      flags:
-        - HIDE_ATTRIBUTES
-      lore:
-        - '%hcplayground_armor%'
-    '5':
+        - '&7指令: &a/recipemenu'
+    questlog:
       slots:
         - 24
-      display: 攻速
-      material: tipped_arrow
-      flags:
-        - HIDE_POTION_EFFECTS
+      display: '&e&l任务&8(开发中)'
+      material: filled_map
+      left_click:
+        24:
+          - '[console] playgroundmenus open questlogmenu %player_name%'
       lore:
-        - '%hcplayground_attack_speed%'
-    '6':
+        - '&7查看各种任务进度'
+        - '&7指令: &a/questlogmenu'
+      flags:
+        - HIDE_ATTRIBUTES
+    calendar:
       slots:
         - 25
-      display: 速度
-      material: diamond_boots
+      display: '&e&l日历事件&8(开发中)'
+      material: item_frame
+      left_click:
+        25:
+          - '[console] playgroundmenus open calendarmenu %player_name%'
       lore:
-        - '%hcplayground_movement_speed%'
-    '7':
+        - '&7查看服务器正在进行的事件'
+        - '&7指令: &a/calendarmenu'
+    storage:
       slots:
         - 30
-      display: 暴击
-      material: tnt
+      display: '&e&l额外行囊&8(开发中)'
+      material: chest
+      left_click:
+        30:
+          - '[console] playgroundmenus open storagemenu %player_name%'
       lore:
-        - '%hcplayground_critical_percentage%'
-    '8':
+        - '&7配置您的额外储存位置'
+        - '&7指令: &a/storagemenu'
+    potion:
       slots:
         - 31
-      display: 爆伤
-      material: lectern
+      display: '&e&l药水效果&8(开发中)'
+      material: potion
+      left_click:
+        31:
+          - '[console] playgroundmenus open potionmenu %player_name%'
       lore:
-        - '%hcplayground_critical_damage_percentage%'
-    '9':
+        - '&7配置您的药水状态'
+        - '&7指令: &a/potionmenu'
+    carrycrafting:
       slots:
         - 32
-      display: 智力
-      material: enchanted_book
+      display: '&e&l随身合成台'
+      material: crafting_table
+      left_click:
+        32:
+          - '[player] crazy crafting'
       lore:
-        - '%hcplayground_intelligence%'
-    '10':
+        - '&7打开疯狂合成台的界面'
+        - '&7指令: &a/crazy crafting'
+    privatebank:
       slots:
         - 33
-      display: 挖掘速度
-      material: diamond_pickaxe
-      lore:
-        - '%hcplayground_digging_speed%'
-    '11':
-      slots:
-        - 34
-      display: 伐木速度
-      material: diamond_axe
-      lore:
-        - '%hcplayground_logging_speed%'
-recipebook:
-  title: '&9Recipe Book'
-  size: 54
-  type: chest
-  decorates:
-    '1':
-      slots:
-        - 5
-      display: '&fRecipe Book'
-      material: book
-      glowing: true
+      display: '&e&l个人银行&8(开发中)'
+      material: yellow_shulker_box
       left_click:
-        - '[player] menu'
-      right_click: []
+        33:
+          - '[console] playgroundmenus open private_bank %player_name%'
       lore:
-        - '&7View all unlocked recipes'
-        - '&7for special items'
-    '2':
+        - '&7访问您的私人银行经理'
+        - '&7指令: &a/private_bank'
+    shop_menu_sur:
+      material: chest
+      slots:
+        - 51
+      display: '&f旧版&6金家&2生存&7贸易总部'
+      lore:
+        - '&7进入&m系统商店&6金氏&7贸易总部'
+        - '&c&m=================='
+        - '&c敬请留意:'
+        - '&c当前功能是版本过渡使用'
+        - '&c新版本登陆后将会删除'
+      left_click:
+        51:
+          - '[console] shop open sur_building %player_name%'
+      left_conditions:
+        conditions:
+          world_compare:
+            operator-type: CONTAINED
+            compare-type: COMPARE_STRING_LIST
+            source-value: '%player_world%'
+            target-value:
+              - survival_spawn
+              - ps_world
+              - survival_1181
+              - survival_1181_nether
+              - survival_1181_the_end
+              - resource_world
+              - resource_world_nether
+              - resource_world_the_end
+        deny-message:
+          - '&c你不能在这个世界使用这个商店'
+    shop_menu_is:
+      material: chest
+      slots:
+        - 52
+      display: '&f旧版&6金家&3空岛&7贸易总部'
+      lore:
+        - '&7进入&m系统商店&6金氏&7贸易总部'
+        - '&c&m=================='
+        - '&c敬请留意:'
+        - '&c当前功能是版本过渡使用'
+        - '&c新版本登陆后将会删除'
+      left_click:
+        52:
+          - '[console] shop open is_building %player_name%'
+      left_conditions:
+        conditions:
+          world_compare:
+            operator-type: CONTAINED
+            compare-type: COMPARE_STRING_LIST
+            source-value: '%player_world%'
+            target-value:
+              - island_spawn
+              - bskyblock_world
+              - bskyblock_world_nether
+              - bskyblock_world_the_end
+              - oneblock_world
+              - oneblock_world_nether
+              - oneblock_world_the_end
+        deny-message:
+          - '&c你不能在这个世界使用这个商店'
+    old_version_surmenu:
       slots:
         - 53
-      display: '&fPrevious page'
-      material: arrow
+      display: '&f旧版&b生存菜单'
+      material: clock
       left_click:
-        - '[player] recipebook'
-      lore: []
-    '3':
+        53:
+          - '[console] playgroundmenus open surmenu %player_name%'
+      lore:
+        - '&7使用旧版本的&b空岛菜单'
+        - '&7指令: &a/surmenu /sm'
+        - '&c&m=================='
+        - '&c敬请留意:'
+        - '&c当前功能是版本过渡使用'
+        - '&c新版本登陆后将会删除'
+      left_conditions:
+        conditions:
+          world_compare:
+            operator-type: CONTAINED
+            compare-type: COMPARE_STRING_LIST
+            source-value: '%player_world%'
+            target-value:
+              - survival_spawn
+              - ps_world
+              - survival_1181
+              - survival_1181_nether
+              - survival_1181_the_end
+              - resource_world
+              - resource_world_nether
+              - resource_world_the_end
+        deny-message:
+          - '&c请回到&e生存世界&c再打开这个菜单'
+    old_version_ismenu:
       slots:
         - 54
-      display: '&fNext page'
-      material: spectral_arrow
+      display: '&f旧版&b空岛菜单'
+      material: clock
       left_click:
-        - '[player] recipebook 2'
-      lore: []
+        54:
+          - '[console] playgroundmenus open ismenu %player_name%'
+      lore:
+        - '&7使用旧版本的&b空岛菜单'
+        - '&7指令: &a/ismenu /im'
+        - '&c&m=================='
+        - '&c敬请留意:'
+        - '&c当前功能是版本过渡使用'
+        - '&c新版本登陆后将会删除'
+      left_conditions:
+        conditions:
+          world_compare:
+            operator-type: CONTAINED
+            compare-type: COMPARE_STRING_LIST
+            source-value: '%player_world%'
+            target-value:
+              - island_spawn
+              - bskyblock_world
+              - bskyblock_world_nether
+              - bskyblock_world_the_end
+              - oneblock_world
+              - oneblock_world_nether
+              - oneblock_world_the_end
+        deny-message:
+          - '&c请回到&e乜岛&c再打开这个菜单'

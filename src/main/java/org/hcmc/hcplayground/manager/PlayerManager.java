@@ -1,26 +1,24 @@
 package org.hcmc.hcplayground.manager;
 
-import com.comphenix.protocol.PacketType;
-import org.bukkit.configuration.InvalidConfigurationException;
-import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.permissions.PermissionAttachmentInfo;
 import org.bukkit.plugin.Plugin;
 import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.model.item.ItemBase;
 import org.hcmc.hcplayground.model.player.PlayerData;
 import org.hcmc.hcplayground.utility.Global;
-import org.hcmc.hcplayground.utility.NameBinaryTagResolver;
+import org.hcmc.hcplayground.utility.NameBinaryTag;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.*;
 
 public class PlayerManager {
     private static final Map<UUID, PlayerData> mapPlayerData;
+
 
     static {
         mapPlayerData = new HashMap<>();
@@ -33,6 +31,42 @@ public class PlayerManager {
     }
 
     /**
+     * 从各自玩家的json格式文档中加载玩家档案数据<br>
+     * 玩家的json档案命名由玩家的uuid决定
+     * @param player 玩家实例
+     * @return 玩家数据实例
+     */
+    @NotNull
+    public static PlayerData LoadConfig(@NotNull Player player) {
+        try {
+            UUID playerUuid = player.getUniqueId();
+            File f = new File(plugin.getDataFolder(), String.format("profile/%s.json", playerUuid));
+            if (!Files.exists(f.toPath())) return new PlayerData(player);
+
+            String value = Files.readString(f.toPath());
+            PlayerData data = Global.GsonObject.fromJson(value, PlayerData.class);
+            data.initialize(player);
+            return data;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return new PlayerData(player);
+        }
+    }
+
+    public static void SaveConfig(Player player) {
+        try {
+            PlayerData data = getPlayerData(player);
+            UUID playerUuid = player.getUniqueId();
+            File f = new File(plugin.getDataFolder(), String.format("profile/%s.json", playerUuid));
+
+            String value = Global.GsonObject.toJson(data, PlayerData.class);
+            Files.writeString(f.toPath(), value);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
      * 获取实体玩家的所有配置信息
      *
      * @param player 实体玩家实例
@@ -41,16 +75,16 @@ public class PlayerManager {
     @NotNull
     public static PlayerData getPlayerData(@NotNull Player player) {
         UUID playerUuid = player.getUniqueId();
-        PlayerData pd = mapPlayerData.get(playerUuid);
+        PlayerData data = mapPlayerData.get(playerUuid);
 
-        if (pd == null) {
-            pd = new PlayerData(player);
+        if (data == null) {
+            data = LoadConfig(player);
             // Don't delete the code as below
             //Global.LogMessage(String.format("\033[1;35mgetPlayerData GameMode: \033[1;33m%s\033[0m", player.getGameMode()));
-            mapPlayerData.put(playerUuid, pd);
+            mapPlayerData.put(playerUuid, data);
         }
 
-        return pd;
+        return data;
     }
 
     /**
@@ -75,20 +109,25 @@ public class PlayerManager {
         mapPlayerData.remove(playerUuid, data);
     }
 
+    /**
+     * 清空所有玩家数据
+     */
     public static void purgePlayerData() {
         mapPlayerData.clear();
     }
 
-    public static void getEquipmentData(Player player, ItemStack[] itemStacks) throws IllegalAccessException, IOException, InvalidConfigurationException {
-        double armor = PlayerData.BASE_ARMOR;
-        double attackReach = PlayerData.BASE_ATTACK_REACH;
-        double bloodSucking = PlayerData.BASE_BLOOD_SUCKING;
-        double critical = PlayerData.BASE_CRITICAL;
-        double criticalDamage = PlayerData.BASE_CRITICAL_DAMAGE;
-        double recover = PlayerData.BASE_RECOVER;
-        double intelligence = PlayerData.BASE_INTELLIGENCE;
-        double diggingSpeed = PlayerData.BASE_DIGGING_SPEED;
-        double loggingSpeed = PlayerData.BASE_LOGGING_SPEED;
+    public static void getEquipmentData(Player player, ItemStack[] itemStacks) {
+        PlayerData data = getPlayerData(player);
+        double extraArmor = 0;
+        double extraArmorToughness = 0;
+        double extraAttackReach = 0;
+        double extraBloodSucking = 0;
+        double extraCritical = 0;
+        double extraCriticalDamage = 0;
+        double extraRecover = 0;
+        double extraIntelligence = 0;
+        double extraDiggingSpeed = 0;
+        double extraLoggingSpeed = 0;
 
         // 检查玩家的装备栏和副手物品
         for (ItemStack is : itemStacks) {
@@ -98,33 +137,32 @@ public class PlayerManager {
             ItemMeta im = is.getItemMeta();
             if (im == null) continue;
             // 获取玩家身上所有装备和副手物品的额外数值
-            NameBinaryTagResolver nbt = new NameBinaryTagResolver(is);
+            NameBinaryTag nbt = new NameBinaryTag(is);
             // Minecraft直接支持的玩家基本属性
-            armor += nbt.getFloatValue(ItemBase.PERSISTENT_ARMOR_KEY);
+            extraArmor += nbt.getFloatValue(ItemBase.PERSISTENT_ARMOR_KEY);
+            extraArmorToughness += nbt.getFloatValue(ItemBase.PERSISTENT_ARMOR_TOUGHNESS_KEY);
             // Minecraft不支持的玩家基本属性
-            recover += nbt.getFloatValue(ItemBase.PERSISTENT_RECOVER_KEY);
-            bloodSucking += nbt.getFloatValue(ItemBase.PERSISTENT_BLOOD_SUCKING_KEY);
-            critical += nbt.getFloatValue(ItemBase.PERSISTENT_CRITICAL_KEY);
-            criticalDamage += nbt.getFloatValue(ItemBase.PERSISTENT_CRITICAL_DAMAGE_KEY);
+            extraRecover += nbt.getFloatValue(ItemBase.PERSISTENT_RECOVER_KEY);
+            extraBloodSucking += nbt.getFloatValue(ItemBase.PERSISTENT_BLOOD_SUCKING_KEY);
+            extraCritical += nbt.getFloatValue(ItemBase.PERSISTENT_CRITICAL_KEY);
+            extraCriticalDamage += nbt.getFloatValue(ItemBase.PERSISTENT_CRITICAL_DAMAGE_KEY);
+            extraIntelligence += nbt.getFloatValue(ItemBase.PERSISTENT_INTELLIGENCE);
+            extraDiggingSpeed += nbt.getFloatValue(ItemBase.PERSISTENT_DIGGING_SPEED);
+            extraLoggingSpeed += nbt.getFloatValue(ItemBase.PERSISTENT_LOGGING_SPEED);
             // Minecraft实验性玩家基本属性，当前版本还不支持
-            attackReach += nbt.getFloatValue(ItemBase.PERSISTENT_ATTACK_REACH_KEY);
-            intelligence += nbt.getFloatValue(ItemBase.PERSISTENT_INTELLIGENCE);
-            diggingSpeed += nbt.getFloatValue(ItemBase.PERSISTENT_DIGGING_SPEED);
-            loggingSpeed += nbt.getFloatValue(ItemBase.PERSISTENT_LOGGING_SPEED);
+            extraAttackReach += nbt.getFloatValue(ItemBase.PERSISTENT_ATTACK_REACH_KEY);
         }
-        PlayerData data = getPlayerData(player);
-        data.setTotalArmor(armor);
-        data.setTotalAttackReach(attackReach);
-        data.setTotalBloodSucking(bloodSucking);
-        data.setTotalCritical(critical);
-        data.setTotalCriticalDamage(criticalDamage);
-        data.setTotalRecover(recover);
-        data.setTotalIntelligence(intelligence);
-        data.setTotalDiggingSpeed(diggingSpeed);
-        data.setTotalLoggingSpeed(loggingSpeed);
+
+        data.setExtraArmor(extraArmor);
+        data.setExtraArmorToughness(extraArmorToughness);
+        data.setExtraAttackReach(extraAttackReach);
+        data.setExtraBloodSucking(extraBloodSucking);
+        data.setExtraCritical(extraCritical);
+        data.setExtraCriticalDamage(extraCriticalDamage);
+        data.setExtraRecover(extraRecover);
+        data.setExtraIntelligence(extraIntelligence);
+        data.setExtraDiggingSpeed(extraDiggingSpeed);
+        data.setExtraLoggingSpeed(extraLoggingSpeed);
         setPlayerData(player, data);
-        /*
-        TODO: 在后续的版本需要实施血量压缩显示
-        */
     }
 }

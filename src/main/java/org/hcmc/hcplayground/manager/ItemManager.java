@@ -211,7 +211,7 @@ public class ItemManager {
         ItemBase ib = findItemById(itemId);
         ItemStack is;
         if (ib == null) {
-            sender.sendMessage(LanguageManager.getString("noSuchItem", player).replace("%item%", itemId));
+            sender.sendMessage(LanguageManager.getString("itemNotExist", player).replace("%item%", itemId));
             return;
         }
         if (ib.isBook()) {

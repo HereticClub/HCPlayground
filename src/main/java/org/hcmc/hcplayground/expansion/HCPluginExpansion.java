@@ -3,7 +3,6 @@ package org.hcmc.hcplayground.expansion;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginDescriptionFile;
@@ -14,7 +13,6 @@ import org.hcmc.hcplayground.model.player.PlayerData;
 import org.hcmc.hcplayground.utility.Global;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.IOException;
 import java.util.List;
 
 public class HCPluginExpansion extends PlaceholderExpansion {
@@ -83,16 +81,22 @@ public class HCPluginExpansion extends PlaceholderExpansion {
         if (player == null) return "Unknown Player";
         PlayerData data = PlayerManager.getPlayerData(player);
 
+        if (params.equalsIgnoreCase(ItemBase.PERSISTENT_ATTACK_DAMAGE_KEY))
+            return String.format("%.1f", data.getMaxAttackDamage());
+        if (params.equalsIgnoreCase(ItemBase.PERSISTENT_ATTACK_SPEED_KEY))
+            return String.format("%.1f", data.getMaxAttackSpeed());
+        if (params.equalsIgnoreCase(ItemBase.PERSISTENT_KNOCKBACK_RESISTANCE_KEY))
+            return String.format("%.2f", data.getMaxKnockBackResistance());
+        if (params.equalsIgnoreCase(ItemBase.PERSISTENT_LUCK_KEY))
+            return String.format("%.1f", data.getMaxLuck());
+        if (params.equalsIgnoreCase(ItemBase.PERSISTENT_MOVEMENT_SPEED_KEY))
+            return String.format("%.3f", data.getMaxMovementSpeed());
         if (params.equalsIgnoreCase(ItemBase.PERSISTENT_ARMOR_KEY))
             return String.format("%.1f", data.getTotalArmor());
         if (params.equalsIgnoreCase(ItemBase.PERSISTENT_ARMOR_TOUGHNESS_KEY))
             return String.format("%.1f", data.getTotalArmorToughness());
-        if (params.equalsIgnoreCase(ItemBase.PERSISTENT_ATTACK_DAMAGE_KEY))
-            return String.format("%.1f", data.getTotalAttackDamage());
         if (params.equalsIgnoreCase(ItemBase.PERSISTENT_ATTACK_REACH_KEY))
             return String.format("%.1f", data.getTotalAttackReach());
-        if (params.equalsIgnoreCase(ItemBase.PERSISTENT_ATTACK_SPEED_KEY))
-            return String.format("%.1f", data.getTotalAttackSpeed());
         if (params.equalsIgnoreCase(ItemBase.PERSISTENT_BLOOD_SUCKING_KEY))
             return String.format("%.1f", data.getTotalBloodSucking());
         if (params.equalsIgnoreCase(ItemBase.PERSISTENT_CRITICAL_KEY))
@@ -104,15 +108,9 @@ public class HCPluginExpansion extends PlaceholderExpansion {
         if (params.equalsIgnoreCase(ItemBase.PERSISTENT_CRITICAL_DAMAGE_PERCENTAGE_KEY))
             return String.format("%.1f%%", data.getTotalCriticalDamage() * 100);
         if (params.equalsIgnoreCase(ItemBase.PERSISTENT_HEALTH_KEY))
-            return String.format("%.1f", data.getCurrentHealth());
+            return String.format("%.1f", data.getLiveHealth());
         if (params.equalsIgnoreCase(ItemBase.PERSISTENT_MAX_HEALTH_KEY))
             return String.format("%.1f", data.getMaxHealth());
-        if (params.equalsIgnoreCase(ItemBase.PERSISTENT_KNOCKBACK_RESISTANCE_KEY))
-            return String.format("%.1f", data.getTotalKnockBackResistance());
-        if (params.equalsIgnoreCase(ItemBase.PERSISTENT_LUCK_KEY))
-            return String.format("%.1f", data.getTotalLuck());
-        if (params.equalsIgnoreCase(ItemBase.PERSISTENT_MOVEMENT_SPEED_KEY))
-            return String.format("%.1f", data.getTotalMovementSpeed());
         if (params.equalsIgnoreCase(ItemBase.PERSISTENT_RECOVER_KEY))
             return String.format("%.1f", data.getTotalRecover());
         if (params.equalsIgnoreCase(ItemBase.PERSISTENT_INTELLIGENCE))

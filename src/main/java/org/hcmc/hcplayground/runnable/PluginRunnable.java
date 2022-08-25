@@ -14,7 +14,6 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.potion.PotionEffect;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.event.WorldMorningEvent;
@@ -25,9 +24,7 @@ import org.hcmc.hcplayground.model.minion.MinionTemplate;
 import org.hcmc.hcplayground.model.player.PlayerData;
 import org.hcmc.hcplayground.utility.Global;
 
-import javax.xml.crypto.Data;
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.util.*;
 
 public class PluginRunnable extends BukkitRunnable {
@@ -183,25 +180,15 @@ public class PluginRunnable extends BukkitRunnable {
         }
     }
 
-    /*
-    TODO: Hologram, 需要实施漂浮字体内容更新功能
-    private void doUpdateHologram(Player player) {
-        List<HologramItem> holograms = HologramManager.getHolograms();
-        for (HologramItem holo : holograms) {
-            holo.update(player);
-        }
-    }
-     */
-
     private void doUpdateSidebar(PlayerData data) {
         data.UpdateSidebar();
     }
 
-    private void doShowActionBar(PlayerData pd) {
-        int interval = (int) (totalSeconds - pd.loginTimeStamp) % Global.potion.refreshInterval + 1;
+    private void doShowActionBar(PlayerData data) {
+        int interval = (int) (totalSeconds - data.getLoginTimeStamp()) % Global.potion.refreshInterval + 1;
         if (interval < 2) return;
 
-        Player player = pd.getPlayer();
+        Player player = data.getPlayer();
         String value = LanguageManager.getString("playerActionBar", player);
         BaseComponent baseComponent = new TextComponent(value);
         player.spigot().sendMessage(ChatMessageType.ACTION_BAR, baseComponent);
@@ -210,11 +197,11 @@ public class PluginRunnable extends BukkitRunnable {
     /**
      * 检测和激活玩家身上装备的药水效果
      */
-    private void doPotionEffect(PlayerData pd) {
-        int interval = (int) (totalSeconds - pd.loginTimeStamp) % Global.potion.refreshInterval + 1;
+    private void doPotionEffect(PlayerData data) {
+        int interval = (int) (totalSeconds - data.getLoginTimeStamp()) % Global.potion.refreshInterval + 1;
         if (interval < Global.potion.refreshInterval) return;
 
-        Player player = plugin.getServer().getPlayer(pd.getUuid());
+        Player player = plugin.getServer().getPlayer(data.getUuid());
         if (player == null) return;
 
         List<ItemStack> items = new ArrayList<>(Arrays.stream(player.getInventory().getArmorContents()).toList());
@@ -237,18 +224,18 @@ public class PluginRunnable extends BukkitRunnable {
         }
     }
 
-    private void doRemindLogin(PlayerData pd) {
+    private void doRemindLogin(PlayerData data) {
         // 自玩家登录时间开始，至今的总秒数
-        long loginSeconds = pd.getLoginTime().getTime() / 1000;
+        long loginSeconds = data.getLoginTime().getTime() / 1000;
         // 获取玩家是否已经登录
-        boolean isLogin = pd.isLogin();
+        boolean isLogin = data.isLogin();
         // 获取玩家是否已经注册
-        boolean isRegister = pd.getRegister();
+        boolean isRegister = data.getRegister();
         // 如果玩家已经登录，则不需要再提醒登录操作
         if (isLogin) return;
 
-        Player player = pd.getPlayer();
-        int interval = (int) (totalSeconds - pd.loginTimeStamp) % Global.authme.remainInterval + 1;
+        Player player = data.getPlayer();
+        int interval = (int) (totalSeconds - data.getLoginTimeStamp()) % Global.authme.remainInterval + 1;
         if (interval >= Global.authme.remainInterval) {
             long remain = Global.authme.timeout - (totalSeconds - loginSeconds);
             if (!isRegister) {

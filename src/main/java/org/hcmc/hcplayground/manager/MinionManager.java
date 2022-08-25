@@ -27,7 +27,7 @@ import org.hcmc.hcplayground.model.minion.MinionPanelSlot;
 import org.hcmc.hcplayground.model.minion.MinionTemplate;
 import org.hcmc.hcplayground.serialization.PanelSlotTypeSerialization;
 import org.hcmc.hcplayground.utility.Global;
-import org.hcmc.hcplayground.utility.PlayerHeaderUtil;
+import org.hcmc.hcplayground.utility.PlayerHeader;
 import org.hcmc.hcplayground.utility.RomanNumber;
 
 import java.util.*;
@@ -125,7 +125,7 @@ public class MinionManager {
         MinionTemplate template = MinionManager.getMinionTemplate(name, level);
         if (template == null) return null;
         // set player head texture
-        ItemMeta meta = PlayerHeaderUtil.setTextures(is, template.getTexture());
+        ItemMeta meta = PlayerHeader.setTextures(is, template.getTexture());
         // set item stack display name
         String display = StringUtils.isBlank(template.getDisplay()) ? String.format("§4%s %s", name, level) : template.getDisplay();
         meta.setDisplayName(display);

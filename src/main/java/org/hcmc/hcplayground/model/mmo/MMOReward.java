@@ -2,14 +2,6 @@ package org.hcmc.hcplayground.model.mmo;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
-import org.apache.commons.lang.StringUtils;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-import org.hcmc.hcplayground.manager.ItemManager;
-import org.hcmc.hcplayground.manager.LanguageManager;
-import org.hcmc.hcplayground.manager.RecipeManager;
-import org.hcmc.hcplayground.model.item.ItemBase;
-import org.hcmc.hcplayground.model.recipe.CrazyShapedRecipe;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,8 +17,23 @@ public class MMOReward {
     @SerializedName(value = "armor")
     private float armor;
     @Expose
-    @SerializedName(value = "damage")
-    private float damage;
+    @SerializedName(value = "armor-toughness")
+    private float armorToughness;
+    @Expose
+    @SerializedName(value = "blood-sucking")
+    private float bloodSucking;
+    @Expose
+    @SerializedName(value = "speed")
+    private float speed;
+    @Expose
+    @SerializedName(value = "attack-damage")
+    private float attackDamage;
+    @Expose
+    @SerializedName(value = "attack-speed")
+    private float attackSpeed;
+    @Expose
+    @SerializedName(value = "attack-reach")
+    private float attackReach;
     @Expose
     @SerializedName(value = "critical")
     private float critical;
@@ -36,6 +43,21 @@ public class MMOReward {
     @Expose
     @SerializedName(value = "fortune")
     private float fortune;
+    @Expose
+    @SerializedName(value = "knock-back")
+    private float knockBack;
+    @Expose
+    @SerializedName(value = "intelligence")
+    private float intelligence;
+    @Expose
+    @SerializedName(value = "digging-speed")
+    private float diggingSpeed;
+    @Expose
+    @SerializedName(value = "logging-speed")
+    private float loggingSpeed;
+    @Expose
+    @SerializedName(value = "recover")
+    private float recover;
     @Expose
     @SerializedName(value = "point")
     private int point;
@@ -48,16 +70,9 @@ public class MMOReward {
     @Expose
     @SerializedName(value = "particles")
     private List<String> particleIds = new ArrayList<>();
-    @Expose
-    @SerializedName(value = "lore")
-    private List<String> lore = new ArrayList<>();
 
     @Expose(deserialize = false)
     private String id;
-    @Expose(deserialize = false)
-    private final List<ItemStack> itemStacks = new ArrayList<>();
-    @Expose(deserialize = false)
-    private final List<CrazyShapedRecipe> crazyRecipes = new ArrayList<>();
 
     public MMOReward() {
 
@@ -67,12 +82,24 @@ public class MMOReward {
         return id;
     }
 
-    public List<String> getLore() {
-        return lore;
+    public float getAttackSpeed() {
+        return attackSpeed;
+    }
+
+    public float getAttackDamage() {
+        return attackDamage;
     }
 
     public float getArmor() {
         return armor;
+    }
+
+    public float getHealth() {
+        return health;
+    }
+
+    public float getFortune() {
+        return fortune;
     }
 
     public float getCritical() {
@@ -83,18 +110,6 @@ public class MMOReward {
         return criticalDamage;
     }
 
-    public float getDamage() {
-        return damage;
-    }
-
-    public float getFortune() {
-        return fortune;
-    }
-
-    public float getHealth() {
-        return health;
-    }
-
     public float getMoney() {
         return money;
     }
@@ -103,8 +118,12 @@ public class MMOReward {
         return point;
     }
 
-    public List<String> getItemIds() {
-        return itemIds;
+    public float getKnockBack() {
+        return knockBack;
+    }
+
+    public float getSpeed() {
+        return speed;
     }
 
     public List<String> getRecipeIds() {
@@ -115,26 +134,36 @@ public class MMOReward {
         return particleIds;
     }
 
-    public List<CrazyShapedRecipe> getCrazyRecipes() {
-        return crazyRecipes;
+    public List<String> getItemIds() {
+        return itemIds;
     }
 
-    public List<ItemStack> getItemStacks() {
-        return itemStacks;
+    public float getArmorToughness() {
+        return armorToughness;
     }
 
-    public void initialize() {
-        if (lore == null) lore = new ArrayList<>();
-        addMoney();
-        addPoint();
-        addHealth();
-        addArmor();
-        addFortune();
-        addDamage();
-        addCritical();
-        addCriticalDamage();
-        addRecipe();
-        addItemStack();
+    public float getIntelligence() {
+        return intelligence;
+    }
+
+    public float getAttackReach() {
+        return attackReach;
+    }
+
+    public float getDiggingSpeed() {
+        return diggingSpeed;
+    }
+
+    public float getLoggingSpeed() {
+        return loggingSpeed;
+    }
+
+    public float getBloodSucking() {
+        return bloodSucking;
+    }
+
+    public float getRecover() {
+        return recover;
     }
 
     @Override
@@ -142,71 +171,4 @@ public class MMOReward {
         return id;
     }
 
-    private void addHealth() {
-        if (health <= 0) return;
-        lore.add(String.format("%s§a+%s", LanguageManager.getString("reword.health"), health));
-    }
-
-    private void addArmor() {
-        if (armor <= 0) return;
-        lore.add(String.format("%s§a+%s", LanguageManager.getString("reword.armor"), armor));
-    }
-    private void addDamage() {
-        if (damage <= 0) return;
-        lore.add(String.format("%s§a+%s", LanguageManager.getString("reword.damage"), damage));
-    }
-    private void addCriticalDamage() {
-        if (criticalDamage <= 0) return;
-        lore.add(String.format("%s§a+%s", LanguageManager.getString("reword.crit-damage"), criticalDamage));
-    }
-    private void addCritical() {
-        if (critical <= 0) return;
-        lore.add(String.format("%s§a+%s", LanguageManager.getString("reword.crit"), critical));
-    }
-    private void addFortune() {
-        if (fortune <= 0) return;
-        lore.add(String.format("%s§a+%s", LanguageManager.getString("reword.fortune"), fortune));
-    }
-    private void addMoney(){
-        if (money <= 0) return;
-        lore.add(String.format("%s§a+%s", LanguageManager.getString("reword.money"), money));
-    }
-    private void addPoint(){
-        if (point <= 0) return;
-        lore.add(String.format("%s§a+%s", LanguageManager.getString("reword.point"), point));
-    }
-
-
-    private void addRecipe() {
-        for (String s : recipeIds) {
-            CrazyShapedRecipe recipe = RecipeManager.getRecipe(s);
-            if (recipe == null) continue;
-            crazyRecipes.add(recipe);
-
-            lore.add(String.format("%s%s", LanguageManager.getString("reword.recipe"), recipe.getDisplay()));
-        }
-    }
-
-    private void addItemStack() {
-        for (String s : itemIds) {
-            String[] keys = s.split(",");
-            if (keys.length <= 1) continue;
-            if (!StringUtils.isNumeric(keys[1])) continue;
-
-            String id = keys[0];
-            int amount = Integer.parseInt(keys[1]);
-
-            ItemBase ib = ItemManager.findItemById(id);
-            if (ib == null) ib = ItemManager.createItemBase(id, amount);
-            ItemStack itemStack = ib.toItemStack();
-            itemStack.setAmount(amount);
-            itemStacks.add(itemStack);
-
-            ItemMeta meta = itemStack.getItemMeta();
-            if (meta == null) continue;
-
-            String display = StringUtils.isBlank(ib.getId()) ? itemStack.getType().name() : meta.getDisplayName();
-            lore.add(String.format("§f %s §7x §a%s", display, amount));
-        }
-    }
 }

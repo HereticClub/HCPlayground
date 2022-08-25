@@ -4,24 +4,26 @@ import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
-import org.hcmc.hcplayground.enums.MMOSkillType;
+import org.hcmc.hcplayground.enums.MMOType;
+import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Type;
 import java.util.Arrays;
 
-public class MMOLevelTypeSerialization implements JsonDeserializer<MMOSkillType> {
+public class MMOLevelTypeSerialization implements JsonDeserializer<MMOType> {
 
     public MMOLevelTypeSerialization() {
 
     }
 
     @Override
-    public MMOSkillType deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
+    public MMOType deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
         return getType(jsonElement.getAsString());
     }
 
-    public static MMOSkillType getType(String name) {
-        MMOSkillType[] types = MMOSkillType.values();
-        return Arrays.stream(types).filter(x -> x.name().equalsIgnoreCase(name)).findAny().orElse(null);
+    @NotNull
+    public static MMOType getType(@NotNull String name) {
+        MMOType[] types = MMOType.values();
+        return Arrays.stream(types).filter(x -> x.name().equalsIgnoreCase(name)).findAny().orElse(MMOType.UNDEFINED);
     }
 }

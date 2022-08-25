@@ -106,12 +106,12 @@ public class Weapon extends CraftItemBase {
             添加AttributeModifier
             GENERIC_ATTACK_REACH 为实验性内容，当前版本暂不支持，临时注释以下代码
             if (weapon.attackReach != 0) lore.add(String.format("%s 攻击距离", setColorString(weapon.attackReach, true)));
-            AttributeModifier amAttackReach = new AttributeModifier(UUID.randomUUID(), Global.PluginName(), actualAttackSpeed, AttributeModifier.Operation.ADD_SCALAR, EquipmentSlot.HAND);
+            AttributeModifier amAttackReach = new AttributeModifier(UUID.randomUUID(), Global.getPluginName(), actualAttackSpeed, AttributeModifier.Operation.ADD_SCALAR, EquipmentSlot.HAND);
             im.addAttributeModifier(Attribute.GENERIC_ATTACK_REACH, amAttackReach);
             */
-            AttributeModifier amHealth = new AttributeModifier(UUID.randomUUID(), Global.PluginName(), this.health, AttributeModifier.Operation.ADD_NUMBER, EquipmentSlot.HAND);
-            AttributeModifier amAttackDamage = new AttributeModifier(UUID.randomUUID(), Global.PluginName(), actualAttackDamage, AttributeModifier.Operation.ADD_NUMBER, EquipmentSlot.HAND);
-            AttributeModifier amAttackSpeed = new AttributeModifier(UUID.randomUUID(), Global.PluginName(), actualAttackSpeed, AttributeModifier.Operation.ADD_NUMBER, EquipmentSlot.HAND);
+            AttributeModifier amHealth = new AttributeModifier(UUID.randomUUID(), Global.getPluginName(), this.health, AttributeModifier.Operation.ADD_NUMBER, EquipmentSlot.HAND);
+            AttributeModifier amAttackDamage = new AttributeModifier(UUID.randomUUID(), Global.getPluginName(), actualAttackDamage, AttributeModifier.Operation.ADD_NUMBER, EquipmentSlot.HAND);
+            AttributeModifier amAttackSpeed = new AttributeModifier(UUID.randomUUID(), Global.getPluginName(), actualAttackSpeed, AttributeModifier.Operation.ADD_NUMBER, EquipmentSlot.HAND);
             im.addAttributeModifier(Attribute.GENERIC_MAX_HEALTH, amHealth);
             im.addAttributeModifier(Attribute.GENERIC_ATTACK_DAMAGE, amAttackDamage);
             im.addAttributeModifier(Attribute.GENERIC_ATTACK_SPEED, amAttackSpeed);

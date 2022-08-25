@@ -1,14 +1,13 @@
 package org.hcmc.hcplayground.manager;
 
 import com.google.gson.annotations.Expose;
+import com.google.gson.reflect.TypeToken;
 import me.clip.placeholderapi.PlaceholderAPI;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandMap;
 import org.bukkit.command.CommandSender;
-import org.bukkit.command.PluginCommand;
 import org.bukkit.command.defaults.BukkitCommand;
-import org.bukkit.command.defaults.PluginsCommand;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -19,14 +18,14 @@ import org.hcmc.hcplayground.model.menu.MenuPanel;
 import org.hcmc.hcplayground.model.menu.MenuPanelSlot;
 import org.hcmc.hcplayground.model.menu.SlotClickCondition;
 import org.hcmc.hcplayground.utility.Global;
+import org.hcmc.hcplayground.utility.YamlFileFilter;
 import org.jetbrains.annotations.NotNull;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.logging.Level;
+import java.io.File;
+import java.io.FilenameFilter;
+import java.io.IOException;
+import java.lang.reflect.Type;
+import java.util.*;
 
 
 public class MenuManager extends BukkitCommand {
@@ -35,20 +34,36 @@ public class MenuManager extends BukkitCommand {
     private static Plugin plugin = HCPlayground.getInstance();
     @Expose(serialize = false, deserialize = false)
     private static List<String> idList = new ArrayList<>();
-    @Expose(serialize = false, deserialize = false)
-    private static YamlConfiguration yaml;
+    private static final Map<String, YamlConfiguration> mapYaml = new HashMap<>();
 
-    public static void Load(YamlConfiguration yaml) {
-        MenuManager.yaml = yaml;
-        idList = yaml.getKeys(false).stream().toList();
-        CommandMap commandMap = Global.getCommandMap();
+    public static void Load() {
+        try {
+            mapYaml.clear();
+            idList.clear();
 
-        for (String id : idList) {
-            Command c = commandMap.getCommand(id);
-            if (c != null) c.unregister(commandMap);
-            MenuManager menuCommand = new MenuManager(id);
-            if (!menuCommand.preregister(id)) continue;
-            commandMap.register(plugin.getName(), menuCommand);
+            CommandMap commandMap = Global.getCommandMap();
+            File dir = new File(String.format("%s/menu", plugin.getDataFolder()));
+            FilenameFilter filter = new YamlFileFilter();
+            String[] filenames = dir.list(filter);
+            if (filenames == null) return;
+
+            for (String file : filenames) {
+                YamlConfiguration yaml = new YamlConfiguration();
+                yaml.load(String.format("%s/menu/%s", plugin.getDataFolder(), file));
+                Set<String> keys = yaml.getKeys(false);
+                for (String id : keys) {
+                    idList.add(id);
+                    mapYaml.put(id, yaml);
+
+                    Command c = commandMap.getCommand(id);
+                    if (c != null) c.unregister(commandMap);
+                    MenuManager menuCommand = new MenuManager(id);
+                    if (!menuCommand.preregister(id)) continue;
+                    commandMap.register(plugin.getName(), menuCommand);
+                }
+            }
+        } catch (IOException | InvalidConfigurationException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -66,34 +81,46 @@ public class MenuManager extends BukkitCommand {
         try {
             Player player = (Player) sender;
             if (!StringUtils.isBlank(getPermission()) && !player.hasPermission(getPermission()) && !player.isOp()) {
-                player.sendMessage(LanguageManager.getString("permission-message").replace("%permission%", getPermission()));
+                player.sendMessage(LanguageManager.getString("no-permission").replace("%permission%", getPermission()));
                 return false;
             }
 
-            MenuPanel menu = MenuManager.getMenuPanel(getName(), player);
-            if (menu == null) return false;
-            menu.open(player);
+            String menuName = getName();
+            String menuId = MMOManager.getMaterialMenuMapping().getOrDefault(menuName, menuName);
+
+            MenuPanel menu = MenuManager.getMenuPanel(menuId, player);
+            if (menu == null) {
+                player.sendMessage(LanguageManager.getString("menuNotExist").replace("%menu%", menuId));
+                return false;
+            }
+            menu.open(player, menuName);
         } catch (InvalidConfigurationException e) {
             throw new RuntimeException(e);
         }
-
         return true;
     }
 
-    public static MenuPanel getMenuPanel(@NotNull String menuId, @NotNull Player player) throws InvalidConfigurationException {
+    public static MenuPanel  getMenuPanel(@NotNull String menuId, @NotNull Player player) throws InvalidConfigurationException {
+        YamlConfiguration yaml = mapYaml.get(menuId);
+        if (yaml == null) return null;
 
         String decoratesPath = String.format("%s.decorates", menuId);
         ConfigurationSection section = yaml.getConfigurationSection(menuId);
         if (section == null) return null;
         MenuPanel menu = Global.deserialize(section, player, MenuPanel.class);
 
-        ConfigurationSection sectionDecorates = yaml.getConfigurationSection(decoratesPath);
-        if (sectionDecorates == null) return null;
-        List<MenuPanelSlot> slots = Global.deserializeList(sectionDecorates, player, MenuPanelSlot.class);
+        ConfigurationSection decoratesSection = yaml.getConfigurationSection(decoratesPath);
+        if (decoratesSection == null) return null;
+        List<MenuPanelSlot> decorates = Global.deserializeList(decoratesSection, player, MenuPanelSlot.class);
+        menu.setDecorates(decorates);
 
-        menu.setDecorates(slots);
-        for (MenuPanelSlot slot : slots) {
+        Type mapType = new TypeToken<Map<Integer, List<String>>>() {
+        }.getType();
+
+        for (MenuPanelSlot slot : decorates) {
             String slotId = slot.getId().split("\\.")[1];
+            String leftClickPath = String.format("%s.decorates.%s.left_click", menuId, slotId);
+            String rightClickPath = String.format("%s.decorates.%s.right_click", menuId, slotId);
             String leftCondPath = String.format("%s.decorates.%s.left_conditions.conditions", menuId, slotId);
             String rightCondPath = String.format("%s.decorates.%s.right_conditions.conditions", menuId, slotId);
             String leftDenyPath = String.format("%s.decorates.%s.left_conditions", menuId, slotId);
@@ -102,6 +129,18 @@ public class MenuManager extends BukkitCommand {
             ConfigurationSection rightCondSection = yaml.getConfigurationSection(rightCondPath);
             ConfigurationSection leftDenySection = yaml.getConfigurationSection(leftDenyPath);
             ConfigurationSection rightDenySection = yaml.getConfigurationSection(rightDenyPath);
+            ConfigurationSection leftClickSection = yaml.getConfigurationSection(leftClickPath);
+            ConfigurationSection rightClickSection = yaml.getConfigurationSection(rightClickPath);
+            if (leftClickSection != null) {
+                String value = Global.GsonObject.toJson(leftClickSection.getValues(false));
+                Map<Integer, List<String>> mapCommands = Global.GsonObject.fromJson(value, mapType);
+                slot.setLeftCommands(mapCommands);
+            }
+            if (rightClickSection != null) {
+                String value = Global.GsonObject.toJson(rightClickSection.getValues(false));
+                Map<Integer, List<String>> mapCommands = Global.GsonObject.fromJson(value, mapType);
+                slot.setRightCommands(mapCommands);
+            }
 
             if (leftDenySection != null) {
                 List<String> leftDeny = leftDenySection.getStringList("deny-message");
@@ -122,6 +161,8 @@ public class MenuManager extends BukkitCommand {
     }
 
     private boolean preregister(@NotNull String menuId) {
+        YamlConfiguration yaml = mapYaml.get(menuId);
+
         String aliasesPath = String.format("%s.aliases", menuId);
         String permissionPath = String.format("%s.permission", menuId);
         String registerPath = String.format("%s.register", menuId);
@@ -138,7 +179,7 @@ public class MenuManager extends BukkitCommand {
         // 以下所有属性值都不能为null
         if (!StringUtils.isBlank(permission)) this.setPermission(permission);
         this.setAliases(aliases);
-        this.setPermissionMessage(LanguageManager.getString("permission-message").replace("%permission%", permission));
+        this.setPermissionMessage(LanguageManager.getString("no-permission").replace("%permission%", permission));
         this.setUsage(LanguageManager.getString(String.format("%s.usage", menuId)));
         this.setDescription(LanguageManager.getString(String.format("%s.description", menuId)));
         return true;

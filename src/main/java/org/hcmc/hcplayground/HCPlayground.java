@@ -60,20 +60,6 @@ public class HCPlayground extends JavaPlugin {
 
     }
 
-    /*
-    public static PlayerManager getPlayerManager() {
-        if (instance.playerManager == null) {
-            instance.playerManager = new PlayerManager();
-        }
-        return instance.playerManager;
-    }
-
-    public static void setPlayerManager(PlayerManager playerManager) {
-        instance.playerManager = playerManager;
-    }
-
-     */
-
     public static HCPlayground getInstance() {
         return instance;
     }

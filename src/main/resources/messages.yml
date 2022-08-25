@@ -21,25 +21,23 @@
 # %hcplayground_balance%: 获得玩家拥有的金钱
 messages:
   # 没有权限运行该指令时的提示，可使用%permission%占位符，代表当前需要的权限
-  permission-message: '&4You need &e%permission% &4to run this command.'
+  no-permission: '&4You need &e%permission% &4to run this command.'
   # 当命令不能在控制台运行时的提示，可使用%command%占位符，代表当前指令名称
-  console-message: '&4The command &e%command% &4can''t be run from console'
+  no-console-command: '&4The command &e%command% &4can''t be run from console'
   # 当命令不能被玩家运行时的提示，可使用%command%占位符，代表当前指令名称
-  player-message: '&4The command &e%command% &4can''t be run by a player'
+  no-player-command: '&4The command &e%command% &4can''t be run by a player'
   # 当命令不能当前世界执行时的提示
   # 可使用%command%占位符，表示当前指令名称
   # 可使用%world%占位符，表示当前执行指令时所在的世界
-  world-message: '&cThe command &e%command% &ccan''t be run on the world: &f%world%'
+  no-world-command: '&cThe command &e%command% &ccan''t be run on the world: &f%world%'
   # 当物品或者方块在不能使用的世界里尝试被使用时显示，可使用%world%占位符，表示当前执行指令时所在的世界
-  world-disabled: '&cThe item/block can''t be interacted at this world: %world%'
+  no-world-interact: '&cThe item/block can''t be interacted at this world: %world%'
+  # 可使用%item%占位符，运行带有item参数的命令时并且找不到item时显示
+  itemNotExist: '&cNo such item as &e%item%'
   # 当执行禁止玩家指令，并且玩家不存在时显示，可使用%player%占位符，代表被禁用玩家的名称
   playerNotExist: '&cPlayer &e%player% &cis not found'
   # 可使用%player%占位符，代表当前执行指令时所指向的玩家名称
   playerOffLine: '&e%player% &cis already offline'
-  # 运行指令时输入的参数不正确时显示
-  parameterInCorrect: '&cParameters length is not right, &e%length% &cargument(s) is required'
-  # 可使用%item%占位符，运行带有item参数的命令时并且找不到item时显示
-  noSuchItem: '&cNo such item as &e%item%'
   # 玩家连接到服务器后，但在指定时间内没有登录时的显示，可使用%player%占位符，代表当前要登录的玩家名称
   playerLoginTimeout: '&fMy dear &c%player%&f, please login for first before playing game on this server'
   # 玩家连接到服务器后，但在指定时间内没有注册时的显示，可使用%player%占位符，代表当前要注册的玩家名称
@@ -144,29 +142,55 @@ messages:
   # 玩家拥有某些赛道
   courseHasAssetInName: '&6The course(s) you owned as below'
   # 当玩家在设计跑酷赛道，并且玩家的位置超出了跑酷赛道的设计范围时显示
-  outOfCourseRange: '&cYou are out of course range'
+  courseOutOfRange: '&cYou are out of course range'
   # 当玩家在设计跑酷赛道，并且玩家的位置进入了跑酷赛道的设计范围时显示
-  enterCourseRange: '&aYou just entered course range'
+  courseEnterRange: '&aYou just entered course range'
   # 当玩家设置赛道的跑酷大厅，但跑酷大厅的名字不存在时显示
-  lobbyNotExist: '&aLobby &e%lobby% &cis not exist'
+  courseLobbyNotExist: '&aLobby &e%lobby% &cis not exist'
   # 当玩家尝试创建跑酷赛道，但该赛道已经存在时显示，可以使用%course%占位符，表示要创建的赛道名称
   courseExist: |-
     &cThe course &e%course% &cis already exists
     &cUse &e/course modify %course% &ccommand to modify
-  # 当尝试获取MMOSkillType枚举值失败时显示
-  # 可以使用%skill%占位符，表示要尝试获取MMOSkillType枚举值的名称
-  skillTypeInvalid: '&cSkill &e%skill% &cis invalid.'
+  # 当玩家成功领取某个技能等级的奖励，或者物品收集等级奖励时显示
+  # 可以使用%reward_type%占位符，表示要领取的技能名称或者物品收集名称
+  # 可以使用%level%占位符，表示要领取的等级，以罗马数字表示
+  rewardLevelClaimed: '&aYou have just claimed &e%reward_type% %level% &areward'
+  # 当玩家尝试领取但已经领取完毕的奖励时显示
+  # 可以使用%reward_type%占位符，表示要领取的奖励类型名称，通常是技能名称或者物品收集名称
+  rewardAllClaimed: '&aYou have claimed all level rewards of &e%reward_type%'
+  # 当尝试获取技能等级奖励，或者获取物品收集等级奖励失败时显示
+  # 可以使用%reward%占位符，表示要尝试获取的奖励类型
+  # 奖励类型必须是MMOType(仅SkillType)的值之一，或者是Material的值之一
+  rewardTypeInvalid: '&cReward type &e%reward% &cis invalid, MUST be &eSkill Type &cor &eMaterial.'
+  # 玩家可以领取奖励的等级被重置，意味着玩家可以再次领取奖励
+  # 可以使用%skill%占位符，表示已被重置的技能名称
+  rewardLevelReset: '&aYour rewardable level of skill &e%skill% &ahas been reset'
+  # 玩家所有可以领取奖励的等级被重置，意味着玩家可以再次领取奖励
+  rewardLevelResetAll: '&aYour rewardable level of all skill has been reset'
+  # 各种奖励的说明前缀
   reword:
-    money: '&6 Money: '
-    point: '&e Honor: '
-    recipe: '&f Recipe: '
-    particle: '&9 Particle: '
-    health: '&c Health: '
     armor: '&1 Armor: '
-    damage: '&4 Damage: '
+    armor-toughness: '&1 Armor Toughness: '
+    attack-damage: '&4 Attack Damage: '
+    attack-speed: '&4 Attack Speed: '
+    attack-reach: '&9 Attack Reach: '
+    blood-sucking: '&9 Blood Sucking: '
     crit: '&d Critical: '
     crit-damage: '&d Critical Damage: '
+    digging-speed: '&9 Digging Speed: '
     fortune: '&6 Fortune: '
+    health: '&c Health: '
+    intelligence: '&9 Intelligence: '
+    knock-back: '&2 Knock Back: '
+    logging-speed: '&9 Logging Speed: '
+    money: '&6 Money: '
+    particle: '&9 Particle: '
+    point: '&e Honor: '
+    recipe: '&f Recipe: '
+    recover: '&9 Recover: '
+    speed: '&b Speed: '
+    lore:
+      - '&7Level Reward:'
   # 不能获得爪牙类型时显示，可以使用%minion_type%占位符，表示要测试的爪牙类型
   minionUnknownType: '&cUnknown minion type: %minion_type%'
   # 当玩家尝试使用非自己拥有的Minion时显示
@@ -200,14 +224,14 @@ messages:
     description: Open the menu for a player
     # 指令的帮助提示，当使用/help playgroundmenus时显示
     usage: |-
-      §f<command> command usage:
+      §f/<command> command usage:
       §9/<command> open {menu_name} [player] §7- §fOpen the specific menu for a player
       §9/<command> list §7- §fList all available menu
   # 军需官指令说明，必须与定义的指令名称一致
   quartermaster:
     description: The quartermaster, who manages weapons, off-hand items, armor, accessories
     usage: |-
-      §f<command> command usage:
+      §f/<command> command usage:
       §e/<command> {help|give|gui} {player} {item} [amount]
       §9/<command> help §7- §fShow help of this command on this screen
       §9/<command> give §7- §fGive an item to player
@@ -215,43 +239,43 @@ messages:
   hcplayground:
     description: HC playground main command
     usage: |-
-      §f<command> command usage:
+      §f/<command> command usage:
       §9/<command> help &7- &fShow help for this command
       §9/<command> reload &7- &fReload all configuration files
   login:
     description: Player login command, player must login for first before playing on this server
     usage: |-
-      §f<command> command usage:
+      §f/<command> command usage:
       §9/<command> your-password
   logout:
     description: Player logout command, disconnect player from server
     usage: |-
-      §f<command> command usage:
+      §f/<command> command usage:
       §9/<command>
   register:
     description: Player register command, player must register for first before playing on this server
     usage: |-
-      §f<command> command usage:
+      §f/<command> command usage:
       §9/<command> your-password your-password
   unregister:
     description: Unregister player account, all attached items and points of this player will be distroyed
     usage: |-
-      §f<command> command usage:
+      §f/<command> command usage:
       §9/<command> your-password
   changepassword:
     description: Player change password command, player can change password by this command any time
     usage: |-
-      §f<command> command usage:
+      §f/<command> command usage:
       §9/<command> old-password new-password new-password
   seen:
     description: See a player's online status
     usage: |-
-      §f<command> command usage:
+      §f/<command> command usage:
       §9/<command> {player} &7- The player name who is being seen by you
   banplayer:
     description: Forbidden a player to enter the server
     usage: |-
-      §f<command> command usage:
+      §f/<command> command usage:
       §9/<command> {player} {message}
       §9player &7- The player name to be banned
       §9message &7- Show player message while he/she was banned
@@ -260,33 +284,33 @@ messages:
   unbanplayer:
     description: Lifting a player to enter the server
     usage: |-
-      §f<command> command usage:
+      §f/<command> command usage:
       §9/<command> {player}
       §9player &7- The player name to be lifted the ban
   scale:
     description: Sets player scale health
     usage: |-
-      &7<command> command usage:
+      &7/<command> command usage:
       &9/<command> scale maxHealth
       &9scale &7- &fThe player health scaled to
       &9maxHealth &7- &fThe player max health
   crazy:
     description: Menu for crazy crafting, crazy enchanting, crazy anvil
     usage: |-
-      &7<command> command usage:
+      &7/<command> command usage:
       &9/<command> crafting &7- &fOpen a menu for crazy crafting
       &9/<command> enchanting &7- &fOpen a menu for crazy enchanting
       &9/<command> anvil &7- &fOpen a menu for crazy anvil
   broadcastplus:
     description: Show message to all players
     usage: |-
-      &7<command> command usage:
+      &7/<command> command usage:
       &9/<command> {message} &7- &fShow message to all players
       &9message &7- &fThe messages to be shown
   course:
     description: Create, Modify, Delete a parkour course owned by a player
     usage: |-
-      &7<command> command usage:
+      &7/<command> command usage:
       &9/<command> help <course> &7- &fShow this screen
       &9/<command> abandons &7- &fList all abandoned parkour courses
       &9/<command> claim <course> &7- &fClaim a abandoned parkour course, the course must be abandoned
@@ -305,20 +329,27 @@ messages:
   minion:
     description: Minion administration
     usage: |-
-      &7<command> command usage:
-      &9<command> give &7- Give a minion to a player
+      &7/<command> command usage:
+      &9/<command> give &7- Give a minion to a player
   recordmanager:
     description: Custom block and entity(item join) place/break Record Manager
     usage: |-
-      &7<command> command usage:
-      &9<command> load &7- Load record from record.yml
-      &9<command> save &7- Save record to record.yml
+      &7/<command> command usage:
+      &9/<command> load &7- Load record from record.yml
+      &9/<command> save &7- Save record to record.yml
   skillmanager:
     description: Manage the skill experience, give player the skill experience or take it from player
     usage: |-
-      &7<command> command usage:
-      &9<command> give <skill_name> <player> <points> &7- Give a player the points of skill experience
-      &9<command> take <skill_name> <player> <points> &7- Take the points of skill experience from a player
+      &7/<command> command usage:
+      &9/<command> give <skill_name> <player> <points> &7- Give a player the points of skill experience
+      &9/<command> take <skill_name> <player> <points> &7- Take the points of skill experience from a player
+  rewardmanager:
+    description: Manage the skill level reward, claim the reward to a player
+    usage: |-
+      &7/<command> command usage:
+      &9/<command> claim <skill_name> <player> &7- Give a player the unclaimed skill level reward
+      &9/<command> reset <skill_name> <player> &7- Reset the claimed skill level to 0 to a player 
+
   # 模板节段
   template:
     # 显示id，不能修改名称
@@ -341,7 +372,7 @@ messages:
   # 重新加载插件配置时显示，可以使用%time_escaped%占位符，表示重新加载插件所使用的时间，单位: 毫秒
   reload: '&aConfiguration reload completed, time escaped: &e%time_escaped% &ams'
   # 当系统出现错误时显示，一般情况下只有当系统出错时才会显示此信息，可以使用%player%占位符，代表执行该指令的玩家
-  systemError: '&4Oooooooops!!! Something went wrong!'
+  systemCriticalError: '&4Oooooooops!!! Something went wrong!'
   # 系统管理员的名字，当使用控制台指令时以此名称代替执行指令的玩家名称
   systemAdminName: '&eSystem Administrator'
   # 尝试解析字符串为数字但失败时显示，可以使用%numeric%，表示要尝试解析的字符串
@@ -352,3 +383,5 @@ messages:
   customCommandCooldown: '&cYou have to wait for &e%remain% &csecond to run this command: &e%command%'
   # 当玩法或者功能正在开发中，并且被玩家尝试使用时显示
   UnderConstruction: '&eThis feature is under construction and will be available soon'
+  # 运行指令时输入的参数不正确时显示
+  parameterInCorrect: '&cParameters length is not right, &e%length% &cargument(s) is required'

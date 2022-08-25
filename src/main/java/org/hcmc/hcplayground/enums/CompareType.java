@@ -10,6 +10,10 @@ public enum CompareType {
      */
     COMPARE_STRING,
     /**
+     * 检查字符串是否在或者不在数组内
+     */
+    COMPARE_STRING_LIST,
+    /**
      * 布尔比较
      */
     COMPARE_BOOLEAN,

@@ -1,19 +1,22 @@
 package org.hcmc.hcplayground.utility;
 
 import org.bukkit.NamespacedKey;
+import org.bukkit.attribute.AttributeInstance;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.model.item.ItemBase;
 
-public class NameBinaryTagResolver {
+public class NameBinaryTag {
     private PersistentDataContainer subContainer = null;
     private JavaPlugin plugin = null;
 
-    public NameBinaryTagResolver(ItemStack itemStack) {
+    public NameBinaryTag(ItemStack itemStack) {
         ItemMeta im = itemStack.getItemMeta();
         if (im == null) return;
 

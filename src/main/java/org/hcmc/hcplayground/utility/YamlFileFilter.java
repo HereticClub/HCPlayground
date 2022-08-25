@@ -11,6 +11,6 @@ public class YamlFileFilter implements FilenameFilter {
 
     @Override
     public boolean accept(File dir, String name) {
-        return false;
+        return name.endsWith(".yml");
     }
 }

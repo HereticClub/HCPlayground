@@ -7,19 +7,15 @@ import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
-import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.InvalidConfigurationException;
-import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.permissions.PermissionAttachment;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.enums.ItemFeatureType;
+import org.hcmc.hcplayground.enums.MMOType;
 import org.hcmc.hcplayground.enums.PlayerBannedState;
-import org.hcmc.hcplayground.manager.ItemManager;
-import org.hcmc.hcplayground.manager.LanguageManager;
-import org.hcmc.hcplayground.manager.MMOSkillManager;
-import org.hcmc.hcplayground.manager.SidebarManager;
+import org.hcmc.hcplayground.manager.*;
 import org.hcmc.hcplayground.model.item.ItemBase;
 import org.hcmc.hcplayground.model.item.Join;
 import org.hcmc.hcplayground.model.scoreboard.ScoreboardItem;
@@ -31,10 +27,6 @@ import org.jetbrains.annotations.NotNull;
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.Field;
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
@@ -43,56 +35,208 @@ import java.security.spec.InvalidKeySpecException;
 import java.sql.SQLException;
 import java.text.DateFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class PlayerData {
-    private static final String Section_Key_CcmdCooldownList = "ccmdCooldownList";
-    private static final String Section_Key_Parkour_Design = "parkour.design";
-    private static final String Section_Key_Parkour_List = "parkour.list";
-    private static final String TYPE_JAVA_UTIL_MAP = "java.util.Map";
+    /**
+     * 玩家血量压缩边缘等级<br>
+     * 右边数值代表玩家血量，当小于某个等级的数值，则按相应左边数值的压缩血量(♥数量)显示<br>
+     * Double - 血量压缩值<br>
+     * Double - 血量等级值<br>
+     * 例如: 当前玩家血量555，在表中表示小于610，则按照30来显示(♥数量)压缩血量<br>
+     */
+    private static final Map<Double, Double> scaleEdges = new HashMap<>();
+    private static final String Section_Key_CcmdCooldownList = "ccmdCooldown";
+    private static final String Section_Key_Course_Design = "courseDesignMode";
+    private static final String Section_Key_Course_Owned = "courseOwned";
+    private static final String Section_Key_Claimed_Skill_Level = "claimedSkillLevel";
+    private static final String Section_Key_Claimed_Collection_Level = "claimedCollectionLevel";
     public static final String ECONOMY_BALANCE_KEY = "balance";
     public static final double BASE_HEALTH = 20.0F;
-    public static final double BASE_MAX_HEALTH = 20.0F;
     public static final double BASE_CRITICAL = 0.05F;
     public static final double BASE_CRITICAL_DAMAGE = 1.5F;
     public static final double BASE_ARMOR = 0;
+    public static final double BASE_ARMOR_TOUGHNESS = 0;
     public static final double BASE_ATTACK_REACH = 0;
     public static final double BASE_BLOOD_SUCKING = 0;
     public static final double BASE_RECOVER = 0;
     public static final double BASE_INTELLIGENCE = 0;
     public static final double BASE_DIGGING_SPEED = 0;
     public static final double BASE_LOGGING_SPEED = 0;
-    /**
-     * 玩家档案文档的各种记录名称列表
-     */
-    private final String[] SectionKeys = new String[]{
-            Section_Key_CcmdCooldownList,
-    };
+
+    static {
+        scaleEdges.put(20.0, 100.0);
+        scaleEdges.put(22.0, 300.0);
+        scaleEdges.put(24.0, 500.0);
+        scaleEdges.put(26.0, 700.0);
+        scaleEdges.put(28.0, 900.0);
+        scaleEdges.put(30.0, 1100.0);
+        scaleEdges.put(32.0, 1300.0);
+        scaleEdges.put(34.0, 1500.0);
+        scaleEdges.put(36.0, 1700.0);
+        scaleEdges.put(38.0, 1900.0);
+        scaleEdges.put(40.0, 9999.0);
+    }
 
     /**
-     * Custom Command with cooldown-able
+     * 玩家护甲值
+     */
+    @Expose
+    @SerializedName(value = "armor")
+    private double baseArmor = BASE_ARMOR;
+    /**
+     * 玩家盔甲韧性值
+     */
+    @Expose
+    @SerializedName(value = "armor_toughness")
+    private double baseArmorToughness = BASE_ARMOR_TOUGHNESS;
+    /**
+     * 攻击距离
+     */
+    @Expose
+    @SerializedName(value = "attack_reach")
+    private double baseAttackReach = BASE_ATTACK_REACH;
+    /**
+     * 吸血效果
+     */
+    @Expose
+    @SerializedName(value = "blood_sucking")
+    private double baseBloodSucking = BASE_BLOOD_SUCKING;
+    /**
+     * 暴击率
+     */
+    @Expose
+    @SerializedName(value = "critical")
+    private double baseCritical = BASE_CRITICAL;
+    /**
+     * 暴击伤害
+     */
+    @Expose
+    @SerializedName(value = "critical_damage")
+    private double baseCriticalDamage = BASE_CRITICAL_DAMAGE;
+    /**
+     * 生命恢复，每x秒恢复y血量
+     */
+    @Expose
+    @SerializedName(value = "recover")
+    private double baseRecover = BASE_RECOVER;
+    /**
+     * 智力
+     */
+    @Expose
+    @SerializedName(value = "intelligence")
+    private double baseIntelligence = BASE_INTELLIGENCE;
+    /**
+     * 挖掘速度，影响破坏矿物方块的速度
+     */
+    @Expose
+    @SerializedName(value = "digging_speed")
+    private double baseDiggingSpeed = BASE_DIGGING_SPEED;
+    /**
+     * 伐木速度，影响破坏木头方块的速度
+     */
+    @Expose
+    @SerializedName(value = "logging_speed")
+    private double baseLoggingSpeed = BASE_LOGGING_SPEED;
+    /**
+     * 表示是否在跑酷赛道设计模式
+     */
+    @Expose
+    @SerializedName(value = Section_Key_Course_Design)
+    private boolean designMode = false;
+    /**
+     * 自定义命令的冷却剩余时间<br>
+     * String - 自定义命令<br>
+     * Double - 剩余的冷却时间<br>
      */
     @Expose
     @SerializedName(value = Section_Key_CcmdCooldownList)
-    public Map<String, Double> CcmdCooldownList = new HashMap<>();
+    private Map<String, Double> ccmdCooldown = new HashMap<>();
+    /**
+     * 当前玩家所拥有的跑酷赛道列表
+     */
     @Expose
-    @SerializedName(value = Section_Key_Parkour_Design)
-    public boolean isCourseDesigning = false;
+    @SerializedName(value = Section_Key_Course_Owned)
+    private List<String> courseOwned = new ArrayList<>();
+    /**
+     * 当前玩家已经解锁的疯狂菜单(id)
+     */
     @Expose
-    @SerializedName(value = Section_Key_Parkour_List)
-    public List<String> courseIds = new ArrayList<>();
+    @SerializedName(value = "recipes")
+    private List<String> recipes = new ArrayList<>();
+    /**
+     * 已领取的技能等级奖励<br>
+     * MMOType - 技能类型<br>
+     * Integer - 已领取的技能等级<br>
+     */
+    @Expose
+    @SerializedName(value = Section_Key_Claimed_Skill_Level)
+    private Map<MMOType, Integer> claimedSkillLevel = new HashMap<>();
+    /**
+     * 已领取的技能等级奖励<br>
+     * MMOType - 技能类型<br>
+     * Integer - 已领取的技能等级<br>
+     */
+    @Expose
+    @SerializedName(value = Section_Key_Claimed_Collection_Level)
+    private Map<Material, Integer> claimedCollectionLevel = new HashMap<>();
+    /**
+     * 来自装备或物品的额外护甲值
+     */
+    private double extraArmor;
+    /**
+     * 来自装备或物品的额外盔甲韧性值
+     */
+    private double extraArmorToughness;
+    /**
+     * 来自装备或物品的额外攻击距离
+     */
+    private double extraAttackReach;
+    /**
+     * 来自装备或物品的额外吸血效果
+     */
+    private double extraBloodSucking;
+    /**
+     * 来自装备或物品的额外暴击率
+     */
+    private double extraCritical;
+    /**
+     * 来自装备或物品的额外暴击伤害
+     */
+    private double extraCriticalDamage;
+    /**
+     * 来自装备或物品的额外恢复速度
+     */
+    private double extraRecover;
+    /**
+     * 来自装备或物品的额外智力值
+     */
+    private double extraIntelligence;
+    /**
+     * 来自装备或物品的额外矿物方块破坏速度
+     */
+    private double extraDiggingSpeed;
+    /**
+     * 来自装备或物品的额外木头方块破坏速度
+     */
+    private double extraLoggingSpeed;
     /**
      * 玩家的背包和装备物品的记录
      */
-    public CourseDesigner designer;
+    private CourseDesigner designer;
     /**
      * 玩家在runnable线程的时间检查点，初始化为登陆时间
      * 通常不会更改这个属性的值
      */
-    public long loginTimeStamp = 0;
+    private long loginTimeStamp;
+    /**
+     * 玩家的血量压缩值
+     */
+    private double scale;
     /**
      * 本插件实例
      */
-    private final JavaPlugin plugin = HCPlayground.getInstance();
+    private JavaPlugin plugin;
     /**
      * 记录玩家登陆时的游戏模式
      */
@@ -100,19 +244,19 @@ public class PlayerData {
     /**
      * 玩家的Player实例
      */
-    private final Player player;
+    private Player player;
     /**
      * 玩家的OfflinePlayer实例
      */
-    private final OfflinePlayer offline;
+    private OfflinePlayer offline;
     /**
      * 玩家的UUID
      */
-    private final UUID uuid;
+    private UUID uuid;
     /**
      * 玩家名称
      */
-    private final String name;
+    private String name;
     /**
      * 玩家是否已经使用/login指令登陆到服务器
      */
@@ -121,31 +265,104 @@ public class PlayerData {
      * 玩家是否已经使用/register指令注册到服务器
      */
     private boolean register;
-    private final PermissionAttachment attachment;
+    private PermissionAttachment attachment;
     private Date loginTime = new Date();
     private ScoreboardItem sidebar;
-    private double totalArmor = BASE_ARMOR;
-    private double totalAttackReach = BASE_ATTACK_REACH;
-    private double totalBloodSucking = BASE_BLOOD_SUCKING;
-    private double totalCritical = BASE_CRITICAL;
-    private double totalCriticalDamage = BASE_CRITICAL_DAMAGE;
-    private double maxHealth = BASE_MAX_HEALTH;
-    private double totalRecover = BASE_RECOVER;
-    private double totalIntelligence = BASE_INTELLIGENCE;
-    private double totalDiggingSpeed = BASE_DIGGING_SPEED;
-    private double totalLoggingSpeed = BASE_LOGGING_SPEED;
 
     public PlayerData(Player player) {
-        this.player = player;
+        initialize(player);
+    }
 
+    public void initialize(Player player) {
+        this.player = player;
+        plugin = HCPlayground.getInstance();
         name = player.getName();
         uuid = player.getUniqueId();
+        loginTimeStamp = 0;
+        loginTime = new Date();
         gameMode = player.getGameMode();
         attachment = player.addAttachment(plugin);
         designer = new CourseDesigner(this);
         offline = Bukkit.getOfflinePlayer(uuid);
 
-        LoadConfig();
+        if (baseCritical <= 0) baseCritical = 0.05;
+        if (baseCriticalDamage <= 0) baseCriticalDamage = 1.5;
+        if (baseIntelligence <= 0) baseIntelligence = 1.0;
+
+        scale = getScaleEdge();
+        player.setHealthScale(scale);
+
+        if (recipes == null) recipes = new ArrayList<>();
+    }
+
+    /**
+     * 不能直接使用getClaimedSkillLevel().xxx直接进行工作
+     * @return claimedSkillLevel属性的副本
+     */
+    @NotNull
+    public Map<MMOType, Integer> getClaimedSkillLevel() {
+        return claimedSkillLevel == null ? new HashMap<>() : new HashMap<>(claimedSkillLevel);
+    }
+
+    public void setClaimedSkillLevel(@NotNull Map<MMOType, Integer> claimedSkillLevel) {
+        this.claimedSkillLevel = new HashMap<>(claimedSkillLevel);
+    }
+
+    @NotNull
+    public Map<Material, Integer> getClaimedCollectionLevel() {
+        return claimedCollectionLevel == null ? new HashMap<>() : new HashMap<>(claimedCollectionLevel);
+    }
+
+    public void setClaimedCollectionLevel(@NotNull Map<Material, Integer> claimedCollectionLevel) {
+        this.claimedCollectionLevel = new HashMap<>(claimedCollectionLevel);
+    }
+
+    public CourseDesigner getDesigner() {
+        return designer;
+    }
+
+    public long getLoginTimeStamp() {
+        return loginTimeStamp;
+    }
+
+    public void setLoginTimeStamp(long loginTimeStamp) {
+        this.loginTimeStamp = loginTimeStamp;
+    }
+
+    public List<String> getCourseOwned() {
+        return courseOwned;
+    }
+
+    public Map<String, Double> getCcmdCooldown() {
+        return ccmdCooldown;
+    }
+
+    public List<String> getRecipes() {
+        return recipes;
+    }
+
+    public void unlockRecipe(String... recipeIds) {
+        for (String id : recipeIds) {
+            // 检查是否已经解锁
+            if (existRecipe(id)) return;
+            // 检查是否存在配方加载项中
+            if (!RecipeManager.existRecipe(id)) return;
+            // 为玩家解锁配方
+            recipes.add(id);
+        }
+    }
+
+
+    public boolean existRecipe(String recipeId) {
+        return recipes.stream().anyMatch(x -> x.equalsIgnoreCase(recipeId));
+    }
+
+    public boolean isDesignMode() {
+        return designMode;
+    }
+
+    public void setDesignMode(boolean designMode) {
+        this.designMode = designMode;
     }
 
     public PermissionAttachment getAttachment() {
@@ -166,6 +383,7 @@ public class PlayerData {
      */
     public void deposit(double money) {
         EconomyResponse response = Global.economyApi.depositPlayer(player, money);
+        if (!response.type.equals(EconomyResponse.ResponseType.SUCCESS)) Global.LogWarning(response.errorMessage);
     }
 
     /**
@@ -174,116 +392,372 @@ public class PlayerData {
      */
     public void withdraw(double money) {
         EconomyResponse response = Global.economyApi.withdrawPlayer(player, money);
+        if (!response.type.equals(EconomyResponse.ResponseType.SUCCESS)) Global.LogWarning(response.errorMessage);
     }
 
-    public double getCurrentHealth() {
-        double currentHealth = (float) player.getHealth();
-        if (currentHealth >= maxHealth) player.setHealth(maxHealth);
-        return currentHealth;
+    public double getExtraArmor() {
+        return extraArmor;
+    }
+
+    public void setExtraArmor(double extraArmor) {
+        this.extraArmor = extraArmor;
+    }
+
+    public double getExtraArmorToughness() {
+        return extraArmorToughness;
+    }
+
+    public void setExtraArmorToughness(double extraArmorToughness) {
+        this.extraArmorToughness = extraArmorToughness;
+    }
+
+    public double getExtraAttackReach() {
+        return extraAttackReach;
+    }
+
+    public void setExtraAttackReach(double extraAttackReach) {
+        this.extraAttackReach = extraAttackReach;
+    }
+
+    public double getExtraBloodSucking() {
+        return extraBloodSucking;
+    }
+
+    public void setExtraBloodSucking(double extraBloodSucking) {
+        this.extraBloodSucking = extraBloodSucking;
+    }
+
+    public double getExtraCritical() {
+        return extraCritical;
+    }
+
+    public void setExtraCritical(double extraCritical) {
+        this.extraCritical = extraCritical;
+    }
+
+    public double getExtraCriticalDamage() {
+        return extraCriticalDamage;
+    }
+
+    public void setExtraCriticalDamage(double extraCriticalDamage) {
+        this.extraCriticalDamage = extraCriticalDamage;
+    }
+
+    public double getExtraDiggingSpeed() {
+        return extraDiggingSpeed;
+    }
+
+    public void setExtraDiggingSpeed(double extraDiggingSpeed) {
+        this.extraDiggingSpeed = extraDiggingSpeed;
+    }
+
+    public double getExtraIntelligence() {
+        return extraIntelligence;
+    }
+
+    public void setExtraIntelligence(double extraIntelligence) {
+        this.extraIntelligence = extraIntelligence;
+    }
+
+    public double getExtraLoggingSpeed() {
+        return extraLoggingSpeed;
+    }
+
+    public void setExtraLoggingSpeed(double extraLoggingSpeed) {
+        this.extraLoggingSpeed = extraLoggingSpeed;
+    }
+
+    public double getExtraRecover() {
+        return extraRecover;
+    }
+
+    public void setExtraRecover(double extraRecover) {
+        this.extraRecover = extraRecover;
+    }
+
+    public double getLiveHealth() {
+        double liveHealth = (float) player.getHealth();
+        double maxHealth = getMaxHealth();
+
+        if (liveHealth >= maxHealth) player.setHealth(maxHealth);
+        return liveHealth;
     }
 
     // 获取玩家当前生命值
     public double getMaxHealth() {
-        maxHealth = getGenericAttribute(Attribute.GENERIC_MAX_HEALTH, BASE_HEALTH);
-        return maxHealth;
+        return getMaxAttribute(Attribute.GENERIC_MAX_HEALTH, BASE_HEALTH);
+    }
+
+    public double getBaseHealth() {
+        return getBaseAttribute(Attribute.GENERIC_MAX_HEALTH, BASE_HEALTH);
+    }
+
+    public void setBaseHealth(double maxHealth) {
+        setBaseAttribute(Attribute.GENERIC_MAX_HEALTH, maxHealth);
+        scale = getScaleEdge();
+        double scaled = player.getHealthScale();
+        if (scale != scaled) player.setHealthScale(scale);
+    }
+
+    public void increaseBaseHealth(double health) {
+        double _health = getBaseHealth();
+        setBaseHealth(health + _health);
+    }
+
+    public double getBaseMovementSpeed() {
+        return getBaseAttribute(Attribute.GENERIC_MOVEMENT_SPEED, 0);
+    }
+
+    public double getMaxMovementSpeed() {
+        return getMaxAttribute(Attribute.GENERIC_MOVEMENT_SPEED, 0);
+    }
+
+    public void setBaseMovementSpeed(double value) {
+        setBaseAttribute(Attribute.GENERIC_MOVEMENT_SPEED, value);
+    }
+
+    public void increaseBaseMovementSpeed(double value) {
+        double _value = getBaseMovementSpeed();
+        setBaseMovementSpeed(value + _value);
+    }
+
+    public double getBaseKnockBackResistance() {
+        return getBaseAttribute(Attribute.GENERIC_KNOCKBACK_RESISTANCE, 0);
+    }
+
+    public double getMaxKnockBackResistance(){
+        return getMaxAttribute(Attribute.GENERIC_KNOCKBACK_RESISTANCE, 0);
+    }
+
+    public void setBaseKnockBackResistance(double value) {
+        setBaseAttribute(Attribute.GENERIC_KNOCKBACK_RESISTANCE, value);
+    }
+
+    public void increaseBaseKnockBackResistance(double value) {
+        double _value = getBaseKnockBackResistance();
+        setBaseKnockBackResistance(value + _value);
+    }
+
+    public double getBaseLuck() {
+        return getBaseAttribute(Attribute.GENERIC_LUCK, 0);
+    }
+
+    public double getMaxLuck() {
+        return getMaxAttribute(Attribute.GENERIC_LUCK, 0);
+    }
+
+    public void setBaseLuck(double value) {
+        setBaseAttribute(Attribute.GENERIC_LUCK, value);
+    }
+
+    public void increaseBaseLuck(double value) {
+        double _value = getBaseLuck();
+        setBaseLuck(value + _value);
+    }
+
+    public double getBaseAttackDamage() {
+        return getBaseAttribute(Attribute.GENERIC_ATTACK_DAMAGE, 0);
+    }
+
+    public double getMaxAttackDamage() {
+        return getMaxAttribute(Attribute.GENERIC_ATTACK_DAMAGE, 0);
+    }
+
+    public void setBaseAttackDamage(double value) {
+        setBaseAttribute(Attribute.GENERIC_ATTACK_DAMAGE, value);
+    }
+
+    public void increaseBaseAttackDamage(double value) {
+        double _value = getBaseAttackDamage();
+        setBaseAttackDamage(value + _value);
+    }
+
+    public double getBaseAttackSpeed() {
+        return getBaseAttribute(Attribute.GENERIC_ATTACK_SPEED, 0);
+    }
+
+    public double getMaxAttackSpeed() {
+        return getMaxAttribute(Attribute.GENERIC_ATTACK_SPEED, 0);
+    }
+
+    public void setBaseAttackSpeed(double value) {
+        setBaseAttribute(Attribute.GENERIC_ATTACK_SPEED, value);
+    }
+
+    public void increaseBaseAttackSpeed(double value) {
+        double _value = getBaseAttackSpeed();
+        setBaseAttackSpeed(value + _value);
     }
 
     // 获取玩家当前护甲值
-    public double getTotalArmor() {
-        return totalArmor;
+    public double getBaseArmor() {
+        return baseArmor;
     }
 
-    // 获取玩家当前移动速度
-    public double getTotalMovementSpeed() {
-        return getGenericAttribute(Attribute.GENERIC_MOVEMENT_SPEED, 0);
+    public void setBaseArmor(double value) {
+        baseArmor = value;
+    }
+
+    public void increaseBaseArmor(double value) {
+        double _value = getBaseArmor();
+        setBaseArmor(value + _value);
+    }
+
+    public double getTotalArmor() {
+        return baseArmor + extraArmor;
+    }
+
+    public double getBaseArmorToughness() {
+        return baseArmorToughness;
+    }
+
+    public void setBaseArmorToughness(double value) {
+        baseArmorToughness = value;
+    }
+
+    public void increaseBaseArmorToughness(double value) {
+        double _value = getBaseArmorToughness();
+        setBaseArmorToughness(value + _value);
     }
 
     public double getTotalArmorToughness() {
-        return getGenericAttribute(Attribute.GENERIC_ARMOR_TOUGHNESS, 0);
+        return baseArmorToughness + extraArmorToughness;
     }
 
-    public double getTotalKnockBackResistance() {
-        return getGenericAttribute(Attribute.GENERIC_KNOCKBACK_RESISTANCE, 0);
+    public double getBaseCritical() {
+        return baseCritical;
     }
 
-    public double getTotalLuck() {
-        return getGenericAttribute(Attribute.GENERIC_LUCK, 0);
+    public void setBaseCritical(double value) {
+        baseCritical = value;
     }
 
-    public double getTotalAttackDamage() {
-        return getGenericAttribute(Attribute.GENERIC_ATTACK_DAMAGE, 0);
-    }
-
-    public double getTotalAttackSpeed() {
-        return getGenericAttribute(Attribute.GENERIC_ATTACK_SPEED, 0);
-    }
-
-    public double getTotalRecover() {
-        return totalRecover;
-    }
-
-    public double getTotalBloodSucking() {
-        return totalBloodSucking;
+    public void increaseBaseCritical(double value) {
+        double _value = getBaseCritical();
+        setBaseCritical(value + _value);
     }
 
     public double getTotalCritical() {
-        return totalCritical;
+        return baseCritical + extraCritical;
+    }
+
+    public double getBaseCriticalDamage() {
+        return baseCriticalDamage;
+    }
+
+    public void setBaseCriticalDamage(double value) {
+        baseCriticalDamage = value;
+    }
+
+    public void increaseBaseCriticalDamage(double value) {
+        double _value = getBaseCriticalDamage();
+        setBaseCriticalDamage(value + _value);
     }
 
     public double getTotalCriticalDamage() {
-        return totalCriticalDamage;
+        return baseCriticalDamage + extraCriticalDamage;
+    }
+
+    public double getBaseAttackReach() {
+        return baseAttackReach;
+    }
+
+    public void setBaseAttackReach(double value) {
+        baseAttackReach = value;
+    }
+
+    public void increaseBaseAttackReach(double value) {
+        double _value = getBaseAttackReach();
+        setBaseAttackReach(value + _value);
     }
 
     public double getTotalAttackReach() {
-        return totalAttackReach;
+        return baseAttackReach + extraAttackReach;
+    }
+
+    public double getBaseIntelligence() {
+        return baseIntelligence;
+    }
+
+    public void setBaseIntelligence(double value) {
+        baseIntelligence = value;
+    }
+
+    public void increaseBaseIntelligence(double value) {
+        double _value = getBaseIntelligence();
+        setBaseIntelligence(value + _value);
     }
 
     public double getTotalIntelligence() {
-        return totalIntelligence;
+        return baseIntelligence + extraIntelligence;
+    }
+
+    public double getBaseDiggingSpeed() {
+        return baseDiggingSpeed;
+    }
+
+    public void setBaseDiggingSpeed(double value) {
+        baseDiggingSpeed = value;
+    }
+
+    public void increaseBaseDiggingSpeed(double value) {
+        double _value = getBaseDiggingSpeed();
+        setBaseDiggingSpeed(value + _value);
     }
 
     public double getTotalDiggingSpeed() {
-        return totalDiggingSpeed;
+        return baseDiggingSpeed + extraDiggingSpeed;
+    }
+
+    public double getBaseLoggingSpeed() {
+        return baseLoggingSpeed;
+    }
+
+    public void setBaseLoggingSpeed(double value) {
+        baseLoggingSpeed = value;
+    }
+
+    public void increaseBaseLoggingSpeed(double value) {
+        double _value = getBaseLoggingSpeed();
+        setBaseLoggingSpeed(value + _value);
     }
 
     public double getTotalLoggingSpeed() {
-        return totalLoggingSpeed;
+        return baseLoggingSpeed + extraLoggingSpeed;
     }
 
-    public void setTotalLoggingSpeed(double value) {
-        totalLoggingSpeed = value;
+    public void setBaseBloodSucking(double value) {
+        baseBloodSucking = value;
     }
 
-    public void setTotalDiggingSpeed(double value) {
-        totalDiggingSpeed = value;
+    public double getBaseBloodSucking() {
+        return baseBloodSucking;
     }
 
-    public void setTotalIntelligence(double value) {
-        totalIntelligence = value;
+    public void increaseBaseBloodSucking(double value) {
+        double _value = getBaseBloodSucking();
+        setBaseBloodSucking(value + _value);
     }
 
-    public void setTotalArmor(double value) {
-        totalArmor = value;
+    public double getTotalBloodSucking() {
+        return baseBloodSucking + extraBloodSucking;
     }
 
-    public void setTotalCriticalDamage(double value) {
-        totalCriticalDamage = value;
+    public double getBaseRecover() {
+        return baseRecover;
     }
 
-    public void setTotalAttackReach(double value) {
-        totalAttackReach = value;
+    public void setBaseRecover(double value) {
+        baseRecover = value;
     }
 
-    public void setTotalCritical(double value) {
-        totalCritical = value;
+    public void increaseBaseRecover(double value) {
+        double _value = getBaseRecover();
+        setBaseRecover(value + _value);
     }
 
-    public void setTotalBloodSucking(double value) {
-        totalBloodSucking = value;
-    }
-
-    public void setTotalRecover(double value) {
-        totalRecover = value;
+    public double getTotalRecover() {
+        return baseRecover + extraRecover;
     }
 
     public boolean isLogin() {
@@ -407,7 +881,7 @@ public class PlayerData {
 
         boolean changed = SqliteManager.ChangePassword(player, newPassword);
         if (!changed) {
-            player.sendMessage(LanguageManager.getString("systemError", player).replace("%player%", name));
+            player.sendMessage(LanguageManager.getString("systemCriticalError", player).replace("%player%", name));
         } else {
             player.sendMessage(LanguageManager.getString("playerPasswordChanged", player).replace("%player%", name));
         }
@@ -463,295 +937,60 @@ public class PlayerData {
         sidebar.Update(player);
     }
 
-    public void LoadConfig() {
-        UUID playerUuid = player.getUniqueId();
-        File f = new File(plugin.getDataFolder(), String.format("profile/%s.yml", playerUuid));
-        // 加载所有Map<Material, Integer>类型的玩家记录
-        YamlConfiguration yaml = YamlConfiguration.loadConfiguration(f);
-        Yaml2Map(yaml);
-    }
-
-    public void SaveConfig() throws IOException {
-        UUID playerUuid = player.getUniqueId();
-        File f = new File(plugin.getDataFolder(), String.format("profile/%s.yml", playerUuid));
-        // 转换所有Map<Material, Integer>类型的玩家记录，成为Yaml格式字符串
-        YamlConfiguration yaml = Map2Yaml();
-        yaml.save(f);
-    }
-
-    public int statisticPickupFeather() {
-        return player.getStatistic(Statistic.PICKUP, Material.FEATHER);
-    }
-    public int statisticPickupLeather() {
-        return player.getStatistic(Statistic.PICKUP, Material.LEATHER);
-    }
-    public int statisticPickupMutton() {
-        return player.getStatistic(Statistic.PICKUP, Material.MUTTON);
-    }
-    public int statisticPickupRabbitHide() {
-        return player.getStatistic(Statistic.PICKUP, Material.RABBIT_HIDE);
-    }
-    public int statisticPickupRabbitFoot() {
-        return player.getStatistic(Statistic.PICKUP, Material.RABBIT_FOOT);
-    }
-    public int statisticPickupBeef() {
-        return player.getStatistic(Statistic.PICKUP, Material.BEEF);
-    }
-    public int statisticPickupChicken() {
-        return player.getStatistic(Statistic.PICKUP, Material.CHICKEN);
-    }
-    public int statisticPickupPorkchop() {
-        return player.getStatistic(Statistic.PICKUP, Material.PORKCHOP);
-    }
-    public int statisticPickupRabbit() {
-        return player.getStatistic(Statistic.PICKUP, Material.RABBIT);
-    }
-    public int statisticPickupCactus() {
-        return player.getStatistic(Statistic.PICKUP, Material.CACTUS);
-    }
-    public int statisticPickupCarrot() {
-        return player.getStatistic(Statistic.PICKUP, Material.CARROT);
-    }
-    public int statisticPickupCocoaBeans() {
-        return player.getStatistic(Statistic.PICKUP, Material.COCOA_BEANS);
-    }
-    public int statisticPickupMelon() {
-        return player.getStatistic(Statistic.PICKUP, Material.MELON);
-    }
-    public int statisticPickupRedMushroom() {
-        return player.getStatistic(Statistic.PICKUP, Material.RED_MUSHROOM);
-    }
-    public int statisticPickupBrownMushroom() {
-        return player.getStatistic(Statistic.PICKUP, Material.BROWN_MUSHROOM);
-    }
-    public int statisticPickupNetherWart() {
-        return player.getStatistic(Statistic.PICKUP, Material.NETHER_WART);
-    }
-    public int statisticPickupPotato() {
-        return player.getStatistic(Statistic.PICKUP, Material.POTATO);
-    }
-    public int statisticPickupPumpkin() {
-        return player.getStatistic(Statistic.PICKUP, Material.PUMPKIN);
-    }
-    public int statisticPickupSugarCane() {
-        return player.getStatistic(Statistic.PICKUP, Material.SUGAR_CANE);
-    }
-    public int statisticPickupWheat() {
-        return player.getStatistic(Statistic.PICKUP, Material.WHEAT);
-    }
-    public int statisticPickupWheatSeeds() {
-        return player.getStatistic(Statistic.PICKUP, Material.WHEAT_SEEDS);
-    }
-    public int statisticPickupCoal() {
-        return player.getStatistic(Statistic.PICKUP, Material.COAL);
-    }
-    public int statisticPickupCobblestone() {
-        return player.getStatistic(Statistic.PICKUP, Material.COBBLESTONE);
-    }
-    public int statisticPickupDiamond() {
-        return player.getStatistic(Statistic.PICKUP, Material.DIAMOND);
-    }
-    public int statisticPickupEmerald() {
-        return player.getStatistic(Statistic.PICKUP, Material.EMERALD);
-    }
-    public int statisticPickupEndStone() {
-        return player.getStatistic(Statistic.PICKUP, Material.END_STONE);
-    }
-    public int statisticPickupGlowStoneDust() {
-        return player.getStatistic(Statistic.PICKUP, Material.GLOWSTONE_DUST);
-    }
-    public int statisticPickupGoldIngot() {
-        return player.getStatistic(Statistic.PICKUP, Material.GOLD_INGOT);
-    }
-    public int statisticPickupIronIngot() {
-        return player.getStatistic(Statistic.PICKUP, Material.IRON_INGOT);
-    }
-    public int statisticPickupGravel() {
-        return player.getStatistic(Statistic.PICKUP, Material.GRAVEL);
-    }
-    public int statisticPickupIce() {
-        return player.getStatistic(Statistic.PICKUP, Material.ICE);
-    }
-    public int statisticPickupLapisLazuli() {
-        return player.getStatistic(Statistic.PICKUP, Material.LAPIS_LAZULI);
-    }
-    public int statisticPickupQuartz() {
-        return player.getStatistic(Statistic.PICKUP, Material.QUARTZ);
-    }
-    public int statisticPickupNetherrack() {
-        return player.getStatistic(Statistic.PICKUP, Material.NETHERRACK);
-    }
-    public int statisticPickupObsidian() {
-        return player.getStatistic(Statistic.PICKUP, Material.OBSIDIAN);
-    }
-    public int statisticPickupRedSend() {
-        return player.getStatistic(Statistic.PICKUP, Material.RED_SAND);
-    }
-    public int statisticPickupSand() {
-        return player.getStatistic(Statistic.PICKUP, Material.SAND);
-    }
-    public int statisticPickupRedstone() {
-        return player.getStatistic(Statistic.PICKUP, Material.REDSTONE);
-    }
-    public int statisticPickupAcaciaLog() {
-        return player.getStatistic(Statistic.PICKUP, Material.ACACIA_LOG);
-    }
-    public int statisticPickupBirchLog() {
-        return player.getStatistic(Statistic.PICKUP, Material.BIRCH_LOG);
-    }
-    public int statisticPickupDarkOakLog() {
-        return player.getStatistic(Statistic.PICKUP, Material.DARK_OAK_LOG);
-    }
-    public int statisticPickupJungleLog() {
-        return player.getStatistic(Statistic.PICKUP, Material.JUNGLE_LOG);
-    }
-    public int statisticPickupMangroveLog() {
-        return player.getStatistic(Statistic.PICKUP, Material.MANGROVE_LOG);
-    }
-    public int statisticPickupOakLog() {
-        return player.getStatistic(Statistic.PICKUP, Material.OAK_LOG);
-    }
-    public int statisticPickupSpruceLog() {
-        return player.getStatistic(Statistic.PICKUP, Material.SPRUCE_LOG);
-    }
-    public int statisticPickupCrimsonStem() {
-        return player.getStatistic(Statistic.PICKUP, Material.CRIMSON_STEM);
-    }
-    public int statisticPickupWarpedStem() {
-        return player.getStatistic(Statistic.PICKUP, Material.WARPED_STEM);
-    }
-    public int statisticPickupAcaciaSapling() {
-        return player.getStatistic(Statistic.PICKUP, Material.ACACIA_SAPLING);
-    }
-    public int statisticPickupBirchSapling() {
-        return player.getStatistic(Statistic.PICKUP, Material.BIRCH_SAPLING);
-    }
-    public int statisticPickupDarkOakSapling() {
-        return player.getStatistic(Statistic.PICKUP, Material.DARK_OAK_SAPLING);
-    }
-    public int statisticPickupJungleSapling() {
-        return player.getStatistic(Statistic.PICKUP, Material.JUNGLE_SAPLING);
-    }
-    public int statisticPickupMangrovePropagule() {
-        return player.getStatistic(Statistic.PICKUP, Material.MANGROVE_PROPAGULE);
-    }
-    public int statisticPickupOakSapling() {
-        return player.getStatistic(Statistic.PICKUP, Material.OAK_SAPLING);
-    }
-    public int statisticPickupSpruceSapling() {
-        return player.getStatistic(Statistic.PICKUP, Material.SPRUCE_SAPLING);
-    }
-    public int statisticPickupApple() {
-        return player.getStatistic(Statistic.PICKUP, Material.APPLE);
-    }
-    public int statisticPickupTropicalFish() {
-        return player.getStatistic(Statistic.PICKUP, Material.TROPICAL_FISH);
-    }
-    public int statisticPickupInkSac() {
-        return player.getStatistic(Statistic.PICKUP, Material.INK_SAC);
-    }
-    public int statisticPickupLilyPad() {
-        return player.getStatistic(Statistic.PICKUP, Material.LILY_PAD);
-    }
-    public int statisticPickupPrismarineCrystals() {
-        return player.getStatistic(Statistic.PICKUP, Material.PRISMARINE_CRYSTALS);
-    }
-    public int statisticPickupPrismarineShard() {
-        return player.getStatistic(Statistic.PICKUP, Material.PRISMARINE_SHARD);
-    }
-    public int statisticPickupPufferFish() {
-        return player.getStatistic(Statistic.PICKUP, Material.PUFFERFISH);
-    }
-    public int statisticPickupCod() {
-        return player.getStatistic(Statistic.PICKUP, Material.COD);
-    }
-    public int statisticPickupSalmon() {
-        return player.getStatistic(Statistic.PICKUP, Material.SALMON);
-    }
-    public int statisticPickupSponge() {
-        return player.getStatistic(Statistic.PICKUP, Material.SPONGE);
-    }
-    public int statisticPickupClay() {
-        return player.getStatistic(Statistic.PICKUP, Material.CLAY);
-    }
-    public int statisticPickupBlazeRod() {
-        return player.getStatistic(Statistic.PICKUP, Material.BLAZE_ROD);
-    }
-    public int statisticPickupBone() {
-        return player.getStatistic(Statistic.PICKUP, Material.BONE);
-    }
-    public int statisticPickupEnderPearl() {
-        return player.getStatistic(Statistic.PICKUP, Material.ENDER_PEARL);
-    }
-    public int statisticPickupGhastTear() {
-        return player.getStatistic(Statistic.PICKUP, Material.GHAST_TEAR);
-    }
-    public int statisticPickupGunpowder() {
-        return player.getStatistic(Statistic.PICKUP, Material.GUNPOWDER);
-    }
-    public int statisticPickupMagmaCream() {
-        return player.getStatistic(Statistic.PICKUP, Material.MAGMA_CREAM);
-    }
-    public int statisticPickupRottenFlesh() {
-        return player.getStatistic(Statistic.PICKUP, Material.ROTTEN_FLESH);
-    }
-    public int statisticPickupSlimeBall() {
-        return player.getStatistic(Statistic.PICKUP, Material.SLIME_BALL);
-    }
-    public int statisticPickupSpiderEye() {
-        return player.getStatistic(Statistic.PICKUP, Material.SPIDER_EYE);
-    }
-    public int statisticPickupString() {
-        return player.getStatistic(Statistic.PICKUP, Material.STRING);
-    }
-
-    public int statisticPickupCombat() {
+    /**
+     * 敌对生物的击杀统计
+     * @return 敌对生物击杀统计数值
+     */
+    public int statisticEntityKilled(EntityType[] types) {
         int total = 0;
-
-        for (Material m : MMOSkillManager.combatStatistics) {
-            total += player.getStatistic(Statistic.PICKUP, m);
-        }
-        return total;
-    }
-
-    public int statisticPickupFishing() {
-        int total = 0;
-        for (Material m : MMOSkillManager.fishingStatistics) {
-            total += player.getStatistic(Statistic.PICKUP, m);
-        }
-        return total;
-    }
-
-    public int statisticPickupLumbering() {
-        int total = 0;
-        for (Material m : MMOSkillManager.lumberingStatistics) {
-            total += player.getStatistic(Statistic.PICKUP, m);
+        for (EntityType type : types) {
+            total += player.getStatistic(Statistic.KILL_ENTITY, type);
         }
         return total;
     }
 
     /**
-     * 拾取矿物的总数量
+     * 矿物类方块的破坏统计
+     * @param materials 矿物类Block的材质
+     * @return 已破坏矿物类Block的统计数量
      */
-    public int statisticPickupMineral() {
+    public int statisticBlockMined(Material[] materials){
         int total = 0;
-        for (Material m : MMOSkillManager.miningStatistics) {
-            total += player.getStatistic(Statistic.PICKUP, m);
+        for (Material material : materials) {
+            total += player.getStatistic(Statistic.MINE_BLOCK, material);
         }
         return total;
     }
 
     /**
-     * 拾取农作物及家禽产物的总数量<br>
-     * TODO: 需要实施家禽产物的总数量
+     * 农作物种植及家禽饲养统计
+     * @return 家禽Entity的击杀数量与农作物Block的破坏数量的总和
      */
-    public int statisticPickupCrops() {
-        int total = 0;
-        for (Material m : MMOSkillManager.farmingStatistics) {
-            total += player.getStatistic(Statistic.PICKUP, m);
-        }
+    public int statisticFarming() {
+        return statisticEntityKilled(MMOManager.Poultry) + statisticBlockMined(MMOManager.FarmingBlocks);
+    }
 
-        return total;
+    /**
+     * 钓鱼统计
+     * @return 钓鱼统计数值
+     */
+    public int statisticFishingCaught() {
+        return player.getStatistic(Statistic.FISH_CAUGHT);
+    }
+
+    public int getStatisticCollection(Material material) {
+        return player.getStatistic(Statistic.PICKUP, material);
+    }
+
+    public int getStatisticSkill(MMOType type) {
+        return switch (type) {
+            case SKILL_LUMBERING -> statisticBlockMined(MMOManager.LumberingBlocks);
+            case SKILL_FISHING -> statisticFishingCaught();
+            case SKILL_FARMING -> statisticFarming();
+            case SKILL_MINING -> statisticBlockMined(MMOManager.MiningBlocks);
+            case SKILL_COMBAT -> statisticEntityKilled(MMOManager.Monsters);
+            default -> 0;
+        };
     }
 
     private void doLoginSuccess() {
@@ -770,61 +1009,27 @@ public class PlayerData {
         }
     }
 
-    /**
-     * 将玩家档案内所有记录数据加载到类型为Map&lt;?, ?&gt;的属性
-     */
-    private void Yaml2Map(YamlConfiguration yaml) {
-
-        try {
-            // 循环检测SectionKeys字段内的字符串列表
-            for (String s : SectionKeys) {
-                // 根据字符串获取当前对象的属性的实例
-                Field[] fields = this.getClass().getFields();
-                Field field = Arrays.stream(fields).filter(x -> x.getName().equalsIgnoreCase(s)).findAny().orElse(null);
-                if (field == null) continue;
-                // 过滤类型不是Map<?, ?>的属性
-                ParameterizedType pType = (ParameterizedType) field.getGenericType();
-                String name = pType.getRawType().getTypeName();
-                if (!name.equalsIgnoreCase(TYPE_JAVA_UTIL_MAP)) continue;
-                // 根据字符串获取yaml格式文档内相应的节段及内容
-                ConfigurationSection section = yaml.getConfigurationSection(s);
-                if (section == null) continue;
-                // 使用Gson将Yaml内容转换到类型为Map<?, ?>的属性
-                String data = Global.GsonObject.toJson(section.getValues(false));
-                Type mapType = new TypeToken<Map<?, ?>>() {
-                }.getType();
-                Map<?, ?> value = Global.GsonObject.fromJson(data, mapType);
-                field.set(this, value);
-            }
-            // 加载玩家的其他数据记录或者状态
-            isCourseDesigning = yaml.getBoolean(Section_Key_Parkour_Design);
-            courseIds = yaml.getStringList(Section_Key_Parkour_List);
-        } catch (IllegalAccessException ex) {
-            ex.printStackTrace();
-        }
+    private double getScaleEdge() {
+        Map<Double, Double> filter = scaleEdges.entrySet().stream().filter(x -> x.getValue() >= getMaxHealth()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        scale = filter.keySet().stream().min(Comparator.comparing(Double::doubleValue)).orElse(20.0);
+        return scale;
     }
 
-    /**
-     * 将所有类型为Map&lt;?, ?&gt;的属性保存到yaml实例
-     *
-     * @return YamlConfiguration实例
-     */
-    private YamlConfiguration Map2Yaml() {
-
-        try {
-            YamlConfiguration yaml = new YamlConfiguration();
-            String v = Global.GsonObject.toJson(this);
-            yaml.loadFromString(v);
-            return yaml;
-        } catch (InvalidConfigurationException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private double getGenericAttribute(Attribute attribute, double defaultValue) {
+    private double getBaseAttribute(Attribute attribute, double defaultValue) {
         AttributeInstance instance = player.getAttribute(attribute);
         if (instance == null) return defaultValue;
+        return instance.getBaseValue();
+    }
 
+    private double getMaxAttribute(Attribute attribute, double defaultValue) {
+        AttributeInstance instance = player.getAttribute(attribute);
+        if (instance == null) return defaultValue;
         return instance.getValue();
+    }
+
+    private void setBaseAttribute(Attribute attribute, double value) {
+        AttributeInstance instance = player.getAttribute(attribute);
+        if (instance == null) return;
+        instance.setBaseValue(value);
     }
 }

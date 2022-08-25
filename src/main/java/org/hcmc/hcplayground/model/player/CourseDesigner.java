@@ -113,22 +113,22 @@ public class CourseDesigner {
      * @return True: 在designRange定义值的范围内<br>
      * False: 超出designRange的定义值
      */
-    public boolean RangeDetection(Location blockLocation) {
+    public boolean isOutOfRange(Location blockLocation) {
         // op玩家忽略该检测
-        if(player.isOp()) return true;
+        if(player.isOp()) return false;
 
         World w = blockLocation.getWorld();
-        if (w == null) return false;
-        if (!w.equals(world)) return true;
-        if (!data.isCourseDesigning) return false;
+        if (w == null) return true;
+        if (!w.equals(world)) return false;
+        if (!data.isDesignMode()) return true;
 
         CourseInfo course = CourseManager.getCourse(currentCourseId);
-        if(course == null) return false;
+        if(course == null) return true;
 
         Location l = blockLocation.subtract(course.getLocation());
         double x = Math.abs(l.getX());
         double z = Math.abs(l.getZ());
-        return x <= designRange && z <= designRange;
+        return !(x <= designRange) || !(z <= designRange);
     }
 
     /**
@@ -145,7 +145,7 @@ public class CourseDesigner {
         CourseInfo course = courses.stream().filter(predicateCourse(block)).findAny().orElse(null);
         if (course == null) return true;
 
-        return data.isCourseDesigning;
+        return data.isDesignMode();
     }
 
     public void EdgeDetection(Location playerLocation) {
@@ -154,7 +154,7 @@ public class CourseDesigner {
         World w = playerLocation.getWorld();
         if (w == null) return;
         if (!w.equals(world)) return;
-        if (!data.isCourseDesigning) return;
+        if (!data.isDesignMode()) return;
 
         CourseInfo course = CourseManager.getCourse(currentCourseId);
         if (course == null) return;
@@ -165,11 +165,11 @@ public class CourseDesigner {
         outOfDesignRange = x >= designRange || z >= designRange;
 
         if (!outOfDesignRange && showMessage) {
-            player.sendMessage(LanguageManager.getString("enterCourseRange", player));
+            player.sendMessage(LanguageManager.getString("courseEnterRange", player));
             showMessage = false;
         }
         if (outOfDesignRange && !showMessage) {
-            player.sendMessage(LanguageManager.getString("outOfCourseRange", player));
+            player.sendMessage(LanguageManager.getString("courseOutOfRange", player));
             showMessage = true;
         }
     }
@@ -190,14 +190,14 @@ public class CourseDesigner {
         // 意味着可以在不离开设计模式时重复调用design()方法
         // 而非op玩家必须调用了leave()方法后才能再次调用design方法
         // 因此只记录第一次进入设计模式时的玩家位置
-        if (!data.isCourseDesigning) location = player.getLocation();
+        if (!data.isDesignMode()) location = player.getLocation();
         // 安全传送，脚下的方块如果是透明的不受碰撞影响的方块，则改变为STONE
         Block block = world.getBlockAt(course.getLocation());
         if (!block.getType().isOccluding()) block.setType(Material.STONE);
         // 保存当前正在设计的赛道实例Id
         currentCourseId = course.getId();
         // 进入设计模式
-        data.isCourseDesigning = true;
+        data.setDesignMode(true);
         // 传送到赛道
         player.teleport(course.getLocation().add(0.5, 1, 0.5));
         // 选择跑酷赛道实例
@@ -215,7 +215,6 @@ public class CourseDesigner {
                 public void run() {
                     player.setGameMode(GameMode.CREATIVE);
                     player.sendMessage(LanguageManager.getString("courseDesignModeEntered", player));
-                    return;
                 }
             }.runTaskLater(plugin, waitFor * 20L);
             // 储存身上装备和背包物品
@@ -229,7 +228,7 @@ public class CourseDesigner {
             String perms = String.format(PermissionManager.PERMISSION_WORLDGUARD_REGION_BYPASS, world.getName());
             PermissionManager.addPermission(player, perms);
             // 创建赛道时，添加赛道Id到玩家列表
-            if (create) data.courseIds.add(id);
+            if (create) data.getCourseOwned().add(id);
         }
 
         // 保存之前的配置，写入到玩家json文档
@@ -264,7 +263,7 @@ public class CourseDesigner {
         // 传送玩家回到原来的世界
         if (location != null) player.teleport(location);
         // 离开设计模式
-        data.isCourseDesigning = false;
+        data.setDesignMode(false);
         // 取消选择跑酷赛道实例
         currentCourseId = null;
         ParkourApiManager.deselectCourse(player);
@@ -281,7 +280,6 @@ public class CourseDesigner {
                 @Override
                 public void run() {
                     player.sendMessage(LanguageManager.getString("courseDesignModeLeave", player));
-                    return;
                 }
             }.runTaskLater(plugin, waitFor * 20L);
         }
@@ -325,7 +323,7 @@ public class CourseDesigner {
 
     public List<String> list() throws IOException, IllegalAccessException, InvalidConfigurationException {
         if (!player.isOp()) {
-            return data.courseIds;
+            return data.getCourseOwned();
         } else {
             List<String> values = new ArrayList<>();
             for (CourseInfo c : CourseManager.getCourses()) {
@@ -351,7 +349,7 @@ public class CourseDesigner {
         if (course == null) return;
 
         course.setAbandon(true);
-        data.courseIds.remove(course.getId());
+        data.getCourseOwned().remove(course.getId());
         CourseManager.save();
         PlayerManager.setPlayerData(player, data);
 
@@ -363,7 +361,7 @@ public class CourseDesigner {
         if (course == null) return;
 
         course.setAbandon(false);
-        data.courseIds.add(course.getId());
+        data.getCourseOwned().add(course.getId());
         CourseManager.save();
         PlayerManager.setPlayerData(player, data);
 

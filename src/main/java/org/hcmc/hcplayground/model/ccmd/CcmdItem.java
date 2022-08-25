@@ -78,7 +78,7 @@ public class CcmdItem extends Command {
     private boolean RunCustomCommand(CommandSender sender, @NotNull String[] args) throws IOException, IllegalAccessException, InvalidConfigurationException, ParseException {
         // 自定义命令必须玩家执行
         if (!(sender instanceof Player player)) {
-            sender.sendMessage(LanguageManager.getString("player-message", sender).replace("%command%", id));
+            sender.sendMessage(LanguageManager.getString("no-player-command", sender).replace("%command%", id));
             return false;
         }
         // 检测指令的可用世界列表，op玩家绕过检测
@@ -89,7 +89,7 @@ public class CcmdItem extends Command {
         if (!player.isOp() && !this.testPermission(sender)) return false;
         PlayerData data = PlayerManager.getPlayerData(player);
 
-        double lastTime = data.CcmdCooldownList.containsKey(id) ? data.CcmdCooldownList.get(id) : new Date(0).getTime();
+        double lastTime = data.getCcmdCooldown().containsKey(id) ? data.getCcmdCooldown().get(id) : new Date(0).getTime();
         double current = new Date().getTime();
         double diff = current - lastTime;
         if (diff <= cooldown * 1000L) {
@@ -102,7 +102,7 @@ public class CcmdItem extends Command {
         r.runTaskTimer(plugin, 0, 2);
 
         lastTime = new Date().getTime();
-        data.CcmdCooldownList.put(id, lastTime);
+        data.getCcmdCooldown().put(id, lastTime);
         PlayerManager.setPlayerData(player, data);
         return true;
     }
@@ -118,7 +118,7 @@ public class CcmdItem extends Command {
 
         if (!StringUtils.isBlank(this.permission)) this.setPermission(this.permission);
         this.setAliases(this.aliases);
-        this.setPermissionMessage(LanguageManager.getString("permission-message", null).replace("%permission%", permission));
+        this.setPermissionMessage(LanguageManager.getString("no-permission", null).replace("%permission%", permission));
         this.setUsage(this.usage);
         this.setDescription(this.description);
     }

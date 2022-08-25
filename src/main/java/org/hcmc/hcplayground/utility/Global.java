@@ -38,7 +38,6 @@ import org.hcmc.hcplayground.model.config.PotionConfiguration;
 import org.hcmc.hcplayground.model.enchantment.EnchantmentItem;
 import org.hcmc.hcplayground.model.item.ItemBase;
 import org.hcmc.hcplayground.model.menu.MenuPanelSlot;
-import org.hcmc.hcplayground.model.player.PlayerData;
 import org.hcmc.hcplayground.runnable.PluginRunnable;
 import org.hcmc.hcplayground.serialization.*;
 import org.jetbrains.annotations.NotNull;
@@ -101,6 +100,7 @@ public final class Global {
     private final static String DATE_TIME_FORMAT = "yyyy/MM/dd HH:mm:ss";
 
     private final static String FOLDER_DEBUG = "debug";
+    private final static String FOLDER_MENU = "menu";
     private final static String FOLDER_PROFILE = "profile";
     private final static String FOLDER_DATABASE = "database";
     private final static String FOLDER_DESIGNER = "designer";
@@ -110,7 +110,6 @@ public final class Global {
     private final static String FILE_DROPS = "drops.yml";
     private final static String FILE_MESSAGES = "messages.yml";
     private final static String FILE_COMMANDS = "command.yml";
-    private final static String FILE_MENU = "menu.yml";
     private final static String FILE_PERMISSION = "permission.yml";
     private final static String FILE_MOBS = "mobs.yml";
     private final static String FILE_BROADCAST = "broadcast.yml";
@@ -120,7 +119,7 @@ public final class Global {
     private final static String FILE_SIDEBAR = "scoreboard.yml";
     private final static String FILE_HOLOGRAM = "hologram.yml";
     private final static String FILE_MINION = "minion.yml";
-    private final static String FILE_MMO_LEVEL = "level.yml";
+    private final static String FILE_MMO_SKILL = "skill.yml";
     private final static String FILE_MMO_REWARD = "reward.yml";
     public final static String FILE_COURSE = "database/course.yml";
     public final static String FILE_RECORD_MINION = "database/minions.json";
@@ -146,9 +145,10 @@ public final class Global {
         yamlMap = new HashMap<>();
         HealthScoreboard = CreateScoreboard();
         childrenFolders = new String[]{
-                FOLDER_DEBUG,
                 FOLDER_DATABASE,
+                FOLDER_DEBUG,
                 FOLDER_DESIGNER,
+                FOLDER_MENU,
                 FOLDER_PROFILE,
                 FOLDER_STORAGE,
         };
@@ -164,12 +164,11 @@ public final class Global {
                 FILE_DROPS,
                 FILE_HOLOGRAM,
                 FILE_ITEMS,
-                FILE_MENU,
                 FILE_MINION,
                 FILE_MOBS,
                 FILE_RECIPE,
                 FILE_SIDEBAR,
-                FILE_MMO_LEVEL,
+                FILE_MMO_SKILL,
                 FILE_MMO_REWARD,
         };
         ymlResources = new String[]{
@@ -202,7 +201,7 @@ public final class Global {
                 .registerTypeAdapter(MaterialData.class, new MaterialDataSerialization())
                 .registerTypeAdapter(MinionCategory.class, new MinionCategorySerialization())
                 .registerTypeAdapter(MinionType.class, new MinionTypeSerialization())
-                .registerTypeAdapter(MMOSkillType.class, new MMOLevelTypeSerialization())
+                .registerTypeAdapter(MMOType.class, new MMOLevelTypeSerialization())
                 .registerTypeAdapter(NamespacedKey.class, new NamespacedKeySerialization())
                 .registerTypeAdapter(OperatorType.class, new OperatorTypeSerialization())
                 .registerTypeAdapter(PanelSlotType.class, new PanelSlotTypeSerialization())
@@ -242,7 +241,7 @@ public final class Global {
         CourseManager.Load(getYamlConfiguration(FILE_COURSE));
         // 7.加载各种菜单(箱子)模板
         // 无依赖，可优先加载
-        MenuManager.Load(getYamlConfiguration(FILE_MENU));
+        MenuManager.Load();
         // 8.加载自定义命令列表
         // 无依赖，可优先加载
         CcmdManager.Load(getYamlConfiguration(FILE_CCMD));
@@ -269,7 +268,7 @@ public final class Global {
         RewardManager.Load(getYamlConfiguration(FILE_MMO_REWARD));
         // 16.加载等级设置列表
         // 依赖ItemManager, RecipeManager, RewardManager
-        MMOSkillManager.Load(getYamlConfiguration(FILE_MMO_LEVEL));
+        MMOManager.Load(getYamlConfiguration(FILE_MMO_SKILL));
         // 101.加载自定义可放置方块的摆放记录
         // 依赖ItemManager, MinionManager
         RecordManager.Load();
@@ -284,8 +283,7 @@ public final class Global {
     public static void Dispose() throws SQLException, IOException, IllegalAccessException, InvalidConfigurationException {
         // 保存所有在线玩家的数据
         for (Player player : plugin.getServer().getOnlinePlayers()) {
-            PlayerData pd = PlayerManager.getPlayerData(player);
-            pd.SaveConfig();
+            PlayerManager.SaveConfig(player);
         }
         LogMessage("Online player data saved");
         // 清除内存
@@ -306,13 +304,14 @@ public final class Global {
      * 获取section节段内容，使用Gson反序列到T对象，并且设置placeholder，然后返回T对象
      */
     public static <T> T deserialize(@NotNull ConfigurationSection section, @NotNull Player player, @NotNull Class<T> tClass) {
-        T item = null;
+        T item;
 
         try {
             String ClassName = tClass.getSimpleName();
             String value = GsonObject.toJson((section).getValues(false)).replace('&', '§');
             value = PlaceholderAPI.setPlaceholders(player, value);
             item = GsonObject.fromJson(value, tClass);
+            // System.out.println(value);
 
             Class<?> findClass = tClass;
             Field fieldId = null;
@@ -347,7 +346,7 @@ public final class Global {
                 if (itemSection == null) continue;
                 String value = GsonObject.toJson(itemSection.getValues(false)).replace('&', '§');
                 value = PlaceholderAPI.setPlaceholders(player, value);
-                //System.out.println(value);
+                // System.out.println(value);
 
                 T item = GsonObject.fromJson(value, tClass);
                 Class<?> findClass = tClass;
@@ -572,7 +571,7 @@ public final class Global {
     /**
      * 获取本插件名称
      */
-    public static String PluginName() {
+    public static String getPluginName() {
         return plugin.getName();
     }
 
@@ -640,8 +639,7 @@ public final class Global {
     }
 
     public static CommandMap getCommandMap() {
-        CommandMap commandMap = null;
-
+        CommandMap commandMap;
         try {
             // 获取Bukkit.Server.CommandMap字段
             Field fieldCommandMap = Bukkit.getServer().getClass().getDeclaredField(FIELD_NAME_COMMANDMAP);

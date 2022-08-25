@@ -7,13 +7,10 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.Recipe;
-import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.hcmc.hcplayground.enums.PanelSlotType;
 import org.hcmc.hcplayground.model.recipe.CraftPanel;
 import org.hcmc.hcplayground.model.recipe.CraftPanelSlot;
-import org.hcmc.hcplayground.model.item.ItemBase;
 import org.hcmc.hcplayground.model.recipe.CrazyShapedRecipe;
 import org.hcmc.hcplayground.serialization.PanelSlotTypeSerialization;
 import org.hcmc.hcplayground.utility.Global;
@@ -28,6 +25,7 @@ public class RecipeManager {
     private static ConfigurationSection anvilPanelSection;
     private static ConfigurationSection enchantPanelSection;
     private static ConfigurationSection barrierItemSection;
+    private static ConfigurationSection recipeLockedSection;
 
 
     public RecipeManager() {
@@ -46,6 +44,7 @@ public class RecipeManager {
         anvilPanelSection = yaml.getConfigurationSection("anvil_panel");
         enchantPanelSection = yaml.getConfigurationSection("enchanting_panel");
         barrierItemSection = yaml.getConfigurationSection("barrier_item");
+        recipeLockedSection = yaml.getConfigurationSection("recipe_locked");
 
         for (CrazyShapedRecipe r : recipes) {
             // 全部成分都是普通Material
@@ -60,26 +59,6 @@ public class RecipeManager {
         }
     }
 
-    public static ItemStack getBarrierItem() {
-        String _material = barrierItemSection.getString("material");
-        String _title = barrierItemSection.getString("name");
-        List<String> _lore = barrierItemSection.getStringList("lore");
-        _lore.replaceAll(x -> x.replace("&", "§"));
-
-        _material = StringUtils.isBlank(_material) ? "BARRIER" : _material.toUpperCase();
-        _title = StringUtils.isBlank(_title) ? "§4Crazy Item" : _title.replace("&", "§");
-
-        Material material = Material.valueOf(_material);
-        ItemStack result = new ItemStack(material, 1);
-        ItemMeta meta = result.getItemMeta();
-        if (meta == null) return result;
-
-        meta.setDisplayName(_title);
-        meta.setLore(_lore);
-        result.setItemMeta(meta);
-        return result;
-    }
-
     public static Inventory createEnchantingPanel() {
         ConfigurationSection buttonsSection = enchantPanelSection.getConfigurationSection("buttons");
         if (buttonsSection == null) return null;
@@ -90,7 +69,6 @@ public class RecipeManager {
         Inventory inventory = Bukkit.createInventory(null, size, title);
         // TODO: Create enchanting table here
         System.out.println("Create enchanting table here");
-
 
         return inventory;
     }
@@ -105,7 +83,6 @@ public class RecipeManager {
         Inventory inventory = Bukkit.createInventory(null, size, title);
         // TODO: Create anvil table here
         System.out.println("Create anvil table here");
-
 
         return inventory;
     }
@@ -147,6 +124,10 @@ public class RecipeManager {
         return inventory;
     }
 
+    public static boolean existRecipe(String id) {
+        return recipes.stream().anyMatch(x -> x.getId().equalsIgnoreCase(id));
+    }
+
     public static CrazyShapedRecipe getRecipe(String id) {
         return recipes.stream().filter(x -> x.getId().equalsIgnoreCase(id)).findAny().orElse(null);
     }
@@ -174,6 +155,37 @@ public class RecipeManager {
         }
 
         return null;
+    }
+
+    public static ItemStack getRecipeLockedItem() {
+        String _material = recipeLockedSection.getString("material");
+        String _title = recipeLockedSection.getString("name");
+        List<String> _lore = recipeLockedSection.getStringList("lore");
+        return createBlockedItemStack(_title, _material, _lore);
+    }
+
+    public static ItemStack getBarrierItem() {
+        String _material = barrierItemSection.getString("material");
+        String _title = barrierItemSection.getString("name");
+        List<String> _lore = barrierItemSection.getStringList("lore");
+        return createBlockedItemStack(_title, _material, _lore);
+    }
+
+    private static ItemStack createBlockedItemStack(String display, String material, List<String> lore){
+        lore.replaceAll(x -> x.replace("&", "§"));
+
+        String _material = StringUtils.isBlank(material) ? "BARRIER" : material.toUpperCase();
+        String _title = StringUtils.isBlank(display) ? "§cCrazy Item" : display.replace("&", "§");
+
+        Material m = Material.valueOf(_material);
+        ItemStack result = new ItemStack(m, 1);
+        ItemMeta meta = result.getItemMeta();
+        if (meta == null) return result;
+
+        meta.setDisplayName(_title);
+        meta.setLore(lore);
+        result.setItemMeta(meta);
+        return result;
     }
 
     @NotNull

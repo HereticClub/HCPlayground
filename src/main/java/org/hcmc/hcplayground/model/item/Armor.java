@@ -2,6 +2,7 @@ package org.hcmc.hcplayground.model.item;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
@@ -57,49 +58,48 @@ public class Armor extends CraftItemBase {
         }
 
         if (this.health != 0) attributeLore.add(String.format("%s 生命", this.setWeaponLore(this.health, false, false)));
-        if (this.recover != 0) attributeLore.add(String.format("%s 恢复生命", this.setWeaponLore(this.recover, false, false)));
-        if (this.armor != 0) attributeLore.add(String.format("%s 盔甲", this.setWeaponLore(this.armor, false, false)));
+        if (this.armor != 0) attributeLore.add(String.format("%s 护甲值", this.setWeaponLore(this.armor, false, false)));
         if (this.armorToughness != 0)
             attributeLore.add(String.format("%s 盔甲韧性", this.setWeaponLore(this.armorToughness, false, false)));
         if (this.knockBackResistance != 0)
             attributeLore.add(String.format("%s 击退抗性", this.setWeaponLore(this.knockBackResistance, false, true)));
         if (this.movementSpeed != 0)
             attributeLore.add(String.format("%s 速度", this.setWeaponLore(this.movementSpeed, false, true)));
+        if (this.recover != 0)
+            attributeLore.add(String.format("%s 恢复生命", this.setWeaponLore(this.recover, false, false)));
     }
 
     public ItemStack toItemStack() {
         ItemStack is = new ItemStack(material.value, amount);
         ItemMeta im = this.setBaseItemMeta(is);
+        // 为了复原该死的护甲条效果
+        double originalArmor = getOriginalArmor(material.value);
+        double originalArmorToughness = getOriginalArmorToughness(material.value);
 
         if (im != null) {
             /*
             添加AttributeModifier
             */
-            AttributeModifier amHealth = new AttributeModifier(UUID.randomUUID(), Global.PluginName(), this.health, AttributeModifier.Operation.ADD_NUMBER, this.equipmentSlot);
-            AttributeModifier amArmor = new AttributeModifier(UUID.randomUUID(), Global.PluginName(), this.armor, AttributeModifier.Operation.ADD_NUMBER, this.equipmentSlot);
-            AttributeModifier amArmorToughness = new AttributeModifier(UUID.randomUUID(), Global.PluginName(), this.armorToughness, AttributeModifier.Operation.ADD_NUMBER, this.equipmentSlot);
-            AttributeModifier amKnockBackResistance = new AttributeModifier(UUID.randomUUID(), Global.PluginName(), this.knockBackResistance, AttributeModifier.Operation.ADD_SCALAR, this.equipmentSlot);
-            AttributeModifier amMovementSpeed = new AttributeModifier(UUID.randomUUID(), Global.PluginName(), this.movementSpeed, AttributeModifier.Operation.ADD_SCALAR, this.equipmentSlot);
-            im.addAttributeModifier(Attribute.GENERIC_MAX_HEALTH, amHealth);
+            AttributeModifier amArmor = new AttributeModifier(UUID.randomUUID(), Global.getPluginName(), originalArmor, AttributeModifier.Operation.ADD_NUMBER, this.equipmentSlot);
+            AttributeModifier amArmorToughness = new AttributeModifier(UUID.randomUUID(), Global.getPluginName(), originalArmorToughness, AttributeModifier.Operation.ADD_NUMBER, this.equipmentSlot);
+            AttributeModifier amHealth = new AttributeModifier(UUID.randomUUID(), Global.getPluginName(), this.health, AttributeModifier.Operation.ADD_NUMBER, this.equipmentSlot);
+            AttributeModifier amKnockBackResistance = new AttributeModifier(UUID.randomUUID(), Global.getPluginName(), this.knockBackResistance, AttributeModifier.Operation.ADD_NUMBER, this.equipmentSlot);
+            AttributeModifier amMovementSpeed = new AttributeModifier(UUID.randomUUID(), Global.getPluginName(), this.movementSpeed, AttributeModifier.Operation.ADD_SCALAR, this.equipmentSlot);
             im.addAttributeModifier(Attribute.GENERIC_ARMOR, amArmor);
             im.addAttributeModifier(Attribute.GENERIC_ARMOR_TOUGHNESS, amArmorToughness);
+            im.addAttributeModifier(Attribute.GENERIC_MAX_HEALTH, amHealth);
             im.addAttributeModifier(Attribute.GENERIC_KNOCKBACK_RESISTANCE, amKnockBackResistance);
             im.addAttributeModifier(Attribute.GENERIC_MOVEMENT_SPEED, amMovementSpeed);
-            /*
-            强制添加隐藏属性标记
-            */
-            if (!flags.contains(ItemFlag.HIDE_ATTRIBUTES)) {
-                im.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
-            }
-
-            SetPersistentData(im);
+            //强制添加隐藏属性标记
+            if (!flags.contains(ItemFlag.HIDE_ATTRIBUTES)) im.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+            // 设置永久性数据
+            setPersistentData(im);
             is.setItemMeta(im);
         }
-
         return is;
     }
 
-    private void SetPersistentData(ItemMeta im) {
+    private void setPersistentData(ItemMeta im) {
         // 设置NamespaceKey，比如暴击等MC没有的特性的命名空间名称
         NamespacedKey subKey = new NamespacedKey(plugin, PERSISTENT_SUB_KEY);
         NamespacedKey healthKey = new NamespacedKey(plugin, PERSISTENT_HEALTH_KEY);
@@ -123,5 +123,36 @@ public class Armor extends CraftItemBase {
         subContainer.set(movementSpeedKey, PersistentDataType.FLOAT, movementSpeed);
         // 最后将次要PersistentDataContainer实例包含在主要PersistentDataContainer实例里面
         mainContainer.set(subKey, PersistentDataType.TAG_CONTAINER, subContainer);
+    }
+
+    /**
+     * 还原玩家护甲条效果，ItemStack没有任何获取护甲值的方法
+     * @param material 物品的材质
+     * @return 护甲值
+     */
+    private double getOriginalArmor(Material material){
+        return switch (material) {
+            case LEATHER_HELMET, LEATHER_BOOTS, CHAINMAIL_BOOTS, GOLDEN_BOOTS -> 1;
+            case LEATHER_CHESTPLATE, GOLDEN_LEGGINGS, DIAMOND_HELMET, DIAMOND_BOOTS, NETHERITE_HELMET, NETHERITE_BOOTS -> 3;
+            case LEATHER_LEGGINGS, CHAINMAIL_HELMET, IRON_HELMET, IRON_BOOTS, GOLDEN_HELMET -> 2;
+            case CHAINMAIL_CHESTPLATE, IRON_LEGGINGS, GOLDEN_CHESTPLATE -> 5;
+            case CHAINMAIL_LEGGINGS -> 4;
+            case IRON_CHESTPLATE, DIAMOND_LEGGINGS, NETHERITE_LEGGINGS -> 6;
+            case DIAMOND_CHESTPLATE, NETHERITE_CHESTPLATE -> 8;
+            default -> 0;
+        };
+    }
+
+    /**
+     * 还原玩家盔甲韧性效果，ItemStack没有任何获取盔甲韧性值的方法
+     * @param material 物品的材质
+     * @return 盔甲韧性值
+     */
+    private double getOriginalArmorToughness(Material material) {
+        return switch (material) {
+            case DIAMOND_HELMET, DIAMOND_CHESTPLATE, DIAMOND_LEGGINGS, DIAMOND_BOOTS -> 2;
+            case NETHERITE_HELMET, NETHERITE_CHESTPLATE, NETHERITE_LEGGINGS, NETHERITE_BOOTS -> 3;
+            default -> 0;
+        };
     }
 }

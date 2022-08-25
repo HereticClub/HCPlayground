@@ -1,70 +1,75 @@
-# 配方Id，必须唯一
-enhance_cobblestone1:
-  # 配方名称，必须为ASCII字符串
-  name: enhance_cobblestone
-  # 成分的列表，必须是矩形，且长度不能大于6，用符号表示成分(成分符号化)
-  # 当列表的长度少于或者等于3，ingredients属性的成分列表全部皆为Material值，amount属性所有数量均为1
-  # 则当前配方会被列入游戏的传统配方，其成品可以在普通工作台合成获得
-  shape:
-    - ' S '
-    - 'SSS'
-    - ' S '
-  # 成分的符号解析，比如: 某符号代表的物质，可以是自定义物品的Id，也可以是Material的名称
-  # 当shape属性的长度少于或者等于3，并且成分列表全部皆为Material值之一
-  # 则忽略amount属性，当前配方会被列入游戏的传统配方，其成品可以在普通工作台合成获得
-  ingredients:
-    - S, cobblestone
-  # 成分的数量表示
-  amount:
-    - S, 32
-  # 成品输出，可以是自定义物品的Id，也可以是Material的名称，获得数量: 1
-  result: join.enhanced_cobblestone
-  # 成品输出的数量，默认值: 1
-  result_amount: 1
-  # 配方分组，绝大多数情况下，group的值为0长度字符串或者不设置
-  # 只有在多种配方的输出成品相同或者相近的情况下才用到group属性
-  # 例如: 把各种颜色玻璃板的配方分组为stained_glass_pane
-  group: ''
-# 配方Id，必须唯一
-enhance_cobblestone2:
-  name: enhance_cobblestone
-  shape:
-    - 'SSSSS'
-  ingredients:
-    - S, cobblestone
-  amount:
-    - S, 32
-  result: join.enhanced_cobblestone
-  result_amount: 1
-  group: ''
-minion_cobblestone_1:
-  name: cobblestone_1
-  shape:
-    - 'SSS'
-    - 'SPS'
-    - 'SSS'
-  ingredients:
-    - 'S,cobblestone'
-    - 'P,stone_pickaxe'
-  amount:
-    - 'S,8'
-    - 'P,1'
-  result: 'COBBLESTONE.1'
-  result_amount: 1
-  group: ''
-# 此配方是一个游戏常规配方，可以用普通合成台制作
-# 因为其所有需求材料均为Material，形状边长均<=3，所有成分需求数量=1
-crazy_crafting_table:
-  name: crazy_crafting_table
-  shape:
-    - EE
-    - EE
-  ingredients:
-    - E, crafting_table
-  amount:
-    - E, 1
-  result: crazy.crafting_table
-  group: group1
+# 配方节段
+recipes:
+  # 配方Id，必须唯一
+  enhance_cobblestone1:
+    # 配方名称，必须为ASCII字符串
+    name: enhanced_cobblestone
+    # 配方的显示名称，必须
+    display: '&a增强圆石'
+    # 成分的列表，必须是矩形，且长度不能大于6，用符号表示成分(成分符号化)
+    # 当列表的长度少于或者等于3，ingredients属性的成分列表全部皆为Material值，amount属性所有数量均为1
+    # 则当前配方会被列入游戏的传统配方，其成品可以在普通工作台合成获得
+    shape:
+      - ' S '
+      - 'SSS'
+      - ' S '
+    # 成分的符号解析，比如: 某符号代表的物质，可以是自定义物品的Id，也可以是Material的名称
+    # 当shape属性的长度少于或者等于3，并且成分列表全部皆为Material值之一
+    # 则忽略amount属性，当前配方会被列入游戏的传统配方，其成品可以在普通工作台合成获得
+    ingredients:
+      - S, cobblestone
+    # 成分的数量表示
+    amount:
+      - S, 32
+    # 成品输出，可以是自定义物品的Id，也可以是Material的名称，获得数量: 1
+    result: join.enhanced_cobblestone
+    # 成品输出的数量，默认值: 1
+    result_amount: 1
+    # 配方分组，绝大多数情况下，group的值为0长度字符串或者不设置
+    # 只有在多种配方的输出成品相同或者相近的情况下才用到group属性
+    # 例如: 把各种颜色玻璃板的配方分组为stained_glass_pane
+    group: ''
+  # 配方Id，必须唯一
+  enhance_cobblestone2:
+    name: enhanced_cobblestone
+    display: '&a增强圆石'
+    shape:
+      - 'SSSSS'
+    ingredients:
+      - S, cobblestone
+    amount:
+      - S, 32
+    result: join.enhanced_cobblestone
+    result_amount: 1
+    group: ''
+  minion_cobblestone_1:
+    name: cobblestone_1
+    shape:
+      - 'SSS'
+      - 'SPS'
+      - 'SSS'
+    ingredients:
+      - 'S,cobblestone'
+      - 'P,stone_pickaxe'
+    amount:
+      - 'S,8'
+      - 'P,1'
+    result: 'COBBLESTONE.1'
+    result_amount: 1
+    group: ''
+  # 此配方是一个游戏常规配方，可以用普通合成台制作
+  # 因为其所有需求材料均为Material，形状边长均<=3，所有成分需求数量=1
+  crazy_crafting_table:
+    name: crazy_crafting_table
+    shape:
+      - EE
+      - EE
+    ingredients:
+      - E, crafting_table
+    amount:
+      - E, 1
+    result: crazy.crafting_table
+    group: group1
 
 # 疯狂合成台面板(箱子界面)
 crafting_panel:
@@ -115,3 +120,12 @@ barrier_item:
   # 说明
   lore:
     - '&eThe Crazy Item only uses for crazy crafting'
+# 未解锁配方的显示物品，当玩家合成了还没解锁的配方时显示
+recipe_locked:
+  # 物品Material
+  material: barrier
+  # 显示文本
+  name: '&cRecipe locked'
+  # 说明文本
+  lore:
+    - '&ePlease unlock this recipe for first.'

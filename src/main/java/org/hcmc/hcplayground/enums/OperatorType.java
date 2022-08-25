@@ -25,4 +25,12 @@ public enum OperatorType {
      * 小于等于
      */
     LESS_AND_EQUAL,
+    /**
+     * 包含
+     */
+    CONTAINED,
+    /**
+     * 不包含
+     */
+    NOT_CONTAINED,
 }

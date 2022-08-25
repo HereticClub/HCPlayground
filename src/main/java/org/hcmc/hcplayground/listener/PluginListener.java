@@ -1,6 +1,5 @@
 package org.hcmc.hcplayground.listener;
 
-import me.clip.placeholderapi.PlaceholderAPI;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
@@ -8,7 +7,6 @@ import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.block.Block;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandMap;
-import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.entity.*;
 import org.bukkit.event.Event;
@@ -22,7 +20,6 @@ import org.bukkit.event.inventory.*;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.*;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Scoreboard;
@@ -109,7 +106,7 @@ public class PluginListener implements Listener {
         boolean register = data.isRegister();
         data.setRegister(register);
         // 获取并记录玩家的登陆时间
-        data.loginTimeStamp = new Date().getTime() / 1000;
+        data.setLoginTimeStamp(new Date().getTime() / 1000);
         data.setLoginTime(new Date());
         // 获取玩家身上的附加属性
         // 任务new EquipmentMonitorRunnable(player).runTask(plugin)
@@ -140,7 +137,7 @@ public class PluginListener implements Listener {
             event.setCancelled(true);
             return;
         }
-        data.designer.EdgeDetection(player.getLocation());
+        data.getDesigner().EdgeDetection(player.getLocation());
         PlayerManager.setPlayerData(player, data);
     }
 
@@ -157,11 +154,11 @@ public class PluginListener implements Listener {
         PlayerData data = PlayerManager.getPlayerData(player);
         //Global.LogMessage(String.format("\033[1;35mPlayerQuitEvent GameMode: \033[1;33m%s\033[0m", playerData.GameMode));
 
-        BukkitTask task = data.designer.getLeaveTask();
+        BukkitTask task = data.getDesigner().getLeaveTask();
         if(task != null && !task.isCancelled()) task.cancel();
 
         player.setGameMode(data.getGameMode());
-        data.SaveConfig();
+        PlayerManager.SaveConfig(player);
         PlayerManager.removePlayerData(player, data);
     }
 
@@ -207,7 +204,7 @@ public class PluginListener implements Listener {
             return;
         }
         // 跑酷赛道设计状态下，非op玩家禁止执行除/course外的任何指令
-        if (data.isCourseDesigning && !player.isOp() && !command.getName().equalsIgnoreCase(CommandItem.COMMAND_COURSE)) {
+        if (data.isDesignMode() && !player.isOp() && !command.getName().equalsIgnoreCase(CommandItem.COMMAND_COURSE)) {
             player.sendMessage(LanguageManager.getString("courseDenyCommandOnDesign", player));
             event.setCancelled(true);
         }
@@ -292,7 +289,7 @@ public class PluginListener implements Listener {
         }
         // 过滤自定义方块在不可用世界
         if (join.isDisabledWorld(player)) {
-            player.sendMessage(LanguageManager.getString("world-disabled", player).replace("%world%", worldName));
+            player.sendMessage(LanguageManager.getString("no-world-interact", player).replace("%world%", worldName));
             return;
         }
 
@@ -326,7 +323,7 @@ public class PluginListener implements Listener {
             return;
         }
         // 跑酷赛道的方块互动检测
-        boolean allowInteract = data.designer.InteractDetection(block);
+        boolean allowInteract = data.getDesigner().InteractDetection(block);
         if (!allowInteract) {
             player.sendMessage(LanguageManager.getString("courseNoPermission", player));
             event.setCancelled(true);
@@ -348,7 +345,7 @@ public class PluginListener implements Listener {
         if (!(ib instanceof Crazy crazyItem)) return;
         // 判断自定义方块是否在不可用世界
         if (crazyItem.isDisabledWorld(player)) {
-            player.sendMessage(LanguageManager.getString("world-disabled", player).replace("%world%", worldName));
+            player.sendMessage(LanguageManager.getString("no-world-interact", player).replace("%world%", worldName));
             return;
         }
         // 判断自定义方块是否可常规互动，比如吃，打开地图等
@@ -428,7 +425,7 @@ public class PluginListener implements Listener {
      * 玩家的盔甲栏物品被改变后的事件
      */
     @EventHandler
-    private void onPlayerEquipmentChanged(PlayerEquipmentChangedEvent event) throws IllegalAccessException, IOException, InvalidConfigurationException {
+    private void onPlayerEquipmentChanged(PlayerEquipmentChangedEvent event) {
         Map<EquipmentSlot, ItemStack> equipments = event.getEquipments();
         Player player = event.getPlayer();
 
@@ -601,7 +598,7 @@ public class PluginListener implements Listener {
         PlayerData data = PlayerManager.getPlayerData(player);
         Block block = event.getBlock();
         // 检测玩家是否在跑酷设计状态，并且超出了跑酷设计范围
-        if (!data.designer.RangeDetection(block.getLocation())) {
+        if (data.getDesigner().isOutOfRange(block.getLocation())) {
             event.setCancelled(true);
             return;
         }
@@ -642,7 +639,7 @@ public class PluginListener implements Listener {
         // 而不是对MainHandItem进行处理，比如更改其材质，数量等
         ItemStack MainHandItem = event.getItemInHand().clone();
         // 检测玩家是否在跑酷设计状态，并且超出了跑酷设计范围
-        if (!data.designer.RangeDetection(block.getLocation())) {
+        if (data.getDesigner().isOutOfRange(block.getLocation())) {
             event.setCancelled(true);
             return;
         }
@@ -663,7 +660,7 @@ public class PluginListener implements Listener {
         ItemBase ib = ItemManager.getItemBase(MainHandItem);
         if (ib != null) {
             if (ib.isDisabledWorld(player)) {
-                player.sendMessage(LanguageManager.getString("world-disabled", player).replace("%world%", worldName));
+                player.sendMessage(LanguageManager.getString("no-world-interact", player).replace("%world%", worldName));
                 event.setCancelled(true);
                 return;
             } else {
@@ -741,14 +738,14 @@ public class PluginListener implements Listener {
             return;
         }
 
-        MenuPanelSlot slot = panel.getSlot(rawSlotIndex + 1);
+        MenuPanelSlot slot = panel.getDecorate(rawSlotIndex + 1);
         if (slot == null) {
             event.setCancelled(true);
             return;
         }
 
-        if (click.isLeftClick()) slot.runLeftClickCommands(player);
-        if (click.isRightClick()) slot.runRightClickCommands(player);
+        if (click.isLeftClick()) slot.runLeftClickCommands(player, rawSlotIndex + 1);
+        if (click.isRightClick()) slot.runRightClickCommands(player, rawSlotIndex + 1);
 
         event.setCancelled(true);
     }
@@ -795,7 +792,6 @@ public class PluginListener implements Listener {
         if (event.isCancelled()) return;
         Inventory inventory = event.getInventory();
         InventoryAction action = event.getAction();
-        ClickType click = event.getClick();
 
         if (!(inventory.getHolder() instanceof CraftPanel panel)) return;
         if (!(event.getWhoClicked() instanceof Player player)) return;
@@ -803,6 +799,7 @@ public class PluginListener implements Listener {
         int rawSlot = event.getRawSlot();
         CraftPanelSlot slot = panel.getPanelSlot(rawSlot);
         CrazyShapedRecipe recipe = panel.getRecipe();
+        PlayerData data = PlayerManager.getPlayerData(player);
 
         // 检测玩家使用鼠标Double Click叠堆物品
         // 不允许叠堆配方的成品输出
@@ -816,12 +813,12 @@ public class PluginListener implements Listener {
                     stacksStorage.add(inventory.getItem(i));
                 }
                 if (stacksStorage.stream().anyMatch(x -> x != null && x.isSimilar(event.getCursor()))) {
-                    RecipeSearchRunnable finder = new RecipeSearchRunnable(inventory);
+                    RecipeSearchRunnable finder = new RecipeSearchRunnable(player, inventory);
                     finder.runTask(plugin);
                 }
             }
             if (action.equals(InventoryAction.MOVE_TO_OTHER_INVENTORY)) {
-                RecipeSearchRunnable finder = new RecipeSearchRunnable(inventory);
+                RecipeSearchRunnable finder = new RecipeSearchRunnable(player, inventory);
                 finder.runTask(plugin);
             }
             return;
@@ -833,10 +830,11 @@ public class PluginListener implements Listener {
         }
         // 当有配方成品输出，并且点击了成品输出槽
         if (slot.getType().equals(PanelSlotType.OUTPUT)) {
-            if (recipe == null) {
+            if (recipe == null || !data.existRecipe(recipe.getId())) {
                 event.setCancelled(true);
                 return;
             }
+
             if (action.equals(InventoryAction.PICKUP_ALL)
                     || action.equals(InventoryAction.PICKUP_SOME)
                     || action.equals(InventoryAction.PICKUP_ONE)
@@ -850,7 +848,7 @@ public class PluginListener implements Listener {
             event.setCancelled(true);
         }
 
-        RecipeSearchRunnable search = new RecipeSearchRunnable(inventory);
+        RecipeSearchRunnable search = new RecipeSearchRunnable(player, inventory);
         search.runTask(plugin);
     }
 
@@ -908,7 +906,7 @@ public class PluginListener implements Listener {
             return;
         }
 
-        RecipeSearchRunnable finder = new RecipeSearchRunnable(inv);
+        RecipeSearchRunnable finder = new RecipeSearchRunnable(player, inv);
         finder.runTask(plugin);
     }
 

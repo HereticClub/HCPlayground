@@ -3,24 +3,21 @@ package org.hcmc.hcplayground.model.mmo;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import org.bukkit.Material;
+import org.bukkit.Statistic;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-import org.hcmc.hcplayground.enums.MMOType;
-import org.hcmc.hcplayground.manager.*;
-import org.hcmc.hcplayground.utility.RomanNumber;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
-/**
- * MMO技能定义
- */
-public class MMOSkill {
+public class MMOCollectionMaterial implements Cloneable {
+
     /**
      * MMO技能等级类型
      */
     @Expose
-    @SerializedName(value = "type")
-    private MMOType type;
+    @SerializedName(value = "material-types")
+    private List<Material> materialTypes = new ArrayList<>();
     /**
      * 技能的显示名称
      */
@@ -33,6 +30,7 @@ public class MMOSkill {
     @Expose
     @SerializedName(value = "template")
     private String template;
+
     @Expose(deserialize = false)
     private List<MMOLevel> levels = new ArrayList<>();
     @Expose(deserialize = false)
@@ -42,41 +40,43 @@ public class MMOSkill {
         return id;
     }
 
-    public List<MMOLevel> getLevels() {
-        return levels;
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public List<Material> getMaterialTypes() {
+        return materialTypes;
     }
 
     public String getName() {
         return name;
     }
 
+    public void setName(String name) {
+        this.name = name;
+    }
+
     public void setLevels(List<MMOLevel> levels) {
         this.levels = new ArrayList<>(levels);
     }
 
-    public MMOType getType() {
-        return type;
-    }
-
-    public void setType(MMOType type) {
-        this.type = type;
-    }
-
-    public MMOSkill() {
+    public MMOCollectionMaterial() {
 
     }
 
-    /**
-     * 获取所有已达成的技能等级实例
-     * @param statistic 当前技能类型的统计值
-     * @return 所有已达成当前技能的等级实例
-     */
-    public List<MMOLevel> getReachedLevels(int statistic) {
-        return levels.stream().filter(x -> statistic >= x.getThreshold()).toList();
+    @Override
+    public MMOCollectionMaterial clone() {
+        try {
+            return (MMOCollectionMaterial) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    public Map<Integer, ItemStack> decorateLevels(int statistic) {
+    @NotNull
+    public Map<Integer, ItemStack> decorate(@NotNull Player player, @NotNull Material material) {
         Map<Integer, ItemStack> itemStacks = new HashMap<>();
+        int statistic = player.getStatistic(Statistic.PICKUP, material);
 
         List<MMOLevel> reached = levels.stream().filter(x -> statistic >= x.getThreshold()).toList();
         List<MMOLevel> unreached = new ArrayList<>(levels.stream().filter(x -> statistic < x.getThreshold()).toList());
@@ -94,5 +94,16 @@ public class MMOSkill {
         }
 
         return itemStacks;
+    }
+
+    /**
+     * 获取所有已达成的物品收集等级实例
+     *
+     * @param statistic 当前物品收集的统计值
+     * @return 所有已达成的物品收集等级实例
+     */
+    @NotNull
+    public List<MMOLevel> getReachedLevels(int statistic) {
+        return levels.stream().filter(x -> statistic >= x.getThreshold()).toList();
     }
 }

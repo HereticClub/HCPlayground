@@ -20,14 +20,32 @@ permissions:
       - hc.quartermaster.*
       - hc.banplayer.*
       - hc.playgroundmenus.*
+      - hc.rewardmanager.*
+
+  permissionRewardManager:
+    name: hc.rewardmanager.*
+    default: op
+    description: Permission to manage the skill level reward
+    children:
+      - hc.rewardmanager.claim
+      - hc.rewardmanager.reset
+
+  permissionRewardManager1:
+    name: hc.rewardmanager.claim
+    description: Claim the skill level reward to the player
+    default: op
+  permissionRewardManager2:
+    name: hc.rewardmanager.reset
+    description: Reset the claimed skill level to 0 to the player
+    default: op
 
   permissionSkillManager:
     name: hc.skillmanager.*
     default: op
     description: Permission to manage the player skill experience
     children:
-      - hc.skillmanager.give
-      - hc.skillmanager.take
+      - hc.skillmanager.increase
+      - hc.skillmanager.decrease
   permissionSkillManager1:
     name: hc.skillmanager.give
     description: Give a player skill experience

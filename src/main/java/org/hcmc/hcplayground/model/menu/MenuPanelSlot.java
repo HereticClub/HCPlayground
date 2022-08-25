@@ -1,18 +1,35 @@
 package org.hcmc.hcplayground.model.menu;
 
+import com.comphenix.net.bytebuddy.description.type.TypeVariableToken;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+import com.google.gson.reflect.TypeToken;
 import me.clip.placeholderapi.PlaceholderAPI;
+import org.apache.commons.lang.StringUtils;
+import org.bukkit.Bukkit;
+import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFlag;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.SkullMeta;
 import org.hcmc.hcplayground.manager.CommandManager;
+import org.hcmc.hcplayground.utility.Global;
 import org.hcmc.hcplayground.utility.MaterialData;
+import org.hcmc.hcplayground.utility.PlayerHeader;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
+import java.lang.reflect.Type;
+import java.util.*;
 
-public class MenuPanelSlot {
+/**
+ * 箱子界面插槽模板类<br>
+ * 所有定义的插槽号{@code slots}显示相同的物品材质、数量、说明，包括显示相同的player-head<br>
+ * 但不同的插槽号可以执行不同的指令组{@code leftCommands}和{@code rightCommands}<br>
+ */
+public class MenuPanelSlot implements Cloneable {
 
     private final static String COMMAND_PERFORM_CONSOLE = "[console]";
     private final static String COMMAND_PERFORM_PLAYER = "[player]";
@@ -37,12 +54,21 @@ public class MenuPanelSlot {
     @Expose
     @SerializedName(value = "lore")
     private List<String> lore = new ArrayList<>();
+    /**
+     * 不同的插槽号可以执行不同的指令组<br>
+     * Integer - 插槽号，由1开始，最大值54<br>
+     * {@code List<String>} - 左键点击的指令组
+     */
     @Expose
     @SerializedName(value = "left_click")
-    private List<String> leftCommands = new ArrayList<>();
-    @Expose
+    private Map<Integer, List<String>> leftCommands = new HashMap<>();
+    /**
+     * 不同的插槽号可以执行不同的指令组<br>
+     * Integer - 插槽号，由1开始，最大值54<br>
+     * {@code List<String>} - 右键点击的指令组
+     */@Expose
     @SerializedName(value = "right_click")
-    private List<String> rightCommands = new ArrayList<>();
+    private Map<Integer, List<String>> rightCommands = new HashMap<>();
     @Expose
     @SerializedName(value = "flags")
     private List<ItemFlag> flags = new ArrayList<>();
@@ -71,32 +97,86 @@ public class MenuPanelSlot {
         return id;
     }
 
+    public void setId(String id) {
+        this.id = id;
+    }
+
     public List<String> getLore() {
-        return lore;
+        return new ArrayList<>(lore);
+    }
+
+    public void setLore(List<String> lore) {
+        this.lore = new ArrayList<>(lore);
     }
 
     public int getAmount() {
         return amount;
     }
 
+    public void setAmount(int amount) {
+        this.amount = amount;
+    }
+
     public String getDisplay() {
         return display;
+    }
+
+    public void setDisplay(String display) {
+        this.display = display;
     }
 
     public List<Integer> getSlots() {
         return slots;
     }
 
+    public void setSlots(List<Integer> slots) {
+        this.slots =new ArrayList<>(slots);
+    }
+
     public List<ItemFlag> getFlags() {
         return flags;
     }
 
-    public List<String> getLeftCommands() {
-        return leftCommands;
+    public void setFlags(List<ItemFlag> flags) {
+        this.flags = flags;
     }
 
-    public List<String> getRightCommands() {
-        return rightCommands;
+    public Map<Integer, List<String>> getLeftCommands() {
+        return new HashMap<>(leftCommands);
+    }
+
+    public void setLeftCommands(Map<Integer, List<String>> leftCommands) {
+        this.leftCommands = new HashMap<>(leftCommands);
+    }
+
+    public void addLeftCommands(Integer slotIndex, String... commands) {
+        if (!slots.contains(slotIndex)) return;
+        List<String> _commands = leftCommands.containsKey(slotIndex) ? leftCommands.get(slotIndex) : new ArrayList<>();
+        leftCommands.put(slotIndex, _commands);
+
+        for (String s : commands) {
+            if (_commands.contains(s)) continue;
+            _commands.add(s);
+        }
+    }
+
+    public Map<Integer, List<String>> getRightCommands() {
+        return new HashMap<>(rightCommands);
+    }
+
+    public void setRightCommands(Map<Integer, List<String>> rightCommands) {
+        this.rightCommands = new HashMap<>(rightCommands);
+    }
+
+    public void addRightCommands(Integer slotIndex, String... commands) {
+        if (!slots.contains(slotIndex)) return;
+        List<String> _commands = rightCommands.containsKey(slotIndex) ? rightCommands.get(slotIndex) : new ArrayList<>();
+        rightCommands.put(slotIndex, _commands);
+
+        for (String s : commands) {
+            if (_commands.contains(s)) continue;
+            _commands.add(s);
+        }
     }
 
     public MaterialData getMaterial() {
@@ -111,8 +191,16 @@ public class MenuPanelSlot {
         return customSkull;
     }
 
+    public void setCustomSkull(String customSkull) {
+        this.customSkull = customSkull;
+    }
+
     public boolean isGlowing() {
         return glowing;
+    }
+
+    public void setGlowing(boolean glowing) {
+        this.glowing = glowing;
     }
 
     public List<String> getLeftDenyMessage() {
@@ -156,12 +244,72 @@ public class MenuPanelSlot {
         return String.format("%s, %s", id, display);
     }
 
-    public void runLeftClickCommands(Player player) {
-        runCommands(player, leftCommands, leftConditions, leftDenyMessage);
+    /**
+     * 执行左键点击箱子界面插槽物品的指令
+     * @param player 点击箱子界面的玩家实例
+     * @param slotIndex 点击箱子界面所在的插槽号，由1开始，最大值54
+     */
+    public void runLeftClickCommands(Player player, int slotIndex) {
+        List<String> commands = leftCommands.getOrDefault(slotIndex, new ArrayList<>());
+        runCommands(player, commands, leftConditions, leftDenyMessage);
     }
 
-    public void runRightClickCommands(Player player) {
-        runCommands(player, rightCommands, rightConditions, rightDenyMessage);
+    /**
+     * 执行右键点击箱子界面插槽物品的指令
+     * @param player 点击箱子界面的玩家实例
+     * @param slotIndex 点击箱子界面所在的插槽号，由1开始，最大值54
+     */
+    public void runRightClickCommands(Player player, int slotIndex) {
+        List<String> commands = rightCommands.getOrDefault(slotIndex, new ArrayList<>());
+        runCommands(player, commands, rightConditions, rightDenyMessage);
+    }
+
+    public Map<Integer, ItemStack> createItemStacks(Player player) {
+        Map<Integer, ItemStack> itemStacks = new HashMap<>();
+
+        for (int index : slots) {
+            ItemStack is;
+            if (material == null) material = new MaterialData(Material.AIR, "");
+            if (material.value == null) material = new MaterialData(Material.STONE, "");
+            if (!material.value.equals(Material.PLAYER_HEAD)) {
+                is = new ItemStack(material.value, amount);
+            } else {
+                is = StringUtils.isBlank(customSkull) ? ResolvePlayerHead(player, material) : ResolveCustomHead(customSkull);
+            }
+
+            ItemMeta im = is.getItemMeta();
+            if (im == null) continue;
+
+            im.addItemFlags(flags.toArray(new ItemFlag[0]));
+            im.setLore(lore);
+            if (!StringUtils.isBlank(display))
+                im.setDisplayName(display.replace("%player%", player.getName()));
+
+            if (glowing) {
+                im.addEnchant(Enchantment.MENDING, 1, true);
+                Set<ItemFlag> flags = im.getItemFlags();
+                if (!flags.contains(ItemFlag.HIDE_ENCHANTS)) {
+                    im.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+                }
+            }
+
+            is.setItemMeta(im);
+            itemStacks.put(index, is);
+        }
+
+        return itemStacks;
+    }
+
+    @Override
+    public Object clone() {
+        try {
+            MenuPanelSlot object = (MenuPanelSlot) super.clone();
+            object.setLeftConditions(this.getLeftConditions());
+            object.setRightConditions(this.getRightConditions());
+            return object;
+        } catch (CloneNotSupportedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private boolean getConditionResult(Player player, List<SlotClickCondition> conditions) {
@@ -200,5 +348,28 @@ public class MenuPanelSlot {
                 default -> CommandManager.runPlayerCommand(command, player);
             }
         }
+    }
+
+    private @NotNull ItemStack ResolvePlayerHead(@NotNull Player player, @NotNull MaterialData data) {
+        ItemStack is = new ItemStack(data.value, 1);
+        OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(player.getUniqueId());
+        if (!StringUtils.equals("head_%player%", data.name.toLowerCase())) return is;
+
+        SkullMeta sm = (SkullMeta) is.getItemMeta();
+        if (sm != null) {
+            sm.setOwningPlayer(offlinePlayer);
+            is.setItemMeta(sm);
+        }
+        return is;
+    }
+
+    private @NotNull ItemStack ResolveCustomHead(String base64data) {
+        ItemStack is = new ItemStack(Material.PLAYER_HEAD, 1);
+
+        ItemMeta im = PlayerHeader.setTextures(is, base64data);
+        if (!(im instanceof SkullMeta meta)) return is;
+
+        is.setItemMeta(meta);
+        return is;
     }
 }

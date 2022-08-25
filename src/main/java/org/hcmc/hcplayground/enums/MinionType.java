@@ -1,23 +1,5 @@
 package org.hcmc.hcplayground.enums;
 
-import org.apache.commons.lang.StringUtils;
-import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.inventory.meta.SkullMeta;
-import org.bukkit.persistence.PersistentDataContainer;
-import org.bukkit.persistence.PersistentDataType;
-import org.bukkit.plugin.Plugin;
-import org.hcmc.hcplayground.HCPlayground;
-import org.hcmc.hcplayground.manager.ItemManager;
-import org.hcmc.hcplayground.manager.MinionManager;
-import org.hcmc.hcplayground.model.minion.MinionTemplate;
-import org.hcmc.hcplayground.utility.PlayerHeaderUtil;
-import org.jetbrains.annotations.NotNull;
-
-import java.util.List;
-
 /**
  * 自动采集伙伴类型
  */

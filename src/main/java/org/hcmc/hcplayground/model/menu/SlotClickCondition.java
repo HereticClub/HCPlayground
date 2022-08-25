@@ -1,9 +1,7 @@
 package org.hcmc.hcplayground.model.menu;
 
-import com.comphenix.protocol.PacketType;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
-import me.clip.placeholderapi.PlaceholderAPI;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.entity.Player;
 import org.hcmc.hcplayground.enums.CompareType;
@@ -11,7 +9,10 @@ import org.hcmc.hcplayground.enums.OperatorType;
 import org.hcmc.hcplayground.manager.LanguageManager;
 import org.hcmc.hcplayground.utility.Global;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+import java.util.Objects;
 import java.util.logging.Level;
 
 public class SlotClickCondition {
@@ -24,7 +25,7 @@ public class SlotClickCondition {
     private OperatorType operatorType;
     @Expose
     @SerializedName(value = "target-value")
-    private String targetValue;
+    private Object targetValue;
     @Expose
     @SerializedName(value = "source-value")
     private String sourceValue;
@@ -36,40 +37,8 @@ public class SlotClickCondition {
         return id;
     }
 
-    public CompareType getCompareType() {
-        return compareType;
-    }
-
-    public OperatorType getOperatorType() {
-        return operatorType;
-    }
-
-    public String getSourceValue() {
-        return sourceValue;
-    }
-
-    public String getTargetValue() {
-        return targetValue;
-    }
-
     public void setId(String id) {
         this.id = id;
-    }
-
-    public void setCompareType(CompareType compareType) {
-        this.compareType = compareType;
-    }
-
-    public void setOperatorType(OperatorType operatorType) {
-        this.operatorType = operatorType;
-    }
-
-    public void setSourceValue(String sourceValue) {
-        this.sourceValue = sourceValue;
-    }
-
-    public void setTargetValue(String targetValue) {
-        this.targetValue = targetValue;
     }
 
     public SlotClickCondition() {
@@ -94,16 +63,16 @@ public class SlotClickCondition {
             case COMPARE_STRING -> {
                 switch (operatorType) {
                     case EQUAL -> {
-                        return sourceValue.equalsIgnoreCase(targetValue);
+                        return sourceValue.equalsIgnoreCase(String.valueOf(targetValue));
                     }
                     case NOT_EQUAL -> {
-                        return !sourceValue.equalsIgnoreCase(targetValue);
+                        return !sourceValue.equalsIgnoreCase(String.valueOf(targetValue));
                     }
                 }
             }
             case COMPARE_BOOLEAN -> {
                 boolean tmpSource = Boolean.parseBoolean(sourceValue);
-                boolean tmpTarget = Boolean.parseBoolean(targetValue);
+                boolean tmpTarget = Boolean.parseBoolean(String.valueOf(targetValue));
                 switch (operatorType) {
                     case EQUAL -> {
                         return tmpSource == tmpTarget;
@@ -114,13 +83,13 @@ public class SlotClickCondition {
                 }
             }
             case COMPARE_NUMERIC -> {
-                if (!StringUtils.isNumeric(sourceValue) || !StringUtils.isNumeric(targetValue)) {
+                if (!StringUtils.isNumeric(sourceValue) || !StringUtils.isNumeric(String.valueOf(targetValue))) {
                     Global.LogMessage("Menu slot click condition judgment fatal error!");
                     Global.LogWarning(LanguageManager.getString("numberFormatInvalid").replace("%numeric%", String.format("source: %s target: %s", sourceValue, targetValue)));
                     return false;
                 }
                 double tmpSource = Double.parseDouble(sourceValue);
-                double tmpTarget = Double.parseDouble(targetValue);
+                double tmpTarget = Double.parseDouble(String.valueOf(targetValue));
                 switch (operatorType) {
                     case EQUAL -> {
                         return tmpSource == tmpTarget;
@@ -139,6 +108,22 @@ public class SlotClickCondition {
                     }
                     case LESS_AND_EQUAL -> {
                         return tmpSource <= tmpTarget;
+                    }
+                }
+            }
+            case COMPARE_STRING_LIST -> {
+                List<String> values = new ArrayList<>();
+                if (!(targetValue instanceof List<?>)) return false;
+                for (Object o : (List<?>) targetValue) {
+                    values.add(String.valueOf(o));
+                }
+
+                switch (operatorType) {
+                    case CONTAINED -> {
+                        return values.contains(sourceValue);
+                    }
+                    case NOT_CONTAINED -> {
+                        return !values.contains(sourceValue);
                     }
                 }
             }

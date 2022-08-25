@@ -4,6 +4,7 @@ import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.attribute.Attribute;
@@ -18,13 +19,14 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.hcmc.hcplayground.HCPlayground;
-import org.hcmc.hcplayground.enums.MMOSkillType;
+import org.hcmc.hcplayground.enums.MMOType;
 import org.hcmc.hcplayground.enums.MinionType;
 import org.hcmc.hcplayground.manager.*;
 import org.hcmc.hcplayground.model.menu.MenuPanel;
 import org.hcmc.hcplayground.model.parkour.CourseInfo;
 import org.hcmc.hcplayground.model.player.PlayerData;
 import org.hcmc.hcplayground.serialization.MMOLevelTypeSerialization;
+import org.hcmc.hcplayground.serialization.MaterialSerialization;
 import org.hcmc.hcplayground.utility.Global;
 import org.hcmc.hcplayground.utility.RomanNumber;
 import org.jetbrains.annotations.NotNull;
@@ -46,8 +48,8 @@ public class CommandItem extends Command {
 
     private final static Pattern patternNumber = Pattern.compile("-?\\d+(\\.\\d+)?");
     public static final String COMMAND_SKILL_MANAGER = "skillmanager";
-    public static final String COMMAND_SKILL_MANAGER_GIVE = "give";
-    public static final String COMMAND_SKILL_MANAGER_TAKE = "take";
+    public static final String COMMAND_SKILL_MANAGER_INCREASE = "increase";
+    public static final String COMMAND_SKILL_MANAGER_DECREASE = "decrease";
     public static final String COMMAND_REGISTER = "register";
     public static final String COMMAND_UNREGISTER = "unregister";
     public static final String COMMAND_LOGIN = "login";
@@ -59,7 +61,9 @@ public class CommandItem extends Command {
     public static final String COMMAND_PLAYGROUND_MENUS = "playgroundmenus";
     public static final String COMMAND_PLAYGROUND_MENUS_OPEN = "open";
     public static final String COMMAND_PLAYGROUND_MENUS_CLOSE = "close";
-    public static final String COMMAND_PLAYGROUND_MENUS_LIST = "list";
+    public static final String COMMAND_REWARD_MANAGER = "rewardmanager";
+    public static final String COMMAND_REWARD_MANAGER_CLAIM = "claim";
+    public static final String COMMAND_REWARD_MANAGER_RESET = "reset";
     public static final String COMMAND_QUARTERMASTER = "quartermaster";
     public static final String COMMAND_QM_GIVE = "give";
     public static final String COMMAND_QM_HELP = "help";
@@ -168,6 +172,15 @@ public class CommandItem extends Command {
 
         try {
             // 获取指令字符串
+            if (index == 2 && getName().equalsIgnoreCase(COMMAND_REWARD_MANAGER)) {
+                if (args[0].equalsIgnoreCase(COMMAND_REWARD_MANAGER_CLAIM)) {
+                    tabs = MMOManager.getSkillIdList();
+                }
+                if (args[0].equalsIgnoreCase(COMMAND_REWARD_MANAGER_RESET)) {
+                    tabs = new ArrayList<>(Collections.singleton("*"));
+                    tabs.addAll(MMOManager.getSkillIdList());
+                }
+            }
             if (index == 2 && getName().equalsIgnoreCase(COMMAND_COURSE)) {
                 if (args[0].equalsIgnoreCase(COMMAND_COURSE_MODIFY)) {
                     tabs = getCourseModifyList(player);
@@ -198,7 +211,7 @@ public class CommandItem extends Command {
                 }
             }
             if (index == 2 && getName().equalsIgnoreCase(COMMAND_SKILL_MANAGER)) {
-                tabs = MMOSkillManager.getIdList();
+                tabs = MMOManager.getSkillIdList();
             }
             if (index == 2 && getName().equalsIgnoreCase(COMMAND_PLAYGROUND_MENUS)) {
                 if (args[0].equalsIgnoreCase(COMMAND_PLAYGROUND_MENUS_OPEN)) {
@@ -250,10 +263,14 @@ public class CommandItem extends Command {
             if (commandText.equalsIgnoreCase(COMMAND_PLAYGROUND_MENUS)) {
                 return RunPlaygroundMenusCommand(sender, args);
             }
+            // 奖励指令 /rewardmanager
+            if (commandText.equalsIgnoreCase(COMMAND_REWARD_MANAGER)) {
+                return RunRewardManagerCommand(sender, args);
+            }
             if (commandText.equalsIgnoreCase(COMMAND_SKILL_MANAGER)) {
                 return RunSkillManagerCommand(sender, args);
             }
-            // 军需官指令 - /quatermaster
+            // 军需官指令 - /quartermaster
             if (commandText.equalsIgnoreCase(COMMAND_QUARTERMASTER)) {
                 return RunQuartermasterCommand(sender, args);
             }
@@ -271,7 +288,7 @@ public class CommandItem extends Command {
             }
             // 玩家登出指令 - /logout
             if (commandText.equalsIgnoreCase(COMMAND_LOGOUT)) {
-                return RunLogoutCommand(sender, args);
+                return RunLogoutCommand(sender);
             }
             // 玩家修改密码指令 - /changepassword
             if (commandText.equalsIgnoreCase(COMMAND_CHANGE_PASSWORD)) {
@@ -328,25 +345,90 @@ public class CommandItem extends Command {
         return false;
     }
 
+    private boolean RunRewardManagerCommand(CommandSender sender, String[] args) {
+        if (args.length <= 2) {
+            return ShowCommandHelp(sender, 3);
+        }
+
+        if (args[0].equalsIgnoreCase(COMMAND_REWARD_MANAGER_CLAIM)) {
+            return RunRewardManagerClaimCommand(sender, args);
+        }
+        if (args[0].equalsIgnoreCase(COMMAND_REWARD_MANAGER_RESET)) {
+            return RunRewardManagerResetCommand(sender, args);
+        }
+
+        return false;
+    }
+
+    private boolean RunRewardManagerResetCommand(CommandSender sender, String[] args) {
+        // args[1] - Skill Type
+        // args[2] - Player Name
+        Player target = Bukkit.getPlayer(args[2]);
+        MMOType type = MMOLevelTypeSerialization.getType(args[1]);
+        if (target == null) {
+            sender.sendMessage(LanguageManager.getString("playerNotExist").replace("%player%", args[2]));
+            return false;
+        }
+
+        if (args[1].equalsIgnoreCase("*")) {
+            MMOType[] types = MMOType.values();
+            for (MMOType t : types) {
+                if (t.equals(MMOType.UNDEFINED)) continue;
+                RewardManager.reset(t, target);
+            }
+            target.sendMessage(LanguageManager.getString("rewardLevelResetAll"));
+            return true;
+        }
+
+        if (type.equals(MMOType.UNDEFINED)) {
+            sender.sendMessage(LanguageManager.getString("skillTypeInvalid").replace("%skill%", args[1]));
+            return false;
+        }
+
+        RewardManager.reset(type, target);
+        target.sendMessage(LanguageManager.getString("rewardLevelReset").replace("%skill%", type.name()));
+        return true;
+    }
+
+    private boolean RunRewardManagerClaimCommand(CommandSender sender, String[] args) {
+        // args[1] - Skill Type or material
+        // args[2] - Player Name
+        Player target = Bukkit.getPlayer(args[2]);
+        MMOType type = MMOLevelTypeSerialization.getType(args[1]);
+        Material material = MaterialSerialization.parse(args[1]);
+        if (target == null) {
+            sender.sendMessage(LanguageManager.getString("playerNotExist").replace("%player%", args[2]));
+            return false;
+        }
+        if (type.equals(MMOType.UNDEFINED) && material.equals(Material.AIR)) {
+            sender.sendMessage(LanguageManager.getString("rewardTypeInvalid").replace("%reward%", args[1]));
+            return false;
+        }
+
+        if (!type.equals(MMOType.UNDEFINED)) RewardManager.claim(type, target);
+        if (!material.equals(Material.AIR)) RewardManager.claim(material, target);
+        return true;
+    }
+
     private boolean RunSkillManagerCommand(CommandSender sender, String[] args) {
         if (args.length <= 3) {
             return ShowCommandHelp(sender, 4);
         }
-        if (args[0].equalsIgnoreCase(COMMAND_SKILL_MANAGER_GIVE)) {
-            return RunSkillManagerGiveCommand(sender, args);
+        if (args[0].equalsIgnoreCase(COMMAND_SKILL_MANAGER_INCREASE)) {
+            return RunSkillManagerIncreaseCommand(sender, args);
         }
-        if (args[0].equalsIgnoreCase(COMMAND_SKILL_MANAGER_TAKE)) {
-            return RunSkillManagerTakeCommand(sender, args);
+        if (args[0].equalsIgnoreCase(COMMAND_SKILL_MANAGER_DECREASE)) {
+            return RunSkillManagerDecreaseCommand(sender, args);
         }
         return false;
     }
 
-    private boolean RunSkillManagerGiveCommand(CommandSender sender, String[] args) {
+    private boolean RunSkillManagerIncreaseCommand(CommandSender sender, String[] args) {
         String playerName = args[2];
         String points = args[3];
         Player target = Bukkit.getPlayer(playerName);
-        MMOSkillType type = MMOLevelTypeSerialization.getType(args[1]);
-        if (type == null) {
+        MMOType type = MMOLevelTypeSerialization.getType(args[1]);
+        if (type.equals(MMOType.UNDEFINED)) {
             sender.sendMessage(LanguageManager.getString("skillTypeInvalid").replace("%skill%", args[1]));
             return false;
         }
@@ -360,17 +442,17 @@ public class CommandItem extends Command {
         }
 
         int p = Integer.parseInt(points);
-        MMOSkillManager.incrementStatisticPoint(target, type, p);
+        MMOManager.incrementStatisticPoints(target, type, p);
 
         return true;
     }
 
-    private boolean RunSkillManagerTakeCommand(CommandSender sender, String[] args) {
+    private boolean RunSkillManagerDecreaseCommand(CommandSender sender, String[] args) {
         String playerName = args[2];
         String points = args[3];
         Player target = Bukkit.getPlayer(playerName);
-        MMOSkillType type = MMOLevelTypeSerialization.getType(args[1]);
-        if (type == null) {
+        MMOType type = MMOLevelTypeSerialization.getType(args[1]);
+        if (type.equals(MMOType.UNDEFINED)) {
             sender.sendMessage(LanguageManager.getString("skillTypeInvalid").replace("%skill%", args[1]));
             return false;
         }
@@ -384,7 +466,7 @@ public class CommandItem extends Command {
         }
 
         int p = Integer.parseInt(points);
-        MMOSkillManager.decrementStatisticPoint(target, type, p);
+        MMOManager.decreaseStatisticPoints(target, type, p);
 
         return true;
     }
@@ -396,21 +478,21 @@ public class CommandItem extends Command {
         }
         // /recordmanager load
         if (args[0].equalsIgnoreCase(COMMAND_RECORD_MANAGER_LOAD)) {
-            return RunRecordManagerLoadCommand(sender, args);
+            return RunRecordManagerLoadCommand();
         }
         // /recordmanager save
         if (args[0].equalsIgnoreCase(COMMAND_RECORD_MANAGER_SAVE)) {
-            return RunRecordManagerSaveCommand(sender, args);
+            return RunRecordManagerSaveCommand();
         }
         return false;
     }
 
-    private boolean RunRecordManagerLoadCommand(CommandSender sender, String[] args) throws IOException {
+    private boolean RunRecordManagerLoadCommand() throws IOException {
         RecordManager.Load();
         return true;
     }
 
-    private boolean RunRecordManagerSaveCommand(CommandSender sender, String[] args) throws IOException, IllegalAccessException {
+    private boolean RunRecordManagerSaveCommand() throws IOException {
         RecordManager.Save();
         return true;
     }
@@ -474,16 +556,6 @@ public class CommandItem extends Command {
     }
 
     private List<String> getMinionTypeList() {
-        /*
-        List<String> tabs = new ArrayList<>();
-        MinionType[] types = MinionType.values();
-
-        for (MinionType type : types) {
-            tabs.add(type.name().toLowerCase());
-        }
-
-         */
-
         return MinionManager.getDeclaredTypes();
     }
 
@@ -493,7 +565,7 @@ public class CommandItem extends Command {
 
     private List<String> getCheckpointList(Player player) throws IOException, IllegalAccessException, InvalidConfigurationException {
         PlayerData data = PlayerManager.getPlayerData(player);
-        String courseId = data.designer.getCurrentCourseId();
+        String courseId = data.getDesigner().getCurrentCourseId();
 
         CourseInfo course = CourseManager.getCourse(courseId);
         if (course == null) return new ArrayList<>();
@@ -521,7 +593,7 @@ public class CommandItem extends Command {
      */
     private List<String> getCourseModifyList(Player player) throws IOException, IllegalAccessException, InvalidConfigurationException {
         PlayerData data = PlayerManager.getPlayerData(player);
-        return data.designer.list();
+        return data.getDesigner().list();
     }
 
     private List<String> getDeclaredArguments(@NotNull Player player, @NotNull String[] args) {
@@ -553,7 +625,7 @@ public class CommandItem extends Command {
         }
         // /course leave
         if (args[0].equalsIgnoreCase(COMMAND_COURSE_LEAVE)) {
-            return RunCourseLeaveCommand(sender, args);
+            return RunCourseLeaveCommand(sender);
         }
         // /course modify
         if (args[0].equalsIgnoreCase(COMMAND_COURSE_MODIFY)) {
@@ -561,11 +633,11 @@ public class CommandItem extends Command {
         }
         // /course list
         if (args[0].equalsIgnoreCase(COMMAND_COURSE_LIST)) {
-            return RunCourseListCommand(sender, args);
+            return RunCourseListCommand(sender);
         }
         // /course list
         if (args[0].equalsIgnoreCase(COMMAND_COURSE_ABANDONS)) {
-            return RunCourseAbandonsCommand(sender, args);
+            return RunCourseAbandonsCommand(sender);
         }
         // /course delete
         if (args[0].equalsIgnoreCase(COMMAND_COURSE_DELETE)) {
@@ -577,7 +649,7 @@ public class CommandItem extends Command {
         }
         // /course startpoint
         if (args[0].equalsIgnoreCase(COMMAND_COURSE_START_POINT)) {
-            return RunCourseStartPointCommand(sender, args);
+            return RunCourseStartPointCommand(sender);
         }
         // /course checkpoint xxx
         if (args[0].equalsIgnoreCase(COMMAND_COURSE_CHECKPOINT)) {
@@ -597,7 +669,7 @@ public class CommandItem extends Command {
         }
         // /course parkourkit
         if (args[0].equalsIgnoreCase(COMMAND_COURSE_PARKOUR_KIT)) {
-            return RunCourseParkourKitCommand(sender, args);
+            return RunCourseParkourKitCommand(sender);
         }
         // /course linklobby
         if (args[0].equalsIgnoreCase(COMMAND_COURSE_LINK_LOBBY)) {
@@ -624,13 +696,13 @@ public class CommandItem extends Command {
         return true;
     }
 
-    private boolean RunCourseLinkLobbyCommand(CommandSender sender, String[] args) throws IOException, IllegalAccessException, InvalidConfigurationException {
+    private boolean RunCourseLinkLobbyCommand(CommandSender sender, String[] args) {
         Player player = (Player) sender;
         PlayerData data = PlayerManager.getPlayerData(player);
         if (args.length <= 1) return ShowCommandHelp(sender, 2);
 
         // 非op玩家必须在跑道设计状态
-        if (!data.isCourseDesigning && !player.isOp()) {
+        if (!data.isDesignMode() && !player.isOp()) {
             player.sendMessage(LanguageManager.getString("courseHasLeft", player));
             return false;
         }
@@ -638,32 +710,32 @@ public class CommandItem extends Command {
         String lobby = args[1];
         boolean exist = ParkourApiManager.isLobbyExist(lobby);
         if (!exist) {
-            player.sendMessage(LanguageManager.getString("lobbyNotExist", player).replace("%lobby%", lobby));
+            player.sendMessage(LanguageManager.getString("courseLobbyNotExist", player).replace("%lobby%", lobby));
             return false;
         }
 
-        data.designer.setLinkLobby(lobby);
+        data.getDesigner().setLinkLobby(lobby);
         return true;
     }
 
-    private boolean RunCourseParkourKitCommand(CommandSender sender, String[] args) throws IOException, IllegalAccessException, InvalidConfigurationException {
+    private boolean RunCourseParkourKitCommand(CommandSender sender) {
         Player player = (Player) sender;
         PlayerData data = PlayerManager.getPlayerData(player);
         // 非op玩家必须在跑道设计状态
-        if (!data.isCourseDesigning && !player.isOp()) {
+        if (!data.isDesignMode() && !player.isOp()) {
             player.sendMessage(LanguageManager.getString("courseHasLeft", player));
             return false;
         }
 
-        data.designer.getParkourKit();
+        data.getDesigner().getParkourKit();
         return true;
     }
 
-    private boolean RunCourseTeleportCommand(CommandSender sender, String[] args) throws IOException, IllegalAccessException, InvalidConfigurationException {
+    private boolean RunCourseTeleportCommand(CommandSender sender, String[] args) {
         Player player = (Player) sender;
         PlayerData data = PlayerManager.getPlayerData(player);
         // 非op玩家必须在跑道设计状态
-        if (data.isCourseDesigning && !player.isOp()) {
+        if (data.isDesignMode() && !player.isOp()) {
             player.sendMessage(LanguageManager.getString("courseDesigning", player));
             return false;
         }
@@ -673,7 +745,7 @@ public class CommandItem extends Command {
         }
 
         String courseName = args[1];
-        if (!data.designer.teleport(courseName)) {
+        if (!data.getDesigner().teleport(courseName)) {
             player.sendMessage(LanguageManager.getString("courseNotExist", player).replace("%course%", courseName));
             return false;
         }
@@ -681,11 +753,11 @@ public class CommandItem extends Command {
         return true;
     }
 
-    private boolean RunCourseDisplayCommand(CommandSender sender, String[] args) throws IOException, IllegalAccessException, InvalidConfigurationException {
+    private boolean RunCourseDisplayCommand(CommandSender sender, String[] args) {
         Player player = (Player) sender;
         PlayerData data = PlayerManager.getPlayerData(player);
         // 非op玩家必须在跑道设计状态
-        if (!data.isCourseDesigning && !player.isOp()) {
+        if (!data.isDesignMode() && !player.isOp()) {
             player.sendMessage(LanguageManager.getString("courseHasLeft", player));
             return false;
         }
@@ -694,15 +766,15 @@ public class CommandItem extends Command {
             return false;
         }
 
-        data.designer.setDisplayName(args[1]);
+        data.getDesigner().setDisplayName(args[1]);
         return true;
     }
 
-    private boolean RunCourseReadyCommand(CommandSender sender, String[] args) throws IOException, IllegalAccessException, InvalidConfigurationException {
+    private boolean RunCourseReadyCommand(CommandSender sender, String[] args) {
         Player player = (Player) sender;
         PlayerData data = PlayerManager.getPlayerData(player);
         // 非op玩家必须在跑道设计状态
-        if (!data.isCourseDesigning && !player.isOp()) {
+        if (!data.isDesignMode() && !player.isOp()) {
             player.sendMessage(LanguageManager.getString("courseHasLeft", player));
             return false;
         }
@@ -713,30 +785,30 @@ public class CommandItem extends Command {
         }
 
         boolean ready = Boolean.parseBoolean(args[1]);
-        data.designer.setReady(ready);
+        data.getDesigner().setReady(ready);
         return true;
     }
 
-    private boolean RunCourseCheckpointCommand(CommandSender sender, String[] args) throws IOException, IllegalAccessException, InvalidConfigurationException {
+    private boolean RunCourseCheckpointCommand(CommandSender sender, String[] args) {
         Player player = (Player) sender;
         PlayerData data = PlayerManager.getPlayerData(player);
         // 非op玩家必须在跑道设计状态
-        if (!data.isCourseDesigning && !player.isOp()) {
+        if (!data.isDesignMode() && !player.isOp()) {
             player.sendMessage(LanguageManager.getString("courseHasLeft", player));
             return false;
         }
         if (args.length >= 2 && StringUtils.isNumeric(args[1])) {
             int index = Integer.parseInt(args[1]);
-            if (!data.designer.addCheckpoint(index)) {
+            if (!data.getDesigner().addCheckpoint(index)) {
                 player.sendMessage(LanguageManager.getString("courseNoStartPoint", player));
             }
         }
         if (args.length >= 2 && args[1].equalsIgnoreCase(COMMAND_COURSE_CHECKPOINT_REMOVE)) {
-            data.designer.deleteCheckpoint();
+            data.getDesigner().deleteCheckpoint();
         }
         if (args.length == 1) {
             int index = 0;
-            if (!data.designer.addCheckpoint(index)) {
+            if (!data.getDesigner().addCheckpoint(index)) {
                 player.sendMessage(LanguageManager.getString("courseNoStartPoint", player));
                 return false;
             }
@@ -754,7 +826,7 @@ public class CommandItem extends Command {
             return false;
         }
         // 非op玩家不能在设计跑道时同时领取另一条跑道
-        if (data.isCourseDesigning && !player.isOp()) {
+        if (data.isDesignMode() && !player.isOp()) {
             player.sendMessage(LanguageManager.getString("courseDesigning", player));
             return false;
         }
@@ -777,17 +849,17 @@ public class CommandItem extends Command {
             return false;
         }
 
-        data.designer.claim(courseId);
+        data.getDesigner().claim(courseId);
         player.sendMessage(LanguageManager.getString("courseClaimOK", player).replace("%course%", courseId));
         return true;
     }
 
     // /course list
-    private boolean RunCourseListCommand(CommandSender sender, String[] args) throws IOException, IllegalAccessException, InvalidConfigurationException {
+    private boolean RunCourseListCommand(CommandSender sender) throws IOException, IllegalAccessException, InvalidConfigurationException {
         Player player = (Player) sender;
         PlayerData data = PlayerManager.getPlayerData(player);
 
-        List<String> values = data.designer.list();
+        List<String> values = data.getDesigner().list();
 
         if (values.size() <= 0) {
             player.sendMessage(LanguageManager.getString("courseNoAssetInName", player));
@@ -802,11 +874,11 @@ public class CommandItem extends Command {
         return true;
     }
 
-    private boolean RunCourseAbandonsCommand(CommandSender sender, String[] args) throws IOException, IllegalAccessException, InvalidConfigurationException {
+    private boolean RunCourseAbandonsCommand(CommandSender sender) {
         Player player = (Player) sender;
         PlayerData data = PlayerManager.getPlayerData(player);
 
-        List<String> values = data.designer.abandons();
+        List<String> values = data.getDesigner().abandons();
         for (String s : values) {
             player.sendMessage(s);
         }
@@ -824,7 +896,7 @@ public class CommandItem extends Command {
             return false;
         }
         // 非op玩家不能在设计跑道时同时再创建另一条跑道
-        if (data.isCourseDesigning && !player.isOp()) {
+        if (data.isDesignMode() && !player.isOp()) {
             player.sendMessage(LanguageManager.getString("courseDesigning", player));
             return false;
         }
@@ -837,7 +909,7 @@ public class CommandItem extends Command {
         // 获取新创建的跑酷赛道实例，并且搭建赛道的初始平台
         CourseInfo course = CourseManager.createCourse(courseId);
         if (!player.isOp()) course.setAbandon(false);
-        data.designer.design(courseId, true);
+        data.getDesigner().design(courseId, true);
         // 保存跑酷赛道信息到course.yml
         CourseManager.save();
 
@@ -853,13 +925,13 @@ public class CommandItem extends Command {
             ShowCommandHelp(sender, 2);
             return false;
         }
-        if (data.isCourseDesigning && !player.isOp()) {
+        if (data.isDesignMode() && !player.isOp()) {
             player.sendMessage(LanguageManager.getString("courseDesigning", player));
             return false;
         }
         String courseId = args[1];
         // 检测非op玩家是否拥有该赛道
-        if (!data.courseIds.contains(courseId) && !player.isOp()) {
+        if (!data.getCourseOwned().contains(courseId) && !player.isOp()) {
             player.sendMessage(LanguageManager.getString("courseNotOwned", player).replace("%course%", courseId));
             return false;
         }
@@ -876,7 +948,7 @@ public class CommandItem extends Command {
             return false;
         }
 
-        data.designer.design(courseId, false);
+        data.getDesigner().design(courseId, false);
         return true;
     }
 
@@ -888,13 +960,13 @@ public class CommandItem extends Command {
             ShowCommandHelp(sender, 2);
             return false;
         }
-        if (data.isCourseDesigning && !player.isOp()) {
+        if (data.isDesignMode() && !player.isOp()) {
             player.sendMessage(LanguageManager.getString("courseDesigning", player));
             return false;
         }
 
         String courseId = args[1];
-        if (!data.courseIds.contains(courseId) && !player.isOp()) {
+        if (!data.getCourseOwned().contains(courseId) && !player.isOp()) {
             player.sendMessage(LanguageManager.getString("courseNotOwned", player).replace("%course%", courseId));
             return false;
         }
@@ -909,45 +981,45 @@ public class CommandItem extends Command {
             return false;
         }
 
-        data.designer.abandon(courseId);
+        data.getDesigner().abandon(courseId);
         player.sendMessage(LanguageManager.getString("courseHasAbandoned", player).replace("%course%", courseId));
         return true;
     }
 
     // /course leave
-    private boolean RunCourseLeaveCommand(CommandSender sender, String[] args) throws IOException, IllegalAccessException, InvalidConfigurationException, ClassNotFoundException {
+    private boolean RunCourseLeaveCommand(CommandSender sender) throws IOException, IllegalAccessException, InvalidConfigurationException {
         Player player = (Player) sender;
         PlayerData data = PlayerManager.getPlayerData(player);
 
-        if (!data.isCourseDesigning && !player.isOp()) {
+        if (!data.isDesignMode() && !player.isOp()) {
             player.sendMessage(LanguageManager.getString("courseHasLeft", player));
             return false;
         }
 
-        data.designer.leave();
+        data.getDesigner().leave();
         return false;
     }
 
-    private boolean RunCourseStartPointCommand(CommandSender sender, String[] args) throws IOException, IllegalAccessException, InvalidConfigurationException {
+    private boolean RunCourseStartPointCommand(CommandSender sender) {
         Player player = (Player) sender;
         PlayerData data = PlayerManager.getPlayerData(player);
 
-        if (!data.isCourseDesigning && !player.isOp()) {
+        if (!data.isDesignMode() && !player.isOp()) {
             player.sendMessage(LanguageManager.getString("courseHasLeft", player));
             return false;
         }
 
-        if (!data.designer.RangeDetection(player.getLocation())) {
-            player.sendMessage(LanguageManager.getString("outOfCourseRange", player));
+        if (data.getDesigner().isOutOfRange(player.getLocation())) {
+            player.sendMessage(LanguageManager.getString("courseOutOfRange", player));
             return false;
         }
 
-        String courseId = data.designer.getCurrentCourseId();
+        String courseId = data.getDesigner().getCurrentCourseId();
         if (StringUtils.isBlank(courseId)) {
             player.sendMessage(LanguageManager.getString("courseHasLeft", player));
             return false;
         }
-        data.designer.startPoint(courseId);
+        data.getDesigner().startPoint(courseId);
         player.sendMessage(LanguageManager.getString("courseStartPoint", player).replace("%course%", courseId));
         return true;
     }
@@ -962,17 +1034,17 @@ public class CommandItem extends Command {
             return RunCrazyCraftingCommand(sender);
         }
         if (args[0].equalsIgnoreCase(COMMAND_CRAZY_ENCHANTING)) {
-            return RunCrazyEnchantingCommand(sender);
+            return RunCrazyEnchantingCommand();
         }
         if (args[0].equalsIgnoreCase(COMMAND_CRAZY_ANVIL)) {
-            return RunCrazyAnvilCommand(sender);
+            return RunCrazyAnvilCommand();
         }
 
         return false;
     }
 
-    private boolean RunCrazyCraftingCommand(CommandSender sender) throws IOException, IllegalAccessException, InvalidConfigurationException {
-        Player player = (Player) sender;
+    private boolean RunCrazyCraftingCommand(CommandSender sender) {
+        if (!(sender instanceof Player player)) return false;
         Inventory inventory = RecipeManager.createCraftPanel();
         if (inventory == null) return false;
 
@@ -980,11 +1052,11 @@ public class CommandItem extends Command {
         return true;
     }
 
-    private boolean RunCrazyEnchantingCommand(CommandSender sender) {
+    private boolean RunCrazyEnchantingCommand() {
         return false;
     }
 
-    private boolean RunCrazyAnvilCommand(CommandSender sender) {
+    private boolean RunCrazyAnvilCommand() {
         return false;
     }
 
@@ -1053,7 +1125,7 @@ public class CommandItem extends Command {
         }
 
         if (args[0].equalsIgnoreCase(COMMAND_QM_GUI)) {
-            return RunQMGuiCommand((Player) sender, args);
+            return RunQMGuiCommand((Player) sender);
         }
 
         return false;
@@ -1078,7 +1150,6 @@ public class CommandItem extends Command {
     }
 
     private boolean RunPlaygroundMenusOpenCommand(@NotNull CommandSender sender, String @NotNull [] args) throws InvalidConfigurationException {
-        String menuId = args[1];
         String target = args.length >= 3 ? args[2] : sender.getName();
         Player targetPlayer = Bukkit.getPlayer(target);
         // 显示目标玩家不存在信息
@@ -1086,14 +1157,16 @@ public class CommandItem extends Command {
             sender.sendMessage(LanguageManager.getString("playerNotExist").replace("%player%", target));
             return false;
         }
+        // 获取技能菜单模板名称，skillTemplate为null表示普通菜单而非技能菜单
+        String menuName = args[1].toLowerCase();
+        String menuId = MMOManager.getMaterialMenuMapping().getOrDefault(menuName, menuName);
         // 显示菜单实例不存在信息
         MenuPanel menu = MenuManager.getMenuPanel(menuId, targetPlayer);
         if (menu == null) {
             targetPlayer.sendMessage(LanguageManager.getString("menuNotExist").replace("%menu%", menuId));
             return false;
         }
-
-        menu.open(targetPlayer);
+        menu.open(targetPlayer, menuName);
         return true;
     }
 
@@ -1160,7 +1233,7 @@ public class CommandItem extends Command {
     private boolean RunUnRegisterCommand(CommandSender sender, String[] args) throws InvalidAlgorithmParameterException, SQLException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException, IllegalAccessException, IOException, InvalidConfigurationException {
         // 该指令必须玩家执行
         if (!(sender instanceof Player player)) {
-            sender.sendMessage(LanguageManager.getString("console-message", sender).replace("%command%", id));
+            sender.sendMessage(LanguageManager.getString("no-console-command", sender).replace("%command%", id));
             return false;
         }
         // 检查参数数量，必须至少1个参数
@@ -1176,7 +1249,7 @@ public class CommandItem extends Command {
     private boolean RunLoginCommand(CommandSender sender, String[] args) throws InvalidAlgorithmParameterException, SQLException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException, IllegalAccessException, IOException, InvalidConfigurationException {
         // 该指令必须玩家执行
         if (!(sender instanceof Player player)) {
-            sender.sendMessage(LanguageManager.getString("console-message", sender).replace("%command%", id));
+            sender.sendMessage(LanguageManager.getString("no-console-command", sender).replace("%command%", id));
             return false;
         }
         // 检查参数数量，必须至少1个参数
@@ -1189,10 +1262,10 @@ public class CommandItem extends Command {
         return playerData.Login(args[0]);
     }
 
-    private boolean RunLogoutCommand(CommandSender sender, String[] args) {
+    private boolean RunLogoutCommand(CommandSender sender) {
         // 该指令必须玩家执行
         if (!(sender instanceof Player player)) {
-            sender.sendMessage(LanguageManager.getString("console-message", sender).replace("%command%", id));
+            sender.sendMessage(LanguageManager.getString("no-console-command", sender).replace("%command%", id));
             return false;
         }
 
@@ -1203,7 +1276,7 @@ public class CommandItem extends Command {
     private boolean RunRegisterCommand(CommandSender sender, String[] args) throws SQLException, InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException, IllegalAccessException, IOException, InvalidConfigurationException {
         // 该指令必须玩家执行
         if (!(sender instanceof Player player)) {
-            sender.sendMessage(LanguageManager.getString("console-message", sender).replace("%command%", id));
+            sender.sendMessage(LanguageManager.getString("no-console-command", sender).replace("%command%", id));
             return false;
         }
         // 检查参数数量，必须至少2个参数
@@ -1224,7 +1297,7 @@ public class CommandItem extends Command {
     private boolean RunChangePasswordCommand(CommandSender sender, String[] args) throws InvalidAlgorithmParameterException, SQLException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException, IllegalAccessException, IOException, InvalidConfigurationException {
         // 该指令必须玩家执行
         if (!(sender instanceof Player player)) {
-            sender.sendMessage(LanguageManager.getString("console-message", sender).replace("%command%", id));
+            sender.sendMessage(LanguageManager.getString("no-console-command", sender).replace("%command%", id));
             return false;
         }
         // 检查参数数量，必须至少3个参数
@@ -1244,7 +1317,7 @@ public class CommandItem extends Command {
     private boolean RunBanPlayerCommand(CommandSender sender, String[] args) throws SQLException, IllegalAccessException, IOException, InvalidConfigurationException {
         // 该指令必须玩家执行
         if (!(sender instanceof Player player)) {
-            sender.sendMessage(LanguageManager.getString("console-message", sender).replace("%command%", id));
+            sender.sendMessage(LanguageManager.getString("no-console-command", sender).replace("%command%", id));
             return false;
         }
         // 检查参数数量，必须至少2个参数
@@ -1267,7 +1340,7 @@ public class CommandItem extends Command {
     private boolean RunUnBanPlayerCommand(CommandSender sender, String[] args) throws IOException, IllegalAccessException, InvalidConfigurationException, SQLException {
         // 该指令必须玩家执行
         if (!(sender instanceof Player player)) {
-            sender.sendMessage(LanguageManager.getString("console-message", sender).replace("%command%", id));
+            sender.sendMessage(LanguageManager.getString("no-console-command", sender).replace("%command%", id));
             return false;
         }
 
@@ -1277,7 +1350,7 @@ public class CommandItem extends Command {
         return true;
     }
 
-    private boolean RunQMGuiCommand(Player player, String[] args) {
+    private boolean RunQMGuiCommand(Player player) {
         // TODO: 需要实施/quartermaster gui指令
         player.sendMessage(LanguageManager.getString("UnderConstruction", player));
         return true;
@@ -1297,13 +1370,13 @@ public class CommandItem extends Command {
         // 如果指令被定义为不能在控制台执行
         // 并且使用了控制台发送当前指令，验证失败
         if (!this.isConsole && sender instanceof ConsoleCommandSender) {
-            sender.sendMessage(LanguageManager.getString("console-message", sender).replace("%command%", id));
+            sender.sendMessage(LanguageManager.getString("no-console-command", sender).replace("%command%", id));
             return false;
         }
         // 如果指令被定义为不能通过玩家执行
         // 并且通过了玩家发送当前指令，验证失败
         if (!this.isPlayer && sender instanceof Player) {
-            sender.sendMessage(LanguageManager.getString("player-message", sender).replace("%command%", id));
+            sender.sendMessage(LanguageManager.getString("no-player-command", sender).replace("%command%", id));
             return false;
         }
         // 如果指令时可以通过控制台发送，则不验证权限
@@ -1315,7 +1388,7 @@ public class CommandItem extends Command {
             World world = player.getWorld();
             String worldName = world.getName();
             if (!worlds.contains(worldName) && worlds.size() != 0) {
-                sender.sendMessage(LanguageManager.getString("world-message", sender).replace("%command%", id).replace("%world%", worldName));
+                sender.sendMessage(LanguageManager.getString("no-world-command", sender).replace("%command%", id).replace("%world%", worldName));
                 return false;
             }
             // 验证指令的参数的权限
@@ -1326,23 +1399,20 @@ public class CommandItem extends Command {
                 CommandArgument arg = this.args.stream().filter(x -> x.name.equalsIgnoreCase(s)).findAny().orElse(null);
                 // 如果当前指令参数不在参数集合内，则指令语法错误，提示/<command> usage
                 if (arg == null) {
-                    //sender.sendMessage(LanguageManager.getString(String.format("%s.usage", id), sender));
                     continue;
                 }
                 // 如果当前指令参数不在参数列表的位置定义，则指令语法错误，提示/<command> usage
                 if (arg.index - 1 != Arrays.asList(args).indexOf(s)) {
-                    //sender.sendMessage(getUsage());
                     continue;
                 }
-                // 如当玩家不拥有前指令参数的权限，提示permission-message
+                // 如当玩家不拥有前指令参数的权限，提示no-permission
                 if (!player.hasPermission(arg.permission) && !arg.permission.equalsIgnoreCase("")) {
-                    //sender.sendMessage(LanguageManager.getString("permission-message", sender).replace("%permission%", arg.permission));
                     return false;
                 }
             }
             /*
              测试当前用户是否拥有执行当前指令的权限
-             如果没有，则显示permission-message，并且返回False
+             如果没有，则显示no-permission，并且返回False
             */
             return this.testPermission(sender);
         }
@@ -1372,7 +1442,7 @@ public class CommandItem extends Command {
 
         if (!this.permission.equalsIgnoreCase("")) this.setPermission(this.permission);
         this.setAliases(this.aliases);
-        this.setPermissionMessage(LanguageManager.getString("permission-message").replace("%permission%", permission));
+        this.setPermissionMessage(LanguageManager.getString("no-permission").replace("%permission%", permission));
         this.setUsage(LanguageManager.getString(String.format("%s.usage", id)));
         this.setDescription(LanguageManager.getString(String.format("%s.description", id)));
     }

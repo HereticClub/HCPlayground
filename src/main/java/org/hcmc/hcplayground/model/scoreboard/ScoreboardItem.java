@@ -7,13 +7,9 @@ import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.*;
-import org.hcmc.hcplayground.manager.SidebarManager;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class ScoreboardItem {
     /**
@@ -27,13 +23,13 @@ public class ScoreboardItem {
      */
     @Expose
     @SerializedName(value = "layout")
-    private List<String> layout;
+    private List<String> layout = new ArrayList<>();
     /**
      * 计分板的可用世界列表，如果设置为null，则所有世界都可用
      */
     @Expose
     @SerializedName(value = "worlds")
-    private List<String> worlds;
+    private List<String> worlds = new ArrayList<>();
     /**
      * id，内置属性
      */
@@ -60,14 +56,11 @@ public class ScoreboardItem {
 
     public void display(Player player) {
         // 计分板标题
-        String _dummy = SidebarManager.SCOREBOARD_CRITERIA_DUMMY;
         String _title = PlaceholderAPI.setPlaceholders(player, title.replace("&", "§"));
         // 初始化map
-        //if (mapTeamLayout == null)
         mapTeamLayout = new HashMap<>();
-        //mapTeamLayout.clear();
         // 获取新的scoreboard实例
-        org.bukkit.scoreboard.ScoreboardManager manager = Bukkit.getScoreboardManager();
+        ScoreboardManager manager = Bukkit.getScoreboardManager();
         if (manager == null) return;
         // 把计分板赋予玩家
         Scoreboard scoreboard = manager.getNewScoreboard();
@@ -79,7 +72,7 @@ public class ScoreboardItem {
         int layoutSize = layout.size();
         for (int index = layoutSize - 1; index >= 0; index--) {
             // 计分板每个Entry的显示标识，为了透明效果，使用颜色代码，如&1、&m等
-            String flag = String.format("§%s", index);
+            String teamEntry = String.format("§%s", Integer.toHexString(index));
             // yaml文档里面的布局行
             String line = layout.get(index);
             // 布局行通过Placeholder解析
@@ -92,8 +85,8 @@ public class ScoreboardItem {
             // 计分项目以Team的前缀显示，非计分的Entry
             team.setPrefix(_layout);
             // Team的Entry值和Score的Entry值必须匹配
-            team.addEntry(flag);
-            Score score = objective.getScore(flag);
+            team.addEntry(teamEntry);
+            Score score = objective.getScore(teamEntry);
             score.setScore(ordinal);
         }
     }

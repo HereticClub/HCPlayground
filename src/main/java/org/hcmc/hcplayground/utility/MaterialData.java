@@ -17,6 +17,10 @@ public class MaterialData {
 
     }
 
+    public MaterialData(Material material, String name) {
+        setData(material, name);
+    }
+
     public void setData(Material material, String name) {
         value = material;
         this.name = name;

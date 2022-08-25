@@ -27,18 +27,32 @@ hcplayground:
   # 指令的别名
   aliases:
     - hc
+
+rewardmanager:
+  permission: hc.rewardmanager.*
+  runOnConsole: true
+  runOnPlayer: true
+  args:
+    1:
+      name: claim
+      permission: hc.rewardmanager.claim
+      index: 1
+    2:
+      name: reset
+      permission: hc.rewardmanager.reset
+      index: 1
 skillmanager:
   permission: hc.skillmanager.*
   runOnConsole: true
   runOnPlayer: true
   args:
     1:
-      name: give
-      permission: hc.skillmanager.give
+      name: increase
+      permission: hc.skillmanager.increase
       index: 1
     2:
-      name: take
-      permission: hc.skillmanager.take
+      name: decrease
+      permission: hc.skillmanager.decrease
       index: 1
   aliases: []
   worlds: []
@@ -57,7 +71,6 @@ recordmanager:
       index: 1
   aliases:
     - record
-    - rm
 quartermaster:
   permission: hc.quartermaster.*
   runOnConsole: true
@@ -79,7 +92,7 @@ quartermaster:
     - master
     - qm
 crazy:
-  runOnConsole: false
+  runOnConsole: true
   runOnPlayer: true
   args:
     1:

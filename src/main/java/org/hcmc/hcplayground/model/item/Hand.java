@@ -12,12 +12,8 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
-import org.bukkit.potion.PotionEffect;
 import org.hcmc.hcplayground.utility.Global;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.UUID;
 
 public class Hand extends CraftItemBase {
@@ -43,7 +39,7 @@ public class Hand extends CraftItemBase {
             /*
             添加AttributeModifier
             */
-            AttributeModifier amLuck = new AttributeModifier(UUID.randomUUID(), Global.PluginName(), this.luck, AttributeModifier.Operation.ADD_NUMBER, EquipmentSlot.OFF_HAND);
+            AttributeModifier amLuck = new AttributeModifier(UUID.randomUUID(), Global.getPluginName(), this.luck, AttributeModifier.Operation.ADD_NUMBER, EquipmentSlot.OFF_HAND);
             im.addAttributeModifier(Attribute.GENERIC_LUCK, amLuck);
             /*
             添加附魔效果

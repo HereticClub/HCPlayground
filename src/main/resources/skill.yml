@@ -1,0 +1,1524 @@
+# 等级阈值设定和奖励
+# 等级名称，可以任意字符串，必须唯一
+# levels是关键字，不能修改
+# levels下面的数字可以自定义，必须是数字，不用排序，自动按照大小来决定第几级
+skill_mining:
+  # 等级所属类型
+  # 必须是MMOLevelType的值之一
+  type: SKILL_MINING
+  name: '&8采矿技能'
+  # 各个等级定义
+  levels:
+    # 等级值，必须能作为等级的整数值
+    1:
+      # 等级显示名称，如果不设置则用默认的显示名称
+      display: '&aLevel 1'
+      # 当前等级的奖励，不设置reward属性则当前等级没有奖励
+      # 奖励id，在reward.yml中定义
+      reward: deluxe
+      # 等级在等级面板(箱子界面)的插槽号，最大值: 54
+      slot: 1
+      # 已通过该等级时显示的物品
+      reached: lime_stained_glass_pane
+      # 正在当前等级时显示的物品
+      inprogress: yellow_stained_glass_pane
+      # 未达成当前等级时显示的物品
+      unreached: red_stained_glass_pane
+      # 等级显示的数量，最大值: 64
+      amount: 1
+      # 等级的文字说明
+      # 可以使用%skill_points%占位符，表示当前已获得的技能点数
+      # 可以使用%threshold%占位符，表示升级当前技能等级所需要的技能点数
+      # 可以使用%percent%占位符，表示当前等级进度的百分比
+      lore:
+        - '&7等级要求'
+        - '&f 经验值: &a%skill_points%&7/&e%threshold% &7(&e%percent%&7)'
+      # 通过当前等级的阈值
+      threshold: 64
+    # 这个等级没有定义display属性，将用默认等级名称显示
+    2:
+      slot: 2
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - '&7等级奖励'
+        - '&9 护甲: &a+1'
+        - '&6 金币: &a+500'
+        - '&7等级要求'
+        - '&f 经验值: &a%skill_points%&7/&e%threshold% &7(&e%percent%&7)'
+      threshold: 128
+    3:
+      slot: 3
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - '&7等级奖励'
+        - '&9 护甲: &a+1'
+        - '&6 金币: &a+500'
+        - '&7等级要求'
+        - '&f 经验值: &a%skill_points%&7/&e%threshold% &7(&e%percent%&7)'
+      threshold: 192
+    4:
+      slot: 4
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - '&7等级奖励'
+        - '&9 护甲: &a+1'
+        - '&6 金币: &a+500'
+        - '&7等级要求'
+        - '&f 经验值: &a%skill_points%&7/&e%threshold% &7(&e%percent%&7)'
+      threshold: 256
+    5:
+      slot: 5
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - '&7等级奖励'
+        - '&9 护甲: &a+1'
+        - '&6 金币: &a+500'
+        - '&e 技能经验: &a+1000'
+        - '&7等级要求'
+        - '&f 经验值: &a%skill_points%&7/&e%threshold% &7(&e%percent%&7)'
+      threshold: 320
+    6:
+      slot: 6
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - '&7等级奖励'
+        - '&9 护甲: &a+1'
+        - '&6 金币: &a+2500'
+        - '&7等级要求'
+        - '&f 经验值: &a%skill_points%&7/&e%threshold% &7(&e%percent%&7)'
+      threshold: 1536
+    7:
+      slot: 7
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - '&7等级奖励'
+        - '&9 护甲: &a+1'
+        - '&6 金币: &a+2500'
+        - '&7等级要求'
+        - '&f 经验值: &a%skill_points%&7/&e%threshold% &7(&e%percent%&7)'
+      threshold: 1792
+    8:
+      slot: 8
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - '&7等级奖励'
+        - '&9 护甲: &a+1'
+        - '&6 金币: &a+2500'
+        - '&7等级要求'
+        - '&f 经验值: &a%skill_points%&7/&e%threshold% &7(&e%percent%&7)'
+      threshold: 2048
+    9:
+      slot: 9
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - '&7等级奖励'
+        - '&9 护甲: &a+1'
+        - '&6 金币: &a+2500'
+        - '&7等级要求'
+        - '&f 经验值: &a%skill_points%&7/&e%threshold% &7(&e%percent%&7)'
+      threshold: 2304
+    10:
+      slot: 18
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - '&7等级奖励'
+        - '&9 护甲: &a+1'
+        - '&6 金币: &a+2500'
+        - '&e 技能经验: &a+2500'
+        - '&7等级要求'
+        - '&f 经验值: &a%skill_points%&7/&e%threshold% &7(&e%percent%&7)'
+      threshold: 2560
+    11:
+      slot: 27
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - '&7等级奖励'
+        - '&9 护甲: &a+1'
+        - '&6 金币: &a+7500'
+        - '&7等级要求'
+        - '&f 经验值: &a%skill_points%&7/&e%threshold% &7(&e%percent%&7)'
+      threshold: 5632
+    12:
+      slot: 26
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - '&7等级奖励'
+        - '&9 护甲: &a+1'
+        - '&6 金币: &a+7500'
+        - '&7等级要求'
+        - '&f 经验值: &a%skill_points%&7/&e%threshold% &7(&e%percent%&7)'
+      threshold: 6144
+    13:
+      slot: 25
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - '&7等级奖励'
+        - '&9 护甲: &a+1'
+        - '&6 金币: &a+7500'
+        - '&7等级要求'
+        - '&f 经验值: &a%skill_points%&7/&e%threshold% &7(&e%percent%&7)'
+      threshold: 6656
+    14:
+      slot: 24
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - '&7等级奖励'
+        - '&9 护甲: &a+1'
+        - '&6 金币: &a+7500'
+        - '&7等级要求'
+        - '&f 经验值: &a%skill_points%&7/&e%threshold% &7(&e%percent%&7)'
+      threshold: 7168
+    15:
+      slot: 23
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - '&7等级奖励'
+        - '&9 护甲: &a+1'
+        - '&6 金币: &a+7500'
+        - '&e 技能经验: &a+7500'
+        - '&7等级要求'
+        - '&f 经验值: &a%skill_points%&7/&e%threshold% &7(&e%percent%&7)'
+      threshold: 7680
+    16:
+      slot: 22
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - '&7等级奖励'
+        - '&9 护甲: &a+1'
+        - '&6 金币: &a+15000'
+        - '&e 荣誉: &a+1'
+        - '&7等级要求'
+        - '&f 经验值: &a%skill_points%&7/&e%threshold% &7(&e%percent%&7)'
+      threshold: 16384
+    17:
+      slot: 21
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - '&7等级奖励'
+        - '&9 护甲: &a+1'
+        - '&6 金币: &a+15000'
+        - '&e 荣誉: &a+1'
+        - '&7等级要求'
+        - '&f 经验值: &a%skill_points%&7/&e%threshold% &7(&e%percent%&7)'
+      threshold: 17408
+    18:
+      slot: 20
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - '&7等级奖励'
+        - '&9 护甲: &a+1'
+        - '&6 金币: &a+15000'
+        - '&e 荣誉: &a+1'
+        - '&7等级要求'
+        - '&f 经验值: &a%skill_points%&7/&e%threshold% &7(&e%percent%&7)'
+      threshold: 18432
+    19:
+      slot: 19
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - '&7等级奖励'
+        - '&9 护甲: &a+1'
+        - '&6 金币: &a+15000'
+        - '&e 荣誉: &a+1'
+        - '&7等级要求'
+        - '&f 经验值: &a%skill_points%&7/&e%threshold% &7(&e%percent%&7)'
+      threshold: 19456
+    20:
+      slot: 28
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - '&7等级奖励'
+        - '&9 护甲: &a+1'
+        - '&6 金币: &a+15000'
+        - '&e 荣誉: &a+1'
+        - '&e 技能经验: &a+10000'
+        - '&7等级要求'
+        - '&f 经验值: &a%skill_points%&7/&e%threshold% &7(&e%percent%&7)'
+      threshold: 20480
+    21:
+      slot: 37
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - '&7等级奖励'
+        - '&9 护甲: &a+1'
+        - '&6 金币: &a+30000'
+        - '&e 荣誉: &a+8'
+        - '&7等级要求'
+        - '&f 经验值: &a%skill_points%&7/&e%threshold% &7(&e%percent%&7)'
+      threshold: 32256
+    22:
+      slot: 38
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - '&7等级奖励'
+        - '&9 护甲: &a+1'
+        - '&6 金币: &a+30000'
+        - '&e 荣誉: &a+8'
+        - '&7等级要求'
+        - '&f 经验值: &a%skill_points%&7/&e%threshold% &7(&e%percent%&7)'
+      threshold: 33792
+    23:
+      slot: 39
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - '&7等级奖励'
+        - '&9 护甲: &a+1'
+        - '&6 金币: &a+30000'
+        - '&e 荣誉: &a+8'
+        - '&7等级要求'
+        - '&f 经验值: &a%skill_points%&7/&e%threshold% &7(&e%percent%&7)'
+      threshold: 35328
+    24:
+      slot: 40
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - '&7等级奖励'
+        - '&9 护甲: &a+1'
+        - '&6 金币: &a+30000'
+        - '&e 荣誉: &a+8'
+        - '&7等级要求'
+        - '&f 经验值: &a%skill_points%&7/&e%threshold% &7(&e%percent%&7)'
+      threshold: 36864
+    25:
+      slot: 41
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - '&7等级奖励'
+        - '&9 护甲: &a+1'
+        - '&6 金币: &a+30000'
+        - '&e 荣誉: &a+8'
+        - '&7等级要求'
+        - '&f 经验值: &a%skill_points%&7/&e%threshold% &7(&e%percent%&7)'
+      threshold: 38400
+    26:
+      slot: 42
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - '&7等级奖励'
+        - '&9 护甲: &a+1'
+        - '&6 金币: &a+45000'
+        - '&e 荣誉: &a+12'
+        - '&7等级要求'
+        - '&f 经验值: &a%skill_points%&7/&e%threshold% &7(&e%percent%&7)'
+      threshold: 39936
+    27:
+      slot: 43
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - '&7等级奖励'
+        - '&9 护甲: &a+1'
+        - '&6 金币: &a+45000'
+        - '&e 荣誉: &a+12'
+        - '&7等级要求'
+        - '&f 经验值: &a%skill_points%&7/&e%threshold% &7(&e%percent%&7)'
+      threshold: 41472
+    28:
+      slot: 44
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - '&7等级奖励'
+        - '&9 护甲: &a+1'
+        - '&6 金币: &a+45000'
+        - '&e 荣誉: &a+12'
+        - '&7等级要求'
+        - '&f 经验值: &a%skill_points%&7/&e%threshold% &7(&e%percent%&7)'
+      threshold: 43008
+    29:
+      slot: 45
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - '&7等级奖励'
+        - '&9 护甲: &a+1'
+        - '&6 金币: &a+45000'
+        - '&e 荣誉: &a+12'
+        - '&7等级要求'
+        - '&f 经验值: &a%skill_points%&7/&e%threshold% &7(&e%percent%&7)'
+      threshold: 44544
+    30:
+      slot: 54
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - '&7等级奖励'
+        - '&9 护甲: &a+1'
+        - '&6 金币: &a+45000'
+        - '&e 荣誉: &a+12'
+        - '&7等级要求'
+        - '&f 经验值: &a%skill_points%&7/&e%threshold% &7(&e%percent%&7)'
+      threshold: 46080
+skill_farming:
+  type: skill_farming
+  name: '&8农业技能'
+  levels:
+    1:
+      slot: 1
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      reward: deluxe
+      amount: 1
+      lore:
+        - '&7等级要求'
+        - '&f 经验值: &a%skill_points%&7/&e%threshold% &7(&e%percent%&7)'
+      threshold: 64
+    2:
+      slot: 2
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      reward: pore
+      amount: 1
+      lore:
+        - '&7等级要求'
+        - '&f 经验值: &a%skill_points%&7/&e%threshold% &7(&e%percent%&7)'
+      threshold: 128
+    3:
+      slot: 3
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      reward: poor
+      lore:
+        - '&7等级要求'
+        - '&f 经验值: &a%skill_points%&7/&e%threshold% &7(&e%percent%&7)'
+      threshold: 192
+    4:
+      slot: 4
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore: []
+      threshold: 256
+    5:
+      slot: 5
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore: []
+      threshold: 320
+    6:
+      slot: 6
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore: []
+      threshold: 1536
+    7:
+      slot: 7
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore: []
+      threshold: 1792
+    8:
+      slot: 8
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+      threshold: 2048
+    9:
+      slot: 9
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore: []
+      threshold: 2304
+    10:
+      slot: 18
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore: []
+      threshold: 2560
+    11:
+      slot: 27
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore: []
+      threshold: 5632
+    12:
+      slot: 26
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore: []
+      threshold: 6144
+    13:
+      slot: 25
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore: []
+      threshold: 6656
+    14:
+      slot: 24
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore: []
+      threshold: 7168
+    15:
+      slot: 23
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore: []
+      threshold: 7680
+    16:
+      slot: 22
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore: []
+      threshold: 16384
+    17:
+      slot: 21
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore: []
+      threshold: 17408
+    18:
+      slot: 20
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore: []
+      threshold: 18432
+    19:
+      slot: 19
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore: []
+      threshold: 19456
+    20:
+      slot: 28
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore: []
+      threshold: 20480
+    21:
+      slot: 37
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore: []
+      threshold: 32256
+    22:
+      slot: 38
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore: []
+      threshold: 33792
+    23:
+      slot: 39
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore: []
+      threshold: 35328
+    24:
+      slot: 40
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore: []
+      threshold: 36864
+    25:
+      slot: 41
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore: []
+      threshold: 38400
+    26:
+      slot: 42
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore: []
+      threshold: 39936
+    27:
+      slot: 43
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore: []
+      threshold: 41472
+    28:
+      slot: 44
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore: []
+      threshold: 43008
+    29:
+      slot: 45
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore: []
+      threshold: 44544
+    30:
+      slot: 54
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore: []
+      threshold: 46080
+skill_combat:
+  type: skill_combat
+  name: '&8击杀技能'
+  levels:
+    1:
+      slot: 1
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - '&7等级奖励'
+        - '&d 暴击: &a+1%'
+        - '&6 金币: &a+500'
+      threshold: 64
+    2:
+      slot: 2
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - aaa
+        - bbb
+      threshold: 128
+    3:
+      slot: 3
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 1111
+        - 2222
+      threshold: 192
+    4:
+      slot: 4
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 44444
+      threshold: 256
+    5:
+      slot: 5
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 320
+    6:
+      slot: 6
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 1536
+    7:
+      slot: 7
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 1792
+    8:
+      slot: 8
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 2048
+    9:
+      slot: 9
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 2304
+    10:
+      slot: 18
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 2560
+    11:
+      slot: 27
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 5632
+    12:
+      slot: 26
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 6144
+    13:
+      slot: 25
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 6656
+    14:
+      slot: 24
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 7168
+    15:
+      slot: 23
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 7680
+    16:
+      slot: 22
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 16384
+    17:
+      slot: 21
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 17408
+    18:
+      slot: 20
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 18432
+    19:
+      slot: 19
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 19456
+    20:
+      slot: 28
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 20480
+    21:
+      slot: 37
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 32256
+    22:
+      slot: 38
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 33792
+    23:
+      slot: 39
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 35328
+    24:
+      slot: 40
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 36864
+    25:
+      slot: 41
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 38400
+    26:
+      slot: 42
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 39936
+    27:
+      slot: 43
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 41472
+    28:
+      slot: 44
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 43008
+    29:
+      slot: 45
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 44544
+    30:
+      slot: 54
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 46080
+skill_lumbering:
+  type: skill_lumbering
+  name: '&8伐木技能'
+  levels:
+    1:
+      slot: 1
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - '&7等级奖励'
+        - '&c 攻击: &a+2'
+        - '&6 金币: &a+500'
+      threshold: 64
+    2:
+      slot: 2
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - aaa
+        - bbb
+      threshold: 128
+    3:
+      slot: 3
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 1111
+        - 2222
+      threshold: 192
+    4:
+      slot: 4
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 44444
+      threshold: 256
+    5:
+      slot: 5
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 320
+    6:
+      slot: 6
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 1536
+    7:
+      slot: 7
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 1792
+    8:
+      slot: 8
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 2048
+    9:
+      slot: 9
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 2304
+    10:
+      slot: 18
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 2560
+    11:
+      slot: 27
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 5632
+    12:
+      slot: 26
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 6144
+    13:
+      slot: 25
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 6656
+    14:
+      slot: 24
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 7168
+    15:
+      slot: 23
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 7680
+    16:
+      slot: 22
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 16384
+    17:
+      slot: 21
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 17408
+    18:
+      slot: 20
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 18432
+    19:
+      slot: 19
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 19456
+    20:
+      slot: 28
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 20480
+    21:
+      slot: 37
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 32256
+    22:
+      slot: 38
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 33792
+    23:
+      slot: 39
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 35328
+    24:
+      slot: 40
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 36864
+    25:
+      slot: 41
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 38400
+    26:
+      slot: 42
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 39936
+    27:
+      slot: 43
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 41472
+    28:
+      slot: 44
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 43008
+    29:
+      slot: 45
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 44544
+    30:
+      slot: 54
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 46080
+skill_fishing:
+  type: skill_fishing
+  name: '&8渔业技能'
+  levels:
+    1:
+      slot: 1
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - '&7等级奖励'
+        - '&d 爆伤: &a+1.5%'
+        - '&6 金币: &a+500'
+      threshold: 64
+    2:
+      slot: 2
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - aaa
+        - bbb
+      threshold: 128
+    3:
+      slot: 3
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 1111
+        - 2222
+      threshold: 192
+    4:
+      slot: 4
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 44444
+      threshold: 256
+    5:
+      slot: 5
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - '&7等级奖励'
+        - '&d 爆伤: &a+1.5%'
+        - '&6 金币: &a+500'
+        - '&e 渔业经验: &a+1000'
+      threshold: 320
+    6:
+      slot: 6
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 1536
+    7:
+      slot: 7
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 1792
+    8:
+      slot: 8
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 2048
+    9:
+      slot: 9
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 2304
+    10:
+      slot: 18
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 2560
+    11:
+      slot: 27
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 5632
+    12:
+      slot: 26
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 6144
+    13:
+      slot: 25
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 6656
+    14:
+      slot: 24
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 7168
+    15:
+      slot: 23
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 7680
+    16:
+      slot: 22
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 16384
+    17:
+      slot: 21
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 17408
+    18:
+      slot: 20
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 18432
+    19:
+      slot: 19
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 19456
+    20:
+      slot: 28
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 20480
+    21:
+      slot: 37
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 32256
+    22:
+      slot: 38
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 33792
+    23:
+      slot: 39
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 35328
+    24:
+      slot: 40
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 36864
+    25:
+      slot: 41
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 38400
+    26:
+      slot: 42
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 39936
+    27:
+      slot: 43
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 41472
+    28:
+      slot: 44
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 43008
+    29:
+      slot: 45
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 44544
+    30:
+      slot: 54
+      reached: lime_stained_glass_pane
+      inprogress: yellow_stained_glass_pane
+      unreached: red_stained_glass_pane
+      amount: 1
+      lore:
+        - 55555
+      threshold: 46080
