@@ -16,7 +16,7 @@ import org.hcmc.hcplayground.enums.MMOType;
 import org.hcmc.hcplayground.manager.*;
 import org.hcmc.hcplayground.model.mmo.*;
 import org.hcmc.hcplayground.model.player.PlayerData;
-import org.hcmc.hcplayground.serialization.MMOLevelTypeSerialization;
+import org.hcmc.hcplayground.serialization.MMOTypeSerialization;
 import org.hcmc.hcplayground.serialization.MaterialSerialization;
 import org.jetbrains.annotations.NotNull;
 
@@ -109,7 +109,7 @@ public class MenuPanel implements InventoryHolder {
             return;
         }
 
-        this.mmoType = MMOLevelTypeSerialization.getType(mmoType);
+        this.mmoType = MMOTypeSerialization.parse(mmoType);
         System.out.println(this.mmoType);
 
         switch (this.mmoType) {

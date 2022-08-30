@@ -40,8 +40,8 @@ public class BanPlayerDetail {
     public Date banDate;
 
     @Expose
-    @SerializedName(value = "isBanned")
-    @SqliteColumn(name = "isBanned")
+    @SerializedName(value = "getBanDetail")
+    @SqliteColumn(name = "getBanDetail")
     public boolean isBanned;
 
     public BanPlayerDetail() {

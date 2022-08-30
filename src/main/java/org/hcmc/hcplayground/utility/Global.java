@@ -84,13 +84,14 @@ public final class Global {
     private final static String[] ymlResources;
     private final static JavaPlugin plugin;
 
+    public final static char CHAR_00A7 = '\u00a7';
+
     private final static Type mapCharInteger = new TypeToken<Map<Character, Integer>>() {
     }.getType();
     private final static Type mapCharItemBase = new TypeToken<Map<Character, ItemBase>>() {
     }.getType();
-    private final static Type listMenuItem=new TypeToken<List<MenuPanelSlot>>(){}.getType();
-
-    public final static char CHAR_00A7 = '\u00a7';
+    private final static Type listMenuItem = new TypeToken<List<MenuPanelSlot>>() {
+    }.getType();
 
     private final static String CONFIG_AUTHME = "authme";
     private final static String CONFIG_POTION = "potion";
@@ -121,6 +122,7 @@ public final class Global {
     private final static String FILE_MINION = "minion.yml";
     private final static String FILE_MMO_SKILL = "skill.yml";
     private final static String FILE_MMO_REWARD = "reward.yml";
+    private final static String FILE_ARMOR_SET = "armorset.yml";
     public final static String FILE_COURSE = "database/course.yml";
     public final static String FILE_RECORD_MINION = "database/minions.json";
     public final static String FILE_RECORD_BLOCK = "database/blocks.json";
@@ -170,6 +172,7 @@ public final class Global {
                 FILE_SIDEBAR,
                 FILE_MMO_SKILL,
                 FILE_MMO_REWARD,
+                FILE_ARMOR_SET,
         };
         ymlResources = new String[]{
                 FILE_COMMANDS,
@@ -180,6 +183,7 @@ public final class Global {
                 .disableHtmlEscaping()
                 .enableComplexMapKeySerialization()
                 .excludeFieldsWithoutExposeAnnotation()
+                .registerTypeAdapter(ArmorSetType.class, new ArmorSetTypeSerialization())
                 .registerTypeAdapter(CcmdActionType.class, new CcmdActionTypeSerialization())
                 .registerTypeAdapter(CompareType.class, new CompareTypeSerialization())
                 .registerTypeAdapter(CrazyBlockType.class, new CrazyTypeSerialization())
@@ -201,7 +205,7 @@ public final class Global {
                 .registerTypeAdapter(MaterialData.class, new MaterialDataSerialization())
                 .registerTypeAdapter(MinionCategory.class, new MinionCategorySerialization())
                 .registerTypeAdapter(MinionType.class, new MinionTypeSerialization())
-                .registerTypeAdapter(MMOType.class, new MMOLevelTypeSerialization())
+                .registerTypeAdapter(MMOType.class, new MMOTypeSerialization())
                 .registerTypeAdapter(NamespacedKey.class, new NamespacedKeySerialization())
                 .registerTypeAdapter(OperatorType.class, new OperatorTypeSerialization())
                 .registerTypeAdapter(PanelSlotType.class, new PanelSlotTypeSerialization())
@@ -236,37 +240,40 @@ public final class Global {
         // 5.加载爪牙模板配置
         // 无依赖，可优先加载
         MinionManager.Load(getYamlConfiguration(FILE_MINION));
-        // 6.加载跑酷赛道信息
+        // 6.加载套装奖励配置
+        // 无依赖，可优先加载
+        ArmorSetManager.Load(getYamlConfiguration(FILE_ARMOR_SET));
+        // 7.加载跑酷赛道信息
         // 无依赖，可优先加载
         CourseManager.Load(getYamlConfiguration(FILE_COURSE));
-        // 7.加载各种菜单(箱子)模板
+        // 8.加载各种菜单(箱子)模板
         // 无依赖，可优先加载
         MenuManager.Load();
-        // 8.加载自定义命令列表
+        // 9.加载自定义命令列表
         // 无依赖，可优先加载
         CcmdManager.Load(getYamlConfiguration(FILE_CCMD));
-        // 9.加载计分板定义列表
+        // 10.加载计分板定义列表
         // 无依赖，可优先加载
         SidebarManager.Load(getYamlConfiguration(FILE_SIDEBAR));
-        // 10.加载随机公告消息列表
+        // 11.加载随机公告消息列表
         // 无依赖，可优先加载
         BroadcastManager.Load(getYamlConfiguration(FILE_BROADCAST));
-        // 11.加载清除垃圾物品设置
+        // 12.加载清除垃圾物品设置
         // 无依赖，可优先加载
         ClearLagManager.Load(getYamlConfiguration(FILE_CLEARLAG));
-        // 12.加载破坏方块的自定义掉落列表，可掉落自定义物品
+        // 13.加载破坏方块的自定义掉落列表，可掉落自定义物品
         // 依赖ItemManager
         DropManager.Load(getYamlConfiguration(FILE_DROPS));
-        // 13.加载各种可生成的生物列表
+        // 14.加载各种可生成的生物列表
         // 依赖ItemManager
         MobManager.Load(getYamlConfiguration(FILE_MOBS));
-        // 14.加载配方列表
+        // 15.加载配方列表
         // 依赖ItemManager
         RecipeManager.Load(getYamlConfiguration(FILE_RECIPE));
-        // 15.加载奖励配置
+        // 16.加载奖励配置
         // 依赖ItemManager, RecipeManager
         RewardManager.Load(getYamlConfiguration(FILE_MMO_REWARD));
-        // 16.加载等级设置列表
+        // 17.加载等级设置列表
         // 依赖ItemManager, RecipeManager, RewardManager
         MMOManager.Load(getYamlConfiguration(FILE_MMO_SKILL));
         // 101.加载自定义可放置方块的摆放记录

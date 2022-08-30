@@ -230,7 +230,7 @@ public class PluginRunnable extends BukkitRunnable {
         // 获取玩家是否已经登录
         boolean isLogin = data.isLogin();
         // 获取玩家是否已经注册
-        boolean isRegister = data.getRegister();
+        boolean isRegister = data.isRegister();
         // 如果玩家已经登录，则不需要再提醒登录操作
         if (isLogin) return;
 

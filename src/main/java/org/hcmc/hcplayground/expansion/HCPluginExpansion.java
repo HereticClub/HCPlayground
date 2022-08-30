@@ -92,33 +92,33 @@ public class HCPluginExpansion extends PlaceholderExpansion {
         if (params.equalsIgnoreCase(ItemBase.PERSISTENT_MOVEMENT_SPEED_KEY))
             return String.format("%.3f", data.getMaxMovementSpeed());
         if (params.equalsIgnoreCase(ItemBase.PERSISTENT_ARMOR_KEY))
-            return String.format("%.1f", data.getTotalArmor());
+            return String.format("%.1f", data.getMaxArmor());
         if (params.equalsIgnoreCase(ItemBase.PERSISTENT_ARMOR_TOUGHNESS_KEY))
-            return String.format("%.1f", data.getTotalArmorToughness());
+            return String.format("%.1f", data.getMaxArmorToughness());
         if (params.equalsIgnoreCase(ItemBase.PERSISTENT_ATTACK_REACH_KEY))
-            return String.format("%.1f", data.getTotalAttackReach());
+            return String.format("%.1f", data.getMaxAttackReach());
         if (params.equalsIgnoreCase(ItemBase.PERSISTENT_BLOOD_SUCKING_KEY))
-            return String.format("%.1f", data.getTotalBloodSucking());
+            return String.format("%.1f", data.getMaxBloodSucking());
         if (params.equalsIgnoreCase(ItemBase.PERSISTENT_CRITICAL_KEY))
-            return String.format("%.1f", data.getTotalCritical());
+            return String.format("%.1f", data.getMaxCritical());
         if (params.equalsIgnoreCase(ItemBase.PERSISTENT_CRITICAL_PERCENTAGE_KEY))
-            return String.format("%.1f%%", data.getTotalCritical() * 100);
+            return String.format("%.1f%%", data.getMaxCritical() * 100);
         if (params.equalsIgnoreCase(ItemBase.PERSISTENT_CRITICAL_DAMAGE_KEY))
-            return String.format("%.1f", data.getTotalCriticalDamage());
+            return String.format("%.1f", data.getMaxCriticalDamage());
         if (params.equalsIgnoreCase(ItemBase.PERSISTENT_CRITICAL_DAMAGE_PERCENTAGE_KEY))
-            return String.format("%.1f%%", data.getTotalCriticalDamage() * 100);
+            return String.format("%.1f%%", data.getMaxCriticalDamage() * 100);
         if (params.equalsIgnoreCase(ItemBase.PERSISTENT_HEALTH_KEY))
             return String.format("%.1f", data.getLiveHealth());
         if (params.equalsIgnoreCase(ItemBase.PERSISTENT_MAX_HEALTH_KEY))
             return String.format("%.1f", data.getMaxHealth());
         if (params.equalsIgnoreCase(ItemBase.PERSISTENT_RECOVER_KEY))
-            return String.format("%.1f", data.getTotalRecover());
+            return String.format("%.1f", data.getMaxRecover());
         if (params.equalsIgnoreCase(ItemBase.PERSISTENT_INTELLIGENCE))
-            return String.format("%.1f", data.getTotalIntelligence());
+            return String.format("%.1f", data.getMaxIntelligence());
         if (params.equalsIgnoreCase(ItemBase.PERSISTENT_DIGGING_SPEED))
-            return String.format("%.1f", data.getTotalDiggingSpeed());
+            return String.format("%.1f", data.getMaxDiggingSpeed());
         if (params.equalsIgnoreCase(ItemBase.PERSISTENT_LOGGING_SPEED))
-            return String.format("%.1f", data.getTotalLoggingSpeed());
+            return String.format("%.1f", data.getMaxLoggingSpeed());
         if (params.equalsIgnoreCase(PlayerData.ECONOMY_BALANCE_KEY))
             return String.format("%.2f", data.getBalance());
 

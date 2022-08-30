@@ -2,6 +2,8 @@ package org.hcmc.hcplayground.model.item;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+import org.apache.commons.lang.StringUtils;
+import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.attribute.Attribute;
@@ -10,14 +12,25 @@ import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
+import org.hcmc.hcplayground.manager.ArmorSetManager;
+import org.hcmc.hcplayground.model.armorset.ArmorSetEffect;
 import org.hcmc.hcplayground.utility.Global;
 
 import java.util.*;
 
 public class Armor extends CraftItemBase {
+    
+    private static final String SECTION_KEY_COLOR = "color";
 
+    @Expose
+    @SerializedName(value = PERSISTENT_ARMOR_SET_KEY)
+    private String armorSetName = "";
+    @Expose
+    @SerializedName(value = SECTION_KEY_COLOR)
+    private String color;
     @Expose
     @SerializedName(value = PERSISTENT_ARMOR_KEY)
     private float armor = 0.0f;
@@ -39,7 +52,6 @@ public class Armor extends CraftItemBase {
     @Expose
     @SerializedName(value = PERSISTENT_EQUIPMENT_SLOT_KEY)
     private EquipmentSlot equipmentSlot;
-
     public Armor() {
 
     }
@@ -67,6 +79,9 @@ public class Armor extends CraftItemBase {
             attributeLore.add(String.format("%s 速度", this.setWeaponLore(this.movementSpeed, false, true)));
         if (this.recover != 0)
             attributeLore.add(String.format("%s 恢复生命", this.setWeaponLore(this.recover, false, false)));
+
+        ArmorSetEffect armorSetEffect = ArmorSetManager.getArmorSetEffect(armorSetName);
+        if (armorSetEffect != null) attributeLore.addAll(armorSetEffect.getLore());
     }
 
     public ItemStack toItemStack() {
@@ -76,10 +91,15 @@ public class Armor extends CraftItemBase {
         double originalArmor = getOriginalArmor(material.value);
         double originalArmorToughness = getOriginalArmorToughness(material.value);
 
+        if (im instanceof LeatherArmorMeta meta && !StringUtils.isBlank(this.color)) {
+            Color color = Color.fromRGB(Integer.decode("0x" + this.color));
+            meta.setColor(color);
+            if (!flags.contains(ItemFlag.HIDE_DYE)) meta.addItemFlags(ItemFlag.HIDE_DYE);
+            is.setItemMeta(meta);
+        }
+
         if (im != null) {
-            /*
-            添加AttributeModifier
-            */
+            //添加AttributeModifier
             AttributeModifier amArmor = new AttributeModifier(UUID.randomUUID(), Global.getPluginName(), originalArmor, AttributeModifier.Operation.ADD_NUMBER, this.equipmentSlot);
             AttributeModifier amArmorToughness = new AttributeModifier(UUID.randomUUID(), Global.getPluginName(), originalArmorToughness, AttributeModifier.Operation.ADD_NUMBER, this.equipmentSlot);
             AttributeModifier amHealth = new AttributeModifier(UUID.randomUUID(), Global.getPluginName(), this.health, AttributeModifier.Operation.ADD_NUMBER, this.equipmentSlot);
@@ -108,6 +128,7 @@ public class Armor extends CraftItemBase {
         NamespacedKey armorToughnessKey = new NamespacedKey(plugin, PERSISTENT_ARMOR_TOUGHNESS_KEY);
         NamespacedKey knockBackResistanceKey = new NamespacedKey(plugin, PERSISTENT_KNOCKBACK_RESISTANCE_KEY);
         NamespacedKey movementSpeedKey = new NamespacedKey(plugin, PERSISTENT_MOVEMENT_SPEED_KEY);
+        NamespacedKey armorSetKey = new NamespacedKey(plugin, PERSISTENT_ARMOR_SET_KEY);
         // 获取当前物品的主要PersistentDataContainer实例，包含当前物品的自定义Id
         // 主要PersistentDataContainer实例是一个PersistentDataContainer容器
         PersistentDataContainer mainContainer = im.getPersistentDataContainer();
@@ -121,6 +142,7 @@ public class Armor extends CraftItemBase {
         subContainer.set(armorToughnessKey, PersistentDataType.FLOAT, this.armorToughness);
         subContainer.set(knockBackResistanceKey, PersistentDataType.FLOAT, knockBackResistance);
         subContainer.set(movementSpeedKey, PersistentDataType.FLOAT, movementSpeed);
+        subContainer.set(armorSetKey, PersistentDataType.STRING, armorSetName);
         // 最后将次要PersistentDataContainer实例包含在主要PersistentDataContainer实例里面
         mainContainer.set(subKey, PersistentDataType.TAG_CONTAINER, subContainer);
     }

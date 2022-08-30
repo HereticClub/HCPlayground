@@ -1,5 +1,6 @@
 package org.hcmc.hcplayground.manager;
 
+import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -49,27 +50,6 @@ public class ItemManager {
 
     public ItemManager() {
 
-    }
-
-    /**
-     * 获取整个自定义物品列表
-     */
-    public static List<ItemBase> getItems() {
-        return items;
-    }
-
-    public static List<ItemBase> getItems(ItemFeatureType type) {
-        return items.stream().filter(x -> x.getFeatures().contains(type)).toList();
-    }
-
-    public static List<MinionTemplate> getItemMinions() {
-        return itemMinions;
-    }
-
-    public static void setItemMinions(List<MinionTemplate> itemMinions) {
-        ItemManager.itemMinions = itemMinions;
-        items.removeIf(x -> x instanceof MinionTemplate);
-        items.addAll(itemMinions);
     }
 
     public static void Load(YamlConfiguration yaml) {
@@ -125,15 +105,38 @@ public class ItemManager {
         items.addAll(itemCrazies);
     }
 
+
+    /**
+     * 获取整个自定义物品列表
+     */
+    public static List<ItemBase> getItems() {
+        return items;
+    }
+
+    public static List<ItemBase> getItems(ItemFeatureType type) {
+        return items.stream().filter(x -> x.getFeatures().contains(type)).toList();
+    }
+
+    public static void setItemMinions(List<MinionTemplate> itemMinions) {
+        ItemManager.itemMinions = new ArrayList<>(itemMinions);
+        items.removeIf(x -> x instanceof MinionTemplate);
+        items.addAll(ItemManager.itemMinions);
+    }
+
     /**
      * 判断物品是否书本
      *
      * @param itemStack 物品实例
      * @return True: 物品是书本, False: 物品不是书本
      */
-    public boolean isBook(ItemStack itemStack) {
+    public static boolean isBook(ItemStack itemStack) {
         ItemMeta im = itemStack.getItemMeta();
         return im instanceof BookMeta;
+    }
+
+    public static boolean isItemBase(ItemStack itemStack) {
+        String id = getItemBaseId(itemStack);
+        return findItemById(id) != null;
     }
 
     public static List<String> getIdList() {
@@ -183,14 +186,8 @@ public class ItemManager {
     /**
      * 从ItemStack实例获取ItemBase实例信息
      */
-    public static ItemBase getItemBase(@NotNull ItemStack is) {
-        ItemMeta im = is.getItemMeta();
-        if (im == null) return new CraftItemBase(is.getType(), is.getAmount());
-
-        NamespacedKey mainKey = new NamespacedKey(plugin, ItemBase.PERSISTENT_MAIN_KEY);
-        PersistentDataContainer mainContainer = im.getPersistentDataContainer();
-        String id = mainContainer.get(mainKey, PersistentDataType.STRING);
-
+    public static ItemBase getItemBase(@NotNull ItemStack itemStack) {
+        String id = getItemBaseId(itemStack);
         return findItemById(id);
     }
 
@@ -221,6 +218,18 @@ public class ItemManager {
             is = ib.toItemStack();
         }
         player.getInventory().setItem(player.getInventory().firstEmpty(), is);
+    }
+
+    private static String getItemBaseId(ItemStack itemStack) {
+        ItemMeta im = itemStack.getItemMeta();
+        if (im == null) return "";
+
+        NamespacedKey mainKey = new NamespacedKey(plugin, ItemBase.PERSISTENT_MAIN_KEY);
+        PersistentDataContainer mainContainer = im.getPersistentDataContainer();
+
+        System.out.println("ItemBase Id: " + mainContainer.get(mainKey, PersistentDataType.STRING));
+
+        return mainContainer.get(mainKey, PersistentDataType.STRING);
     }
 
     private static class CraftItemBase extends org.hcmc.hcplayground.model.item.CraftItemBase {

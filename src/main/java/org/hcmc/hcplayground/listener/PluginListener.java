@@ -27,7 +27,6 @@ import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.enums.CrazyBlockType;
 import org.hcmc.hcplayground.enums.PanelSlotType;
 import org.hcmc.hcplayground.enums.RecipeType;
-import org.hcmc.hcplayground.event.PlayerEquipmentChangedEvent;
 import org.hcmc.hcplayground.event.WorldMorningEvent;
 import org.hcmc.hcplayground.manager.*;
 import org.hcmc.hcplayground.model.item.*;
@@ -71,6 +70,31 @@ public class PluginListener implements Listener {
 
     }
 
+    @EventHandler
+    private void onPlayerConnected(PlayerLoginEvent event) throws SQLException {
+        Player player = event.getPlayer();
+        PlayerData data = PlayerManager.getPlayerData(player);
+        player.setHealthScaled(true);
+        // 判断玩家是否被禁止进入服务器
+        BanPlayerDetail detail = data.getBanDetail();
+        if (detail != null) {
+            DateFormat df = DateFormat.getDateInstance(DateFormat.FULL, Locale.CHINA);
+            DateFormat tf = DateFormat.getTimeInstance(DateFormat.FULL, Locale.CHINA);
+            String banDateTime = String.format("%s %s", df.format(detail.banDate), tf.format(detail.banDate));
+            String bannedMessage = LanguageManager.getString("playerBannedMessage", player)
+                    .replace("%player%", player.getName())
+                    .replace("%master%", detail.masterName)
+                    .replace("%reason%", detail.message)
+                    .replace("%banDate%", banDateTime);
+            player.kickPlayer(bannedMessage);
+            //event.disallow(PlayerLoginEvent.Result.KICK_OTHER, bannedMessage);
+            return;
+        }
+        // 获取玩家身上的附加属性，更换玩家身上装备，需要在下一tick才能检测
+        // 任务new EquipmentMonitorRunnable(player).runTask(plugin)
+        new EquipmentMonitorRunnable(player).runTask(plugin);
+    }
+
     /**
      * 玩家进入服务器事件<br>
      * 当玩家第一次进入服务器，需要执行/register password password以注册<br>
@@ -82,41 +106,21 @@ public class PluginListener implements Listener {
     private void onPlayerJoined(final PlayerJoinEvent event) throws SQLException {
         // 获取登陆玩家实例
         Player player = event.getPlayer();
-        World world = player.getWorld();
         // 获取玩家实例的附加数据
         PlayerData data = PlayerManager.getPlayerData(player);
-        // 进入服务器马上显示计分板
-        data.ShowSidebar(world.getName());
-        // 判断玩家是否被禁止进入服务器
-        BanPlayerDetail detail = data.isBanned();
-        if (detail != null) {
-            DateFormat df = DateFormat.getDateInstance(DateFormat.FULL, Locale.CHINA);
-            DateFormat tf = DateFormat.getTimeInstance(DateFormat.FULL, Locale.CHINA);
-            String banDateTime = String.format("%s %s", df.format(detail.banDate), tf.format(detail.banDate));
-            String bannedMessage = LanguageManager.getString("playerBannedMessage", player)
-                    .replace("%player%", player.getName())
-                    .replace("%master%", detail.masterName)
-                    .replace("%reason%", detail.message)
-                    .replace("%banDate%", banDateTime);
-            player.kickPlayer(bannedMessage);
-            return;
-        }
-        // 获取玩家是否已经注册到服务器
-        // 用于显示提醒登陆或者提醒注册
-        boolean register = data.isRegister();
-        data.setRegister(register);
-        // 获取并记录玩家的登陆时间
-        data.setLoginTimeStamp(new Date().getTime() / 1000);
-        data.setLoginTime(new Date());
-        // 获取玩家身上的附加属性
-        // 任务new EquipmentMonitorRunnable(player).runTask(plugin)
-        // 已经执行了一次PlayerManager.setPlayerData(player, playerData)
-        // 所以不需要在这里再次执行
-        new EquipmentMonitorRunnable(player).runTask(plugin);
         // 在成功登陆前，把玩家的游戏模式设置为SPECTATOR，防止被怪物攻击
         // 在成功登陆后，把玩家的游戏模式设置为上次退出服务器时的游戏模式
         //Global.LogMessage(String.format("\033[1;35mPlayerJoinEvent GameMode: \033[1;33m%s\033[0m", playerData.GameMode));
         player.setGameMode(GameMode.SPECTATOR);
+        World world = player.getWorld();
+        // 进入服务器马上显示计分板
+        data.ShowSidebar(world.getName());
+        // 获取玩家是否已经注册到服务器
+        // 用于显示提醒登陆或者提醒注册
+        data.checkRegister();
+        // 获取并记录玩家的登陆时间
+        data.setLoginTimeStamp(new Date().getTime() / 1000);
+        data.setLoginTime(new Date());
     }
 
     /**
@@ -244,7 +248,7 @@ public class PluginListener implements Listener {
         Player player = event.getPlayer();
 
         EquipmentMonitorRunnable runnable = new EquipmentMonitorRunnable(player);
-        runnable.runTask(plugin);
+        runnable.runTaskLater(plugin, 4);
     }
 
     /**
@@ -419,18 +423,6 @@ public class PluginListener implements Listener {
             event.setCancelled(true);
             break;
         }
-    }
-
-    /**
-     * 玩家的盔甲栏物品被改变后的事件
-     */
-    @EventHandler
-    private void onPlayerEquipmentChanged(PlayerEquipmentChangedEvent event) {
-        Map<EquipmentSlot, ItemStack> equipments = event.getEquipments();
-        Player player = event.getPlayer();
-
-        List<ItemStack> itemStacks = new ArrayList<>(equipments.values().stream().toList());
-        PlayerManager.getEquipmentData(player, itemStacks.toArray(new ItemStack[0]));
     }
 
     /**
@@ -704,6 +696,7 @@ public class PluginListener implements Listener {
         if (!(holder instanceof Player player)) return;
         InventoryType.SlotType slotType = event.getSlotType();
         int slot = event.getSlot();
+        if (slot <= -1) return;
         if (slotType.equals(InventoryType.SlotType.CONTAINER)) return;
         if (slotType.equals(InventoryType.SlotType.RESULT)) return;
         if (slotType.equals(InventoryType.SlotType.CRAFTING)) return;
@@ -720,7 +713,7 @@ public class PluginListener implements Listener {
         }
 
         EquipmentMonitorRunnable runnable = new EquipmentMonitorRunnable(player);
-        runnable.runTask(plugin);
+        runnable.runTaskLater(plugin, 4);
     }
 
     @EventHandler

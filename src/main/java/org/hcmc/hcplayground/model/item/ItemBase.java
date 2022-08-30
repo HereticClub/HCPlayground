@@ -22,6 +22,10 @@ public interface ItemBase {
      */
     String PERSISTENT_SUB_KEY = "content";
     /**
+     * 盔甲的套装名称，具有相同值的盔甲被视为同一套装
+     */
+    String PERSISTENT_ARMOR_SET_KEY = "armor_set";
+    /**
      * 当前Minecraft版本直接支持的玩家基本属性，数值可直接添加和提取
      * 当前生命值
      */

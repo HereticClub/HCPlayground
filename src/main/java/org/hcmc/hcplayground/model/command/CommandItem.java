@@ -25,7 +25,7 @@ import org.hcmc.hcplayground.manager.*;
 import org.hcmc.hcplayground.model.menu.MenuPanel;
 import org.hcmc.hcplayground.model.parkour.CourseInfo;
 import org.hcmc.hcplayground.model.player.PlayerData;
-import org.hcmc.hcplayground.serialization.MMOLevelTypeSerialization;
+import org.hcmc.hcplayground.serialization.MMOTypeSerialization;
 import org.hcmc.hcplayground.serialization.MaterialSerialization;
 import org.hcmc.hcplayground.utility.Global;
 import org.hcmc.hcplayground.utility.RomanNumber;
@@ -61,6 +61,9 @@ public class CommandItem extends Command {
     public static final String COMMAND_PLAYGROUND_MENUS = "playgroundmenus";
     public static final String COMMAND_PLAYGROUND_MENUS_OPEN = "open";
     public static final String COMMAND_PLAYGROUND_MENUS_CLOSE = "close";
+    public static final String COMMAND_RECIPE_MANAGER = "recipemanager";
+    public static final String COMMAND_RECIPE_MANAGER_GIVE = "give";
+    public static final String COMMAND_RECIPE_MANAGER_REMOVE = "remove";
     public static final String COMMAND_REWARD_MANAGER = "rewardmanager";
     public static final String COMMAND_REWARD_MANAGER_CLAIM = "claim";
     public static final String COMMAND_REWARD_MANAGER_RESET = "reset";
@@ -169,16 +172,29 @@ public class CommandItem extends Command {
         // 检测当前命令如果不是由玩家在聊天栏输入，忽略TabComplete列表设置
         if (!(sender instanceof Player player)) return org;
         tabs = getDeclaredArguments(player, args);
+        PlayerData data = PlayerManager.getPlayerData(player);
 
         try {
             // 获取指令字符串
             if (index == 2 && getName().equalsIgnoreCase(COMMAND_REWARD_MANAGER)) {
                 if (args[0].equalsIgnoreCase(COMMAND_REWARD_MANAGER_CLAIM)) {
-                    tabs = MMOManager.getSkillIdList();
+                    tabs = new ArrayList<>(MMOManager.getSkillIdList());
+                    tabs.addAll(MMOManager.getCollectionIdList());
                 }
                 if (args[0].equalsIgnoreCase(COMMAND_REWARD_MANAGER_RESET)) {
                     tabs = new ArrayList<>(Collections.singleton("*"));
                     tabs.addAll(MMOManager.getSkillIdList());
+                    tabs.addAll(MMOManager.getCollectionIdList());
+                }
+            }
+            if (index == 2 && getName().equalsIgnoreCase(COMMAND_RECIPE_MANAGER)) {
+                if (args[0].equalsIgnoreCase(COMMAND_RECIPE_MANAGER_REMOVE)) {
+                    tabs = new ArrayList<>(Collections.singleton("*"));
+                    tabs.addAll(data.getRecipes());
+                }
+                if (args[0].equalsIgnoreCase(COMMAND_RECIPE_MANAGER_GIVE)) {
+                    tabs = new ArrayList<>(Collections.singleton("*"));
+                    tabs.addAll(RecipeManager.getIdList());
                 }
             }
             if (index == 2 && getName().equalsIgnoreCase(COMMAND_COURSE)) {
@@ -267,6 +283,9 @@ public class CommandItem extends Command {
             if (commandText.equalsIgnoreCase(COMMAND_REWARD_MANAGER)) {
                 return RunRewardManagerCommand(sender, args);
             }
+            if (commandText.equalsIgnoreCase(COMMAND_RECIPE_MANAGER)) {
+                return RunRecipeManagerCommand(sender, args);
+            }
             if (commandText.equalsIgnoreCase(COMMAND_SKILL_MANAGER)) {
                 return RunSkillManagerCommand(sender, args);
             }
@@ -345,6 +364,75 @@ public class CommandItem extends Command {
         return false;
     }
 
+    private boolean RunRecipeManagerCommand(CommandSender sender, String[] args) {
+        if (args.length <= 2) {
+            return ShowCommandHelp(sender, 3);
+        }
+
+        if (args[0].equalsIgnoreCase(COMMAND_RECIPE_MANAGER_GIVE)) {
+            return RunRecipeManagerGiveCommand(sender, args);
+        }
+        if (args[0].equalsIgnoreCase(COMMAND_RECIPE_MANAGER_REMOVE)) {
+            return RunRecipeManagerRemoveCommand(sender, args);
+        }
+
+        return false;
+    }
+
+    private boolean RunRecipeManagerGiveCommand(CommandSender sender, String[] args) {
+        String playerName = args[2];
+        String recipeId = args[1];
+        Player target = Bukkit.getPlayer(playerName);
+        List<String> definedRecipes = RecipeManager.getIdList();
+
+        if (target == null) {
+            sender.sendMessage(LanguageManager.getString("playerNotExist").replace("%player%", playerName));
+            return false;
+        }
+        if (definedRecipes.stream().noneMatch(x -> x.equalsIgnoreCase(recipeId)) && !recipeId.equalsIgnoreCase("*")) {
+            sender.sendMessage(LanguageManager.getString("recipeNotExist").replace("%recipe%", recipeId));
+            return false;
+        }
+
+        PlayerData targetData = PlayerManager.getPlayerData(target);
+        List<String> givenRecipes = new ArrayList<>(recipeId.equalsIgnoreCase("*") ? definedRecipes : Collections.singleton(recipeId));
+
+        for (String recipe : givenRecipes) {
+            if (!targetData.unlockRecipe(recipe)) continue;
+            sender.sendMessage(LanguageManager.getString("recipeGivenToPlayer").replace("%recipe%", recipe).replace("%player%", playerName));
+            target.sendMessage(LanguageManager.getString("recipePlayerReceived").replace("%recipe%", recipe));
+        }
+        return true;
+    }
+
+    private boolean RunRecipeManagerRemoveCommand(CommandSender sender, String[] args) {
+        String playerName = args[2];
+        String recipeId = args[1];
+        Player target = Bukkit.getPlayer(playerName);
+        if (target == null) {
+            sender.sendMessage(LanguageManager.getString("playerNotExist").replace("%player%", playerName));
+            return false;
+        }
+
+        PlayerData targetData = PlayerManager.getPlayerData(target);
+        List<String> targetRecipes = targetData.getRecipes();
+        List<String> removedRecipes = new ArrayList<>(recipeId.equalsIgnoreCase("*") ? targetRecipes : Collections.singleton(recipeId));
+
+        if (!recipeId.equalsIgnoreCase("*") && targetRecipes.stream().noneMatch(x -> x.equalsIgnoreCase(recipeId))) {
+            sender.sendMessage(LanguageManager.getString("recipeNotExist").replace("%recipe%", recipeId));
+            return false;
+        }
+
+        for (String recipe : removedRecipes) {
+            if (targetData.removeRecipe(recipe)) {
+                sender.sendMessage(LanguageManager.getString("recipeRemoveFromPlayer").replace("%recipe%", recipe).replace("%player%", playerName));
+                target.sendMessage(LanguageManager.getString("recipePlayerRemoved").replace("%recipe%", recipe));
+            }
+        }
+
+        return true;
+    }
+
     private boolean RunRewardManagerCommand(CommandSender sender, String[] args) {
         if (args.length <= 2) {
             return ShowCommandHelp(sender, 3);
@@ -364,7 +452,8 @@ public class CommandItem extends Command {
         // args[1] - Skill Type
         // args[2] - Player Name
         Player target = Bukkit.getPlayer(args[2]);
-        MMOType type = MMOLevelTypeSerialization.getType(args[1]);
+        MMOType type = MMOTypeSerialization.parse(args[1]);
+        Material material = MaterialSerialization.parse(args[1]);
         if (target == null) {
             sender.sendMessage(LanguageManager.getString("playerNotExist").replace("%player%", args[2]));
             return false;
@@ -372,20 +461,26 @@ public class CommandItem extends Command {
 
         if (args[1].equalsIgnoreCase("*")) {
             MMOType[] types = MMOType.values();
+            Material[] materials = Material.values();
             for (MMOType t : types) {
-                if (t.equals(MMOType.UNDEFINED)) continue;
                 RewardManager.reset(t, target);
             }
+            for (Material m : materials) {
+                RewardManager.reset(m, target);
+            }
+
             target.sendMessage(LanguageManager.getString("rewardLevelResetAll"));
             return true;
         }
 
-        if (type.equals(MMOType.UNDEFINED)) {
-            sender.sendMessage(LanguageManager.getString("skillTypeInvalid").replace("%skill%", args[1]));
+        if (type.equals(MMOType.UNDEFINED) && material.equals(Material.AIR)) {
+            sender.sendMessage(LanguageManager.getString("rewardTypeInvalid").replace("%reward%", args[1]));
             return false;
         }
 
-        RewardManager.reset(type, target);
+        if (!type.equals(MMOType.UNDEFINED)) RewardManager.reset(type, target);
+        if (!material.equals(Material.AIR)) RewardManager.reset(material, target);
+
         target.sendMessage(LanguageManager.getString("rewardLevelReset").replace("%skill%", type.name()));
         return true;
     }
@@ -394,7 +489,7 @@ public class CommandItem extends Command {
         // args[1] - Skill Type or material
         // args[2] - Player Name
         Player target = Bukkit.getPlayer(args[2]);
-        MMOType type = MMOLevelTypeSerialization.getType(args[1]);
+        MMOType type = MMOTypeSerialization.parse(args[1]);
         Material material = MaterialSerialization.parse(args[1]);
         if (target == null) {
             sender.sendMessage(LanguageManager.getString("playerNotExist").replace("%player%", args[2]));
@@ -427,7 +522,7 @@ public class CommandItem extends Command {
         String playerName = args[2];
         String points = args[3];
         Player target = Bukkit.getPlayer(playerName);
-        MMOType type = MMOLevelTypeSerialization.getType(args[1]);
+        MMOType type = MMOTypeSerialization.parse(args[1]);
         if (type.equals(MMOType.UNDEFINED)) {
             sender.sendMessage(LanguageManager.getString("skillTypeInvalid").replace("%skill%", args[1]));
             return false;
@@ -451,7 +546,7 @@ public class CommandItem extends Command {
         String playerName = args[2];
         String points = args[3];
         Player target = Bukkit.getPlayer(playerName);
-        MMOType type = MMOLevelTypeSerialization.getType(args[1]);
+        MMOType type = MMOTypeSerialization.parse(args[1]);
         if (type.equals(MMOType.UNDEFINED)) {
             sender.sendMessage(LanguageManager.getString("skillTypeInvalid").replace("%skill%", args[1]));
             return false;

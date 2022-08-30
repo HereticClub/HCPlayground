@@ -2,13 +2,15 @@ package org.hcmc.hcplayground.model.player;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
-import com.google.gson.reflect.TypeToken;
 import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.permissions.PermissionAttachment;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.hcmc.hcplayground.HCPlayground;
@@ -16,18 +18,19 @@ import org.hcmc.hcplayground.enums.ItemFeatureType;
 import org.hcmc.hcplayground.enums.MMOType;
 import org.hcmc.hcplayground.enums.PlayerBannedState;
 import org.hcmc.hcplayground.manager.*;
+import org.hcmc.hcplayground.model.armorset.ArmorSetEffect;
 import org.hcmc.hcplayground.model.item.ItemBase;
 import org.hcmc.hcplayground.model.item.Join;
 import org.hcmc.hcplayground.model.scoreboard.ScoreboardItem;
 import org.hcmc.hcplayground.sqlite.SqliteManager;
 import org.hcmc.hcplayground.sqlite.table.BanPlayerDetail;
 import org.hcmc.hcplayground.utility.Global;
+import org.hcmc.hcplayground.utility.NameBinaryTag;
 import org.jetbrains.annotations.NotNull;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
-import java.lang.reflect.Type;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -51,6 +54,8 @@ public class PlayerData {
     private static final String Section_Key_Course_Owned = "courseOwned";
     private static final String Section_Key_Claimed_Skill_Level = "claimedSkillLevel";
     private static final String Section_Key_Claimed_Collection_Level = "claimedCollectionLevel";
+    private static final String Section_Key_Recipes = "recipes";
+    private static final String Section_Key_Activated_Armor_Sets= "activatedArmorSets";
     public static final String ECONOMY_BALANCE_KEY = "balance";
     public static final double BASE_HEALTH = 20.0F;
     public static final double BASE_CRITICAL = 0.05F;
@@ -162,8 +167,14 @@ public class PlayerData {
      * 当前玩家已经解锁的疯狂菜单(id)
      */
     @Expose
-    @SerializedName(value = "recipes")
+    @SerializedName(value = Section_Key_Recipes)
     private List<String> recipes = new ArrayList<>();
+    /**
+     * 记录已经激活的套装效果
+     */
+    @Expose
+    @SerializedName(value = Section_Key_Activated_Armor_Sets)
+    private Map<String, List<Integer>> activatedArmorSetEffects = new HashMap<>();
     /**
      * 已领取的技能等级奖励<br>
      * MMOType - 技能类型<br>
@@ -230,10 +241,6 @@ public class PlayerData {
      */
     private long loginTimeStamp;
     /**
-     * 玩家的血量压缩值
-     */
-    private double scale;
-    /**
      * 本插件实例
      */
     private JavaPlugin plugin;
@@ -288,11 +295,10 @@ public class PlayerData {
         if (baseCritical <= 0) baseCritical = 0.05;
         if (baseCriticalDamage <= 0) baseCriticalDamage = 1.5;
         if (baseIntelligence <= 0) baseIntelligence = 1.0;
-
-        scale = getScaleEdge();
-        player.setHealthScale(scale);
-
         if (recipes == null) recipes = new ArrayList<>();
+        if (activatedArmorSetEffects == null) activatedArmorSetEffects = new HashMap<>();
+
+        setPlayerScale();
     }
 
     /**
@@ -341,17 +347,34 @@ public class PlayerData {
         return recipes;
     }
 
-    public void unlockRecipe(String... recipeIds) {
-        for (String id : recipeIds) {
-            // 检查是否已经解锁
-            if (existRecipe(id)) return;
-            // 检查是否存在配方加载项中
-            if (!RecipeManager.existRecipe(id)) return;
-            // 为玩家解锁配方
-            recipes.add(id);
-        }
+    public boolean unlockRecipe(String recipeId) {
+        // 检查是否已经解锁
+        if (existRecipe(recipeId)) return false;
+        // 检查是否存在配方加载项中
+        if (!RecipeManager.existRecipe(recipeId)) return false;
+        // 为玩家解锁配方
+        recipes.add(recipeId);
+        return true;
     }
 
+    public boolean removeRecipe(String recipeId) {
+        // 检查是否已经解锁
+        if (!existRecipe(recipeId)) return false;
+        // 为玩家解锁配方
+        recipes.remove(recipeId);
+        return true;
+    }
+
+    public void unlockRecipe(String ... recipeIds) {
+        for (String recipe : recipeIds) {
+            // 检查是否已经解锁
+            if (existRecipe(recipe)) continue;
+            // 检查是否存在配方加载项中
+            if (!RecipeManager.existRecipe(recipe)) continue;
+            // 为玩家解锁配方
+            recipes.add(recipe);
+        }
+    }
 
     public boolean existRecipe(String recipeId) {
         return recipes.stream().anyMatch(x -> x.equalsIgnoreCase(recipeId));
@@ -378,8 +401,8 @@ public class PlayerData {
     }
 
     /**
-     * 给予玩家的钱
-     * @param money 给予玩家钱的数量
+     * 玩家从银行提款
+     * @param money 提款的数量
      */
     public void deposit(double money) {
         EconomyResponse response = Global.economyApi.depositPlayer(player, money);
@@ -387,12 +410,20 @@ public class PlayerData {
     }
 
     /**
-     * 拿走玩家的钱
-     * @param money 拿走玩家钱的数量
+     * 玩家存款到银行
+     * @param money 存款的数量
      */
     public void withdraw(double money) {
         EconomyResponse response = Global.economyApi.withdrawPlayer(player, money);
         if (!response.type.equals(EconomyResponse.ResponseType.SUCCESS)) Global.LogWarning(response.errorMessage);
+    }
+
+    public Map<String, List<Integer>> getActivatedArmorSetEffects() {
+        return new HashMap<>(activatedArmorSetEffects);
+    }
+
+    public void setActivatedArmorSetEffects(Map<String, List<Integer>> activatedArmorSetEffects) {
+        this.activatedArmorSetEffects = new HashMap<>(activatedArmorSetEffects);
     }
 
     public double getExtraArmor() {
@@ -494,14 +525,17 @@ public class PlayerData {
 
     public void setBaseHealth(double maxHealth) {
         setBaseAttribute(Attribute.GENERIC_MAX_HEALTH, maxHealth);
-        scale = getScaleEdge();
-        double scaled = player.getHealthScale();
-        if (scale != scaled) player.setHealthScale(scale);
+        setPlayerScale();
     }
 
     public void increaseBaseHealth(double health) {
         double _health = getBaseHealth();
         setBaseHealth(health + _health);
+    }
+
+    public void decreaseBaseHealth(double health) {
+        double _health = getBaseHealth();
+        setBaseHealth(_health - health);
     }
 
     public double getBaseMovementSpeed() {
@@ -521,6 +555,11 @@ public class PlayerData {
         setBaseMovementSpeed(value + _value);
     }
 
+    public void decreaseBaseMovementSpeed(double value) {
+        double _value = getBaseMovementSpeed();
+        setBaseMovementSpeed(_value - value);
+    }
+
     public double getBaseKnockBackResistance() {
         return getBaseAttribute(Attribute.GENERIC_KNOCKBACK_RESISTANCE, 0);
     }
@@ -536,6 +575,11 @@ public class PlayerData {
     public void increaseBaseKnockBackResistance(double value) {
         double _value = getBaseKnockBackResistance();
         setBaseKnockBackResistance(value + _value);
+    }
+
+    public void decreaseBaseKnockBackResistance(double value){
+        double _value = getBaseKnockBackResistance();
+        setBaseKnockBackResistance(_value - value);
     }
 
     public double getBaseLuck() {
@@ -555,6 +599,11 @@ public class PlayerData {
         setBaseLuck(value + _value);
     }
 
+    public void decreaseBaseLuck(double value) {
+        double _value = getBaseLuck();
+        setBaseLuck(_value - value);
+    }
+
     public double getBaseAttackDamage() {
         return getBaseAttribute(Attribute.GENERIC_ATTACK_DAMAGE, 0);
     }
@@ -570,6 +619,11 @@ public class PlayerData {
     public void increaseBaseAttackDamage(double value) {
         double _value = getBaseAttackDamage();
         setBaseAttackDamage(value + _value);
+    }
+
+    public void decreaseBaseAttackDamage(double value) {
+        double _value = getBaseAttackDamage();
+        setBaseAttackDamage(_value - value);
     }
 
     public double getBaseAttackSpeed() {
@@ -589,6 +643,11 @@ public class PlayerData {
         setBaseAttackSpeed(value + _value);
     }
 
+    public void decreaseBaseAttackSpeed(double value) {
+        double _value = getBaseAttackSpeed();
+        setBaseAttackSpeed(_value - value);
+    }
+
     // 获取玩家当前护甲值
     public double getBaseArmor() {
         return baseArmor;
@@ -603,7 +662,12 @@ public class PlayerData {
         setBaseArmor(value + _value);
     }
 
-    public double getTotalArmor() {
+    public void decreaseBaseArmor(double value) {
+        double _value = getBaseArmor();
+        setBaseArmor(_value - value);
+    }
+
+    public double getMaxArmor() {
         return baseArmor + extraArmor;
     }
 
@@ -620,7 +684,12 @@ public class PlayerData {
         setBaseArmorToughness(value + _value);
     }
 
-    public double getTotalArmorToughness() {
+    public void decreaseBaseArmorToughness(double value) {
+        double _value = getBaseArmorToughness();
+        setBaseArmorToughness(_value - value);
+    }
+
+    public double getMaxArmorToughness() {
         return baseArmorToughness + extraArmorToughness;
     }
 
@@ -637,7 +706,12 @@ public class PlayerData {
         setBaseCritical(value + _value);
     }
 
-    public double getTotalCritical() {
+    public void decreaseBaseCritical(double value) {
+        double _value = getBaseCritical();
+        setBaseCritical(_value - value);
+    }
+
+    public double getMaxCritical() {
         return baseCritical + extraCritical;
     }
 
@@ -654,7 +728,12 @@ public class PlayerData {
         setBaseCriticalDamage(value + _value);
     }
 
-    public double getTotalCriticalDamage() {
+    public void decreaseBaseCriticalDamage(double value) {
+        double _value = getBaseCriticalDamage();
+        setBaseCriticalDamage(_value - value);
+    }
+
+    public double getMaxCriticalDamage() {
         return baseCriticalDamage + extraCriticalDamage;
     }
 
@@ -671,7 +750,12 @@ public class PlayerData {
         setBaseAttackReach(value + _value);
     }
 
-    public double getTotalAttackReach() {
+    public void decreaseBaseAttackReach(double value) {
+        double _value = getBaseAttackReach();
+        setBaseAttackReach(_value - value);
+    }
+
+    public double getMaxAttackReach() {
         return baseAttackReach + extraAttackReach;
     }
 
@@ -688,7 +772,12 @@ public class PlayerData {
         setBaseIntelligence(value + _value);
     }
 
-    public double getTotalIntelligence() {
+    public void decreaseBaseIntelligence(double value) {
+        double _value = getBaseIntelligence();
+        setBaseIntelligence(_value - value);
+    }
+
+    public double getMaxIntelligence() {
         return baseIntelligence + extraIntelligence;
     }
 
@@ -705,7 +794,12 @@ public class PlayerData {
         setBaseDiggingSpeed(value + _value);
     }
 
-    public double getTotalDiggingSpeed() {
+    public void decreaseBaseDiggingSpeed(double value) {
+        double _value = getBaseDiggingSpeed();
+        setBaseDiggingSpeed(_value - value);
+    }
+
+    public double getMaxDiggingSpeed() {
         return baseDiggingSpeed + extraDiggingSpeed;
     }
 
@@ -722,7 +816,12 @@ public class PlayerData {
         setBaseLoggingSpeed(value + _value);
     }
 
-    public double getTotalLoggingSpeed() {
+    public void decreaseBaseLoggingSpeed(double value) {
+        double _value = getBaseLoggingSpeed();
+        setBaseLoggingSpeed(_value - value);
+    }
+
+    public double getMaxLoggingSpeed() {
         return baseLoggingSpeed + extraLoggingSpeed;
     }
 
@@ -739,7 +838,12 @@ public class PlayerData {
         setBaseBloodSucking(value + _value);
     }
 
-    public double getTotalBloodSucking() {
+    public void decreaseBaseBloodSucking(double value) {
+        double _value = getBaseBloodSucking();
+        setBaseBloodSucking(_value - value);
+    }
+
+    public double getMaxBloodSucking() {
         return baseBloodSucking + extraBloodSucking;
     }
 
@@ -756,7 +860,12 @@ public class PlayerData {
         setBaseRecover(value + _value);
     }
 
-    public double getTotalRecover() {
+    public void decreaseBaseRecover(double value) {
+        double _value = getBaseRecover();
+        setBaseRecover(_value - value);
+    }
+
+    public double getMaxRecover() {
         return baseRecover + extraRecover;
     }
 
@@ -776,7 +885,15 @@ public class PlayerData {
         loginTime = value;
     }
 
-    public boolean getRegister() {
+    public void checkRegister() {
+        try {
+            register = SqliteManager.isPlayerRegister(player);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public boolean isRegister() {
         return register;
     }
 
@@ -805,17 +922,13 @@ public class PlayerData {
         this.gameMode = gameMode;
     }
 
-    public boolean isRegister() throws SQLException {
-        return SqliteManager.isPlayerRegister(player);
-    }
-
-    public BanPlayerDetail isBanned() throws SQLException {
-        return SqliteManager.isPlayerBanned(player);
+    public BanPlayerDetail getBanDetail() throws SQLException {
+        return SqliteManager.getBanDetail(player);
     }
 
     public boolean Register(String password) throws SQLException, InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException {
 
-        boolean register = SqliteManager.PlayerRegister(player, password);
+        boolean register = SqliteManager.doPlayerRegister(player, password);
         if (!register) {
             player.sendMessage(LanguageManager.getString("playerRegisterExist", player)
                     .replace("%player%", name));
@@ -834,7 +947,7 @@ public class PlayerData {
 
     public boolean Unregister(String password) throws InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException, SQLException {
 
-        boolean unregister = SqliteManager.PlayerUnregister(player, password);
+        boolean unregister = SqliteManager.doPlayerUnregister(player, password);
         if (!unregister) {
             player.sendMessage(LanguageManager.getString("playerURPasswordNotRight", player).replace("%player%", name));
         } else {
@@ -978,10 +1091,6 @@ public class PlayerData {
         return player.getStatistic(Statistic.FISH_CAUGHT);
     }
 
-    public int getStatisticCollection(Material material) {
-        return player.getStatistic(Statistic.PICKUP, material);
-    }
-
     public int getStatisticSkill(MMOType type) {
         return switch (type) {
             case SKILL_LUMBERING -> statisticBlockMined(MMOManager.LumberingBlocks);
@@ -991,6 +1100,72 @@ public class PlayerData {
             case SKILL_COMBAT -> statisticEntityKilled(MMOManager.Monsters);
             default -> 0;
         };
+    }
+
+    /**
+     * Call this function while player change their equipment every time<br>
+     * On EquipmentMonitorRunnable Class<br>
+     */
+    public void getExtraDataInEquipments() {
+        PlayerInventory inv = player.getInventory();
+        List<ItemStack> itemStacks = new ArrayList<>(Arrays.stream(inv.getArmorContents()).toList());
+        itemStacks.add(inv.getItemInMainHand());
+        itemStacks.add(inv.getItemInOffHand());
+        setPlayerScale();
+        Map<String, Integer> mapAmount = new HashMap<>();
+
+        this.extraArmor = 0;
+        this.extraArmorToughness = 0;
+        this.extraAttackReach = 0;
+        this.extraBloodSucking = 0;
+        this.extraCritical = 0;
+        this.extraCriticalDamage = 0;
+        this.extraRecover = 0;
+        this.extraIntelligence = 0;
+        this.extraDiggingSpeed = 0;
+        this.extraLoggingSpeed = 0;
+
+        // 检查玩家的装备栏和副手物品
+        for (ItemStack is : itemStacks) {
+            // 忽略没有装备的物品
+            if (is == null) continue;
+            // 获取玩家身上所有装备和副手物品的额外数值
+            NameBinaryTag nbt = new NameBinaryTag(is);
+            // 忽略没有ItemMeta的物品
+            ItemMeta im = is.getItemMeta();
+            if (im == null) continue;
+            // 获取套装效果名称和拥有相同套装名称的装备数量
+            String armorSetName = nbt.getStringValue(ItemBase.PERSISTENT_ARMOR_SET_KEY);
+            int armorAmount = mapAmount.getOrDefault(armorSetName, 0);
+            armorAmount++;
+            mapAmount.put(armorSetName, armorAmount);
+            // Minecraft直接支持的玩家基本属性
+            extraArmor += nbt.getFloatValue(ItemBase.PERSISTENT_ARMOR_KEY);
+            extraArmorToughness += nbt.getFloatValue(ItemBase.PERSISTENT_ARMOR_TOUGHNESS_KEY);
+            // Minecraft不支持的玩家基本属性
+            extraRecover += nbt.getFloatValue(ItemBase.PERSISTENT_RECOVER_KEY);
+            extraBloodSucking += nbt.getFloatValue(ItemBase.PERSISTENT_BLOOD_SUCKING_KEY);
+            extraCritical += nbt.getFloatValue(ItemBase.PERSISTENT_CRITICAL_KEY);
+            extraCriticalDamage += nbt.getFloatValue(ItemBase.PERSISTENT_CRITICAL_DAMAGE_KEY);
+            extraIntelligence += nbt.getFloatValue(ItemBase.PERSISTENT_INTELLIGENCE);
+            extraDiggingSpeed += nbt.getFloatValue(ItemBase.PERSISTENT_DIGGING_SPEED);
+            extraLoggingSpeed += nbt.getFloatValue(ItemBase.PERSISTENT_LOGGING_SPEED);
+            // Minecraft实验性玩家基本属性，当前版本还不支持
+            extraAttackReach += nbt.getFloatValue(ItemBase.PERSISTENT_ATTACK_REACH_KEY);
+        }
+
+        Map<String, List<Integer>> newArmorSetEffects = new HashMap<>();
+        for (Map.Entry<String, Integer> entry : mapAmount.entrySet()) {
+            String name = entry.getKey();
+            ArmorSetEffect effect = ArmorSetManager.getArmorSetEffect(name);
+            if (effect == null) continue;
+            List<Integer> _amount = effect.getAmountActivated(entry.getValue());
+            if (_amount.size() <= 0)
+                newArmorSetEffects.remove(name);
+            else
+                newArmorSetEffects.put(name, _amount);
+        }
+        ArmorSetManager.applyArmorSetEffect(player, newArmorSetEffects);
     }
 
     private void doLoginSuccess() {
@@ -1009,22 +1184,22 @@ public class PlayerData {
         }
     }
 
-    private double getScaleEdge() {
-        Map<Double, Double> filter = scaleEdges.entrySet().stream().filter(x -> x.getValue() >= getMaxHealth()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-        scale = filter.keySet().stream().min(Comparator.comparing(Double::doubleValue)).orElse(20.0);
-        return scale;
+    private void setPlayerScale() {
+        double health = getMaxHealth();
+        Map<Double, Double> filter = scaleEdges.entrySet().stream().filter(x -> x.getValue() >= health).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        double scale = filter.keySet().stream().min(Comparator.comparing(Double::doubleValue)).orElse(20.0);
+        double playerScale = player.getHealthScale();
+        if (scale != playerScale) player.setHealthScale(scale);
     }
 
     private double getBaseAttribute(Attribute attribute, double defaultValue) {
         AttributeInstance instance = player.getAttribute(attribute);
-        if (instance == null) return defaultValue;
-        return instance.getBaseValue();
+        return instance == null ? defaultValue : instance.getBaseValue();
     }
 
     private double getMaxAttribute(Attribute attribute, double defaultValue) {
         AttributeInstance instance = player.getAttribute(attribute);
-        if (instance == null) return defaultValue;
-        return instance.getValue();
+        return instance == null ? defaultValue : instance.getValue();
     }
 
     private void setBaseAttribute(Attribute attribute, double value) {

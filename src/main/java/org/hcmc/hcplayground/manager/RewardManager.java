@@ -94,8 +94,15 @@ public class RewardManager {
     public static void reset(MMOType type, Player player) {
         PlayerData data = PlayerManager.getPlayerData(player);
         Map<MMOType, Integer> claimed = data.getClaimedSkillLevel();
-        claimed.put(type, 0);
+        if (claimed.containsKey(type)) claimed.put(type, 0);
         data.setClaimedSkillLevel(claimed);
+    }
+
+    public static void reset(Material material, Player player) {
+        PlayerData data = PlayerManager.getPlayerData(player);
+        Map<Material, Integer> claimed = data.getClaimedCollectionLevel();
+        if (claimed.containsKey(material)) claimed.put(material, 0);
+        data.setClaimedCollectionLevel(claimed);
     }
 
     public static List<MMOLevel> getUnclaimedLevels(Player player, MMOType type) {

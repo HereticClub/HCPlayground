@@ -1,13 +1,49 @@
+# 奖励id，唯一
 deluxe:
+  # 金币奖励
   money: 10000
+  # 点数奖励
   point: 500
-  lore:
-    - '&7等级奖励:'
+  # 伤害值奖励，永久增加最大伤害值
+  attack-damage: 1
+  # 攻击距离奖励，永久增加最大攻击距离值
+  attack-reach: 1
+  # 攻击速度奖励，永久增加最大攻击速度值
+  attack-speed: 1
+  # 护甲值奖励，永久增加最大护甲值
+  armor: 2
+  # 盔甲韧性奖励，永久增加最大盔甲韧性值
+  armor-toughness: 1
+  # 吸血值奖励，永久增加最大吸血值值
+  blood-sucking: 1
+  # 暴击率奖励，永久增加最大暴击率
+  critical: 0.5
+  # 暴击伤害奖励，永久增加最大暴击伤害
+  critical-damage: 0.5
+  # 幸运值奖励，永久增加最大幸运值
+  fortune: 2
+  # 生命值奖励，永久增加最大生命值
+  health: 2
+  # 智力值奖励，永久增加最大智力值
+  intelligence: 1
+  # 击退值奖励，永久增加最大击退值
+  knock-back: 1
+  # 生命恢复值奖励，永久增加最大生命恢复值
+  recover: 1
+  # 移动速度值奖励，永久增加最大移动速度值
+  speed: 0.01
+  # 挖掘速度值奖励，永久增加最大挖掘速度值
+  digging-speed: 1
+  # 伐木速度值奖励，永久增加最大伐木速度值
+  logging-speed: 1
+  # 物品奖励，直接发放到玩家背包，背包满了会掉到地上
   items:
     - weapon.兵主的开罐器,1
     - diamond_block,64
     - join.enchanted_cobblestone,64
+  # 疯狂配方奖励，为玩家解锁疯狂配方
   recipes:
-    - enhance_cobblestone1
-    - enhance_cobblestone2
+    - crazyshapedrecipe.enhance_cobblestone1
+    - crazyshapedrecipe.enhance_cobblestone2
+  # 粒子效果奖励，玩家可以使用某些粒子效果
   particles: []

@@ -71,7 +71,7 @@ public class SqliteManager {
         statement.close();
     }
 
-    public static BanPlayerDetail isPlayerBanned(Player player) throws SQLException {
+    public static BanPlayerDetail getBanDetail(Player player) throws SQLException {
         BanPlayerDetail detail;
 
         String commandText = String.format("select * from banDetails where playerId = '%s'", player.getUniqueId());
@@ -87,7 +87,7 @@ public class SqliteManager {
         return detail;
     }
 
-    public static boolean PlayerRegister(Player player, String password) throws InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException, SQLException {
+    public static boolean doPlayerRegister(Player player, String password) throws InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException, SQLException {
         UUID uuid = player.getUniqueId();
         String hyphen = "-";
         String empty = "";
@@ -103,7 +103,7 @@ public class SqliteManager {
         return count != 0;
     }
 
-    public static boolean PlayerUnregister(Player player, String password) throws InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException, SQLException {
+    public static boolean doPlayerUnregister(Player player, String password) throws InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException, SQLException {
         UUID uuid = player.getUniqueId();
 
         String key = uuid.toString().replace("-", "");
@@ -190,7 +190,7 @@ public class SqliteManager {
 
         commandText = String.format("insert into banRecord (id,masterId,playerId,message) values ('%s','%s','%s','%s')", UUID.randomUUID(), masterUuid, targetUuid, reason);
         statement.executeUpdate(commandText);
-        commandText = String.format("update player set isBanned = 'true' where uuid = '%s'", targetUuid);
+        commandText = String.format("update player set getBanDetail = 'true' where uuid = '%s'", targetUuid);
         statement.executeUpdate(commandText);
         statement.close();
 
@@ -206,7 +206,7 @@ public class SqliteManager {
         if (target == null) return PlayerBannedState.Player_Not_Exist;
 
         UUID targetUuid = target.getUniqueId();
-        commandText = String.format("update player set isBanned = 'false' where uuid = '%s'", targetUuid);
+        commandText = String.format("update player set getBanDetail = 'false' where uuid = '%s'", targetUuid);
         statement.executeUpdate(commandText);
         statement.close();
 

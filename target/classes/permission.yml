@@ -21,6 +21,24 @@ permissions:
       - hc.banplayer.*
       - hc.playgroundmenus.*
       - hc.rewardmanager.*
+      - hc.recipemanager.*
+
+  permissionRecipeManager:
+    name: hc.recipemanager.*
+    default: op
+    description: Permission to manage the crazy recipes
+    children:
+      - hc.rewardmanager.give
+      - hc.rewardmanager.remove
+
+  permissionRecipeManager1:
+    name: hc.rewardmanager.give
+    description: Give a recipe to a player
+    default: op
+  permissionRecipeManager2:
+    name: hc.rewardmanager.remove
+    description: Remove a recipe from a player
+    default: op
 
   permissionRewardManager:
     name: hc.rewardmanager.*

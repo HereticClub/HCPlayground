@@ -10,19 +10,19 @@ import org.jetbrains.annotations.NotNull;
 import java.lang.reflect.Type;
 import java.util.Arrays;
 
-public class MMOLevelTypeSerialization implements JsonDeserializer<MMOType> {
+public class MMOTypeSerialization implements JsonDeserializer<MMOType> {
 
-    public MMOLevelTypeSerialization() {
+    public MMOTypeSerialization() {
 
     }
 
     @Override
     public MMOType deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
-        return getType(jsonElement.getAsString());
+        return parse(jsonElement.getAsString());
     }
 
     @NotNull
-    public static MMOType getType(@NotNull String name) {
+    public static MMOType parse(@NotNull String name) {
         MMOType[] types = MMOType.values();
         return Arrays.stream(types).filter(x -> x.name().equalsIgnoreCase(name)).findAny().orElse(MMOType.UNDEFINED);
     }

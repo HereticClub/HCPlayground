@@ -27,7 +27,19 @@ hcplayground:
   # 指令的别名
   aliases:
     - hc
-
+recipemanager:
+  permission: hc.recipemanager.*
+  runOnConsole: true
+  runOnPlayer: true
+  args:
+    1:
+      name: give
+      permission: hc.recipemanager.give
+      index: 1
+    2:
+      name: remove
+      permission: hc.recipemanager.remove
+      index: 1
 rewardmanager:
   permission: hc.rewardmanager.*
   runOnConsole: true

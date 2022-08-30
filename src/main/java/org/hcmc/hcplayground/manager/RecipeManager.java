@@ -27,6 +27,7 @@ public class RecipeManager {
     private static ConfigurationSection barrierItemSection;
     private static ConfigurationSection recipeLockedSection;
 
+    private static final List<String> idList = new ArrayList<>();
 
     public RecipeManager() {
 
@@ -40,6 +41,8 @@ public class RecipeManager {
         ConfigurationSection recipeSection = yaml.getConfigurationSection("recipes");
         if (recipeSection != null) recipes = Global.deserializeList(recipeSection, CrazyShapedRecipe.class);
 
+        idList.clear();
+
         craftPanelSection = yaml.getConfigurationSection("crafting_panel");
         anvilPanelSection = yaml.getConfigurationSection("anvil_panel");
         enchantPanelSection = yaml.getConfigurationSection("enchanting_panel");
@@ -51,12 +54,17 @@ public class RecipeManager {
             // 所有成分数量=1
             // 成分形状边长<=3
             // 则添加到传统配方
+            idList.add(r.getId().toLowerCase());
             if (r.isLegacy()) {
                 r.setLegacyRecipe();
             } else {
                 r.prepareCrazyRecipe();
             }
         }
+    }
+
+    public static List<String> getIdList() {
+        return idList;
     }
 
     public static Inventory createEnchantingPanel() {

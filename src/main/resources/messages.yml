@@ -97,6 +97,22 @@ messages:
     &cYour account &e%player% &chas been banned by %master%
     &7please contact game master if any question
     &7Reason: &e%reason%
+  # 在尝试给与玩家一个不存在的配方id时显示，可以使用%recipe%占位符，表示配方的id
+  recipeNotExist: '&cThe recipe &e%recipe% &cis not exist.'
+  # 当给予的配方到一位玩家后显示，在配方发送方显示
+  # 可以使用%player%占位符，表示接收到配方的玩家名称
+  # 可以使用%recipe%占位符，表示玩家接收到配方的id
+  recipeGivenToPlayer: '&fPlayer &a%player% &fhas received a recipe: &a%recipe%'
+  # 从玩家移除一个配方后显示，在配方管理方显示
+  # 可以使用%player%占位符，表示接收到配方的玩家名称
+  # 可以使用%recipe%占位符，表示玩家接收到配方的id
+  recipeRemoveFromPlayer: '&fYou remove a recipe %recipe% from player %player%'
+  # 当玩家接收到一个配方后显示，在配方接收方显示
+  # 可以使用%player%占位符，表示接收到配方的玩家名称
+  recipePlayerReceived: '&aYou have got a recipe %recipe% just now.'
+  # 当玩家的一个配方被移除后显示，在配方被移除方显示
+  # 可以使用%player%占位符，表示接收到配方的玩家名称
+  recipePlayerRemoved: '&cYour recipe &e%recipe% &chas been removed just now.'
   # 当玩家准备进入赛道设计模式时显示，可以使用%second%占位符，表示需要等待的秒数
   courseEnteringDesignMode: '&fYou are coming into course design mode, please waiting for &e%second% &fsecond'
   # 当玩家正式进入赛道设计模式后显示
@@ -337,6 +353,12 @@ messages:
       &7/<command> command usage:
       &9/<command> load &7- Load record from record.yml
       &9/<command> save &7- Save record to record.yml
+  recipemanager:
+    description: Manage the crazy recipes
+    usage: |-
+      &7/<command> command usage:
+      &9/<command> give <recipe_id> <player> &7- Giving a crazy recipe to a player
+      &9/<command> remove <recipe_id> <player> &7- Removing a crazy recipe from a player
   skillmanager:
     description: Manage the skill experience, give player the skill experience or take it from player
     usage: |-

@@ -1,5 +1,7 @@
 package org.hcmc.hcplayground.manager;
 
+import com.google.gson.reflect.TypeToken;
+import org.apache.commons.lang.StringUtils;
 import org.bukkit.Material;
 import org.bukkit.Statistic;
 import org.bukkit.configuration.ConfigurationSection;
@@ -7,10 +9,10 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.*;
 import org.hcmc.hcplayground.enums.MMOType;
 import org.hcmc.hcplayground.model.mmo.*;
-import org.hcmc.hcplayground.serialization.MaterialSerialization;
 import org.hcmc.hcplayground.utility.Global;
 import org.jetbrains.annotations.NotNull;
 
+import java.lang.reflect.Type;
 import java.util.*;
 import java.util.logging.Level;
 
@@ -307,7 +309,8 @@ public class MMOManager {
     private static List<MMOLevel> levelTemplates = new ArrayList<>();
     private static YamlConfiguration yaml;
 
-    public static List<String> skillIdList = new ArrayList<>();
+    private static List<String> skillIdList = new ArrayList<>();
+    private static final List<String> collectionIdList = new ArrayList<>();
 
     public MMOManager() {
 
@@ -318,27 +321,47 @@ public class MMOManager {
     }
 
     public static void Load(YamlConfiguration yaml) {
+        Type mapType = new TypeToken<Map<String, List<String>>>() {
+        }.getType();
         MMOManager.yaml = yaml;
         ConfigurationSection skillSection = yaml.getConfigurationSection("skill_declarations");
         ConfigurationSection collectionCategorySection = yaml.getConfigurationSection("collection_categories");
         ConfigurationSection collectionMaterialSection = yaml.getConfigurationSection("collection_materials");
         ConfigurationSection levelSection = yaml.getConfigurationSection("level_templates");
+
         if (skillSection != null) {
             skills = Global.deserializeList(skillSection, MMOSkill.class);
             skillIdList = skillSection.getKeys(false).stream().toList();
             for (MMOSkill skill : skills) {
-                String path = String.format("%s.levels", skill.getId().split("\\.")[1]);
-                ConfigurationSection section = skillSection.getConfigurationSection(path);
-                if (section == null) continue;
-                List<MMOLevel> levels = Global.deserializeList(section, MMOLevel.class);
+                String id = skill.getId().split("\\.")[1];
+                String levelsPath = String.format("%s.levels", id);
+                ConfigurationSection levelsSection = skillSection.getConfigurationSection(levelsPath);
+
+                if (levelsSection == null) continue;
+                List<MMOLevel> levels = Global.deserializeList(levelsSection, MMOLevel.class);
                 for (MMOLevel level : levels) {
-                    level.initialize(skill.getName());
+                    int l = getLevelById(level.getId());
+                    String rewardsPath = String.format("%s.levels.%s.rewards", id, l);
+                    ConfigurationSection rewardsSection = skillSection.getConfigurationSection(rewardsPath);
+                    if (rewardsSection != null) {
+                        String value = Global.GsonObject.toJson(rewardsSection.getValues(false));
+                        Map<String, List<String>> mapRewards = Global.GsonObject.fromJson(value, mapType);
+                        level.setRewards(mapRewards);
+                    }
+
+                    level.initialize(l, skill.getType().name(), skill.getName());
                 }
                 skill.setLevels(levels);
             }
         }
         if (collectionMaterialSection != null) {
             collectionMaterials = Global.deserializeList(collectionMaterialSection, MMOCollectionMaterial.class);
+            collectionIdList.clear();
+            for (MMOCollectionMaterial collection : collectionMaterials) {
+                for (Material material : collection.getMaterialTypes()) {
+                    collectionIdList.add(material.name().toLowerCase());
+                }
+            }
         }
         if (collectionCategorySection != null) {
             collectionCategories = Global.deserializeList(collectionCategorySection, MMOCollectionCategory.class);
@@ -394,35 +417,43 @@ public class MMOManager {
     }
 
     public static MMOCollectionMaterial getCollectionMaterial(Material material) {
-        MMOCollectionMaterial collectionMaterial = collectionMaterials.stream().filter(x -> x.getMaterialTypes().contains(material)).findAny().orElse(null);
-        if (collectionMaterial == null) return null;
+        Type mapType = new TypeToken<Map<String, List<String>>>() {
+        }.getType();
+        MMOCollectionMaterial cloneObject = collectionMaterials.stream().filter(x -> x.getMaterialTypes().contains(material)).findAny().orElse(null);
+        if (cloneObject == null) return null;
 
-        MMOCollectionMaterial obj = collectionMaterial.clone();
-        obj.setName(obj.getName().replace("%material%", material.name()));
+        MMOCollectionMaterial collectionMaterial = cloneObject.clone();
+        String id = collectionMaterial.getId().split("\\.")[1];
+        String levelsPath = String.format("collection_materials.%s.levels", id);
+        collectionMaterial.setName(collectionMaterial.getName().replace("%material%", material.name()));
 
-        String path = String.format("collection_materials.%s.levels", obj.getId().split("\\.")[1]);
-        ConfigurationSection section = yaml.getConfigurationSection(path);
-        if (section != null) {
-            List<MMOLevel> levels = Global.deserializeList(section, MMOLevel.class);
-            obj.setLevels(levels);
+        ConfigurationSection levelsSection = yaml.getConfigurationSection(levelsPath);
+        if (levelsSection == null) return collectionMaterial;
 
-            for (MMOLevel level : levels) {
-                level.initialize(material.name());
-                /*
-                for (String rewardId : level.getRewards()) {
-                    MMOReward reward = RewardManager.getReward(rewardId);
-                    if (reward != null) level.calculate(reward);
-                }
+        List<MMOLevel> levels = Global.deserializeList(levelsSection, MMOLevel.class);
+        collectionMaterial.setLevels(levels);
 
-                 */
+        for (MMOLevel level : levels) {
+            int l = getLevelById(level.getId());
+            String rewardsPath = String.format("collection_materials.%s.levels.%s.rewards", id, l);
+            ConfigurationSection rewardsSection = yaml.getConfigurationSection(rewardsPath);
+            if (rewardsSection != null) {
+                String value = Global.GsonObject.toJson(rewardsSection.getValues(false));
+                Map<String, List<String>> mapRewards = Global.GsonObject.fromJson(value, mapType);
+                level.setRewards(mapRewards);
             }
-        }
 
-        return obj;
+            level.initialize(l, material.name(), collectionMaterial.getName());
+        }
+        return collectionMaterial;
     }
 
     public static List<String> getSkillIdList() {
         return skillIdList;
+    }
+
+    public static List<String> getCollectionIdList() {
+        return collectionIdList;
     }
 
     public static void incrementStatisticPoints(Player player, MMOType type, int points) {
@@ -542,5 +573,15 @@ public class MMOManager {
             player.incrementStatistic(Statistic.MINE_BLOCK, materials[materialIndex], 1);
             materialIndex++;
         }
+    }
+
+    private static int getLevelById(String id) {
+        int level = -1;
+        if (StringUtils.isBlank(id)) return level;
+        String[] keys = id.split("\\.");
+        if (keys.length >= 2 && StringUtils.isNumeric(keys[1]))
+            level = Integer.parseInt(keys[1]);
+
+        return level;
     }
 }

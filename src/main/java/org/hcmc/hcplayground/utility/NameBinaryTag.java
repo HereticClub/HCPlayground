@@ -1,5 +1,6 @@
 package org.hcmc.hcplayground.utility;
 
+import org.apache.commons.lang.StringUtils;
 import org.bukkit.NamespacedKey;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.inventory.EquipmentSlot;
@@ -31,7 +32,14 @@ public class NameBinaryTag {
         NamespacedKey subKey = new NamespacedKey(plugin, key);
         Float value = subContainer.get(subKey, PersistentDataType.FLOAT);
 
-        if (value == null) return 0;
-        return value;
+        return value == null ? 0.0F : value;
+    }
+
+    public String getStringValue(String key) {
+        if (subContainer == null) return "";
+        NamespacedKey subKey = new NamespacedKey(plugin, key);
+        String value = subContainer.get(subKey, PersistentDataType.STRING);
+
+        return StringUtils.isBlank(value) ? "" : value;
     }
 }

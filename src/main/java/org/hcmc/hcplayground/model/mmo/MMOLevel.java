@@ -7,28 +7,26 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.hcmc.hcplayground.enums.MMOType;
 import org.hcmc.hcplayground.manager.*;
 import org.hcmc.hcplayground.model.item.ItemBase;
 import org.hcmc.hcplayground.model.player.PlayerData;
 import org.hcmc.hcplayground.model.recipe.CrazyShapedRecipe;
+import org.hcmc.hcplayground.serialization.MMOTypeSerialization;
+import org.hcmc.hcplayground.serialization.MaterialSerialization;
 import org.hcmc.hcplayground.utility.RomanNumber;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.Serializable;
 import java.util.*;
 
-public class MMOLevel {
+public class MMOLevel implements Serializable {
     /**
      * 技能等级的显示名称
      */
     @Expose
     @SerializedName(value = "display")
     private String display;
-    /**
-     * 奖励id
-     */
-    @Expose
-    @SerializedName(value = "rewards")
-    private List<String> rewards;
     /**
      * 已达成等级的显示物品，通常是绿色玻璃板
      */
@@ -71,18 +69,25 @@ public class MMOLevel {
      */
     @Expose
     @SerializedName(value = "lore")
-    private List<String> lore = null;
+    private List<String> lore = new ArrayList<>();
+
+    /**
+     * 收集物品或技能的奖励对应列表<br>
+     * String - 奖励类型，如果当前等级实例属于技能类型，则值必须是MMOType的值之一，如果属于物品收集类型，则值必须是Material的值之一<br>
+     * {@code List<String>} - 奖励id列表
+     */
+    @Expose(deserialize = false)
+    private Map<String, List<String>> rewards = new HashMap<>();
     /**
      * 等级id，包含等级数值
      */
     @Expose(deserialize = false)
     private String id;
+
     /**
      * 等级数值，由id拆解
      */
-    @Expose(deserialize = false)
     private int level = -1;
-
     private double knockBack = 0;
     private double armor = 0;
     private double armorToughness = 0;
@@ -101,9 +106,23 @@ public class MMOLevel {
     private double speed = 0;
     private double diggingSpeed = 0;
     private double loggingSpeed = 0;
+    /**
+     * 可解锁的疯狂配方列表
+     */
     private final List<String> recipeIdList = new ArrayList<>();
+    /**
+     * 奖励项目的物品列表，包含数量<br>
+     * String - ItemBase id，也可以是Material<br>
+     * Integer - 数量<br>
+     */
     private final Map<String, Integer> itemIdList = new HashMap<>();
+    /**
+     * 可解锁的粒子效果列表
+     */
     private final List<String> particleIdList = new ArrayList<>();
+    /**
+     * 奖励项目的物品实例，由itemIdList属性转换
+     */
     private final List<ItemStack> itemStacks = new ArrayList<>();
 
     public int getLevel() {
@@ -114,8 +133,12 @@ public class MMOLevel {
         return id;
     }
 
-    public List<String> getRewards() {
-        return rewards;
+    public Map<String, List<String>> getRewards() {
+        return new HashMap<>(rewards);
+    }
+
+    public void setRewards(Map<String, List<String>> rewards) {
+        this.rewards = new HashMap<>(rewards);
     }
 
     public int getAmount() {
@@ -146,24 +169,12 @@ public class MMOLevel {
         return currentMaterial;
     }
 
-    public void setCurrentMaterial(Material currentMaterial) {
-        this.currentMaterial = currentMaterial;
-    }
-
     public Material getReachedMaterial() {
         return reachedMaterial;
     }
 
-    public void setReachedMaterial(Material reachedMaterial) {
-        this.reachedMaterial = reachedMaterial;
-    }
-
     public Material getUnreachedMaterial() {
         return unreachedMaterial;
-    }
-
-    public void setUnreachedMaterial(Material unreachedMaterial) {
-        this.unreachedMaterial = unreachedMaterial;
     }
 
     @NotNull
@@ -186,25 +197,13 @@ public class MMOLevel {
 
     }
 
-    public void initialize(String display) {
-        level = -1;
-
-        if (StringUtils.isBlank(id)) return;
-        String[] keys = id.split("\\.");
-        if (keys.length <= 1) return;
-        if (!StringUtils.isNumeric(keys[1])) return;
-        level = Integer.parseInt(keys[1]);
-        if (!StringUtils.isBlank(display) && StringUtils.isBlank(this.display)) {
-            this.display = String.format("%s %s", display, RomanNumber.fromInteger(level));
-        }
-
-        for (String rewardId : rewards) {
-            MMOReward reward = RewardManager.getReward(rewardId);
-            if (reward != null) calculate(reward);
-        }
-    }
-
-    public void reset() {
+    /**
+     * 初始化等级实例
+     * @param rewardType 奖励类型，必须是MMOType或者Material的值之一
+     * @param display 箱子界面上当前等级实例在插槽上的显示名称
+     */
+    public void initialize(int level, String rewardType, String display) {
+        this.level = level;
         armor = 0;
         armorToughness = 0;
         attackDamage = 0;
@@ -224,15 +223,31 @@ public class MMOLevel {
         diggingSpeed = 0;
         loggingSpeed = 0;
 
+        itemStacks.clear();
+        itemIdList.clear();
+        recipeIdList.clear();
+        particleIdList.clear();
+
         if (amount <= 0) amount = 1;
         if (lore == null) lore = new ArrayList<>();
         if (reachedMaterial == null) reachedMaterial = Material.LIME_STAINED_GLASS_PANE;
         if (currentMaterial == null) currentMaterial = Material.YELLOW_STAINED_GLASS_PANE;
         if (unreachedMaterial == null) unreachedMaterial = Material.RED_STAINED_GLASS_PANE;
+        if (!StringUtils.isBlank(display) && StringUtils.isBlank(this.display))
+            this.display = String.format("%s %s", display, RomanNumber.fromInteger(level));
 
-        itemIdList.clear();
-        recipeIdList.clear();
-        particleIdList.clear();
+        String _rewardType = rewardType.toLowerCase();
+        MMOType type = MMOTypeSerialization.parse(_rewardType);
+        Material material = MaterialSerialization.parse(_rewardType);
+
+        List<String> _rewards = new ArrayList<>();
+        if (!type.equals(MMOType.UNDEFINED) && rewards.containsKey(_rewardType)) _rewards = rewards.get(_rewardType);
+        if (!material.equals(Material.AIR) && rewards.containsKey(_rewardType)) _rewards = rewards.get(_rewardType);
+
+        for (String rewardId : _rewards) {
+            MMOReward reward = RewardManager.getReward(rewardId);
+            if (reward != null) calculate(reward);
+        }
     }
 
     public void reward(Player player) {
@@ -258,68 +273,16 @@ public class MMOLevel {
 
         data.unlockRecipe(recipeIdList.toArray(new String[0]));
 
-        Map<Integer, ItemStack> drops = player.getInventory().addItem(itemStacks.toArray(new ItemStack[0]));
-        for (Map.Entry<Integer, ItemStack> entry : drops.entrySet()) {
+        for (Map.Entry<String, Integer> entry : itemIdList.entrySet()) {
+            ItemBase ib = ItemManager.findItemById(entry.getKey());
+            if (ib == null) ib = ItemManager.createItemBase(entry.getKey(), entry.getValue());
+            ib.setAmount(entry.getValue());
+            itemStacks.add(ib.toItemStack());
+        }
+        Map<Integer, ItemStack> rewardItemStacks = player.getInventory().addItem(itemStacks.toArray(new ItemStack[0]));
+        for (Map.Entry<Integer, ItemStack> entry : rewardItemStacks.entrySet()) {
             player.getWorld().dropItemNaturally(player.getLocation(), entry.getValue());
         }
-    }
-
-    private List<String> getRewardLore() {
-        List<String> _lore = new ArrayList<>();
-
-        if (health > 0) _lore.add(String.format("%s§a+%.1f", LanguageManager.getString("reword.health"), health));
-        if (armor > 0) _lore.add(String.format("%s§a+%.1f", LanguageManager.getString("reword.armor"), armor));
-        if (attackDamage > 0)
-            _lore.add(String.format("%s§a+%.1f", LanguageManager.getString("reword.attack-damage"), attackDamage));
-        if (critical > 0) _lore.add(String.format("%s§a+%.3f", LanguageManager.getString("reword.crit"), critical));
-        if (criticalDamage > 0)
-            _lore.add(String.format("%s§a+%.2f", LanguageManager.getString("reword.crit-damage"), criticalDamage));
-        if (intelligence > 0)
-            _lore.add(String.format("%s§a+%.1f", LanguageManager.getString("reword.intelligence"), intelligence));
-        if (attackSpeed > 0)
-            _lore.add(String.format("%s§a+%.1f", LanguageManager.getString("reword.attack-speed"), attackSpeed));
-        if (armorToughness > 0)
-            _lore.add(String.format("%s§a+%.1f", LanguageManager.getString("reword.armor-toughness"), armorToughness));
-        if (speed > 0) _lore.add(String.format("%s§a+%.1f", LanguageManager.getString("reword.speed"), armor));
-        if (recover > 0) _lore.add(String.format("%s§a+%.1f", LanguageManager.getString("reword.recover"), recover));
-        if (fortune > 0) _lore.add(String.format("%s§a+%.1f", LanguageManager.getString("reword.fortune"), fortune));
-        if (knockBack > 0)
-            _lore.add(String.format("%s§a+%.1f", LanguageManager.getString("reword.knock-back"), knockBack));
-        if (bloodSucking > 0)
-            _lore.add(String.format("%s§a+%.1f", LanguageManager.getString("reword.blood-sucking"), bloodSucking));
-        if (attackReach > 0)
-            _lore.add(String.format("%s§a+%.1f", LanguageManager.getString("reword.attack-reach"), attackReach));
-        if (diggingSpeed > 0)
-            _lore.add(String.format("%s§a+%.1f", LanguageManager.getString("reword.digging-speed"), diggingSpeed));
-        if (loggingSpeed > 0)
-            _lore.add(String.format("%s§a+%.1f", LanguageManager.getString("reword.logging-speed"), loggingSpeed));
-        if (money > 0) _lore.add(String.format("%s§a+%.1f", LanguageManager.getString("reword.money"), money));
-        if (point > 0) _lore.add(String.format("%s§a+%d", LanguageManager.getString("reword.point"), point));
-
-        for (String s : recipeIdList) {
-            CrazyShapedRecipe recipe = RecipeManager.getRecipe(s);
-            if (recipe == null) continue;
-            _lore.add(String.format("%s%s", LanguageManager.getString("reword.recipe"), recipe.getDisplay()));
-        }
-        for (Map.Entry<String, Integer> entry : itemIdList.entrySet()) {
-            String id = entry.getKey();
-            int amount = entry.getValue();
-
-            ItemBase ib = ItemManager.findItemById(id);
-            if (ib == null) ib = ItemManager.createItemBase(id, amount);
-
-            ItemStack itemStack = ib.toItemStack();
-            itemStack.setAmount(amount);
-            itemStacks.add(itemStack);
-            ItemMeta meta = itemStack.getItemMeta();
-            if (meta == null) continue;
-
-            String display = StringUtils.isBlank(ib.getId()) ? itemStack.getType().name() : meta.getDisplayName();
-            _lore.add(String.format("§f %s §7x §a%d", display, amount));
-        }
-
-        if (_lore.size() >= 1) _lore.addAll(0, LanguageManager.getStringList("reword.lore"));
-        return _lore;
     }
 
     /**
@@ -330,15 +293,6 @@ public class MMOLevel {
      */
     public ItemStack setupItemStack(String levelTemplate, int statistic, int flag) {
         MMOLevel _levelTemplate = MMOManager.getLevelTemplate(levelTemplate);
-        reset();
-        // 等级奖励计算，将同等级但重复的奖励堆叠
-        /*
-        for (String id : rewards) {
-            MMOReward reward = RewardManager.getReward(id);
-            if (reward != null) calculate(reward);
-        }
-
-         */
         // 以下代码必须运行在等级奖励计算后
         if (_levelTemplate != null) {
             if (_levelTemplate.getAmount() >= 1) amount = _levelTemplate.getAmount();
@@ -394,7 +348,7 @@ public class MMOLevel {
         return String.format("Level x %d, Threshold x %d", level, threshold);
     }
 
-    public void calculate(MMOReward reward) {
+    private void calculate(MMOReward reward) {
         armor += reward.getArmor();
         armorToughness += reward.getArmorToughness();
         attackDamage += reward.getAttackDamage();
@@ -417,13 +371,13 @@ public class MMOLevel {
         for (String s : reward.getRecipeIds()) {
             if (recipeIdList.stream().noneMatch(x -> x.equalsIgnoreCase(s))) recipeIdList.add(s);
         }
-        for (String s1 : reward.getItemIds()) {
-            List<String> keys = Arrays.stream(s1.split(",")).map(String::trim).toList();
+        for (String s : reward.getItemIds()) {
+            List<String> keys = Arrays.stream(s.split(",")).map(String::trim).toList();
             if (keys.size() <= 1) continue;
             if (!StringUtils.isNumeric(keys.get(1))) continue;
+
             String id = keys.get(0);
             int amount = Integer.parseInt(keys.get(1));
-
             if (itemIdList.containsKey(id)) {
                 int _amount = itemIdList.get(id);
                 itemIdList.replace(id, amount + _amount);
@@ -434,5 +388,58 @@ public class MMOLevel {
         for (String s : reward.getParticleIds()) {
             if (particleIdList.stream().noneMatch(x -> x.equalsIgnoreCase(s))) particleIdList.add(s);
         }
+    }
+
+    private List<String> getRewardLore() {
+        List<String> _lore = new ArrayList<>();
+
+        if (health > 0) _lore.add(String.format("%s§a+%.1f", LanguageManager.getString("reword.health"), health));
+        if (armor > 0) _lore.add(String.format("%s§a+%.1f", LanguageManager.getString("reword.armor"), armor));
+        if (attackDamage > 0)
+            _lore.add(String.format("%s§a+%.1f", LanguageManager.getString("reword.attack-damage"), attackDamage));
+        if (critical > 0) _lore.add(String.format("%s§a+%.3f", LanguageManager.getString("reword.crit"), critical));
+        if (criticalDamage > 0)
+            _lore.add(String.format("%s§a+%.2f", LanguageManager.getString("reword.crit-damage"), criticalDamage));
+        if (intelligence > 0)
+            _lore.add(String.format("%s§a+%.1f", LanguageManager.getString("reword.intelligence"), intelligence));
+        if (attackSpeed > 0)
+            _lore.add(String.format("%s§a+%.1f", LanguageManager.getString("reword.attack-speed"), attackSpeed));
+        if (armorToughness > 0)
+            _lore.add(String.format("%s§a+%.1f", LanguageManager.getString("reword.armor-toughness"), armorToughness));
+        if (speed > 0) _lore.add(String.format("%s§a+%.1f", LanguageManager.getString("reword.speed"), armor));
+        if (recover > 0) _lore.add(String.format("%s§a+%.1f", LanguageManager.getString("reword.recover"), recover));
+        if (fortune > 0) _lore.add(String.format("%s§a+%.1f", LanguageManager.getString("reword.fortune"), fortune));
+        if (knockBack > 0)
+            _lore.add(String.format("%s§a+%.1f", LanguageManager.getString("reword.knock-back"), knockBack));
+        if (bloodSucking > 0)
+            _lore.add(String.format("%s§a+%.1f", LanguageManager.getString("reword.blood-sucking"), bloodSucking));
+        if (attackReach > 0)
+            _lore.add(String.format("%s§a+%.1f", LanguageManager.getString("reword.attack-reach"), attackReach));
+        if (diggingSpeed > 0)
+            _lore.add(String.format("%s§a+%.1f", LanguageManager.getString("reword.digging-speed"), diggingSpeed));
+        if (loggingSpeed > 0)
+            _lore.add(String.format("%s§a+%.1f", LanguageManager.getString("reword.logging-speed"), loggingSpeed));
+        if (money > 0) _lore.add(String.format("%s§a+%.1f", LanguageManager.getString("reword.money"), money));
+        if (point > 0) _lore.add(String.format("%s§a+%d", LanguageManager.getString("reword.point"), point));
+
+        for (String s : recipeIdList) {
+            CrazyShapedRecipe recipe = RecipeManager.getRecipe(s);
+            if (recipe == null) continue;
+            _lore.add(String.format("%s%s", LanguageManager.getString("reword.recipe"), recipe.getDisplay()));
+        }
+        for (Map.Entry<String, Integer> entry : itemIdList.entrySet()) {
+            String id = entry.getKey();
+            Integer amount = entry.getValue();
+            ItemBase ib = ItemManager.findItemById(id);
+            Material material = MaterialSerialization.parse(id);
+            ItemStack itemStack = ib == null ? new ItemStack(material, amount) : ib.toItemStack();
+            itemStack.setAmount(amount);
+            ItemMeta meta = itemStack.getItemMeta();
+            String display = !ItemManager.isItemBase(itemStack) || meta == null ? itemStack.getType().name() : meta.getDisplayName();
+            _lore.add(String.format("§f %s §7x §a%d", display, itemStack.getAmount()));
+        }
+
+        if (_lore.size() >= 1) _lore.addAll(0, LanguageManager.getStringList("reword.lore"));
+        return _lore;
     }
 }

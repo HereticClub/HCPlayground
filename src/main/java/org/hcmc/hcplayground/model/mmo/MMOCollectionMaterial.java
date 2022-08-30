@@ -56,6 +56,14 @@ public class MMOCollectionMaterial implements Cloneable {
         this.name = name;
     }
 
+    public void setMaterialTypes(List<Material> materialTypes) {
+        this.materialTypes = new ArrayList<>(materialTypes);
+    }
+
+    public List<MMOLevel> getLevels() {
+        return new ArrayList<>(levels);
+    }
+
     public void setLevels(List<MMOLevel> levels) {
         this.levels = new ArrayList<>(levels);
     }
@@ -63,6 +71,7 @@ public class MMOCollectionMaterial implements Cloneable {
     public MMOCollectionMaterial() {
 
     }
+
 
     @Override
     public MMOCollectionMaterial clone() {
