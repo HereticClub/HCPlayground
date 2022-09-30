@@ -67,7 +67,7 @@ public class PluginRunnable extends BukkitRunnable {
             }
             // 以下方法每5秒运行1次
             if (delta5s <= CPU_TIMER) {
-                doMinionDressingPlatform();
+                doMinionDressing();
             }
             // 以下方法每10分钟运行1次
             if (delta10m <= CPU_TIMER) {
@@ -83,15 +83,15 @@ public class PluginRunnable extends BukkitRunnable {
     }
 
     private void doMinionAcquire() {
-        List<MinionEntity> minions = RecordManager.getMinionRecords();
+        List<MinionEntity> minions = RecordManager.getMinionEntities();
         for (MinionEntity entity : minions) {
             if (entity.getType() == null) continue;
 
             long diff = new Date().getTime() / 1000 - entity.getLastAcquireTime().getTime() / 1000;
-            MinionTemplate template = MinionManager.getMinionTemplate(entity.getType(), entity.getLevel());
+            MinionTemplate template = entity.getMinionTemplate();
             if (template == null || diff <= template.getPeriod()) continue;
 
-            new MinionAcquireRunnable(entity, template).runTaskLater(plugin, 10);
+            new MinionAcquireRunnable(entity).runTaskLater(plugin, 10);
             entity.setLastAcquireTime(new Date());
         }
     }
@@ -106,9 +106,11 @@ public class PluginRunnable extends BukkitRunnable {
         super.cancel();
     }
 
-    private void doMinionDressingPlatform() {
-        for (MinionEntity minion : RecordManager.getMinionRecords()) {
+    private void doMinionDressing() {
+        for (MinionEntity minion : RecordManager.getMinionEntities()) {
             minion.dressingPlatform();
+            minion.breedingCubs();
+            minion.breedingBees();
         }
     }
 

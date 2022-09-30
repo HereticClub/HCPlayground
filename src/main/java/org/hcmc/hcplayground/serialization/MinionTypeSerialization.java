@@ -14,12 +14,16 @@ public class MinionTypeSerialization implements JsonDeserializer<MinionType>, Js
 
     @Override
     public MinionType deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
-        MinionType[] types = MinionType.values();
-        return Arrays.stream(types).filter(x -> x.name().equalsIgnoreCase(jsonElement.getAsString())).findAny().orElse(null);
+        return valueOf(jsonElement.getAsString());
     }
 
     @Override
     public JsonElement serialize(MinionType minionType, Type type, JsonSerializationContext jsonSerializationContext) {
         return new JsonPrimitive(minionType.name());
+    }
+
+    public static MinionType valueOf(String name) {
+        MinionType[] types = MinionType.values();
+        return Arrays.stream(types).filter(x -> x.name().equalsIgnoreCase(name)).findAny().orElse(null);
     }
 }

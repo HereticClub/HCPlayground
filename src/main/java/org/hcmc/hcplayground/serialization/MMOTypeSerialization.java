@@ -18,11 +18,11 @@ public class MMOTypeSerialization implements JsonDeserializer<MMOType> {
 
     @Override
     public MMOType deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
-        return parse(jsonElement.getAsString());
+        return valueOf(jsonElement.getAsString());
     }
 
     @NotNull
-    public static MMOType parse(@NotNull String name) {
+    public static MMOType valueOf(@NotNull String name) {
         MMOType[] types = MMOType.values();
         return Arrays.stream(types).filter(x -> x.name().equalsIgnoreCase(name)).findAny().orElse(MMOType.UNDEFINED);
     }

@@ -17,10 +17,10 @@ public class CompareTypeSerialization implements JsonDeserializer<CompareType> {
 
     @Override
     public CompareType deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
-        return getValue(jsonElement.getAsString());
+        return valueOf(jsonElement.getAsString());
     }
 
-    public static CompareType getValue(String name) {
+    public static CompareType valueOf(String name) {
         CompareType[] types = CompareType.values();
         return Arrays.stream(types).filter(x -> x.name().equalsIgnoreCase(name)).findAny().orElse(null);
     }

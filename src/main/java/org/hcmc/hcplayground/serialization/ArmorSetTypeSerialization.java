@@ -17,10 +17,10 @@ public class ArmorSetTypeSerialization implements JsonDeserializer<ArmorSetType>
 
     @Override
     public ArmorSetType deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
-        return parse(jsonElement.getAsString());
+        return valueOf(jsonElement.getAsString());
     }
 
-    public static ArmorSetType parse(String name) {
+    public static ArmorSetType valueOf(String name) {
         ArmorSetType[] types = ArmorSetType.values();
         return Arrays.stream(types).filter(x -> x.name().equalsIgnoreCase(name)).findAny().orElse(null);
     }

@@ -135,8 +135,13 @@ public class ItemManager {
     }
 
     public static boolean isItemBase(ItemStack itemStack) {
-        String id = getItemBaseId(itemStack);
-        return findItemById(id) != null;
+        String id = getMainKeyName(itemStack);
+        return id.equalsIgnoreCase(ItemBase.PERSISTENT_MAIN_KEY);
+    }
+
+    public static boolean isMinion(ItemStack itemStack) {
+        String id = getMainKeyName(itemStack);
+        return id.equalsIgnoreCase(MinionManager.PERSISTENT_MAIN_KEY);
     }
 
     public static List<String> getIdList() {
@@ -223,13 +228,26 @@ public class ItemManager {
     private static String getItemBaseId(ItemStack itemStack) {
         ItemMeta im = itemStack.getItemMeta();
         if (im == null) return "";
+        String key = getMainKeyName(itemStack);
+        if (StringUtils.isBlank(key)) return "";
 
-        NamespacedKey mainKey = new NamespacedKey(plugin, ItemBase.PERSISTENT_MAIN_KEY);
         PersistentDataContainer mainContainer = im.getPersistentDataContainer();
-
-        System.out.println("ItemBase Id: " + mainContainer.get(mainKey, PersistentDataType.STRING));
-
+        NamespacedKey mainKey = new NamespacedKey(plugin, key);
         return mainContainer.get(mainKey, PersistentDataType.STRING);
+    }
+
+    private static String getMainKeyName(ItemStack itemStack) {
+        ItemMeta im = itemStack.getItemMeta();
+        if (im == null) return "";
+
+        PersistentDataContainer mainContainer = im.getPersistentDataContainer();
+        Set<NamespacedKey> dataKeys = mainContainer.getKeys();
+        String[] mainKeys = Global.getPersistentMainKeys();
+        for (NamespacedKey n : dataKeys) {
+            if (Arrays.stream(mainKeys).noneMatch(x -> x.equalsIgnoreCase(n.getKey()))) continue;
+            return n.getKey();
+        }
+        return "";
     }
 
     private static class CraftItemBase extends org.hcmc.hcplayground.model.item.CraftItemBase {
@@ -244,7 +262,7 @@ public class ItemManager {
         }
 
         public CraftItemBase(String material, int amount) {
-            Material m = MaterialSerialization.parse(material);
+            Material m = MaterialSerialization.valueOf(material);
             this.material = new MaterialData();
             this.material.setData(m, m.name());
             this.amount = amount;

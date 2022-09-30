@@ -452,8 +452,8 @@ public class CommandItem extends Command {
         // args[1] - Skill Type
         // args[2] - Player Name
         Player target = Bukkit.getPlayer(args[2]);
-        MMOType type = MMOTypeSerialization.parse(args[1]);
-        Material material = MaterialSerialization.parse(args[1]);
+        MMOType type = MMOTypeSerialization.valueOf(args[1]);
+        Material material = MaterialSerialization.valueOf(args[1]);
         if (target == null) {
             sender.sendMessage(LanguageManager.getString("playerNotExist").replace("%player%", args[2]));
             return false;
@@ -489,8 +489,8 @@ public class CommandItem extends Command {
         // args[1] - Skill Type or material
         // args[2] - Player Name
         Player target = Bukkit.getPlayer(args[2]);
-        MMOType type = MMOTypeSerialization.parse(args[1]);
-        Material material = MaterialSerialization.parse(args[1]);
+        MMOType type = MMOTypeSerialization.valueOf(args[1]);
+        Material material = MaterialSerialization.valueOf(args[1]);
         if (target == null) {
             sender.sendMessage(LanguageManager.getString("playerNotExist").replace("%player%", args[2]));
             return false;
@@ -522,7 +522,7 @@ public class CommandItem extends Command {
         String playerName = args[2];
         String points = args[3];
         Player target = Bukkit.getPlayer(playerName);
-        MMOType type = MMOTypeSerialization.parse(args[1]);
+        MMOType type = MMOTypeSerialization.valueOf(args[1]);
         if (type.equals(MMOType.UNDEFINED)) {
             sender.sendMessage(LanguageManager.getString("skillTypeInvalid").replace("%skill%", args[1]));
             return false;
@@ -546,7 +546,7 @@ public class CommandItem extends Command {
         String playerName = args[2];
         String points = args[3];
         Player target = Bukkit.getPlayer(playerName);
-        MMOType type = MMOTypeSerialization.parse(args[1]);
+        MMOType type = MMOTypeSerialization.valueOf(args[1]);
         if (type.equals(MMOType.UNDEFINED)) {
             sender.sendMessage(LanguageManager.getString("skillTypeInvalid").replace("%skill%", args[1]));
             return false;

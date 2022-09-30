@@ -41,7 +41,7 @@ public class RecordManager {
         return hcItemBlockRecords;
     }
 
-    public static List<MinionEntity> getMinionRecords() {
+    public static List<MinionEntity> getMinionEntities() {
         return minionEntities;
     }
 
@@ -50,14 +50,14 @@ public class RecordManager {
     }
 
     public static void addMinionRecord(MinionEntity item) {
-        if (!existMinionRecord(item.getLocation())) minionEntities.add(item);
+        if (!existMinionEntity(item.getLocation())) minionEntities.add(item);
     }
 
-    public static boolean existMinionRecord(Location location) {
+    public static boolean existMinionEntity(Location location) {
         return minionEntities.stream().anyMatch(x -> x.getLocation().toVector().equals(location.toVector()));
     }
 
-    public static boolean existMinionRecord(UUID armorstandUuid) {
+    public static boolean existMinionEntity(UUID armorstandUuid) {
         return minionEntities.stream().anyMatch(x -> x.getUuid().equals(armorstandUuid));
     }
 

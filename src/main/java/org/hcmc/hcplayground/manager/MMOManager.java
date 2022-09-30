@@ -2,14 +2,17 @@ package org.hcmc.hcplayground.manager;
 
 import com.google.gson.reflect.TypeToken;
 import org.apache.commons.lang.StringUtils;
-import org.bukkit.Material;
-import org.bukkit.Statistic;
+import org.bukkit.*;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.*;
+import org.bukkit.inventory.ItemStack;
 import org.hcmc.hcplayground.enums.MMOType;
 import org.hcmc.hcplayground.model.mmo.*;
 import org.hcmc.hcplayground.utility.Global;
+import org.hcmc.hcplayground.utility.RandomNumber;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Type;
@@ -89,6 +92,9 @@ public class MMOManager {
             Material.NETHER_WART,
             Material.CHORUS_FLOWER,
             Material.CHORUS_PLANT,
+            Material.RED_MUSHROOM,
+            Material.BROWN_MUSHROOM,
+            Material.SWEET_BERRY_BUSH,
     };
 
     /**
@@ -163,6 +169,90 @@ public class MMOManager {
             Material.REDSTONE_ORE,
             Material.SAND,
     };
+
+    public static final Material[] Flowers = new Material[]{
+            Material.DANDELION,
+            Material.POPPY,
+            Material.BLUE_ORCHID,
+            Material.ALLIUM,
+            Material.AZURE_BLUET,
+            Material.RED_TULIP,
+            Material.ORANGE_TULIP,
+            Material.WHITE_TULIP,
+            Material.PINK_TULIP,
+            Material.OXEYE_DAISY,
+            Material.CORNFLOWER,
+            Material.LILY_OF_THE_VALLEY,
+            Material.SUNFLOWER,
+            Material.LILAC,
+            Material.ROSE_BUSH,
+            Material.PEONY,
+    };
+
+    /**
+     * 从start位置开始算起，获取和start位置相同的方块
+     * @param start 作为起始方块的锚点
+     * @param face 扩展方向
+     * @param round 相对扩展方向的水平方块数量
+     * @param layers 扩展方向的数量
+     * @param distance 距离作为start方块的起始方块，为0表示从start位置开始
+     * @return 与start位置的方块类型相同的方块列表实例
+     */
+    public static List<Block> getBlocks(Location start, BlockFace face, int round, int layers, int distance) {
+        Location _start = start.clone();
+        Material material = start.getBlock().getType();
+        List<Block> blocks = new ArrayList<>();
+
+        switch (face) {
+            // 北，-Z方向
+            case NORTH -> _start.add(0, 0, -distance);
+            // 南，+Z方向
+            case SOUTH -> _start.add(0, 0, distance);
+            // 东，+X方向
+            case WEST -> _start.add(distance, 0, 0);
+            // 西，-X方向
+            case EAST -> _start.add(-distance, 0, 0);
+            // 上，+Y方向
+            case UP -> _start.add(0, distance, 0);
+            // 下，-Y方向
+            case DOWN -> _start.add(0, -distance, 0);
+        }
+
+        switch (face) {
+            case NORTH, SOUTH -> {
+                for (int x = -round; x <= round; x++) {
+                    for (int y = -round; y <= round; y++) {
+                        for (int z = 0; z < layers; z++) {
+                            Block sample = _start.clone().add(x, y, z).getBlock();
+                            if (sample.getType().equals(material)) blocks.add(sample);
+                        }
+                    }
+                }
+            }
+            case EAST, WEST -> {
+                for (int y = -round; y <= round; y++) {
+                    for (int z = -round; z <= round; z++) {
+                        for (int x = 0; x < layers; x++) {
+                            Block sample = _start.clone().add(x, y, z).getBlock();
+                            if (sample.getType().equals(material)) blocks.add(sample);
+                        }
+                    }
+                }
+            }
+            case UP, DOWN -> {
+                for (int x = -round; x <= round; x++) {
+                    for (int z = -round; z <= round; z++) {
+                        for (int y = 0; y < layers; y++) {
+                            Block sample = _start.clone().add(x, y, z).getBlock();
+                            if (sample.getType().equals(material)) blocks.add(sample);
+                        }
+                    }
+                }
+            }
+        }
+
+        return blocks;
+    }
 
     /**
      * Lumbering skill statistic
@@ -482,6 +572,11 @@ public class MMOManager {
         String methodName = "decreaseStatisticPoints";
         String message = String.format("Remind %s points: %d", type, reminder);
         Global.LogDebug(new Date(), className, methodName, Level.INFO, message);
+    }
+
+    public static Item dropProbability(World world, Location location, ItemStack itemStack, float rate) {
+        if (!RandomNumber.checkBingo(rate)) return null;
+        return world.dropItemNaturally(location, itemStack);
     }
 
     private static int decreaseFarmingPoints(Player player, int points) {

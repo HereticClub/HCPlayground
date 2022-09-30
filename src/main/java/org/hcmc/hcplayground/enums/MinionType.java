@@ -4,6 +4,11 @@ package org.hcmc.hcplayground.enums;
  * 自动采集伙伴类型
  */
 public enum MinionType {
+    /*======== 未定义 ========*/
+    /**
+     * 未定义类型
+     */
+    UNDEFINED,
     /*======== 矿工 ========*/
     /**
      * 圆石
@@ -49,6 +54,10 @@ public enum MinionType {
      * 黑曜石
      */
     OBSIDIAN,
+    /**
+     * 冰
+     */
+    ICE,
     /**
      * 煤炭矿石
      */
@@ -167,7 +176,7 @@ public enum MinionType {
     /**
      * 鱼竿
      */
-    FISH_ROD,
+    FISHING_ROD,
     /*======== 农民 ========*/
     /**
      * 小麦
@@ -198,6 +207,10 @@ public enum MinionType {
      */
     SWEET_BERRY,
     /**
+     * 蘑菇(红/棕)
+     */
+    MUSHROOM,
+    /**
      * 下界犹
      */
     NETHER_WART,
@@ -214,9 +227,9 @@ public enum MinionType {
      */
     BAMBOO,
     /**
-     * 蘑菇(红/棕)
+     * 蜜蜂
      */
-    MUSHROOM,
+    BEE,
     /*======== 斗士 ========*/
     /**
      * 烈焰人
@@ -239,6 +252,26 @@ public enum MinionType {
      */
     ENDERMAN,
     /**
+     * 恶魂
+     */
+    GHAST,
+    /**
+     * 岩浆怪
+     */
+    MAGMA_CUBE,
+    /**
+     * 骷髅
+     */
+    SKELETON,
+    /**
+     * 史莱姆
+     */
+    SLIME,
+    /**
+     * 僵尸
+     */
+    ZOMBIE,
+    /**
      * 溺尸
      */
     DROWNED,
@@ -251,10 +284,6 @@ public enum MinionType {
      */
     ELDER_GUARDIAN,
     /**
-     * 恶魂
-     */
-    GHAST,
-    /**
      * 疣猪兽
      */
     HOGLIN,
@@ -262,10 +291,6 @@ public enum MinionType {
      * 尸壳
      */
     HUSK,
-    /**
-     * 岩浆怪
-     */
-    MAGMA_CUBE,
     /**
      * 怨翼
      */
@@ -279,14 +304,6 @@ public enum MinionType {
      */
     RAVAGER,
     /**
-     * 骷髅
-     */
-    SKELETON,
-    /**
-     * 史莱姆
-     */
-    SLIME,
-    /**
      * 恼鬼
      */
     VEX,
@@ -297,17 +314,13 @@ public enum MinionType {
     /**
      * 女巫
      */
-    WITCHER,
+    WITCH,
     /**
      * 凋零骷髅
      */
-    WITCHER_SKELETON,
+    WITHER_SKELETON,
     /**
      * 狼
      */
     WOLF,
-    /**
-     * 僵尸
-     */
-    ZOMBIE,
 }

@@ -17,10 +17,10 @@ public class PanelSlotTypeSerialization implements JsonDeserializer<PanelSlotTyp
 
     @Override
     public PanelSlotType deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
-        return resolveType(jsonElement.getAsString());
+        return valueOf(jsonElement.getAsString());
     }
 
-    public static PanelSlotType resolveType(String name) {
+    public static PanelSlotType valueOf(String name) {
         PanelSlotType[] values = PanelSlotType.values();
         return Arrays.stream(values).filter(x -> x.name().equalsIgnoreCase(name)).findAny().orElse(null);
     }

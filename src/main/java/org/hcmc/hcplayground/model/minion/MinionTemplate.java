@@ -3,12 +3,14 @@ package org.hcmc.hcplayground.model.minion;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import org.bukkit.Material;
+import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.hcmc.hcplayground.enums.MinionCategory;
 import org.hcmc.hcplayground.enums.MinionType;
 import org.hcmc.hcplayground.manager.MinionManager;
 import org.hcmc.hcplayground.model.item.CraftItemBase;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,7 +27,25 @@ public class MinionTemplate extends CraftItemBase {
     private String texture;
     @Expose
     @SerializedName(value = "platform")
-    private Material platform;
+    private Material platform = Material.AIR;
+    /**
+     * 树苗，仅LUMBERJACK使用
+     */
+    @Expose
+    @SerializedName(value = "sapling")
+    private Material sapling = Material.AIR;
+    /**
+     * 种子，仅FARMER使用
+     */
+    @Expose
+    @SerializedName(value = "seed")
+    private Material seed = Material.AIR;
+    /**
+     * 幼崽，仅BUTCHER和FIGHTER使用
+     */
+    @Expose
+    @SerializedName(value = "cubs")
+    private EntityType cubs = EntityType.PLAYER;
     @Expose
     @SerializedName(value = "category")
     private MinionCategory category;
@@ -62,6 +82,18 @@ public class MinionTemplate extends CraftItemBase {
         this.id = id;
     }
 
+    public Material getSeed() {
+        return seed;
+    }
+
+    public Material getSapling() {
+        return sapling;
+    }
+
+    public EntityType getCubs() {
+        return cubs;
+    }
+
     @Override
     public void updateAttributeLore() {
 
@@ -96,8 +128,9 @@ public class MinionTemplate extends CraftItemBase {
         return period;
     }
 
+    @NotNull
     public Material getPlatform() {
-        return platform;
+        return platform == null ? Material.AIR : platform;
     }
 
     public MinionCategory getCategory() {

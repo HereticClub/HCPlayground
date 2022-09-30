@@ -19,11 +19,11 @@ public class MaterialSerialization implements JsonDeserializer<Material> {
     @Override
     @NotNull
     public Material deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
-        return parse(jsonElement.getAsString());
+        return valueOf(jsonElement.getAsString());
     }
 
     @NotNull
-    public static Material parse(String name) {
+    public static Material valueOf(String name) {
         Material[] values = Material.values();
         return Arrays.stream(values).filter(x -> x.name().equalsIgnoreCase(name)).findAny().orElse(Material.AIR);
     }

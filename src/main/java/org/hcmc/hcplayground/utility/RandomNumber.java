@@ -18,7 +18,7 @@ public class RandomNumber {
     /**
      * 该函数会产生一个随机浮点数，该浮点数会对比参数rate，如果小于参数rate，则返回true，否则返回false
      *
-     * @param rate 该函数内产生的随机数的检测阈值
+     * @param rate 该函数内产生的随机数的检测阈值，值必须介于0 ~ 100之间
      * @return 函数内的浮点随机数小于参数rate，则返回true，否则返回false
      */
     public static boolean checkBingo(float rate) {

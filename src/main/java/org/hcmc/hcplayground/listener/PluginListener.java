@@ -19,10 +19,10 @@ import org.bukkit.event.entity.*;
 import org.bukkit.event.inventory.*;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.*;
+import org.bukkit.loot.Lootable;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
-import org.bukkit.scoreboard.Objective;
-import org.bukkit.scoreboard.Scoreboard;
 import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.enums.CrazyBlockType;
 import org.hcmc.hcplayground.enums.PanelSlotType;
@@ -35,6 +35,7 @@ import org.hcmc.hcplayground.model.menu.MenuPanelSlot;
 import org.hcmc.hcplayground.model.minion.MinionEntity;
 import org.hcmc.hcplayground.model.minion.MinionPanel;
 import org.hcmc.hcplayground.model.minion.MinionPanelSlot;
+import org.hcmc.hcplayground.model.minion.MinionTemplate;
 import org.hcmc.hcplayground.model.recipe.CraftPanel;
 import org.hcmc.hcplayground.model.recipe.CraftPanelSlot;
 import org.hcmc.hcplayground.model.recipe.CrazyShapedRecipe;
@@ -476,6 +477,11 @@ public class PluginListener implements Listener {
         }
         // 获取掉落物品
         Item item = event.getItem();
+        ItemStack itemStack = item.getItemStack();
+        ItemBase itemBase = ItemManager.getItemBase(itemStack);
+        MinionTemplate template = MinionManager.getMinionTemplate(itemStack);
+        if (itemBase != null) item.setItemStack(itemBase.toItemStack());
+        if (template != null) item.setItemStack(template.toItemStack());
         // 物品的掉落者
         UUID thrower = item.getThrower();
         if (thrower == null) return;
@@ -523,9 +529,6 @@ public class PluginListener implements Listener {
             String customName = String.format("%s%s", prefix, display);
             monster.setCustomName(customName);
         }
-        /*
-        TODO: 需要实施在生物的名字下方显示生命值
-         */
     }
 
     /**
@@ -552,10 +555,8 @@ public class PluginListener implements Listener {
     private void onDamageArmorstand(EntityDamageByEntityEvent event) {
         if (event.isCancelled()) return;
         Entity entity = event.getEntity();
-        boolean exist = RecordManager.existMinionRecord(entity.getUniqueId());
-        if (exist) {
-            event.setCancelled(true);
-        }
+        boolean exist = RecordManager.existMinionEntity(entity.getUniqueId());
+        if (exist) event.setCancelled(true);
     }
 
     /**
@@ -568,14 +569,48 @@ public class PluginListener implements Listener {
         // 获取生物的类型及位置
         EntityType type = entity.getType();
         Location location = entity.getLocation();
-
-        Scoreboard sb = Global.HealthScoreboard;
-        Objective objective = sb.getObjective(entity.getUniqueId().toString());
-        if (objective != null) objective.unregister();
+        World world = entity.getWorld();
         // 获取生物的额外掉落列表及掉落概率
         MobEntity mob = MobManager.MobEntities.stream().filter(x -> x.type.equals(type)).findAny().orElse(null);
-        if (mob != null && RandomNumber.checkBingo(mob.spawnRate)) {
-            DropManager.ExtraDrops(location, mob.drops);
+        if (mob != null && RandomNumber.checkBingo(mob.spawnRate)) DropManager.ExtraDrops(location, mob.drops);
+
+        if (entity.getLastDamageCause() instanceof EntityDamageByEntityEvent damage) {
+            // 判断生物是否被爪牙杀死
+            MinionEntity minion = RecordManager.getMinionRecord(damage.getDamager().getUniqueId());
+            if (minion == null) return;
+            // 为了那个该死的掉落-消失效果
+            List<Item> drops = new ArrayList<>();
+            List<ItemStack> mobDrops = event.getDrops();
+            // 获取怪物死亡的自然掉落物品
+            if (mobDrops.size() >= 1) {
+                for (ItemStack is : mobDrops) {
+                    drops.add(world.dropItemNaturally(location, is));
+                    is.setType(Material.AIR);
+                }
+            } else {
+                // 如果怪物死亡时没有掉落物品，则额外添加1个怪物的相应掉落物品
+                switch (event.getEntity().getType()) {
+                    case BLAZE -> drops.add(world.dropItemNaturally(location, new ItemStack(Material.BLAZE_ROD, 1)));
+                    case CAVE_SPIDER -> drops.add(world.dropItemNaturally(location, new ItemStack(Material.SPIDER_EYE, 1)));
+                    case ENDERMAN -> drops.add(world.dropItemNaturally(location, new ItemStack(Material.ENDER_PEARL, 1)));
+                    case MAGMA_CUBE -> drops.add(world.dropItemNaturally(location, new ItemStack(Material.MAGMA_CREAM, 1)));
+                    case PHANTOM -> drops.add(world.dropItemNaturally(location, new ItemStack(Material.PHANTOM_MEMBRANE, 1)));
+                    case ZOMBIE -> drops.add(world.dropItemNaturally(location, new ItemStack(Material.ROTTEN_FLESH, 1)));
+                }
+            }
+            // 为怪物死亡时，概率性的添加掉落物品
+            Item item = switch (event.getEntity().getType()) {
+                case RABBIT -> MMOManager.dropProbability(world, location, new ItemStack(Material.RABBIT_FOOT, 1), 30);
+                case WITHER_SKELETON -> MMOManager.dropProbability(world, location, new ItemStack(Material.WITHER_SKELETON_SKULL, 1), 30);
+                default -> MMOManager.dropProbability(world, location, new ItemStack(Material.AIR, 1), 0);
+            };
+            if (item != null) drops.add(item);
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    minion.harvest(drops, location);
+                }
+            }.runTaskLater(plugin, 20);
         }
     }
 

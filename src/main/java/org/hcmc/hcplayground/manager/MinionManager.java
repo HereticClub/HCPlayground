@@ -76,7 +76,7 @@ public class MinionManager {
         for (MinionPanelSlot slot : slots) {
             // id 的第二段表示slot的动作类型
             String[] id = slot.getId().split("\\.");
-            PanelSlotType type = PanelSlotTypeSerialization.resolveType(id[1]);
+            PanelSlotType type = PanelSlotTypeSerialization.valueOf(id[1]);
             slot.setType(type == null ? PanelSlotType.INACTIVE : type);
             // 根据slots定义转换成为ItemStack
             Map<Integer, ItemStack> maps = slot.toItemStacks();
@@ -120,14 +120,14 @@ public class MinionManager {
         return getMinionTemplate(minionType, level);
     }
 
-    public static ItemStack getMinionStack(MinionType name, int level, int amount) {
+    public static ItemStack getMinionStack(MinionType type, int level, int amount) {
         ItemStack is = new ItemStack(Material.PLAYER_HEAD, amount);
-        MinionTemplate template = MinionManager.getMinionTemplate(name, level);
+        MinionTemplate template = MinionManager.getMinionTemplate(type, level);
         if (template == null) return null;
         // set player head texture
         ItemMeta meta = PlayerHeader.setTextures(is, template.getTexture());
-        // set item stack display name
-        String display = StringUtils.isBlank(template.getDisplay()) ? String.format("§4%s %s", name, level) : template.getDisplay();
+        // set item stack display type
+        String display = StringUtils.isBlank(template.getDisplay()) ? String.format("§4%s %s", type, level) : template.getDisplay();
         meta.setDisplayName(display);
         // set item stack lore
         List<String> lore = template.getLore();
@@ -139,7 +139,7 @@ public class MinionManager {
         NamespacedKey levelKey = new NamespacedKey(plugin, MinionManager.PERSISTENT_LEVEL_KEY);
         PersistentDataContainer mainContainer = meta.getPersistentDataContainer();
         PersistentDataContainer subContainer = mainContainer.getAdapterContext().newPersistentDataContainer();
-        mainContainer.set(mainKey, PersistentDataType.STRING, name.name());
+        mainContainer.set(mainKey, PersistentDataType.STRING, type.name());
         subContainer.set(levelKey, PersistentDataType.INTEGER, level);
         mainContainer.set(subKey, PersistentDataType.TAG_CONTAINER, subContainer);
 
@@ -157,14 +157,12 @@ public class MinionManager {
         if (type == null) return null;
         // 生成ArmorStand
         ArmorStand armorStand = (ArmorStand) world.spawnEntity(location, EntityType.ARMOR_STAND);
-
         // 没有重力，重要，不至于脚下方块被挖了之后掉下
         armorStand.setGravity(false);
         // 看见手臂，重要，能拿工具、武器、鱼竿等
         armorStand.setArms(true);
         // 没有底板，视觉
         armorStand.setBasePlate(false);
-        //armorStand.setMarker(true);
         // 关闭所有装备被玩家置换，重要
         armorStand.addEquipmentLock(EquipmentSlot.HEAD, ArmorStand.LockType.REMOVING_OR_CHANGING);
         armorStand.addEquipmentLock(EquipmentSlot.CHEST, ArmorStand.LockType.REMOVING_OR_CHANGING);

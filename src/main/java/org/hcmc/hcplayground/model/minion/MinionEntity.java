@@ -2,24 +2,31 @@ package org.hcmc.hcplayground.model.minion;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.block.Block;
-import org.bukkit.entity.ArmorStand;
-import org.bukkit.entity.Player;
+import org.bukkit.block.BlockFace;
+import org.bukkit.block.data.Bisected;
+import org.bukkit.block.data.BlockData;
+import org.bukkit.block.data.Directional;
+import org.bukkit.block.data.MultipleFacing;
+import org.bukkit.block.data.type.Beehive;
+import org.bukkit.block.data.type.BigDripleaf;
+import org.bukkit.block.data.type.Dripleaf;
+import org.bukkit.block.data.type.SmallDripleaf;
+import org.bukkit.entity.*;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.plugin.Plugin;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.hcmc.hcplayground.HCPlayground;
+import org.hcmc.hcplayground.enums.MinionCategory;
 import org.hcmc.hcplayground.enums.PanelSlotType;
 import org.hcmc.hcplayground.enums.MinionType;
-import org.hcmc.hcplayground.manager.ItemManager;
-import org.hcmc.hcplayground.manager.LanguageManager;
-import org.hcmc.hcplayground.manager.MinionManager;
-import org.hcmc.hcplayground.manager.RecordManager;
+import org.hcmc.hcplayground.manager.*;
 import org.hcmc.hcplayground.model.item.ItemBase;
+import org.hcmc.hcplayground.utility.Global;
 import org.hcmc.hcplayground.utility.RandomNumber;
 import org.hcmc.hcplayground.utility.RomanNumber;
 import org.jetbrains.annotations.NotNull;
@@ -67,13 +74,19 @@ public class MinionEntity {
     @Expose(deserialize = false)
     private Location location;
     @Expose(deserialize = false)
-    private List<Location> platform = new ArrayList<>();
+    private MinionTemplate template;
+    @Expose(deserialize = false)
+    private MinionTemplate nextLevel;
+    @Expose(deserialize = false)
+    private List<Location> platformLocations = new ArrayList<>();
     @Expose(deserialize = false)
     private Date lastAcquireTime = new Date();
     @Expose(deserialize = false)
     private ArmorStand armorStand;
-    @Expose(serialize = false, deserialize = false)
+    @Expose(deserialize = false)
     private Inventory inventory;
+    @Expose(deserialize = false)
+    private ItemStack tool = new ItemStack(Material.AIR, 1);
 
     public MinionEntity() {
 
@@ -83,6 +96,8 @@ public class MinionEntity {
         this.type = type;
         this.level = level;
         this.armorStand = armorStand;
+        EntityEquipment equipment = armorStand.getEquipment();
+        if (equipment != null) this.tool = equipment.getItemInMainHand();
 
         x = location.getX();
         y = location.getY();
@@ -99,14 +114,208 @@ public class MinionEntity {
     }
 
     public void initialPlatform() {
+        this.template = MinionManager.getMinionTemplate(type, level);
+        this.nextLevel = MinionManager.getMinionTemplate(type, level + 1);
+
         if (location == null) location = getLocation();
-        platform.clear();
+        platformLocations.clear();
         for (int x = -2; x <= 2; x++) {
             for (int z = -2; z <= 2; z++) {
                 if (x == 0 && z == 0) continue;
                 Location l = new Location(location.getWorld(), location.getX() + x, location.getY() - 1, location.getZ() + z);
-                platform.add(l);
+                platformLocations.add(l);
             }
+        }
+    }
+
+    /**
+     * 摆放方块并且播放摆放相应方块的声音
+     *
+     * @param block    要摆放的方块实例
+     * @param material 方块的材质
+     */
+    public void placeBlock(Block block, Material material) {
+        if (!block.getType().equals(material)) block.setType(material);
+        if (block.getBlockData() instanceof Bisected) {
+            Block upBlock = block.getRelative(BlockFace.UP);
+            upBlock.setType(material, false);
+            Bisected bisected = (Bisected) upBlock.getBlockData();
+            bisected.setHalf(Bisected.Half.TOP);
+            upBlock.setBlockData(bisected);
+        }
+        if (block.getBlockData() instanceof Directional directional) {
+            List<BlockFace> faces = directional.getFaces().stream().toList();
+            int rnd = RandomNumber.getRandomInteger(faces.size());
+            directional.setFacing(faces.get(rnd));
+            block.setBlockData(directional);
+        }
+
+        Player player = Bukkit.getPlayer(owner);
+        if (player == null) return;
+        SoundGroup soundGroup = block.getBlockData().getSoundGroup();
+        player.playSound(block.getLocation(), soundGroup.getPlaceSound(), soundGroup.getVolume(), soundGroup.getPitch());
+    }
+
+    /**
+     * 破坏指定位置的方块，并且播放破坏相应方块的声音
+     *
+     * @param block 要破坏的方块的位置
+     */
+    public void breakBlock(Block block) {
+        if (block.getType().equals(Material.AIR)) return;
+
+        Player player = Bukkit.getPlayer(owner);
+        if (player == null) return;
+        SoundGroup soundGroup = block.getBlockData().getSoundGroup();
+        player.playSound(block.getLocation(), soundGroup.getBreakSound(), soundGroup.getVolume(), soundGroup.getPitch());
+        block.setType(Material.AIR);
+    }
+
+    public MinionTemplate getMinionTemplate() {
+        return MinionManager.getMinionTemplate(type, level);
+    }
+
+    public List<Entity> getNearbyCubs() {
+        List<Entity> entities = armorStand.getNearbyEntities(4, 10, 4);
+        return entities.stream().filter(x -> x.getType().equals(template.getCubs())).toList();
+    }
+
+    public Location getRandomPlatform() {
+        int rnd = RandomNumber.getRandomInteger(platformLocations.size());
+        return platformLocations.get(rnd);
+    }
+
+    public Entity getRandomCubs() {
+        List<Entity> entities = getNearbyCubs();
+        if (entities.size() == 0) return null;
+
+        int rnd = RandomNumber.getRandomInteger(entities.size());
+        return entities.get(rnd);
+    }
+
+    public void harvestHoney(Block block) {
+        Plugin plugin = HCPlayground.getInstance();
+        if (!(block.getBlockData() instanceof Beehive beehive)) return;
+        if (beehive.getHoneyLevel() < beehive.getMaximumHoneyLevel()) return;
+        boolean rnd = new Random().nextBoolean();
+        int count = new Random().nextInt(3) + 1;
+
+        ItemStack is = new ItemStack(rnd ? Material.HONEYCOMB : Material.HONEY_BOTTLE, count);
+        Item item = block.getWorld().dropItemNaturally(block.getLocation(), is);
+        beehive.setHoneyLevel(0);
+        block.setBlockData(beehive);
+        // 10Ticks(500毫秒)后，显示模拟收集效果
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                int amount = sack.getOrDefault(is.getType(), 0);
+                amount += is.getAmount();
+                sack.put(is.getType(), amount);
+                refreshSack();
+                item.remove();
+            }
+        }.runTaskLater(plugin, 10);
+
+        Location l = Global.LookAt(this.location, block.getLocation());
+        armorStand.setRotation(l.getPitch(), l.getYaw());
+    }
+
+    public void harvest(List<Item> drops, Location location) {
+        // 遍历掉落物品
+        for (Item item : drops) {
+            ItemStack is = item.getItemStack();
+            // 排除空气方块(AIR)
+            if (is.getType().equals(Material.AIR)) continue;
+            // 10Ticks(500毫秒)后，显示模拟收集效果
+            int amount = sack.getOrDefault(is.getType(), 0);
+            amount += is.getAmount();
+            sack.put(is.getType(), amount);
+            refreshSack();
+            item.remove();
+        }
+        // MinionEntity 望向可收获的方块
+        Location l = Global.LookAt(this.location, location);
+        armorStand.setRotation(l.getPitch(), l.getYaw());
+    }
+
+    /**
+     * 破坏方块，从方块中收获掉落物品，然后放入MinionEntity实例的袋中
+     *
+     * @param block 方块实例
+     */
+    public void harvest(Block block) {
+        Plugin plugin = HCPlayground.getInstance();
+        // 获取方块的掉落列表
+        List<ItemStack> dropStacks = block.getDrops(tool).stream().toList();
+        // 在掉落列表中随机选择掉落物品
+        int dropBound = dropStacks.size();
+        int dropCount = RandomNumber.getRandomInteger(dropStacks.size()) + 1;
+        List<Integer> dropList = RandomNumber.getRandomInteger(dropBound, dropCount);
+        // 重置可收成方块为空气方块(AIR)
+        breakBlock(block);
+        dropList.forEach(x -> {
+            // 遍历掉落物品
+            ItemStack is = dropStacks.get(x).clone();
+            // 排除空气方块(AIR)
+            if (is.getType().equals(Material.AIR)) return;
+            // 在世界中显示物品的掉落效果
+            Item item = block.getWorld().dropItemNaturally(block.getLocation(), is);
+            // 10Ticks(500毫秒)后，显示模拟收集效果
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    int amount = sack.getOrDefault(is.getType(), 0);
+                    amount += is.getAmount();
+                    sack.put(is.getType(), amount);
+                    refreshSack();
+                    item.remove();
+                }
+            }.runTaskLater(plugin, 10);
+        });
+        // MinionEntity 望向可收获的方块
+        Location l = Global.LookAt(location, block.getLocation());
+        armorStand.setRotation(l.getPitch(), l.getYaw());
+    }
+
+    public void breedingCubs() {
+        if (template == null) return;
+        MinionCategory category = template.getCategory();
+        if (!category.equals(MinionCategory.BUTCHER) && !category.equals(MinionCategory.FIGHTER)) return;
+
+        World world = armorStand.getWorld();
+        List<Entity> cubs = getNearbyCubs();
+        Location l = getRandomPlatform().clone().add(0, 1, 0);
+        if (cubs.size() <= 4) world.spawnEntity(l, template.getCubs());
+    }
+
+    /**
+     * 针对类型为蜜蜂爪牙的操作，搭建蜂箱，种植各种花
+     */
+    public void breedingBees() {
+        if (template == null) return;
+        if (!template.getType().equals(MinionType.BEE)) return;
+        World world = armorStand.getWorld();
+        List<Location> undressingLocations = new ArrayList<>();
+        List<Location> beehiveLocations = new ArrayList<>();
+        for (Location l : platformLocations) {
+            Block block = l.clone().add(0, 1, 0).getBlock();
+            Material material = block.getType();
+            if (block.getBlockData() instanceof Beehive) beehiveLocations.add(block.getLocation());
+            if (!Arrays.asList(MMOManager.Flowers).contains(material) && !(block.getBlockData() instanceof Beehive))
+                undressingLocations.add(block.getLocation());
+        }
+
+        int size = undressingLocations.size();
+        if (size == 0) return;
+        int rnd = RandomNumber.getRandomInteger(size);
+        Location l = undressingLocations.get(rnd);
+        if (beehiveLocations.size() < 6) {
+            placeBlock(l.getBlock(), Material.BEEHIVE);
+            world.spawnEntity(this.location.clone().add(0, 2, 0), EntityType.BEE);
+            world.spawnEntity(this.location.clone().add(0, 2, 0), EntityType.BEE);
+        } else {
+            int flowerIndex = RandomNumber.getRandomInteger(MMOManager.Flowers.length);
+            placeBlock(l.getBlock(), MMOManager.Flowers[flowerIndex]);
         }
     }
 
@@ -114,21 +323,18 @@ public class MinionEntity {
      * Minion 修整平台，将Minion的工作平台修整为所需要的方块
      */
     public void dressingPlatform() {
-        MinionTemplate template = MinionManager.getMinionTemplate(type, level);
-        if (template == null || template.getPlatform() == null) return;
-
-        List<Block> blocks = new ArrayList<>();
-        for (Location l : platform) {
-            Block b = l.getBlock();
-            blocks.add(b);
+        if (template == null || template.getPlatform().equals(Material.AIR)) return;
+        List<Location> undressingLocation = new ArrayList<>(platformLocations.stream().filter(x -> !x.getBlock().getType().equals(template.getPlatform())).toList());
+        switch (type) {
+            case WHEAT, CARROT, POTATO, BEETROOT, MELON, PUMPKIN -> undressingLocation.removeIf(x -> x.getBlock().getType().equals(Material.FARMLAND));
+            case SUGAR_CANE -> undressingLocation.removeIf(x -> x.getBlock().getType().equals(Material.WATER));
         }
 
-        List<Block> filterBlocks = blocks.stream().filter(x -> !x.getType().equals(template.getPlatform())).toList();
-        int size = filterBlocks.size();
-        if (size <= 0) return;
-
+        int size = undressingLocation.size();
+        if (size == 0) return;
         int rnd = RandomNumber.getRandomInteger(size);
-        filterBlocks.get(rnd).setType(template.getPlatform());
+        Block block = undressingLocation.get(rnd).getBlock();
+        placeBlock(block, template.getPlatform());
     }
 
     public void reduceItemInSack(@NotNull ItemStack... itemStacks) {
@@ -170,10 +376,7 @@ public class MinionEntity {
     }
 
     public void clearSack() {
-        Set<Material> materials = sack.keySet();
-        for (Material material : materials) {
-            sack.remove(material);
-        }
+        sack.clear();
     }
 
     public void upgrade() {
@@ -188,7 +391,6 @@ public class MinionEntity {
 
     public void refreshSack() {
         // 获取爪牙的定义模板
-        MinionTemplate template = MinionManager.getMinionTemplate(type, level);
         if (template == null) return;
         // 获取爪牙的储存槽位数量
         int storageAmount = template.getStorageAmount();
@@ -247,7 +449,6 @@ public class MinionEntity {
         // 设置爪牙的标题，容量，采集周期
         int storage = 1;
         String title = "";
-        MinionTemplate template = MinionManager.getMinionTemplate(type, level);
         if (template == null) return null;
         title = template.getDisplay();
         storage = template.getStorageAmount();
@@ -267,7 +468,6 @@ public class MinionEntity {
         // 设置升级槽位的爪牙升级信息
         MinionPanelSlot slotUpgrade = panel.getSlots().stream().filter(x -> x.getType().equals(PanelSlotType.UPGRADE)).findAny().orElse(null);
         if (slotUpgrade == null) return null;
-        MinionTemplate nextLevel = MinionManager.getMinionTemplate(type, level + 1);
         for (int i : slotUpgrade.getSlots()) {
             // 一些不是判断的判断
             ItemStack itemStack = inventory.getItem(i);
@@ -346,7 +546,11 @@ public class MinionEntity {
     }
 
     public Map<Material, Integer> getSack() {
-        return sack;
+        return new HashMap<>(sack);
+    }
+
+    public void setSack(Map<Material, Integer> sack) {
+        this.sack = new HashMap<>(sack);
     }
 
     public UUID getUuid() {
@@ -357,12 +561,12 @@ public class MinionEntity {
         this.uuid = uuid;
     }
 
-    public List<Location> getPlatform() {
-        return platform;
+    public List<Location> getPlatformLocations() {
+        return platformLocations;
     }
 
-    public void setPlatform(List<Location> platform) {
-        this.platform = platform;
+    public void setPlatformLocations(List<Location> platformLocations) {
+        this.platformLocations = platformLocations;
     }
 
     public ArmorStand getArmorStand() {

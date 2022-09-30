@@ -17,10 +17,10 @@ public class OperatorTypeSerialization implements JsonDeserializer<OperatorType>
 
     @Override
     public OperatorType deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
-        return getValue(jsonElement.getAsString());
+        return valueOf(jsonElement.getAsString());
     }
 
-    public static OperatorType getValue(String name) {
+    public static OperatorType valueOf(String name) {
         OperatorType[] types = OperatorType.values();
         return Arrays.stream(types).filter(x -> x.name().equalsIgnoreCase(name)).findAny().orElse(null);
     }

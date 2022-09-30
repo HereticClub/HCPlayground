@@ -82,9 +82,8 @@ public final class Global {
      * 永远不会将资源文档复制到本地
      */
     private final static String[] ymlResources;
+    private final static String[] persistentMainKeys;
     private final static JavaPlugin plugin;
-
-    public final static char CHAR_00A7 = '\u00a7';
 
     private final static Type mapCharInteger = new TypeToken<Map<Character, Integer>>() {
     }.getType();
@@ -99,7 +98,7 @@ public final class Global {
     private final static String CONFIG_PARKOUR = "parkouradmin";
     private final static String FIELD_NAME_COMMANDMAP = "commandMap";
     private final static String DATE_TIME_FORMAT = "yyyy/MM/dd HH:mm:ss";
-
+    private final static Map<String, YamlConfiguration> yamlMap;
     private final static String FOLDER_DEBUG = "debug";
     private final static String FOLDER_MENU = "menu";
     private final static String FOLDER_PROFILE = "profile";
@@ -126,11 +125,16 @@ public final class Global {
     public final static String FILE_COURSE = "database/course.yml";
     public final static String FILE_RECORD_MINION = "database/minions.json";
     public final static String FILE_RECORD_BLOCK = "database/blocks.json";
-
-    public static PluginRunnable runnable;
-    public static Map<String, YamlConfiguration> yamlMap;
-
-    public static Gson GsonObject;
+    /**
+     * '§'符号
+     */
+    public final static char CHAR_00A7 = '\u00a7';
+    /**
+     * '&'符号
+     */
+    public final static char CHAR_0026 = '\u0026';
+    public final static Gson GsonObject;
+    public final static PluginRunnable runnable;
     public static Scoreboard HealthScoreboard;
     public static CourseConfiguration course = null;
     public static AuthmeConfiguration authme = null;
@@ -146,6 +150,10 @@ public final class Global {
         runnable = new PluginRunnable();
         yamlMap = new HashMap<>();
         HealthScoreboard = CreateScoreboard();
+        persistentMainKeys = new String[]{
+                ItemBase.PERSISTENT_MAIN_KEY,
+                MinionManager.PERSISTENT_MAIN_KEY,
+        };
         childrenFolders = new String[]{
                 FOLDER_DATABASE,
                 FOLDER_DEBUG,
@@ -217,6 +225,10 @@ public final class Global {
                 .setDateFormat(DATE_TIME_FORMAT)
                 .setPrettyPrinting()
                 .create();
+    }
+
+    public static String[] getPersistentMainKeys() {
+        return persistentMainKeys;
     }
 
     public static void ReloadConfiguration() throws IllegalAccessException, NoSuchFieldException, SQLException, NoSuchAlgorithmException, InvalidKeySpecException, IOException {
@@ -315,7 +327,7 @@ public final class Global {
 
         try {
             String ClassName = tClass.getSimpleName();
-            String value = GsonObject.toJson((section).getValues(false)).replace('&', '§');
+            String value = GsonObject.toJson((section).getValues(false)).replace(CHAR_0026, CHAR_00A7);
             value = PlaceholderAPI.setPlaceholders(player, value);
             item = GsonObject.fromJson(value, tClass);
             // System.out.println(value);
@@ -351,7 +363,7 @@ public final class Global {
             for (String s : keys) {
                 ConfigurationSection itemSection = section.getConfigurationSection(s);
                 if (itemSection == null) continue;
-                String value = GsonObject.toJson(itemSection.getValues(false)).replace('&', '§');
+                String value = GsonObject.toJson(itemSection.getValues(false)).replace(CHAR_0026, CHAR_00A7);
                 value = PlaceholderAPI.setPlaceholders(player, value);
                 // System.out.println(value);
 
@@ -390,7 +402,7 @@ public final class Global {
             for (String s : keys) {
                 ConfigurationSection itemSection = section.getConfigurationSection(s);
                 if (itemSection == null) continue;
-                String value = GsonObject.toJson(itemSection.getValues(false)).replace('&', '§');
+                String value = GsonObject.toJson(itemSection.getValues(false)).replace(CHAR_0026, CHAR_00A7);
                 //System.out.println(value);
 
                 T item = GsonObject.fromJson(value, tClass);
@@ -428,7 +440,7 @@ public final class Global {
             for (String s : keys) {
                 ConfigurationSection itemSection = yaml.getConfigurationSection(s);
                 if (itemSection == null) continue;
-                String value = GsonObject.toJson(itemSection.getValues(false)).replace('&', '§');
+                String value = GsonObject.toJson(itemSection.getValues(false)).replace(CHAR_0026, CHAR_00A7);
                 //System.out.println(value);
 
                 T item = GsonObject.fromJson(value, tClass);

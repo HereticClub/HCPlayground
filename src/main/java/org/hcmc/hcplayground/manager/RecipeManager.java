@@ -118,7 +118,7 @@ public class RecipeManager {
         for (CraftPanelSlot slot : slots) {
             // id 的第二段表示slot的动作类型
             String[] id = slot.getId().split("\\.");
-            PanelSlotType type = PanelSlotTypeSerialization.resolveType(id[1]);
+            PanelSlotType type = PanelSlotTypeSerialization.valueOf(id[1]);
             slot.setType(type == null ? PanelSlotType.INACTIVE : type);
             // 根据slots定义转换成为ItemStack
             Map<Integer, ItemStack> maps = slot.toItemStacks();

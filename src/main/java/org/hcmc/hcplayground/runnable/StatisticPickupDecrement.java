@@ -21,6 +21,5 @@ public class StatisticPickupDecrement extends BukkitRunnable {
         Material material = itemStack.getType();
         int amount = itemStack.getAmount();
         player.decrementStatistic(Statistic.PICKUP, material, amount);
-        System.out.println(player.getStatistic(Statistic.PICKUP, material));
     }
 }

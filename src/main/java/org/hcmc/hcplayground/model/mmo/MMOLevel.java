@@ -237,8 +237,8 @@ public class MMOLevel implements Serializable {
             this.display = String.format("%s %s", display, RomanNumber.fromInteger(level));
 
         String _rewardType = rewardType.toLowerCase();
-        MMOType type = MMOTypeSerialization.parse(_rewardType);
-        Material material = MaterialSerialization.parse(_rewardType);
+        MMOType type = MMOTypeSerialization.valueOf(_rewardType);
+        Material material = MaterialSerialization.valueOf(_rewardType);
 
         List<String> _rewards = new ArrayList<>();
         if (!type.equals(MMOType.UNDEFINED) && rewards.containsKey(_rewardType)) _rewards = rewards.get(_rewardType);
@@ -431,7 +431,7 @@ public class MMOLevel implements Serializable {
             String id = entry.getKey();
             Integer amount = entry.getValue();
             ItemBase ib = ItemManager.findItemById(id);
-            Material material = MaterialSerialization.parse(id);
+            Material material = MaterialSerialization.valueOf(id);
             ItemStack itemStack = ib == null ? new ItemStack(material, amount) : ib.toItemStack();
             itemStack.setAmount(amount);
             ItemMeta meta = itemStack.getItemMeta();

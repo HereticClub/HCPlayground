@@ -109,9 +109,7 @@ public class MenuPanel implements InventoryHolder {
             return;
         }
 
-        this.mmoType = MMOTypeSerialization.parse(mmoType);
-        System.out.println(this.mmoType);
-
+        this.mmoType = MMOTypeSerialization.valueOf(mmoType);
         switch (this.mmoType) {
             case SKILL_COMBAT -> {
                 int statistic = data.statisticEntityKilled(MMOManager.Monsters);
@@ -242,7 +240,7 @@ public class MenuPanel implements InventoryHolder {
     private Material getCollectionMaterial(String collectionName) {
         if (!collectionName.startsWith("collection_")) return Material.AIR;
         String materialName = collectionName.substring(11);
-        return MaterialSerialization.parse(materialName);
+        return MaterialSerialization.valueOf(materialName);
     }
 
     private Inventory setupCollectionMaterialInventory(Player player, Material material) {
