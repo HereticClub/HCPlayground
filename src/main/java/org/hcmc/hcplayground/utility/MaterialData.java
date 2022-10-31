@@ -8,13 +8,14 @@ public class MaterialData {
 
     @Expose
     @SerializedName(value = "value")
-    public Material value = Material.AIR;
+    public Material value;
     @Expose
     @SerializedName(value = "name")
     public String name;
 
     public MaterialData() {
-
+        this.value = Material.AIR;
+        this.name = "";
     }
 
     public MaterialData(Material material, String name) {
@@ -22,7 +23,7 @@ public class MaterialData {
     }
 
     public void setData(Material material, String name) {
-        value = material;
+        this.value = material;
         this.name = name;
     }
 }

@@ -1,11 +1,8 @@
 package org.hcmc.hcplayground.runnable;
 
-import com.comphenix.protocol.PacketType;
-import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.hcmc.hcplayground.enums.PanelSlotType;
 import org.hcmc.hcplayground.manager.PlayerManager;
@@ -15,10 +12,7 @@ import org.hcmc.hcplayground.model.recipe.CraftPanel;
 import org.hcmc.hcplayground.model.recipe.CraftPanelSlot;
 import org.hcmc.hcplayground.model.recipe.CrazyShapedRecipe;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 public class RecipeSearchRunnable extends BukkitRunnable {
 
@@ -45,7 +39,7 @@ public class RecipeSearchRunnable extends BukkitRunnable {
                 inventory.setItem(entry.getKey(), entry.getValue());
             }
         } else {
-            ItemStack result = data.existRecipe(recipe.getId()) ? recipe.getPreview(panel.getPreviewLore()) : RecipeManager.getRecipeLockedItem();
+            ItemStack result = data.isRecipeUnlocked(recipe.getId()) ? recipe.getPreview(panel.getPreviewLore()) : RecipeManager.getRecipeLockedItem();
             for (int i : slot.getSlots()) {
                 inventory.setItem(i, result);
             }

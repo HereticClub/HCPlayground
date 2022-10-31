@@ -12,7 +12,6 @@ import org.bukkit.inventory.meta.BookMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
 
-import java.awt.print.Book;
 import java.util.*;
 
 public class Join extends CraftItemBase {

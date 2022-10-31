@@ -13,20 +13,21 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
-import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
 import org.hcmc.hcplayground.HCPlayground;
-import org.hcmc.hcplayground.enums.PanelSlotType;
 import org.hcmc.hcplayground.enums.MinionType;
+import org.hcmc.hcplayground.enums.PanelSlotType;
 import org.hcmc.hcplayground.model.item.ItemBase;
 import org.hcmc.hcplayground.model.minion.MinionEntity;
 import org.hcmc.hcplayground.model.minion.MinionPanel;
 import org.hcmc.hcplayground.model.minion.MinionPanelSlot;
 import org.hcmc.hcplayground.model.minion.MinionTemplate;
+import org.hcmc.hcplayground.serialization.MinionTypeSerialization;
 import org.hcmc.hcplayground.serialization.PanelSlotTypeSerialization;
 import org.hcmc.hcplayground.utility.Global;
+import org.hcmc.hcplayground.utility.NameBinaryTag;
 import org.hcmc.hcplayground.utility.PlayerHeader;
 import org.hcmc.hcplayground.utility.RomanNumber;
 
@@ -37,6 +38,7 @@ public class MinionManager {
     public final static String PERSISTENT_MAIN_KEY = "minion";
     public final static String PERSISTENT_SUB_KEY = "content";
     public final static String PERSISTENT_LEVEL_KEY = "level";
+    public final static String PERSISTENT_TYPE_KEY = "type";
     /**
      * Minion修整工作平台周期，单位: 秒
      */
@@ -91,7 +93,7 @@ public class MinionManager {
     }
 
     public static MinionTemplate getMinionTemplate(String type, int level) {
-        MinionType t = MinionType.valueOf(type.toUpperCase());
+        MinionType t = MinionTypeSerialization.valueOf(type);
         return getMinionTemplate(t, level);
     }
 
@@ -100,24 +102,10 @@ public class MinionManager {
     }
 
     public static MinionTemplate getMinionTemplate(ItemStack item) {
-        NamespacedKey mainKey = new NamespacedKey(plugin, MinionManager.PERSISTENT_MAIN_KEY);
-        NamespacedKey subKey = new NamespacedKey(plugin, MinionManager.PERSISTENT_SUB_KEY);
-        NamespacedKey levelKey = new NamespacedKey(plugin, MinionManager.PERSISTENT_LEVEL_KEY);
-
-        ItemMeta im = item.getItemMeta();
-        if (!(im instanceof SkullMeta meta)) return null;
-
-        PersistentDataContainer mainContainer = meta.getPersistentDataContainer();
-        String minionType = mainContainer.get(mainKey, PersistentDataType.STRING);
-        if (StringUtils.isBlank(minionType)) return null;
-
-        PersistentDataContainer subContainer = mainContainer.get(subKey, PersistentDataType.TAG_CONTAINER);
-        if (subContainer == null) return null;
-
-        Integer level = subContainer.get(levelKey, PersistentDataType.INTEGER);
-        if (level == null) return null;
-
-        return getMinionTemplate(minionType, level);
+        NameBinaryTag tag = new NameBinaryTag(item);
+        String type = tag.getStringValue(MinionManager.PERSISTENT_TYPE_KEY);
+        int level = tag.getIntegerValue(MinionManager.PERSISTENT_LEVEL_KEY);
+        return getMinionTemplate(type, level);
     }
 
     public static ItemStack getMinionStack(MinionType type, int level, int amount) {
@@ -125,7 +113,8 @@ public class MinionManager {
         MinionTemplate template = MinionManager.getMinionTemplate(type, level);
         if (template == null) return null;
         // set player head texture
-        ItemMeta meta = PlayerHeader.setTextures(is, template.getTexture());
+        UUID uuid = UUID.fromString("00000000-0000-0000-0000-000000000000");
+        ItemMeta meta = PlayerHeader.setTextures(is, template.getTexture(), uuid);
         // set item stack display type
         String display = StringUtils.isBlank(template.getDisplay()) ? String.format("§4%s %s", type, level) : template.getDisplay();
         meta.setDisplayName(display);
@@ -137,10 +126,13 @@ public class MinionManager {
         NamespacedKey mainKey = new NamespacedKey(plugin, MinionManager.PERSISTENT_MAIN_KEY);
         NamespacedKey subKey = new NamespacedKey(plugin, MinionManager.PERSISTENT_SUB_KEY);
         NamespacedKey levelKey = new NamespacedKey(plugin, MinionManager.PERSISTENT_LEVEL_KEY);
+        NamespacedKey typeKey = new NamespacedKey(plugin, MinionManager.PERSISTENT_TYPE_KEY);
+
         PersistentDataContainer mainContainer = meta.getPersistentDataContainer();
         PersistentDataContainer subContainer = mainContainer.getAdapterContext().newPersistentDataContainer();
-        mainContainer.set(mainKey, PersistentDataType.STRING, type.name());
+        mainContainer.set(mainKey, PersistentDataType.STRING, template.getId());
         subContainer.set(levelKey, PersistentDataType.INTEGER, level);
+        subContainer.set(typeKey, PersistentDataType.STRING, type.name());
         mainContainer.set(subKey, PersistentDataType.TAG_CONTAINER, subContainer);
 
         is.setItemMeta(meta);
@@ -153,8 +145,8 @@ public class MinionManager {
         // 根据手持的ItemStack获取Minion的定义模板
         MinionTemplate template = getMinionTemplate(helmet);
         if (template == null) return null;
-        MinionType type = getMinionType(helmet);
-        if (type == null) return null;
+        MinionType type = template.getType();
+        int level = template.getLevel();
         // 生成ArmorStand
         ArmorStand armorStand = (ArmorStand) world.spawnEntity(location, EntityType.ARMOR_STAND);
         // 没有重力，重要，不至于脚下方块被挖了之后掉下
@@ -180,9 +172,7 @@ public class MinionManager {
             equipment.setItem(EquipmentSlot.HAND, equipments.get(EquipmentSlot.HAND));
         }
         // 返回Minion的放置记录
-        MinionEntity entity = new MinionEntity(armorStand, type, template.getLevel(), location);
-        entity.setUuid(armorStand.getUniqueId());
-        return entity;
+        return new MinionEntity(armorStand, type, level);
     }
 
     public static boolean isMinionType(String type) {
@@ -221,16 +211,11 @@ public class MinionManager {
     }
 
     public static MinionType getMinionType(ItemStack item) {
-        NamespacedKey mainKey = new NamespacedKey(plugin, MinionManager.PERSISTENT_MAIN_KEY);
-        ItemMeta im = item.getItemMeta();
-        if (!(im instanceof SkullMeta meta)) return null;
-
-        PersistentDataContainer mainContainer = meta.getPersistentDataContainer();
-        String minionType = mainContainer.get(mainKey, PersistentDataType.STRING);
-        if (StringUtils.isBlank(minionType)) return null;
+        NameBinaryTag tag = new NameBinaryTag(item);
+        String type = tag.getStringValue(MinionManager.PERSISTENT_TYPE_KEY);
 
         MinionType[] types = MinionType.values();
-        return Arrays.stream(types).filter(x -> x.name().equalsIgnoreCase(minionType)).findAny().orElse(null);
+        return Arrays.stream(types).filter(x -> x.name().equalsIgnoreCase(type)).findAny().orElse(null);
     }
 
     public static MinionType getMinionType(String name) {
@@ -255,8 +240,6 @@ public class MinionManager {
                 int level = Integer.parseInt(ss[1]);
                 String id = String.format("%s.%s", type, level);
 
-                if (template.getPlatform() == null)
-                    Global.LogWarning(String.format("%s level %s has no define PLATFORM property", type, level));
                 if (template.getPeriod() <= 0)
                     Global.LogWarning(String.format("%s level %s has no define PERIOD property", type, level));
 

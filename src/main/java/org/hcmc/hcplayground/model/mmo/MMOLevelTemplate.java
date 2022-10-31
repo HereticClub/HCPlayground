@@ -17,10 +17,9 @@ import org.hcmc.hcplayground.serialization.MaterialSerialization;
 import org.hcmc.hcplayground.utility.RomanNumber;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.Serializable;
 import java.util.*;
 
-public class MMOLevel implements Serializable {
+public class MMOLevelTemplate {
     /**
      * 技能等级的显示名称
      */
@@ -193,7 +192,7 @@ public class MMOLevel implements Serializable {
         return keys[1];
     }
 
-    public MMOLevel() {
+    public MMOLevelTemplate() {
 
     }
 
@@ -292,7 +291,7 @@ public class MMOLevel implements Serializable {
      * 2: unreached<br>
      */
     public ItemStack setupItemStack(String levelTemplate, int statistic, int flag) {
-        MMOLevel _levelTemplate = MMOManager.getLevelTemplate(levelTemplate);
+        MMOLevelTemplate _levelTemplate = MMOManager.getLevelTemplate(levelTemplate);
         // 以下代码必须运行在等级奖励计算后
         if (_levelTemplate != null) {
             if (_levelTemplate.getAmount() >= 1) amount = _levelTemplate.getAmount();
@@ -425,7 +424,10 @@ public class MMOLevel implements Serializable {
         for (String s : recipeIdList) {
             CrazyShapedRecipe recipe = RecipeManager.getRecipe(s);
             if (recipe == null) continue;
-            _lore.add(String.format("%s%s", LanguageManager.getString("reword.recipe"), recipe.getDisplay()));
+            ItemStack is = recipe.getResult();
+            ItemMeta meta = is.getItemMeta();
+            String display = meta == null ? is.getType().name() : meta.getDisplayName();
+            _lore.add(String.format("%s%s", LanguageManager.getString("reword.recipe"), display));
         }
         for (Map.Entry<String, Integer> entry : itemIdList.entrySet()) {
             String id = entry.getKey();

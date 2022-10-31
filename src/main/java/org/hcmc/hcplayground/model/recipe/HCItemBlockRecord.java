@@ -116,7 +116,7 @@ public class HCItemBlockRecord {
         world = w.getName();
     }
 
-    public Location toLocation() {
+    public Location getLocation() {
         World w = Bukkit.getWorld(world);
         return new Location(w, x, y, z, yaw, pitch);
     }

@@ -22,7 +22,7 @@ import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.enums.MMOType;
 import org.hcmc.hcplayground.enums.MinionType;
 import org.hcmc.hcplayground.manager.*;
-import org.hcmc.hcplayground.model.menu.MenuPanel;
+import org.hcmc.hcplayground.model.menu.*;
 import org.hcmc.hcplayground.model.parkour.CourseInfo;
 import org.hcmc.hcplayground.model.player.PlayerData;
 import org.hcmc.hcplayground.serialization.MMOTypeSerialization;
@@ -568,7 +568,7 @@ public class CommandItem extends Command {
 
     private boolean RunRecordManagerCommand(CommandSender sender, String[] args) throws IOException, IllegalAccessException {
         // 该指令参数长度不能为0
-        if (args.length <= 0) {
+        if (args.length == 0) {
             return ShowCommandHelp(sender, 1);
         }
         // /recordmanager load
@@ -594,7 +594,7 @@ public class CommandItem extends Command {
 
     private boolean RunMinionCommand(CommandSender sender, String[] args) {
         // 该指令参数长度不能为0
-        if (args.length <= 0) {
+        if (args.length == 0) {
             return ShowCommandHelp(sender, 1);
         }
         // /minion give
@@ -711,7 +711,7 @@ public class CommandItem extends Command {
 
     private boolean RunCourseCommand(CommandSender sender, String[] args) throws IOException, IllegalAccessException, InvalidConfigurationException, ClassNotFoundException {
         // 该指令参数长度不能为0
-        if (args.length <= 0) {
+        if (args.length == 0) {
             return ShowCommandHelp(sender, 1);
         }
         // /course create
@@ -779,7 +779,7 @@ public class CommandItem extends Command {
     }
 
     private boolean RunBroadcastPlusCommand(CommandSender sender, String[] args) {
-        if (args.length <= 0) {
+        if (args.length == 0) {
             return ShowCommandHelp(sender, 1);
         }
 
@@ -956,7 +956,7 @@ public class CommandItem extends Command {
 
         List<String> values = data.getDesigner().list();
 
-        if (values.size() <= 0) {
+        if (values.size() == 0) {
             player.sendMessage(LanguageManager.getString("courseNoAssetInName", player));
         } else {
             player.sendMessage(LanguageManager.getString("courseHasAssetInName", player));
@@ -1121,7 +1121,7 @@ public class CommandItem extends Command {
 
     private boolean RunCrazyCommand(CommandSender sender, String[] args) throws IOException, IllegalAccessException, InvalidConfigurationException {
         // 当前hc指令需要至少1个参数
-        if (args.length <= 0) {
+        if (args.length == 0) {
             return ShowCommandHelp(sender, 1);
         }
 
@@ -1184,7 +1184,7 @@ public class CommandItem extends Command {
     // 执行hcplayground指令
     private boolean RunHCPlaygroundCommand(CommandSender sender, String[] args) throws SQLException, NoSuchAlgorithmException, InvalidKeySpecException, NoSuchFieldException, IllegalAccessException, IOException {
         // 当前hc指令需要至少1个参数
-        if (args.length <= 0) {
+        if (args.length == 0) {
             return ShowCommandHelp(sender, 0);
         }
         // /hc reload
@@ -1203,7 +1203,7 @@ public class CommandItem extends Command {
     private boolean RunQuartermasterCommand(CommandSender sender, String[] args) {
         int amount = 1;
 
-        if (args.length <= 0) {
+        if (args.length == 0) {
             return ShowCommandHelp(sender, 1);
         }
 
@@ -1230,7 +1230,7 @@ public class CommandItem extends Command {
         if (args.length <= 1) {
             return ShowCommandHelp(sender, 2);
         }
-        if (!(sender instanceof Player) && args.length <= 2) {
+        if (!(sender instanceof Player) && args.length == 2) {
             return false;
         }
 
@@ -1266,7 +1266,6 @@ public class CommandItem extends Command {
     }
 
     private boolean RunPlaygroundMenusCloseCommand(@NotNull CommandSender sender, String @NotNull [] args) throws InvalidConfigurationException {
-
         String menuId = args[1];
         String target = args.length >= 3 ? args[2] : sender.getName();
         Player targetPlayer = Bukkit.getPlayer(target);
@@ -1296,7 +1295,7 @@ public class CommandItem extends Command {
     }
 
     private boolean RunSeenCommand(CommandSender sender, String[] args) {
-        if (args.length <= 0) {
+        if (args.length == 0) {
             ShowCommandHelp(sender, 1);
             return false;
         }
@@ -1332,7 +1331,7 @@ public class CommandItem extends Command {
             return false;
         }
         // 检查参数数量，必须至少1个参数
-        if (args.length <= 0) {
+        if (args.length == 0) {
             ShowCommandHelp(sender, 1);
             return false;
         }
@@ -1348,7 +1347,7 @@ public class CommandItem extends Command {
             return false;
         }
         // 检查参数数量，必须至少1个参数
-        if (args.length <= 0) {
+        if (args.length == 0) {
             ShowCommandHelp(sender, 1);
             return false;
         }

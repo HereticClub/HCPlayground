@@ -40,6 +40,9 @@ recipemanager:
       name: remove
       permission: hc.recipemanager.remove
       index: 1
+    3:
+      name: show
+      index: 1
 rewardmanager:
   permission: hc.rewardmanager.*
   runOnConsole: true

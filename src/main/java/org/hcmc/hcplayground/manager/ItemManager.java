@@ -176,7 +176,6 @@ public class ItemManager {
 
     public static void updateLore(ItemStack stack) {
         ItemBase ib = getItemBase(stack);
-        if (ib == null) return;
         ib.updateLore(stack);
     }
 
@@ -191,9 +190,12 @@ public class ItemManager {
     /**
      * 从ItemStack实例获取ItemBase实例信息
      */
+    @NotNull
     public static ItemBase getItemBase(@NotNull ItemStack itemStack) {
         String id = getItemBaseId(itemStack);
-        return findItemById(id);
+        ItemBase ib = findItemById(id);
+        if (ib != null) ib.setAmount(itemStack.getAmount());
+        return ib == null ? new CraftItemBase(itemStack) : ib;
     }
 
     public static void give(CommandSender sender, String playerName, String itemId, int amount) {
@@ -252,22 +254,52 @@ public class ItemManager {
 
     private static class CraftItemBase extends org.hcmc.hcplayground.model.item.CraftItemBase {
 
+        private final ItemStack itemStack;
         private int amount;
         private MaterialData material;
 
         public CraftItemBase(Material material, int amount) {
-            this.material = new MaterialData();
-            this.material.setData(material, material.name());
+            this.itemStack = new ItemStack(material, amount);
             this.amount = amount;
+            setMaterial(material);
         }
 
         public CraftItemBase(String material, int amount) {
             Material m = MaterialSerialization.valueOf(material);
-            this.material = new MaterialData();
-            this.material.setData(m, m.name());
+            this.itemStack = new ItemStack(m, amount);
             this.amount = amount;
+            setMaterial(m);
         }
 
+        public CraftItemBase(ItemStack itemStack) {
+            this.itemStack = itemStack;
+            this.amount = itemStack.getAmount();
+            setMaterial(itemStack.getType());
+        }
+
+        @Override
+        public MaterialData getMaterial() {
+            if (this.material == null) material = new MaterialData();
+            material.setData(Material.AIR, Material.AIR.name());
+            return this.material;
+        }
+
+        public void setMaterial(Material material) {
+            this.material = new MaterialData();
+            this.material.setData(material, material.name());
+            if (!itemStack.getType().equals(material)) this.itemStack.setType(material);
+        }
+
+        @Override
+        public int getAmount() {
+            return this.amount;
+        }
+
+        @Override
+        public void setAmount(int amount) {
+            this.amount = amount;
+            this.itemStack.setAmount(amount);
+        }
 
         @Override
         public void updateAttributeLore() {
@@ -275,28 +307,13 @@ public class ItemManager {
         }
 
         @Override
-        public MaterialData getMaterial() {
-            return material;
-        }
-
-        public void setMaterial(Material material) {
-            this.material = new MaterialData();
-            this.material.setData(material, material.name());
-        }
-
-        @Override
-        public int getAmount() {
-            return amount;
-        }
-
-        @Override
-        public void setAmount(int amount) {
-            this.amount = amount;
-        }
-
-        @Override
         public ItemStack toItemStack() {
-            return new ItemStack(material.value, amount);
+            return itemStack;
+        }
+
+        @Override
+        public String toString() {
+            return itemStack.getType().name();
         }
     }
 }

@@ -349,9 +349,9 @@ public class PlayerData {
 
     public boolean unlockRecipe(String recipeId) {
         // 检查是否已经解锁
-        if (existRecipe(recipeId)) return false;
+        if (isRecipeUnlocked(recipeId)) return false;
         // 检查是否存在配方加载项中
-        if (!RecipeManager.existRecipe(recipeId)) return false;
+        if (RecipeManager.noneMatchRecipe(recipeId)) return false;
         // 为玩家解锁配方
         recipes.add(recipeId);
         return true;
@@ -359,7 +359,7 @@ public class PlayerData {
 
     public boolean removeRecipe(String recipeId) {
         // 检查是否已经解锁
-        if (!existRecipe(recipeId)) return false;
+        if (!isRecipeUnlocked(recipeId)) return false;
         // 为玩家解锁配方
         recipes.remove(recipeId);
         return true;
@@ -368,15 +368,22 @@ public class PlayerData {
     public void unlockRecipe(String ... recipeIds) {
         for (String recipe : recipeIds) {
             // 检查是否已经解锁
-            if (existRecipe(recipe)) continue;
+            if (isRecipeUnlocked(recipe)) continue;
             // 检查是否存在配方加载项中
-            if (!RecipeManager.existRecipe(recipe)) continue;
+            if (RecipeManager.noneMatchRecipe(recipe)) continue;
             // 为玩家解锁配方
             recipes.add(recipe);
         }
     }
 
-    public boolean existRecipe(String recipeId) {
+    /**
+     * 指示配方id是否已经被玩家解锁<br>
+     * 所有op玩家都被视为解锁所有配方
+     * @param recipeId 配方id
+     * @return 当前玩家是否已经解锁由recipeId指定的配方
+     */
+    public boolean isRecipeUnlocked(String recipeId) {
+        // if (player.isOp()) return true;
         return recipes.stream().anyMatch(x -> x.equalsIgnoreCase(recipeId));
     }
 

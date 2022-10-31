@@ -2,12 +2,15 @@ package org.hcmc.hcplayground.manager;
 
 import com.google.gson.reflect.TypeToken;
 import org.apache.commons.lang.StringUtils;
-import org.bukkit.*;
-import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.Statistic;
+import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.entity.*;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Item;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.hcmc.hcplayground.enums.MMOType;
 import org.hcmc.hcplayground.model.mmo.*;
@@ -20,16 +23,22 @@ import java.util.*;
 import java.util.logging.Level;
 
 public class MMOManager {
-    private static final String SKILL_ID_MINING = "skill_mining";
-    private static final String SKILL_ID_FARMING = "skill_farming";
-    private static final String SKILL_ID_COMBAT = "skill_combat";
-    private static final String SKILL_ID_LUMBERING = "skill_lumbering";
-    private static final String SKILL_ID_FISHING = "skill_fishing";
-    private static final String COLLECTION_ID_MINING = "collection_mining";
-    private static final String COLLECTION_ID_FARMING = "collection_farming";
-    private static final String COLLECTION_ID_COMBAT = "collection_combat";
-    private static final String COLLECTION_ID_LUMBERING = "collection_lumbering";
-    private static final String COLLECTION_ID_FISHING = "collection_fishing";
+    private static final String MENU_SKILL_ID_MINING = "skill_mining";
+    private static final String MENU_SKILL_ID_FARMING = "skill_farming";
+    private static final String MENU_SKILL_ID_COMBAT = "skill_combat";
+    private static final String MENU_SKILL_ID_LUMBERING = "skill_lumbering";
+    private static final String MENU_SKILL_ID_FISHING = "skill_fishing";
+    private static final String MENU_COLLECTION_ID_MINING = "collection_mining";
+    private static final String MENU_COLLECTION_ID_FARMING = "collection_farming";
+    private static final String MENU_COLLECTION_ID_COMBAT = "collection_combat";
+    private static final String MENU_COLLECTION_ID_LUMBERING = "collection_lumbering";
+    private static final String MENU_COLLECTION_ID_FISHING = "collection_fishing";
+    private static final String MENU_RECIPE_ID_MINING = "recipe_mining";
+    private static final String MENU_RECIPE_ID_FARMING = "recipe_farming";
+    private static final String MENU_RECIPE_ID_COMBAT = "recipe_combat";
+    private static final String MENU_RECIPE_ID_LUMBERING = "recipe_lumbering";
+    private static final String MENU_RECIPE_ID_FISHING = "recipe_fishing";
+    private static final String MENU_RECIPE_ID_MINION = "recipe_minion";
     /**
      * 技能菜单模板名称，必须在菜单配置列表中定义
      */
@@ -39,9 +48,20 @@ public class MMOManager {
      */
     private static final String MENU_TEMPLATE_COLLECTION_ID = "collection_id_template";
     /**
+     * 配方菜单模板，必须在菜单配置列表中定义
+     */
+    private static final String MENU_TEMPLATE_RECIPE_ID = "recipe_id_template";
+    /**
      * 物品收集菜单模板，必须在菜单配置列表中定义
      */
     private static final String MENU_TEMPLATE_COLLECTION_MATERIAL = "collection_material_template";
+    /**
+     * 配方成分列表及摆放模板，必须在菜单配置列表中定义
+     */
+    private static final String MENU_TEMPLATE_RECIPE_MATERIAL = "recipe_material_template";
+    private static List<String> skillMenuKeys = new ArrayList<>();
+    private static List<String> collectionMenuKeys = new ArrayList<>();
+    private static List<String> recipeMenuKeys = new ArrayList<>();
     /**
      * String - Material name for collection<br>
      * String - Menu template id
@@ -190,71 +210,6 @@ public class MMOManager {
     };
 
     /**
-     * 从start位置开始算起，获取和start位置相同的方块
-     * @param start 作为起始方块的锚点
-     * @param face 扩展方向
-     * @param round 相对扩展方向的水平方块数量
-     * @param layers 扩展方向的数量
-     * @param distance 距离作为start方块的起始方块，为0表示从start位置开始
-     * @return 与start位置的方块类型相同的方块列表实例
-     */
-    public static List<Block> getBlocks(Location start, BlockFace face, int round, int layers, int distance) {
-        Location _start = start.clone();
-        Material material = start.getBlock().getType();
-        List<Block> blocks = new ArrayList<>();
-
-        switch (face) {
-            // 北，-Z方向
-            case NORTH -> _start.add(0, 0, -distance);
-            // 南，+Z方向
-            case SOUTH -> _start.add(0, 0, distance);
-            // 东，+X方向
-            case WEST -> _start.add(distance, 0, 0);
-            // 西，-X方向
-            case EAST -> _start.add(-distance, 0, 0);
-            // 上，+Y方向
-            case UP -> _start.add(0, distance, 0);
-            // 下，-Y方向
-            case DOWN -> _start.add(0, -distance, 0);
-        }
-
-        switch (face) {
-            case NORTH, SOUTH -> {
-                for (int x = -round; x <= round; x++) {
-                    for (int y = -round; y <= round; y++) {
-                        for (int z = 0; z < layers; z++) {
-                            Block sample = _start.clone().add(x, y, z).getBlock();
-                            if (sample.getType().equals(material)) blocks.add(sample);
-                        }
-                    }
-                }
-            }
-            case EAST, WEST -> {
-                for (int y = -round; y <= round; y++) {
-                    for (int z = -round; z <= round; z++) {
-                        for (int x = 0; x < layers; x++) {
-                            Block sample = _start.clone().add(x, y, z).getBlock();
-                            if (sample.getType().equals(material)) blocks.add(sample);
-                        }
-                    }
-                }
-            }
-            case UP, DOWN -> {
-                for (int x = -round; x <= round; x++) {
-                    for (int z = -round; z <= round; z++) {
-                        for (int y = 0; y < layers; y++) {
-                            Block sample = _start.clone().add(x, y, z).getBlock();
-                            if (sample.getType().equals(material)) blocks.add(sample);
-                        }
-                    }
-                }
-            }
-        }
-
-        return blocks;
-    }
-
-    /**
      * Lumbering skill statistic
      */
     public static final Material[] LumberingBlocks = new Material[]{
@@ -375,35 +330,79 @@ public class MMOManager {
     };
 
     static {
-        baseMenuMapping.put(SKILL_ID_COMBAT, MENU_TEMPLATE_SKILL_ID);
-        baseMenuMapping.put(SKILL_ID_FARMING, MENU_TEMPLATE_SKILL_ID);
-        baseMenuMapping.put(SKILL_ID_FISHING, MENU_TEMPLATE_SKILL_ID);
-        baseMenuMapping.put(SKILL_ID_LUMBERING, MENU_TEMPLATE_SKILL_ID);
-        baseMenuMapping.put(SKILL_ID_MINING, MENU_TEMPLATE_SKILL_ID);
-        baseMenuMapping.put(COLLECTION_ID_COMBAT, MENU_TEMPLATE_COLLECTION_ID);
-        baseMenuMapping.put(COLLECTION_ID_FARMING, MENU_TEMPLATE_COLLECTION_ID);
-        baseMenuMapping.put(COLLECTION_ID_FISHING, MENU_TEMPLATE_COLLECTION_ID);
-        baseMenuMapping.put(COLLECTION_ID_LUMBERING, MENU_TEMPLATE_COLLECTION_ID);
-        baseMenuMapping.put(COLLECTION_ID_MINING, MENU_TEMPLATE_COLLECTION_ID);
+        baseMenuMapping.put(MENU_SKILL_ID_COMBAT, MENU_TEMPLATE_SKILL_ID);
+        baseMenuMapping.put(MENU_SKILL_ID_FARMING, MENU_TEMPLATE_SKILL_ID);
+        baseMenuMapping.put(MENU_SKILL_ID_FISHING, MENU_TEMPLATE_SKILL_ID);
+        baseMenuMapping.put(MENU_SKILL_ID_LUMBERING, MENU_TEMPLATE_SKILL_ID);
+        baseMenuMapping.put(MENU_SKILL_ID_MINING, MENU_TEMPLATE_SKILL_ID);
+        baseMenuMapping.put(MENU_COLLECTION_ID_COMBAT, MENU_TEMPLATE_COLLECTION_ID);
+        baseMenuMapping.put(MENU_COLLECTION_ID_FARMING, MENU_TEMPLATE_COLLECTION_ID);
+        baseMenuMapping.put(MENU_COLLECTION_ID_FISHING, MENU_TEMPLATE_COLLECTION_ID);
+        baseMenuMapping.put(MENU_COLLECTION_ID_LUMBERING, MENU_TEMPLATE_COLLECTION_ID);
+        baseMenuMapping.put(MENU_COLLECTION_ID_MINING, MENU_TEMPLATE_COLLECTION_ID);
+        baseMenuMapping.put(MENU_RECIPE_ID_COMBAT, MENU_TEMPLATE_RECIPE_ID);
+        baseMenuMapping.put(MENU_RECIPE_ID_FARMING, MENU_TEMPLATE_RECIPE_ID);
+        baseMenuMapping.put(MENU_RECIPE_ID_FISHING, MENU_TEMPLATE_RECIPE_ID);
+        baseMenuMapping.put(MENU_RECIPE_ID_LUMBERING, MENU_TEMPLATE_RECIPE_ID);
+        baseMenuMapping.put(MENU_RECIPE_ID_MINING, MENU_TEMPLATE_RECIPE_ID);
+        baseMenuMapping.put(MENU_RECIPE_ID_MINION, MENU_TEMPLATE_RECIPE_ID);
 
         collectionMapping.put(MMOType.COLLECTION_COMBAT, CombatMaterials);
         collectionMapping.put(MMOType.COLLECTION_FARMING, FarmingMaterials);
         collectionMapping.put(MMOType.COLLECTION_FISHING, FishingMaterials);
         collectionMapping.put(MMOType.COLLECTION_LUMBERING, LumberingMaterials);
         collectionMapping.put(MMOType.COLLECTION_MINING, MiningMaterials);
+
+        skillMenuKeys.add(MENU_SKILL_ID_FARMING);
+        skillMenuKeys.add(MENU_SKILL_ID_FISHING);
+        skillMenuKeys.add(MENU_SKILL_ID_COMBAT);
+        skillMenuKeys.add(MENU_SKILL_ID_MINING);
+        skillMenuKeys.add(MENU_SKILL_ID_LUMBERING);
+        skillMenuKeys.add(MENU_TEMPLATE_SKILL_ID);
+        collectionMenuKeys.add(MENU_COLLECTION_ID_LUMBERING);
+        collectionMenuKeys.add(MENU_COLLECTION_ID_COMBAT);
+        collectionMenuKeys.add(MENU_COLLECTION_ID_FARMING);
+        collectionMenuKeys.add(MENU_COLLECTION_ID_FISHING);
+        collectionMenuKeys.add(MENU_COLLECTION_ID_MINING);
+        collectionMenuKeys.add(MENU_TEMPLATE_COLLECTION_ID);
+        collectionMenuKeys.add(MENU_TEMPLATE_COLLECTION_MATERIAL);
+        recipeMenuKeys.add(MENU_RECIPE_ID_COMBAT);
+        recipeMenuKeys.add(MENU_RECIPE_ID_FARMING);
+        recipeMenuKeys.add(MENU_RECIPE_ID_MINING);
+        recipeMenuKeys.add(MENU_RECIPE_ID_FISHING);
+        recipeMenuKeys.add(MENU_RECIPE_ID_LUMBERING);
+        recipeMenuKeys.add(MENU_RECIPE_ID_MINION);
+        recipeMenuKeys.add(MENU_TEMPLATE_RECIPE_ID);
+        recipeMenuKeys.add(MENU_TEMPLATE_RECIPE_MATERIAL);
     }
 
-    private static List<MMOSkill> skills = new ArrayList<>();
+    private static List<MMOSkillTemplate> skillTemplates = new ArrayList<>();
+    private static List<MMORecipeTemplate> recipeTemplates = new ArrayList<>();
     private static List<MMOCollectionCategory> collectionCategories = new ArrayList<>();
     private static List<MMOCollectionMaterial> collectionMaterials = new ArrayList<>();
-    private static List<MMOLevel> levelTemplates = new ArrayList<>();
+    private static List<MMOLevelTemplate> levelTemplates = new ArrayList<>();
     private static YamlConfiguration yaml;
-
     private static List<String> skillIdList = new ArrayList<>();
     private static final List<String> collectionIdList = new ArrayList<>();
 
     public MMOManager() {
 
+    }
+
+    public static boolean isSkillMenuId(String menuId) {
+        return skillMenuKeys.contains(menuId);
+    }
+
+    public static boolean isCollectionMenuId(String menuId) {
+        return collectionMenuKeys.contains(menuId);
+    }
+
+    public static boolean isRecipeMenuId(String menuId) {
+        return recipeMenuKeys.contains(menuId);
+    }
+
+    public static boolean isLegacyMenuId(String menuId) {
+        return !skillMenuKeys.contains(menuId) && !collectionMenuKeys.contains(menuId) && !recipeMenuKeys.contains(menuId);
     }
 
     public static Map<String, String> getMaterialMenuMapping() {
@@ -418,18 +417,23 @@ public class MMOManager {
         ConfigurationSection collectionCategorySection = yaml.getConfigurationSection("collection_categories");
         ConfigurationSection collectionMaterialSection = yaml.getConfigurationSection("collection_materials");
         ConfigurationSection levelSection = yaml.getConfigurationSection("level_templates");
+        ConfigurationSection recipeSection = yaml.getConfigurationSection("recipe_template");
+
+        if (recipeSection != null) {
+            recipeTemplates = Global.deserializeList(recipeSection, MMORecipeTemplate.class);
+        }
 
         if (skillSection != null) {
-            skills = Global.deserializeList(skillSection, MMOSkill.class);
+            skillTemplates = Global.deserializeList(skillSection, MMOSkillTemplate.class);
             skillIdList = skillSection.getKeys(false).stream().toList();
-            for (MMOSkill skill : skills) {
-                String id = skill.getId().split("\\.")[1];
+            for (MMOSkillTemplate template : skillTemplates) {
+                String id = template.getId().split("\\.")[1];
                 String levelsPath = String.format("%s.levels", id);
                 ConfigurationSection levelsSection = skillSection.getConfigurationSection(levelsPath);
 
                 if (levelsSection == null) continue;
-                List<MMOLevel> levels = Global.deserializeList(levelsSection, MMOLevel.class);
-                for (MMOLevel level : levels) {
+                List<MMOLevelTemplate> levels = Global.deserializeList(levelsSection, MMOLevelTemplate.class);
+                for (MMOLevelTemplate level : levels) {
                     int l = getLevelById(level.getId());
                     String rewardsPath = String.format("%s.levels.%s.rewards", id, l);
                     ConfigurationSection rewardsSection = skillSection.getConfigurationSection(rewardsPath);
@@ -439,9 +443,9 @@ public class MMOManager {
                         level.setRewards(mapRewards);
                     }
 
-                    level.initialize(l, skill.getType().name(), skill.getName());
+                    level.initialize(l, template.getType().name(), template.getName());
                 }
-                skill.setLevels(levels);
+                template.setLevels(levels);
             }
         }
         if (collectionMaterialSection != null) {
@@ -457,30 +461,34 @@ public class MMOManager {
             collectionCategories = Global.deserializeList(collectionCategorySection, MMOCollectionCategory.class);
         }
         if (levelSection != null) {
-            levelTemplates = Global.deserializeList(levelSection, MMOLevel.class);
+            levelTemplates = Global.deserializeList(levelSection, MMOLevelTemplate.class);
         }
 
-        materialMenuMapping.clear();
         materialMenuMapping.putAll(baseMenuMapping);
         for (Material material : FarmingMaterials) {
             String name = String.format("collection_%s", material.name().toLowerCase());
-            materialMenuMapping.put(name, MENU_TEMPLATE_COLLECTION_MATERIAL);
+            if (!materialMenuMapping.containsKey(name))
+                materialMenuMapping.put(name, MENU_TEMPLATE_COLLECTION_MATERIAL);
         }
         for (Material material : MiningMaterials) {
             String name = String.format("collection_%s", material.name().toLowerCase());
-            materialMenuMapping.put(name, MENU_TEMPLATE_COLLECTION_MATERIAL);
+            if (!materialMenuMapping.containsKey(name))
+                materialMenuMapping.put(name, MENU_TEMPLATE_COLLECTION_MATERIAL);
         }
         for (Material material : CombatMaterials) {
             String name = String.format("collection_%s", material.name().toLowerCase());
-            materialMenuMapping.put(name, MENU_TEMPLATE_COLLECTION_MATERIAL);
+            if (!materialMenuMapping.containsKey(name))
+                materialMenuMapping.put(name, MENU_TEMPLATE_COLLECTION_MATERIAL);
         }
         for (Material material : LumberingMaterials) {
             String name = String.format("collection_%s", material.name().toLowerCase());
-            materialMenuMapping.put(name, MENU_TEMPLATE_COLLECTION_MATERIAL);
+            if (!materialMenuMapping.containsKey(name))
+                materialMenuMapping.put(name, MENU_TEMPLATE_COLLECTION_MATERIAL);
         }
         for (Material material : FishingMaterials) {
             String name = String.format("collection_%s", material.name().toLowerCase());
-            materialMenuMapping.put(name, MENU_TEMPLATE_COLLECTION_MATERIAL);
+            if (!materialMenuMapping.containsKey(name))
+                materialMenuMapping.put(name, MENU_TEMPLATE_COLLECTION_MATERIAL);
         }
     }
 
@@ -494,12 +502,16 @@ public class MMOManager {
         return MMOType.UNDEFINED;
     }
 
-    public static MMOLevel getLevelTemplate(String name) {
+    public static MMORecipeTemplate getRecipeTemplate(MMOType type) {
+        return recipeTemplates.stream().filter(x -> x.getType().equals(type)).findAny().orElse(null);
+    }
+
+    public static MMOLevelTemplate getLevelTemplate(String name) {
         return levelTemplates.stream().filter(x -> x.getName().equalsIgnoreCase(name)).findAny().orElse(null);
     }
 
-    public static MMOSkill getSkill(MMOType type) {
-        return skills.stream().filter(x -> x.getType().equals(type)).findAny().orElse(null);
+    public static MMOSkillTemplate getSkillTemplate(MMOType type) {
+        return skillTemplates.stream().filter(x -> x.getType().equals(type)).findAny().orElse(null);
     }
 
     public static MMOCollectionCategory getCollectionCategory(MMOType type) {
@@ -520,10 +532,10 @@ public class MMOManager {
         ConfigurationSection levelsSection = yaml.getConfigurationSection(levelsPath);
         if (levelsSection == null) return collectionMaterial;
 
-        List<MMOLevel> levels = Global.deserializeList(levelsSection, MMOLevel.class);
+        List<MMOLevelTemplate> levels = Global.deserializeList(levelsSection, MMOLevelTemplate.class);
         collectionMaterial.setLevels(levels);
 
-        for (MMOLevel level : levels) {
+        for (MMOLevelTemplate level : levels) {
             int l = getLevelById(level.getId());
             String rewardsPath = String.format("collection_materials.%s.levels.%s.rewards", id, l);
             ConfigurationSection rewardsSection = yaml.getConfigurationSection(rewardsPath);
@@ -577,6 +589,11 @@ public class MMOManager {
     public static Item dropProbability(World world, Location location, ItemStack itemStack, float rate) {
         if (!RandomNumber.checkBingo(rate)) return null;
         return world.dropItemNaturally(location, itemStack);
+    }
+
+    public static void setRecipeMenuMapping(String recipeName) {
+        if (materialMenuMapping.containsKey(recipeName.toLowerCase())) return;
+        materialMenuMapping.put(recipeName.toLowerCase(), MENU_TEMPLATE_RECIPE_MATERIAL);
     }
 
     private static int decreaseFarmingPoints(Player player, int points) {

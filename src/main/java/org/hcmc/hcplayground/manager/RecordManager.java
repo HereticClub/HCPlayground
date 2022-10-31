@@ -7,7 +7,6 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.hcmc.hcplayground.HCPlayground;
@@ -21,7 +20,9 @@ import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 public class RecordManager {
     private static List<HCItemBlockRecord> hcItemBlockRecords = new ArrayList<>();
@@ -46,7 +47,7 @@ public class RecordManager {
     }
 
     public static void addHCItemRecord(HCItemBlockRecord item) {
-        if (!existHCItemRecord(item.toLocation())) hcItemBlockRecords.add(item);
+        if (!existHCItemRecord(item.getLocation())) hcItemBlockRecords.add(item);
     }
 
     public static void addMinionRecord(MinionEntity item) {
@@ -138,25 +139,16 @@ public class RecordManager {
         }.getType();
         minionEntities = Global.GsonObject.fromJson(jsonMinion, _type);
         for (MinionEntity record : minionEntities) {
-            record.initialPlatform();
-
-            World w = record.getLocation().getWorld();
-            if (w == null) continue;
-            // 获取记录位置周围0.001范围内的所有ArmorStand实体
-            List<Entity> entities = w.getNearbyEntities(record.getLocation(), 0.001, 0.001, 0.001, x -> x.getType().equals(EntityType.ARMOR_STAND)).stream().toList();
-            if (entities.size() >= 1) {
+            Entity entity = Bukkit.getEntity(record.getUuid());
+            if (entity instanceof ArmorStand armorStand) {
                 // 获取第一个ArmorStand实体
-                record.setArmorStand((ArmorStand) entities.get(0));
-                record.setUuid((entities.get(0).getUniqueId()));
+                record.initial(armorStand, record.getType(), record.getLevel());
             } else {
                 // 生成ArmorStand实体
-                //MinionType minion = record.getInventoryType();
+                if (entity != null) entity.remove();
                 ItemStack is = MinionManager.getMinionStack(record.getType(), record.getLevel(), 1);
-                MinionEntity tmp = MinionManager.spawnMinion(record.getLocation(), is);
-                if (tmp != null) {
-                    record.setArmorStand(tmp.getArmorStand());
-                    record.setUuid(tmp.getUuid());
-                }
+                MinionEntity other = MinionManager.spawnMinion(record.getLocation(), is);
+                if (other != null) record.initial(other);
             }
         }
     }
@@ -172,11 +164,10 @@ public class RecordManager {
         for (HCItemBlockRecord record : hcItemBlockRecords) {
             ItemBase ib = ItemManager.findItemById(record.getName());
             if (ib == null) continue;
-
             World w = Bukkit.getWorld(record.getWorld());
             if (w == null) continue;
 
-            Location l = new Location(w, record.getX(), record.getY(), record.getZ(), record.getYaw(), record.getPitch());
+            Location l = record.getLocation();
             Block b = w.getBlockAt(l);
             if (!b.getType().equals(ib.getMaterial().value)) b.setType(ib.getMaterial().value);
         }

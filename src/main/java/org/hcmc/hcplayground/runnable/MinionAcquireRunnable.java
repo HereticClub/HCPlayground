@@ -11,9 +11,6 @@ import org.bukkit.block.data.type.Sapling;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -82,6 +79,7 @@ public class MinionAcquireRunnable extends BukkitRunnable {
     private void logging() {
         if (template == null) return;
         MinionCategory category = template.getCategory();
+        MinionType minionType = entity.getType();
         if (!category.equals(MinionCategory.LUMBERJACK)) return;
 
         List<Location> saplingLocations = new ArrayList<>();
@@ -91,11 +89,38 @@ public class MinionAcquireRunnable extends BukkitRunnable {
             Location distance = l.clone().subtract(entity.getLocation());
             if (Math.abs(distance.getX()) == 2 && Math.abs(distance.getZ()) == 2) saplingLocations.add(l.clone());
         }
-        Sapling sapling;
+        List<Block> logBlocks = switch (minionType) {
+            case ACACIA_LOG -> getCropBlocks(Material.ACACIA_LOG);
+            case BIRCH_LOG -> getCropBlocks(Material.BIRCH_LOG);
+            case DARK_OAK_LOG -> getCropBlocks(Material.DARK_OAK_LOG);
+            case JUNGLE_LOG -> getCropBlocks(Material.JUNGLE_LOG);
+            case OAK_LOG -> getCropBlocks(Material.OAK_LOG);
+            case SPRUCE_LOG -> getCropBlocks(Material.SPRUCE_LOG);
+            case CHORUS_FLOWER -> getCropBlocks(Material.CHORUS_PLANT);
+            default -> new ArrayList<>();
+        };
+        if (logBlocks.size() >= 1) {
+            int rnd = RandomNumber.getRandomInteger(logBlocks.size());
+            Block block = logBlocks.get(rnd);
 
 
+            List<Location> tree = new ArrayList<>();
+            /*
+            entity.setWholeTree(block, tree);
+            for (Location l : tree) System.out.println(l);
 
-        saplingLocations.forEach(x -> planting(x, template));
+             */
+
+            CutDownTreeRunnable runnable = new CutDownTreeRunnable(entity, block, tree);
+            runnable.runTaskTimer(plugin, 5, 4);
+        }
+
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                saplingLocations.forEach(x -> planting(x, template));
+            }
+        }.runTaskLater(plugin, 14);
     }
 
     private void farming() {
@@ -296,7 +321,12 @@ public class MinionAcquireRunnable extends BukkitRunnable {
                     if (sapling.getStage() < sapling.getMaximumStage()) {
                         sapling.setStage(sapling.getStage() + 1);
                         cropBlock.setBlockData(sapling);
+                    } else {
+                        generateTree(cropBlock);
                     }
+                }
+                if (cropBlock.getType().equals(Material.CHORUS_FLOWER)) {
+                    generateTree(cropBlock);
                 }
             }
         }.runTaskLater(plugin, 8);
@@ -317,16 +347,30 @@ public class MinionAcquireRunnable extends BukkitRunnable {
                     if (blockType.equals(Material.JUNGLE_LOG)) return;
                     if (blockType.equals(Material.SPRUCE_LOG)) return;
                     if (blockType.equals(Material.MANGROVE_LOG)) return;
+                    if (blockType.equals(Material.CHORUS_PLANT)) return;
                     if (blockType.equals(Material.ATTACHED_PUMPKIN_STEM)) return;
                     if (blockType.equals(Material.ATTACHED_MELON_STEM)) return;
                 }
-
                 if (!template.getCategory().equals(MinionCategory.LUMBERJACK) && !template.getSeed().equals(Material.AIR))
                     entity.placeBlock(cropBlock, template.getSeed());
                 if (template.getCategory().equals(MinionCategory.LUMBERJACK) && !template.getSapling().equals(Material.AIR))
                     entity.placeBlock(cropBlock, template.getSapling());
             }
         }.runTaskLater(plugin, 16);
+    }
+
+    private void generateTree(Block block) {
+        World world = block.getWorld();
+        block.setType(Material.AIR);
+        switch (entity.getType()) {
+            case OAK_LOG -> world.generateTree(block.getLocation(), TreeType.TREE);
+            case BIRCH_LOG -> world.generateTree(block.getLocation(), TreeType.BIRCH);
+            case JUNGLE_LOG -> world.generateTree(block.getLocation(), TreeType.SMALL_JUNGLE);
+            case SPRUCE_LOG -> world.generateTree(block.getLocation(), TreeType.REDWOOD);
+            case DARK_OAK_LOG -> world.generateTree(block.getLocation(), TreeType.DARK_OAK);
+            case ACACIA_LOG -> world.generateTree(block.getLocation(), TreeType.ACACIA);
+            case CHORUS_FLOWER -> world.generateTree(block.getLocation(), TreeType.CHORUS_PLANT);
+        }
     }
 
     private void setAttachedStem(Block block) {

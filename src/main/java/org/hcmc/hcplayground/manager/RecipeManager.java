@@ -9,6 +9,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.hcmc.hcplayground.enums.PanelSlotType;
+import org.hcmc.hcplayground.model.item.ItemBase;
 import org.hcmc.hcplayground.model.recipe.CraftPanel;
 import org.hcmc.hcplayground.model.recipe.CraftPanelSlot;
 import org.hcmc.hcplayground.model.recipe.CrazyShapedRecipe;
@@ -59,6 +60,7 @@ public class RecipeManager {
                 r.setLegacyRecipe();
             } else {
                 r.prepareCrazyRecipe();
+                MMOManager.setRecipeMenuMapping(r.getId());
             }
         }
     }
@@ -132,8 +134,8 @@ public class RecipeManager {
         return inventory;
     }
 
-    public static boolean existRecipe(String id) {
-        return recipes.stream().anyMatch(x -> x.getId().equalsIgnoreCase(id));
+    public static boolean noneMatchRecipe(String id) {
+        return recipes.stream().noneMatch(x -> x.getId().equalsIgnoreCase(id));
     }
 
     public static CrazyShapedRecipe getRecipe(String id) {
@@ -142,19 +144,20 @@ public class RecipeManager {
 
     public static CrazyShapedRecipe getRecipe(@NotNull Inventory inventory) {
         List<ItemStack> requirements = getRequirements(inventory);
-        if (requirements.size() <= 0) return null;
+        if (requirements.size() == 0) return null;
 
         List<CrazyShapedRecipe> filterRecipes = recipes.stream().filter(x -> x.getRequirements().size() == requirements.size()).toList();
         for (CrazyShapedRecipe recipe : filterRecipes) {
             List<ItemStack> ingredients = recipe.getRequirements();
             int count = ingredients.size();
             boolean assumeFound = true;
-            for (int i = 0; i < count; i++) {
-                ItemStack isIngredient = ingredients.get(i);
-                ItemStack isRequirement = requirements.get(i);
 
-                boolean similar = isIngredient.isSimilar(isRequirement);
-                int delta = isRequirement.getAmount() - isIngredient.getAmount();
+            for (int i = 0; i < count; i++) {
+                ItemBase ibRequirement = ItemManager.getItemBase(requirements.get(i));
+                ItemBase ibIngredient = ItemManager.getItemBase(ingredients.get(i));
+
+                boolean similar = ibRequirement.isSimilar(ibIngredient);
+                int delta = requirements.get(i).getAmount() - ingredients.get(i).getAmount();
                 assumeFound = similar && delta >= 0;
                 if (!assumeFound) break;
             }

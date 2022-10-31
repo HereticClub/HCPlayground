@@ -1,7 +1,5 @@
 package org.hcmc.hcplayground.enums;
 
-import com.google.gson.JsonDeserializer;
-
 public enum ArmorSetType {
     // (至少)每x秒触发效果
     // 药水效果

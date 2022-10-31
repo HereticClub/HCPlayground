@@ -99,6 +99,10 @@ messages:
     &7Reason: &e%reason%
   # 在尝试给与玩家一个不存在的配方id时显示，可以使用%recipe%占位符，表示配方的id
   recipeNotExist: '&cThe recipe &e%recipe% &cis not exist.'
+  # 在配方书中作为配方标题的前缀显示
+  recipeTitlePrefix: '&fRecipe:'
+  # 在配方书中，当配方被锁定时显示
+  recipeLocked: '&cThis recipe has been locked!'
   # 当给予的配方到一位玩家后显示，在配方发送方显示
   # 可以使用%player%占位符，表示接收到配方的玩家名称
   # 可以使用%recipe%占位符，表示玩家接收到配方的id

@@ -6,30 +6,25 @@ import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.Bisected;
-import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.Directional;
-import org.bukkit.block.data.MultipleFacing;
 import org.bukkit.block.data.type.Beehive;
-import org.bukkit.block.data.type.BigDripleaf;
-import org.bukkit.block.data.type.Dripleaf;
-import org.bukkit.block.data.type.SmallDripleaf;
 import org.bukkit.entity.*;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.enums.MinionCategory;
-import org.hcmc.hcplayground.enums.PanelSlotType;
 import org.hcmc.hcplayground.enums.MinionType;
+import org.hcmc.hcplayground.enums.PanelSlotType;
 import org.hcmc.hcplayground.manager.*;
 import org.hcmc.hcplayground.model.item.ItemBase;
-import org.hcmc.hcplayground.utility.Global;
 import org.hcmc.hcplayground.utility.RandomNumber;
 import org.hcmc.hcplayground.utility.RomanNumber;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
@@ -68,70 +63,72 @@ public class MinionEntity {
     @Expose
     @SerializedName(value = "owner")
     private UUID owner;
-
-    @Expose(deserialize = false)
-    private String id;
-    @Expose(deserialize = false)
-    private Location location;
-    @Expose(deserialize = false)
-    private MinionTemplate template;
-    @Expose(deserialize = false)
-    private MinionTemplate nextLevel;
-    @Expose(deserialize = false)
-    private List<Location> platformLocations = new ArrayList<>();
-    @Expose(deserialize = false)
+    @Expose
+    @SerializedName(value = "lastAcquireTime")
     private Date lastAcquireTime = new Date();
-    @Expose(deserialize = false)
+
+    @Expose(deserialize = false, serialize = false)
+    private Location location;
+    @Expose(deserialize = false, serialize = false)
+    private List<Location> platformLocations = new ArrayList<>();
+    @Expose(deserialize = false, serialize = false)
+    private MinionTemplate template;
+    @Expose(deserialize = false, serialize = false)
+    private MinionTemplate nextLevel;
+    @Expose(deserialize = false, serialize = false)
     private ArmorStand armorStand;
-    @Expose(deserialize = false)
+    @Expose(deserialize = false, serialize = false)
     private Inventory inventory;
-    @Expose(deserialize = false)
+    @Expose(deserialize = false, serialize = false)
     private ItemStack tool = new ItemStack(Material.AIR, 1);
+    @Expose(serialize = false, deserialize = false)
+    private JavaPlugin plugin;
 
-    public MinionEntity() {
-
+    public MinionEntity(ArmorStand armorStand, MinionType type, int level) {
+        initial(armorStand, type, level);
     }
 
-    public MinionEntity(ArmorStand armorStand, MinionType type, int level, Location location) {
+    public void initial(MinionEntity other) {
+        initial(other.armorStand, other.type, other.level);
+    }
+
+    public void initial(ArmorStand armorStand, MinionType type, int level) {
         this.type = type;
         this.level = level;
         this.armorStand = armorStand;
-        EntityEquipment equipment = armorStand.getEquipment();
-        if (equipment != null) this.tool = equipment.getItemInMainHand();
-
-        x = location.getX();
-        y = location.getY();
-        z = location.getZ();
-        pitch = location.getPitch();
-        yaw = location.getYaw();
-        this.location = location;
-
-        World w = location.getWorld();
-        if (w == null) return;
-        world = w.getName();
-
-        initialPlatform();
-    }
-
-    public void initialPlatform() {
+        this.location = armorStand.getLocation();
+        this.uuid = armorStand.getUniqueId();
+        this.x = location.getX();
+        this.y = location.getY();
+        this.z = location.getZ();
+        this.pitch = location.getPitch();
+        this.yaw = location.getYaw();
+        this.world = armorStand.getWorld().getName();
         this.template = MinionManager.getMinionTemplate(type, level);
         this.nextLevel = MinionManager.getMinionTemplate(type, level + 1);
+        this.plugin = HCPlayground.getInstance();
 
-        if (location == null) location = getLocation();
-        platformLocations.clear();
+        EntityEquipment equipment = armorStand.getEquipment();
+        if (equipment != null) this.tool = equipment.getItemInMainHand();
+        if (this.lastAcquireTime == null) this.lastAcquireTime = new Date();
+
+        if (this.platformLocations == null) {
+            this.platformLocations = new ArrayList<>();
+        } else {
+            this.platformLocations.clear();
+        }
+
         for (int x = -2; x <= 2; x++) {
             for (int z = -2; z <= 2; z++) {
                 if (x == 0 && z == 0) continue;
-                Location l = new Location(location.getWorld(), location.getX() + x, location.getY() - 1, location.getZ() + z);
-                platformLocations.add(l);
+                this.platformLocations.add(this.location.clone().add(x, -1, z));
             }
         }
     }
 
     /**
      * 摆放方块并且播放摆放相应方块的声音
-     *
-     * @param block    要摆放的方块实例
+     * @param block 要摆放的方块实例
      * @param material 方块的材质
      */
     public void placeBlock(Block block, Material material) {
@@ -158,7 +155,6 @@ public class MinionEntity {
 
     /**
      * 破坏指定位置的方块，并且播放破坏相应方块的声音
-     *
      * @param block 要破坏的方块的位置
      */
     public void breakBlock(Block block) {
@@ -194,12 +190,11 @@ public class MinionEntity {
     }
 
     public void harvestHoney(Block block) {
-        Plugin plugin = HCPlayground.getInstance();
+        LookAt(block.getLocation());
         if (!(block.getBlockData() instanceof Beehive beehive)) return;
         if (beehive.getHoneyLevel() < beehive.getMaximumHoneyLevel()) return;
         boolean rnd = new Random().nextBoolean();
         int count = new Random().nextInt(3) + 1;
-
         ItemStack is = new ItemStack(rnd ? Material.HONEYCOMB : Material.HONEY_BOTTLE, count);
         Item item = block.getWorld().dropItemNaturally(block.getLocation(), is);
         beehive.setHoneyLevel(0);
@@ -215,12 +210,11 @@ public class MinionEntity {
                 item.remove();
             }
         }.runTaskLater(plugin, 10);
-
-        Location l = Global.LookAt(this.location, block.getLocation());
-        armorStand.setRotation(l.getPitch(), l.getYaw());
     }
 
     public void harvest(List<Item> drops, Location location) {
+        // MinionEntity 望向可收获的方块
+        LookAt(location);
         // 遍历掉落物品
         for (Item item : drops) {
             ItemStack is = item.getItemStack();
@@ -233,9 +227,6 @@ public class MinionEntity {
             refreshSack();
             item.remove();
         }
-        // MinionEntity 望向可收获的方块
-        Location l = Global.LookAt(this.location, location);
-        armorStand.setRotation(l.getPitch(), l.getYaw());
     }
 
     /**
@@ -244,7 +235,8 @@ public class MinionEntity {
      * @param block 方块实例
      */
     public void harvest(Block block) {
-        Plugin plugin = HCPlayground.getInstance();
+        // MinionEntity华丽转身，望向可收获的方块
+        LookAt(block.getLocation());
         // 获取方块的掉落列表
         List<ItemStack> dropStacks = block.getDrops(tool).stream().toList();
         // 在掉落列表中随机选择掉落物品
@@ -272,9 +264,6 @@ public class MinionEntity {
                 }
             }.runTaskLater(plugin, 10);
         });
-        // MinionEntity 望向可收获的方块
-        Location l = Global.LookAt(location, block.getLocation());
-        armorStand.setRotation(l.getPitch(), l.getYaw());
     }
 
     public void breedingCubs() {
@@ -494,7 +483,7 @@ public class MinionEntity {
                 List<ItemStack> upgrade = template.getUpgrade();
                 for (ItemStack isUpgrade : upgrade) {
                     ItemBase ib = ItemManager.getItemBase(isUpgrade);
-                    lore.add(upgradeLore.replace("%name%", ib == null ? isUpgrade.getType().name() : ib.getName())
+                    lore.add(upgradeLore.replace("%name%", ib.isNativeItemStack() ? isUpgrade.getType().name() : ib.getName())
                             .replace("%amount%", String.valueOf(isUpgrade.getAmount())));
                 }
             }
@@ -533,10 +522,6 @@ public class MinionEntity {
         this.lastAcquireTime = lastAcquireTime;
     }
 
-    public String getId() {
-        return id;
-    }
-
     public UUID getOwner() {
         return owner;
     }
@@ -565,16 +550,8 @@ public class MinionEntity {
         return platformLocations;
     }
 
-    public void setPlatformLocations(List<Location> platformLocations) {
-        this.platformLocations = platformLocations;
-    }
-
     public ArmorStand getArmorStand() {
         return armorStand;
-    }
-
-    public void setArmorStand(ArmorStand armorStand) {
-        this.armorStand = armorStand;
     }
 
     public double getX() {
@@ -591,14 +568,6 @@ public class MinionEntity {
 
     public String getWorld() {
         return world;
-    }
-
-    public float getPitch() {
-        return pitch;
-    }
-
-    public float getYaw() {
-        return yaw;
     }
 
     public Location getLocation() {
@@ -628,5 +597,80 @@ public class MinionEntity {
 
     public boolean isNonOwner(Player player) {
         return !owner.equals(player.getUniqueId());
+    }
+
+    /**
+     * 从startBlock开始获取相同材质的方块
+     * @param startBlock 起始方块，但必须是各种原木
+     * @param tree 返回一组和startBlock相同的方块<br>
+     *             这个参数必须以变量方式传入<br>
+     *             这个方法被调用后，这个参数会被重新设置
+     */
+    public void setWholeTree(@NotNull Block startBlock,@Nullable List<Location> tree) {
+        if (tree == null) tree = new ArrayList<>();
+        if (startBlock.getType().equals(Material.AIR)) return;
+        if (!startBlock.getType().equals(Material.BIRCH_LOG) &&
+                !startBlock.getType().equals(Material.OAK_LOG) &&
+                !startBlock.getType().equals(Material.ACACIA_LOG) &&
+                !startBlock.getType().equals(Material.JUNGLE_LOG) &&
+                !startBlock.getType().equals(Material.DARK_OAK_LOG) &&
+                !startBlock.getType().equals(Material.SPRUCE_LOG) &&
+                !startBlock.getType().equals(Material.MANGROVE_LOG) &&
+                !startBlock.getType().equals(Material.CHORUS_FLOWER) &&
+                !startBlock.getType().equals(Material.CHORUS_PLANT) &&
+                !startBlock.getType().equals(Material.BIRCH_LOG)) return;
+
+        Material m = startBlock.getType();
+
+        tree.add(startBlock.getLocation());
+
+        for (BlockFace face : BlockFace.values()) {
+            // 排除非正向方块
+            if (!face.isCartesian()) continue;
+            // 获取连接的方块
+            Block relative = startBlock.getRelative(face);
+            // 排除和起始方块不一致的方块
+            if (!relative.getType().equals(m)) continue;
+            // 获取方块的位置
+            Location l = relative.getLocation();
+            // 排除位置超出界限的方块
+            Location distance = l.clone().subtract(location);
+            if (Math.abs(distance.getX()) >= 5 || Math.abs(distance.getZ()) >= 5) continue;
+            // 排除已在“树”中的位置
+            if (tree.stream().anyMatch(x -> x.toVector().equals(l.toVector()))) continue;
+            // 添加相关方块的位置，防止该位置的方块被外部因素所改变
+            tree.add(l);
+            System.out.println(l.toVector());
+            // 递归继续获取下一正向位置的方块
+            setWholeTree(relative, tree);
+        }
+    }
+
+    private void LookAt(Location target) {
+        Location l = location.getBlock().getLocation();
+
+        double dx = target.getX() - l.getX();
+        double dy = target.getY() - l.getY();
+        double dz = target.getZ() - l.getZ();
+        double dxz = Math.sqrt(Math.pow(dx, 2) + Math.pow(dz, 2));
+        float yaw1 = location.getYaw();
+        float pitch1 = (float) -Math.atan(dy / dxz);
+
+        if (dx != 0)
+            yaw1 = (float) ((dx < 0 ? 1.5 * Math.PI : 0.5 * Math.PI) - Math.atan(dz / dx));
+        else if (dz < 0) {
+            yaw1 = (float) Math.PI;
+        }
+
+        yaw1 = (float) (yaw1 * -180f / Math.PI);
+        pitch1 = (float) (pitch1 * 180f / Math.PI);
+        if (Math.abs(yaw1) >= 360) yaw1 = 0;
+        armorStand.setRotation(yaw1, pitch1);
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                armorStand.setRotation(yaw, pitch);
+            }
+        }.runTaskLater(plugin, 30);
     }
 }

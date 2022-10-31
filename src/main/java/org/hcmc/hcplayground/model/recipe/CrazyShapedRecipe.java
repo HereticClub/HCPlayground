@@ -45,12 +45,6 @@ public class CrazyShapedRecipe implements Recipe {
     @SerializedName(value = "name")
     private NamespacedKey key;
     /**
-     * 配方的显示名称
-     */
-    @Expose
-    @SerializedName(value = "display")
-    private String display;
-    /**
      * 成分排列形状
      */
     @Expose
@@ -91,10 +85,6 @@ public class CrazyShapedRecipe implements Recipe {
 
     public String getId() {
         return id;
-    }
-
-    public String getDisplay() {
-        return display;
     }
 
     public Map<Character, ItemBase> getIngredients() {
@@ -143,10 +133,7 @@ public class CrazyShapedRecipe implements Recipe {
         int rowLength = -1;
         Validate.notNull(ingredientShape, "Must provide a ingredient shape, and the shape should be square.");
         Validate.isTrue(ingredientShape.size() >= 1 && ingredientShape.size() <= 6, "Crazy Crafting Recipes should be 1, 2, 3, 4, 5, 6 rows, not ", ingredientShape.size());
-
         this.requirements.clear();
-        if (StringUtils.isBlank(display)) display = key.getKey();
-
         // 验证，成分摆放形状必须是矩形
         for (String line : ingredientShape) {
             Validate.notNull(line, "Shape can not have null rows");
@@ -188,7 +175,7 @@ public class CrazyShapedRecipe implements Recipe {
             Map<Integer, ItemStack> placedIngredients = panel.getPlacedIngredients();
             // 检测成分的数量，少于需求则马上退出循环
             for (Map.Entry<Integer, ItemStack> entry : placedIngredients.entrySet()) {
-                Map.Entry<Character, ItemBase> ee = ingredients.entrySet().stream().filter(x -> x.getValue().toItemStack().isSimilar(entry.getValue())).findAny().orElse(null);
+                Map.Entry<Character, ItemBase> ee = ingredients.entrySet().stream().filter(x -> x.getValue().isSimilar(ItemManager.getItemBase(entry.getValue()))).findAny().orElse(null);
                 if (ee == null) continue;
                 // 现有的物品堆叠实例
                 ItemStack isExisting = entry.getValue();
@@ -201,7 +188,7 @@ public class CrazyShapedRecipe implements Recipe {
             }
             // 通过成分数量的检测后，才减去配方台里面的物品堆叠的需求数量
             for (Map.Entry<Integer, ItemStack> entry : placedIngredients.entrySet()) {
-                Map.Entry<Character, ItemBase> ee = ingredients.entrySet().stream().filter(x -> x.getValue().toItemStack().isSimilar(entry.getValue())).findAny().orElse(null);
+                Map.Entry<Character, ItemBase> ee = ingredients.entrySet().stream().filter(x -> x.getValue().isSimilar(ItemManager.getItemBase(entry.getValue()))).findAny().orElse(null);
                 if (ee == null) continue;
 
                 ItemStack isExisting = entry.getValue();
@@ -224,7 +211,8 @@ public class CrazyShapedRecipe implements Recipe {
         // Player.getItemOnCursor()
         // 运行在runnable之外，表示获取鼠标点击箱子界面前的物品
         // 运行在runnable之内，表示获取鼠标点击箱子界面后的物品
-        ItemStack cursor = player.getItemOnCursor();
+        ItemStack isCursor = player.getItemOnCursor();
+        ItemBase ibCursor = ItemManager.getItemBase(isCursor);
         new BukkitRunnable() {
             @Override
             public void run() {
@@ -232,7 +220,7 @@ public class CrazyShapedRecipe implements Recipe {
 
                 Map<Integer, ItemStack> placedIngredients = panel.getPlacedIngredients();
                 for (Map.Entry<Integer, ItemStack> entry : placedIngredients.entrySet()) {
-                    Map.Entry<Character, ItemBase> ee = ingredients.entrySet().stream().filter(x -> x.getValue().toItemStack().isSimilar(entry.getValue())).findAny().orElse(null);
+                    Map.Entry<Character, ItemBase> ee = ingredients.entrySet().stream().filter(x -> x.getValue().isSimilar(ItemManager.getItemBase(entry.getValue()))).findAny().orElse(null);
                     if (ee == null) continue;
 
                     int amount = ingredientAmount.get(ee.getKey());
@@ -241,13 +229,15 @@ public class CrazyShapedRecipe implements Recipe {
                     inventory.setItem(entry.getKey(), is);
                 }
 
-                ItemStack result = getResult();
-                if (result.isSimilar(cursor)) {
-                    cursor.setAmount(cursor.getAmount() + result.getAmount());
-                    player.setItemOnCursor(cursor);
+                ItemStack isResult = getResult();
+                ItemBase ibResult = ItemManager.getItemBase(isResult);
+
+                if (ibResult.isSimilar(ibCursor)) {
+                    isCursor.setAmount(isCursor.getAmount() + isResult.getAmount());
+                    player.setItemOnCursor(isCursor);
                 } else {
-                    player.getInventory().addItem(cursor);
-                    player.setItemOnCursor(result);
+                    player.getInventory().addItem(isCursor);
+                    player.setItemOnCursor(isResult);
                 }
             }
         }.runTask(plugin);
@@ -268,7 +258,6 @@ public class CrazyShapedRecipe implements Recipe {
     }
 
     public void setLegacyRecipe() {
-
         Recipe r = Bukkit.getRecipe(key);
         if (r != null) Bukkit.removeRecipe(key);
 

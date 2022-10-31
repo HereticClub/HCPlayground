@@ -151,6 +151,10 @@ public enum MinionType {
      * 深色橡木
      */
     DARK_OAK_LOG,
+    /**
+     * 紫颂花
+     */
+    CHORUS_FLOWER,
     /*======== 屠夫 ========*/
     /**
      * 猪

@@ -3,12 +3,8 @@ package org.hcmc.hcplayground.runnable;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.hcmc.hcplayground.manager.ItemManager;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * 使用指令/enchant为主手的自定义物品附魔后更新说明

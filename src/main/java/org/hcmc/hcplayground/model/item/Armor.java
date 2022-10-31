@@ -19,7 +19,7 @@ import org.hcmc.hcplayground.manager.ArmorSetManager;
 import org.hcmc.hcplayground.model.armorset.ArmorSetEffect;
 import org.hcmc.hcplayground.utility.Global;
 
-import java.util.*;
+import java.util.UUID;
 
 public class Armor extends CraftItemBase {
     

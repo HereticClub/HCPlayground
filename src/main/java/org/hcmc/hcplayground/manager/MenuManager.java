@@ -14,9 +14,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.hcmc.hcplayground.HCPlayground;
-import org.hcmc.hcplayground.model.menu.MenuPanel;
-import org.hcmc.hcplayground.model.menu.MenuPanelSlot;
-import org.hcmc.hcplayground.model.menu.SlotClickCondition;
+import org.hcmc.hcplayground.model.menu.*;
 import org.hcmc.hcplayground.utility.Global;
 import org.hcmc.hcplayground.utility.YamlFileFilter;
 import org.jetbrains.annotations.NotNull;
@@ -24,6 +22,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Type;
 import java.util.*;
 
@@ -100,15 +99,18 @@ public class MenuManager extends BukkitCommand {
         return true;
     }
 
-    public static MenuPanel  getMenuPanel(@NotNull String menuId, @NotNull Player player) throws InvalidConfigurationException {
+    public static MenuPanel getMenuPanel(@NotNull String menuId, @NotNull Player player) throws InvalidConfigurationException {
         YamlConfiguration yaml = mapYaml.get(menuId);
         if (yaml == null) return null;
 
-        String decoratesPath = String.format("%s.decorates", menuId);
         ConfigurationSection section = yaml.getConfigurationSection(menuId);
         if (section == null) return null;
-        MenuPanel menu = Global.deserialize(section, player, MenuPanel.class);
 
+        String className = section.getString("class-name");
+        Class<? extends MenuPanel> cls = getMenuClass(className);
+        MenuPanel menu = Global.deserialize(section, player, cls);
+
+        String decoratesPath = String.format("%s.decorates", menuId);
         ConfigurationSection decoratesSection = yaml.getConfigurationSection(decoratesPath);
         if (decoratesSection == null) return null;
         List<MenuPanelSlot> decorates = Global.deserializeList(decoratesSection, player, MenuPanelSlot.class);
@@ -116,7 +118,6 @@ public class MenuManager extends BukkitCommand {
 
         Type mapType = new TypeToken<Map<Integer, List<String>>>() {
         }.getType();
-
         for (MenuPanelSlot slot : decorates) {
             String slotId = slot.getId().split("\\.")[1];
             String leftClickPath = String.format("%s.decorates.%s.left_click", menuId, slotId);
@@ -158,6 +159,27 @@ public class MenuManager extends BukkitCommand {
                 slot.setRightConditions(Global.deserializeList(rightCondSection, player, SlotClickCondition.class));
         }
         return menu;
+    }
+
+    private static Class<? extends MenuPanel> getMenuClass(String className) {
+
+        try {
+            if (StringUtils.isBlank(className)) return LegacyMenuPanel.class;
+
+            Class<? extends MenuPanel> resultClass;
+            Class<?> menuClass = Class.forName(className);
+            Constructor<?> constructor = menuClass.getConstructor();
+
+            if (menuClass.isAssignableFrom(MenuPanel.class)) {
+                MenuPanel panel = (MenuPanel) constructor.newInstance();
+                resultClass = panel.getClass();
+            } else {
+                resultClass = LegacyMenuPanel.class;
+            }
+            return resultClass;
+        } catch (Exception e) {
+            return LegacyMenuPanel.class;
+        }
     }
 
     private boolean preregister(@NotNull String menuId) {

@@ -7,10 +7,12 @@ import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.hcmc.hcplayground.enums.PanelSlotType;
-import org.hcmc.hcplayground.manager.ItemManager;
 import org.hcmc.hcplayground.model.item.ItemBase;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class CraftPanelSlot {
     @Expose

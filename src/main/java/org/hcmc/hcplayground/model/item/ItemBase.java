@@ -184,6 +184,7 @@ public interface ItemBase {
     boolean isDisabledWorld(Player player);
 
     boolean isWrittenBook();
+    boolean isSimilar(ItemBase other);
 
     boolean isNativeItemStack();
 

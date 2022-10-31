@@ -2,11 +2,8 @@ package org.hcmc.hcplayground.utility;
 
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.NamespacedKey;
-import org.bukkit.attribute.AttributeInstance;
-import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -25,6 +22,14 @@ public class NameBinaryTag {
         PersistentDataContainer mainContainer = im.getPersistentDataContainer();
         NamespacedKey key = new NamespacedKey(plugin, ItemBase.PERSISTENT_SUB_KEY);
         subContainer = mainContainer.get(key, PersistentDataType.TAG_CONTAINER);
+    }
+
+    public int getIntegerValue(String key) {
+        if (subContainer == null) return 0;
+        NamespacedKey subKey = new NamespacedKey(plugin, key);
+        Integer value = subContainer.get(subKey, PersistentDataType.INTEGER);
+
+        return value == null ? 0 : value;
     }
 
     public float getFloatValue(String key) {

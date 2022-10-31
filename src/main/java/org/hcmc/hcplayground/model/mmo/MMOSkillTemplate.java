@@ -2,19 +2,15 @@ package org.hcmc.hcplayground.model.mmo;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
-import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.hcmc.hcplayground.enums.MMOType;
-import org.hcmc.hcplayground.manager.*;
-import org.hcmc.hcplayground.utility.RomanNumber;
 
 import java.util.*;
 
 /**
  * MMO技能定义
  */
-public class MMOSkill {
+public class MMOSkillTemplate {
     /**
      * MMO技能等级类型
      */
@@ -34,7 +30,7 @@ public class MMOSkill {
     @SerializedName(value = "template")
     private String template;
     @Expose(deserialize = false)
-    private List<MMOLevel> levels = new ArrayList<>();
+    private List<MMOLevelTemplate> levels = new ArrayList<>();
     @Expose(deserialize = false)
     private String id;
 
@@ -42,7 +38,7 @@ public class MMOSkill {
         return id;
     }
 
-    public List<MMOLevel> getLevels() {
+    public List<MMOLevelTemplate> getLevels() {
         return levels;
     }
 
@@ -50,7 +46,7 @@ public class MMOSkill {
         return name;
     }
 
-    public void setLevels(List<MMOLevel> levels) {
+    public void setLevels(List<MMOLevelTemplate> levels) {
         this.levels = new ArrayList<>(levels);
     }
 
@@ -62,7 +58,7 @@ public class MMOSkill {
         this.type = type;
     }
 
-    public MMOSkill() {
+    public MMOSkillTemplate() {
 
     }
 
@@ -71,24 +67,24 @@ public class MMOSkill {
      * @param statistic 当前技能类型的统计值
      * @return 所有已达成当前技能的等级实例
      */
-    public List<MMOLevel> getReachedLevels(int statistic) {
+    public List<MMOLevelTemplate> getReachedLevels(int statistic) {
         return levels.stream().filter(x -> statistic >= x.getThreshold()).toList();
     }
 
     public Map<Integer, ItemStack> decorateLevels(int statistic) {
         Map<Integer, ItemStack> itemStacks = new HashMap<>();
 
-        List<MMOLevel> reached = levels.stream().filter(x -> statistic >= x.getThreshold()).toList();
-        List<MMOLevel> unreached = new ArrayList<>(levels.stream().filter(x -> statistic < x.getThreshold()).toList());
-        unreached.sort(Comparator.comparing(MMOLevel::getThreshold));
+        List<MMOLevelTemplate> reached = levels.stream().filter(x -> statistic >= x.getThreshold()).toList();
+        List<MMOLevelTemplate> unreached = new ArrayList<>(levels.stream().filter(x -> statistic < x.getThreshold()).toList());
+        unreached.sort(Comparator.comparing(MMOLevelTemplate::getThreshold));
 
-        for (MMOLevel level : reached) {
+        for (MMOLevelTemplate level : reached) {
             ItemStack itemStack = level.setupItemStack(template, statistic, 0);
             itemStacks.put(level.getSlot() - 1, itemStack);
         }
 
         for (int i = 0; i < unreached.size(); i++) {
-            MMOLevel level = unreached.get(i);
+            MMOLevelTemplate level = unreached.get(i);
             ItemStack itemStack = i == 0 ? level.setupItemStack(template, statistic, 1) : level.setupItemStack(template, statistic, 2);
             itemStacks.put(level.getSlot() - 1, itemStack);
         }

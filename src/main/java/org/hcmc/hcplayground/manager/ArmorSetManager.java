@@ -1,6 +1,5 @@
 package org.hcmc.hcplayground.manager;
 
-import com.comphenix.protocol.PacketType;
 import com.google.gson.reflect.TypeToken;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;

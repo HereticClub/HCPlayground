@@ -1,10 +1,7 @@
 package org.hcmc.hcplayground.model.menu;
 
-import com.comphenix.net.bytebuddy.description.type.TypeVariableToken;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
-import com.google.gson.reflect.TypeToken;
-import me.clip.placeholderapi.PlaceholderAPI;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -16,12 +13,10 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.hcmc.hcplayground.manager.CommandManager;
-import org.hcmc.hcplayground.utility.Global;
 import org.hcmc.hcplayground.utility.MaterialData;
 import org.hcmc.hcplayground.utility.PlayerHeader;
 import org.jetbrains.annotations.NotNull;
 
-import java.lang.reflect.Type;
 import java.util.*;
 
 /**
@@ -365,7 +360,6 @@ public class MenuPanelSlot implements Cloneable {
 
     private @NotNull ItemStack ResolveCustomHead(String base64data) {
         ItemStack is = new ItemStack(Material.PLAYER_HEAD, 1);
-
         ItemMeta im = PlayerHeader.setTextures(is, base64data);
         if (!(im instanceof SkullMeta meta)) return is;
 

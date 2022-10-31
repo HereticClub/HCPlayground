@@ -15,11 +15,13 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.entity.*;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.entity.EntityPickupItemEvent;
+import org.bukkit.event.entity.EntitySpawnEvent;
 import org.bukkit.event.inventory.*;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.*;
-import org.bukkit.loot.Lootable;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
@@ -29,21 +31,23 @@ import org.hcmc.hcplayground.enums.PanelSlotType;
 import org.hcmc.hcplayground.enums.RecipeType;
 import org.hcmc.hcplayground.event.WorldMorningEvent;
 import org.hcmc.hcplayground.manager.*;
-import org.hcmc.hcplayground.model.item.*;
+import org.hcmc.hcplayground.model.command.CommandItem;
+import org.hcmc.hcplayground.model.config.BanItemConfiguration;
+import org.hcmc.hcplayground.model.item.Crazy;
+import org.hcmc.hcplayground.model.item.ItemBase;
+import org.hcmc.hcplayground.model.item.Join;
 import org.hcmc.hcplayground.model.menu.MenuPanel;
 import org.hcmc.hcplayground.model.menu.MenuPanelSlot;
 import org.hcmc.hcplayground.model.minion.MinionEntity;
 import org.hcmc.hcplayground.model.minion.MinionPanel;
 import org.hcmc.hcplayground.model.minion.MinionPanelSlot;
 import org.hcmc.hcplayground.model.minion.MinionTemplate;
+import org.hcmc.hcplayground.model.mob.MobEntity;
+import org.hcmc.hcplayground.model.player.PlayerData;
 import org.hcmc.hcplayground.model.recipe.CraftPanel;
 import org.hcmc.hcplayground.model.recipe.CraftPanelSlot;
 import org.hcmc.hcplayground.model.recipe.CrazyShapedRecipe;
 import org.hcmc.hcplayground.model.recipe.HCItemBlockRecord;
-import org.hcmc.hcplayground.model.mob.MobEntity;
-import org.hcmc.hcplayground.model.command.CommandItem;
-import org.hcmc.hcplayground.model.config.BanItemConfiguration;
-import org.hcmc.hcplayground.model.player.PlayerData;
 import org.hcmc.hcplayground.runnable.EquipmentMonitorRunnable;
 import org.hcmc.hcplayground.runnable.RecipeSearchRunnable;
 import org.hcmc.hcplayground.runnable.StatisticPickupDecrement;
@@ -402,7 +406,7 @@ public class PluginListener implements Listener {
         for (ItemStack itemStack : itemStacks) {
             if (itemStack == null) continue;
             ItemBase ib = ItemManager.getItemBase(itemStack);
-            if (ib == null) continue;
+            if (ib.isNativeItemStack()) continue;
 
             ItemStack result = RecipeManager.getBarrierItem();
             inventory.setResult(result);
@@ -419,7 +423,7 @@ public class PluginListener implements Listener {
         for (ItemStack itemStack : itemStacks) {
             if (itemStack == null) continue;
             ItemBase ib = ItemManager.getItemBase(itemStack);
-            if (ib == null) continue;
+            if (ib.isNativeItemStack()) continue;
 
             event.setCancelled(true);
             break;
@@ -478,9 +482,11 @@ public class PluginListener implements Listener {
         // 获取掉落物品
         Item item = event.getItem();
         ItemStack itemStack = item.getItemStack();
+        // 判断是否ItemBase物品
         ItemBase itemBase = ItemManager.getItemBase(itemStack);
         MinionTemplate template = MinionManager.getMinionTemplate(itemStack);
-        if (itemBase != null) item.setItemStack(itemBase.toItemStack());
+        // 获取最新的ItemBase物品的版本
+        if (!itemBase.isNativeItemStack()) item.setItemStack(itemBase.toItemStack());
         if (template != null) item.setItemStack(template.toItemStack());
         // 物品的掉落者
         UUID thrower = item.getThrower();
@@ -653,50 +659,51 @@ public class PluginListener implements Listener {
     @EventHandler
     private void onBlockPlaced(final BlockPlaceEvent event) {
         if (event.isCancelled()) return;
-
+        // 获取玩家实例和玩家数据
         Player player = event.getPlayer();
         PlayerData data = PlayerManager.getPlayerData(player);
+        // 获取摆放的方块实例
         Block block = event.getBlock();
+        // 检测玩家是否在跑酷设计状态，并且超出了跑酷设计范围
+        if (data.getDesigner().isOutOfRange(block.getLocation())) {
+            event.setCancelled(true);
+            return;
+        }
+        // 获取当前世界名称及位置
         String worldName = player.getWorld().getName();
-        // 被摆放方块的位置
         Location location = block.getLocation();
         // MainHandItem, 摆放方块时主手拿着的物品
         // 从行为上，当方块被摆放后，MainHandItem就已经被消灭
         // 因此在此处MainHandItem只能被某些判断逻辑使用
         // 而不是对MainHandItem进行处理，比如更改其材质，数量等
         ItemStack MainHandItem = event.getItemInHand().clone();
-        // 检测玩家是否在跑酷设计状态，并且超出了跑酷设计范围
-        if (data.getDesigner().isOutOfRange(block.getLocation())) {
+        ItemBase ib = ItemManager.getItemBase(MainHandItem);
+        // 检查摆放方块是否在可用的世界
+        if (ib.isDisabledWorld(player)) {
+            player.sendMessage(LanguageManager.getString("no-world-interact", player).replace("%world%", worldName));
             event.setCancelled(true);
             return;
         }
-        if (MinionManager.isMinionStack(MainHandItem)) {
+        // 判断主手拿着的物品是否爪牙物品
+        if (ItemManager.isMinion(MainHandItem)) {
             MainHandItem.setAmount(1);
             block.setType(Material.AIR);
-
+            // 设置摆放的爪牙位置在方块的正中间
             Location minionLocation = new Location(location.getWorld(), (int) location.getX(), (int) location.getY(), (int) location.getZ());
             minionLocation.add(0.5, 0, 0.5);
             minionLocation.setDirection(player.getLocation().getDirection().multiply(-1));
+            // 生成爪牙(ArmorStand)
             MinionEntity record = MinionManager.spawnMinion(minionLocation, MainHandItem);
             if (record == null) return;
             // 放置该Minion的玩家
             record.setOwner(player.getUniqueId());
             RecordManager.addMinionRecord(record);
         }
-        // 自定义可放置方块的摆放记录
-        ItemBase ib = ItemManager.getItemBase(MainHandItem);
-        if (ib != null) {
-            if (ib.isDisabledWorld(player)) {
-                player.sendMessage(LanguageManager.getString("no-world-interact", player).replace("%world%", worldName));
-                event.setCancelled(true);
-                return;
-            } else {
-                HCItemBlockRecord record = new HCItemBlockRecord(ib.getId(), block.getLocation());
-                RecordManager.addHCItemRecord(record);
-            }
+        //判断主手拿着的物品是否自定义物品
+        if (ItemManager.isItemBase(MainHandItem)) {
+            HCItemBlockRecord record = new HCItemBlockRecord(ib.getId(), block.getLocation());
+            RecordManager.addHCItemRecord(record);
         }
-
-        PlayerManager.setPlayerData(player, data);
     }
 
     @EventHandler
@@ -858,7 +865,7 @@ public class PluginListener implements Listener {
         }
         // 当有配方成品输出，并且点击了成品输出槽
         if (slot.getType().equals(PanelSlotType.OUTPUT)) {
-            if (recipe == null || !data.existRecipe(recipe.getId())) {
+            if (recipe == null || !data.isRecipeUnlocked(recipe.getId())) {
                 event.setCancelled(true);
                 return;
             }

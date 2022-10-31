@@ -24,7 +24,10 @@ import org.hcmc.hcplayground.utility.MaterialData;
 import org.hcmc.hcplayground.utility.RomanNumber;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * 自定义物品的基础类<br>
@@ -115,29 +118,22 @@ public abstract class CraftItemBase implements ItemBase {
     @SerializedName(value = ItemBase.PERSISTENT_POTIONS_KEY)
     protected List<PotionEffect> potions = new ArrayList<>();
 
-    /*
-    使用了@Expose，必须在创建Gson实例时<br>
-    同时使用excludeFieldsWithoutExposeAnnotation()
-    同时没有使用@Expose的字段不会被序列化和反序列化
-    */
-    @Expose(serialize = false, deserialize = false)
+    @Expose(deserialize = false)
     protected List<String> enchantLore = new ArrayList<>();
-    @Expose(serialize = false, deserialize = false)
+    @Expose(deserialize = false)
     protected List<String> potionLore = new ArrayList<>();
-    @Expose(serialize = false, deserialize = false)
+    @Expose(deserialize = false)
     protected List<String> equipmentLore = new ArrayList<>();
-    @Expose(serialize = false, deserialize = false)
+    @Expose(deserialize = false)
     protected List<String> attributeLore = new ArrayList<>();
-    @Expose(serialize = false, deserialize = false)
+    @Expose(deserialize = false)
     protected JavaPlugin plugin = HCPlayground.getInstance();
     /**
      * 物品的ID，以hccraft为命名空间写入PersistentData<br>
      * 如果id属性为null，表示当前ItemBase实例为普通的ItemStack
      */
-    @Expose(serialize = false, deserialize = false)
-    protected String id = null;
-
-
+    @Expose(deserialize = false)
+    protected String id;
 
     @Override
     public List<EnchantmentItem> getEnchantments() {
@@ -300,10 +296,38 @@ public abstract class CraftItemBase implements ItemBase {
         this.potions = potions;
     }
 
+    /**
+     * 标识当前ItemBase实例是否普通的ItemStack
+     */
+    @Override
+    public boolean isNativeItemStack(){
+        return StringUtils.isBlank(id);
+    }
+
+    /**
+     * 判断是否和另一个ItemBase实例相似<br>
+     * @param other 另一个ItemBase实例
+     * @return 如果当前ItemBase实例和被判断的ItemBase实例中其中一个包含id属性，则判断这两个ItemBase实例的id属性是否一致<br>
+     * 如果当前ItemBase实例和被判断的ItemBase实例都是普通的ItemStack实例，则调用ItemStack.isSimilar(ItemStack)方法来判断是否相似
+     */
+    @Override
+    public boolean isSimilar(@NotNull ItemBase other) {
+        if (StringUtils.isBlank(id) && StringUtils.isBlank(other.getId())) {
+            return toItemStack().isSimilar(other.toItemStack());
+        } else {
+            return StringUtils.equalsIgnoreCase(id, other.getId());
+        }
+    }
+
+    /**
+     * 判断玩家所在的世界是否当前ItemBase实例的可用世界
+     * @param player 玩家实例
+     * @return true: ItemBase实例在当前世界可用, false: ItemBase实例在当前世界不可用
+     */
     @Override
     public boolean isEnabledWorld(Player player) {
         if (player.isOp()) return true;
-        if (worlds.size() <= 0) return true;
+        if (worlds.size() == 0) return true;
 
         String world = player.getWorld().getName();
         return worlds.stream().anyMatch(x -> x.equalsIgnoreCase(world));
@@ -409,14 +433,6 @@ public abstract class CraftItemBase implements ItemBase {
         itemStack.setItemMeta(meta);
     }
 
-    /**
-     * 标识当前ItemBase实例是否普通的ItemStack
-     */
-    @Override
-    public boolean isNativeItemStack(){
-        return StringUtils.isBlank(id);
-    }
-
     @Override
     public String setWeaponLore(float value, boolean isWeapon, boolean isPercentage) {
         String result;
@@ -435,7 +451,7 @@ public abstract class CraftItemBase implements ItemBase {
 
     @Override
     public String toString() {
-        return String.format("%s x %s", name, amount);
+        return String.format("%s x %s", StringUtils.isBlank(name) ? material.value.name() : name, amount);
     }
 
     private void updateEnchantLore(ItemMeta meta) {

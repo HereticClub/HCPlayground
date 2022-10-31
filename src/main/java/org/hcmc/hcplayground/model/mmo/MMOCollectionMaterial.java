@@ -32,7 +32,7 @@ public class MMOCollectionMaterial implements Cloneable {
     private String template;
 
     @Expose(deserialize = false)
-    private List<MMOLevel> levels = new ArrayList<>();
+    private List<MMOLevelTemplate> levels = new ArrayList<>();
     @Expose(deserialize = false)
     private String id;
 
@@ -60,11 +60,11 @@ public class MMOCollectionMaterial implements Cloneable {
         this.materialTypes = new ArrayList<>(materialTypes);
     }
 
-    public List<MMOLevel> getLevels() {
+    public List<MMOLevelTemplate> getLevels() {
         return new ArrayList<>(levels);
     }
 
-    public void setLevels(List<MMOLevel> levels) {
+    public void setLevels(List<MMOLevelTemplate> levels) {
         this.levels = new ArrayList<>(levels);
     }
 
@@ -87,17 +87,17 @@ public class MMOCollectionMaterial implements Cloneable {
         Map<Integer, ItemStack> itemStacks = new HashMap<>();
         int statistic = player.getStatistic(Statistic.PICKUP, material);
 
-        List<MMOLevel> reached = levels.stream().filter(x -> statistic >= x.getThreshold()).toList();
-        List<MMOLevel> unreached = new ArrayList<>(levels.stream().filter(x -> statistic < x.getThreshold()).toList());
-        unreached.sort(Comparator.comparing(MMOLevel::getThreshold));
+        List<MMOLevelTemplate> reached = levels.stream().filter(x -> statistic >= x.getThreshold()).toList();
+        List<MMOLevelTemplate> unreached = new ArrayList<>(levels.stream().filter(x -> statistic < x.getThreshold()).toList());
+        unreached.sort(Comparator.comparing(MMOLevelTemplate::getThreshold));
 
-        for (MMOLevel level : reached) {
+        for (MMOLevelTemplate level : reached) {
             ItemStack itemStack = level.setupItemStack(template, statistic, 0);
             itemStacks.put(level.getSlot() - 1, itemStack);
         }
 
         for (int i = 0; i < unreached.size(); i++) {
-            MMOLevel level = unreached.get(i);
+            MMOLevelTemplate level = unreached.get(i);
             ItemStack itemStack = i == 0 ? level.setupItemStack(template, statistic, 1) : level.setupItemStack(template, statistic, 2);
             itemStacks.put(level.getSlot() - 1, itemStack);
         }
@@ -112,7 +112,7 @@ public class MMOCollectionMaterial implements Cloneable {
      * @return 所有已达成的物品收集等级实例
      */
     @NotNull
-    public List<MMOLevel> getReachedLevels(int statistic) {
+    public List<MMOLevelTemplate> getReachedLevels(int statistic) {
         return levels.stream().filter(x -> statistic >= x.getThreshold()).toList();
     }
 }

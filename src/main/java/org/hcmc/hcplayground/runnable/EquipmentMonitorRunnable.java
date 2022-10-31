@@ -1,7 +1,5 @@
 package org.hcmc.hcplayground.runnable;
 
-import org.bukkit.attribute.Attribute;
-import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.hcmc.hcplayground.manager.PlayerManager;

@@ -28,7 +28,6 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.ScoreboardManager;
-import org.bukkit.util.Vector;
 import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.enums.*;
 import org.hcmc.hcplayground.manager.*;
@@ -49,7 +48,10 @@ import java.io.InputStreamReader;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.sql.Connection;
@@ -322,21 +324,21 @@ public final class Global {
     /**
      * 获取section节段内容，使用Gson反序列到T对象，并且设置placeholder，然后返回T对象
      */
-    public static <T> T deserialize(@NotNull ConfigurationSection section, @NotNull Player player, @NotNull Class<T> tClass) {
+    public static <T> T deserialize(@NotNull ConfigurationSection section, @NotNull Player player, @NotNull Class<? extends T> tClass) {
         T item;
+        String fieldNameId = "id";
 
         try {
             String ClassName = tClass.getSimpleName();
             String value = GsonObject.toJson((section).getValues(false)).replace(CHAR_0026, CHAR_00A7);
             value = PlaceholderAPI.setPlaceholders(player, value);
             item = GsonObject.fromJson(value, tClass);
-            // System.out.println(value);
 
             Class<?> findClass = tClass;
             Field fieldId = null;
             while (findClass != null) {
                 Field[] fields = findClass.getDeclaredFields();
-                fieldId = Arrays.stream(fields).filter(x -> x.getName().equalsIgnoreCase("id")).findAny().orElse(null);
+                fieldId = Arrays.stream(fields).filter(x -> x.getName().equalsIgnoreCase(fieldNameId)).findAny().orElse(null);
                 if (fieldId != null) break;
                 findClass = findClass.getSuperclass();
             }
@@ -354,10 +356,11 @@ public final class Global {
     }
 
     @NotNull
-    public static <T> List<T> deserializeList(@NotNull ConfigurationSection section, @NotNull Player player, @NotNull Class<T> tClass) {
+    public static <T> List<T> deserializeList(@NotNull ConfigurationSection section, @NotNull Player player, @NotNull Class<? extends T> tClass) {
         Set<String> keys = section.getKeys(false);
         String ClassName = tClass.getSimpleName();
         List<T> list = new ArrayList<>();
+        String fieldNameId = "id";
 
         try {
             for (String s : keys) {
@@ -365,14 +368,13 @@ public final class Global {
                 if (itemSection == null) continue;
                 String value = GsonObject.toJson(itemSection.getValues(false)).replace(CHAR_0026, CHAR_00A7);
                 value = PlaceholderAPI.setPlaceholders(player, value);
-                // System.out.println(value);
 
                 T item = GsonObject.fromJson(value, tClass);
                 Class<?> findClass = tClass;
                 Field fieldId = null;
                 while (findClass != null) {
                     Field[] fields = findClass.getDeclaredFields();
-                    fieldId = Arrays.stream(fields).filter(x -> x.getName().equalsIgnoreCase("id")).findAny().orElse(null);
+                    fieldId = Arrays.stream(fields).filter(x -> x.getName().equalsIgnoreCase(fieldNameId)).findAny().orElse(null);
                     if (fieldId != null) break;
                     findClass = findClass.getSuperclass();
                 }
@@ -393,10 +395,11 @@ public final class Global {
      * 获取section内所有子节段，使用Gson反序列到每一个T对象，然后返回List&lt;T&gt;数组
      */
     @NotNull
-    public static <T> List<T> deserializeList(ConfigurationSection section, Class<T> tClass) {
+    public static <T> List<T> deserializeList(ConfigurationSection section, Class<? extends T> tClass) {
         Set<String> keys = section.getKeys(false);
         String ClassName = tClass.getSimpleName();
         List<T> list = new ArrayList<>();
+        String fieldNameId = "id";
 
         try {
             for (String s : keys) {
@@ -410,7 +413,7 @@ public final class Global {
                 Field fieldId = null;
                 while (findClass != null) {
                     Field[] fields = findClass.getDeclaredFields();
-                    fieldId = Arrays.stream(fields).filter(x -> x.getName().equalsIgnoreCase("id")).findAny().orElse(null);
+                    fieldId = Arrays.stream(fields).filter(x -> x.getName().equalsIgnoreCase(fieldNameId)).findAny().orElse(null);
                     if (fieldId != null) break;
                     findClass = findClass.getSuperclass();
                 }
@@ -432,9 +435,10 @@ public final class Global {
      * 获取yml文档内所有子节段，使用Gson反序列到每一个T对象，然后返回List&lt;T&gt;数组
      */
     @NotNull
-    public static <T> List<T> deserializeList(YamlConfiguration yaml, Class<T> tClass) {
+    public static <T> List<T> deserializeList(YamlConfiguration yaml, Class<? extends T> tClass) {
         Set<String> keys = yaml.getKeys(false);
         List<T> list = new ArrayList<>();
+        String fieldNameId = "id";
 
         try {
             for (String s : keys) {
@@ -444,7 +448,7 @@ public final class Global {
                 //System.out.println(value);
 
                 T item = GsonObject.fromJson(value, tClass);
-                Field fieldId = Arrays.stream(tClass.getDeclaredFields()).filter(x -> x.getName().equalsIgnoreCase("id")).findAny().orElse(null);
+                Field fieldId = Arrays.stream(tClass.getDeclaredFields()).filter(x -> x.getName().equalsIgnoreCase(fieldNameId)).findAny().orElse(null);
                 if (fieldId != null) {
                     fieldId.setAccessible(true);
                     fieldId.set(item, s);
@@ -632,29 +636,6 @@ public final class Global {
         dateFormat = String.format("%s %s", df.format(date), tf.format(date));
 
         return dateFormat;
-    }
-
-    public static Location LookAt(Location source, Location target) {
-        Vector v = source.toVector().subtract(target.toVector());
-        Location _s = source.clone();
-
-        double x = v.getX();
-        double y = v.getY();
-        double z = v.getZ();
-
-        double dXZ = Math.sqrt(x * x + z * z);
-        double dY = Math.sqrt(dXZ * dXZ + y * y);
-
-        double newYaw = Math.acos(x / dXZ) * 180 / Math.PI;
-        double newPitch = Math.acos(y / dY) * 180 / Math.PI - 90;
-        if (z < 0.0)
-            newYaw = newYaw + Math.abs(180 - newYaw) * 2;
-        newYaw = (newYaw - 90);
-
-        _s.setYaw((float) newYaw);
-        _s.setPitch((float) newPitch);
-
-        return _s;
     }
 
     public static CommandMap getCommandMap() {

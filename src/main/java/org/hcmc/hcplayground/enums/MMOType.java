@@ -61,4 +61,28 @@ public enum MMOType {
      * 矿产收集
      */
     COLLECTION_MINING,
+    /**
+     * 战斗类配方
+     */
+    RECIPE_COMBAT,
+    /**
+     * 农业类配方
+     */
+    RECIPE_FARMING,
+    /**
+     * 渔业类配方
+     */
+    RECIPE_FISHING,
+    /**
+     * 伐木类配方
+     */
+    RECIPE_LUMBERING,
+    /**
+     * 矿业类配方
+     */
+    RECIPE_MINING,
+    /**
+     * 爪牙类配方
+     */
+    RECIPE_MINION,
 }

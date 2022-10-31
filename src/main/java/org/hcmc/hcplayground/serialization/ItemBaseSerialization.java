@@ -7,7 +7,6 @@ import com.google.gson.JsonParseException;
 import org.bukkit.Material;
 import org.hcmc.hcplayground.manager.ItemManager;
 import org.hcmc.hcplayground.model.item.ItemBase;
-import org.hcmc.hcplayground.utility.Global;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Type;

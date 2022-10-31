@@ -1,14 +1,8 @@
 package org.hcmc.hcplayground.model.enchantment;
 
-import org.bukkit.NamespacedKey;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.enchantments.EnchantmentWrapper;
-import org.bukkit.plugin.Plugin;
-import org.bukkit.plugin.java.JavaPlugin;
-import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.utility.RomanNumber;
 
-import javax.xml.stream.events.Namespace;
 import java.util.Arrays;
 
 public class EnchantmentItem {

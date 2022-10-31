@@ -11,8 +11,6 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.hcmc.hcplayground.enums.CrazyBlockType;
 
-import java.util.Arrays;
-
 public class Crazy extends CraftItemBase {
     // 自定义方块类型
     @Expose
