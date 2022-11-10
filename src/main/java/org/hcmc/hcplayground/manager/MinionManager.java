@@ -62,7 +62,6 @@ public class MinionManager {
             FilenameFilter filter = new YamlFileFilter();
             String[] filenames = dir.list(filter);
             if (filenames == null) return;
-
             for (String file : filenames) {
                 // 获取路径内每个yaml文档
                 YamlConfiguration yaml = new YamlConfiguration();
