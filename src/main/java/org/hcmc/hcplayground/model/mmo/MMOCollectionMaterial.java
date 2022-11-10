@@ -6,11 +6,16 @@ import org.bukkit.Material;
 import org.bukkit.Statistic;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.hcmc.hcplayground.manager.PlayerManager;
+import org.hcmc.hcplayground.model.player.PlayerData;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
-public class MMOCollectionMaterial implements Cloneable {
+/**
+ * 采集材料类，采集材料的等级奖励
+ */
+public class MMOCollectionMaterial {
 
     /**
      * MMO技能等级类型
@@ -72,16 +77,6 @@ public class MMOCollectionMaterial implements Cloneable {
 
     }
 
-
-    @Override
-    public MMOCollectionMaterial clone() {
-        try {
-            return (MMOCollectionMaterial) super.clone();
-        } catch (CloneNotSupportedException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     @NotNull
     public Map<Integer, ItemStack> decorate(@NotNull Player player, @NotNull Material material) {
         Map<Integer, ItemStack> itemStacks = new HashMap<>();
@@ -108,11 +103,23 @@ public class MMOCollectionMaterial implements Cloneable {
     /**
      * 获取所有已达成的物品收集等级实例
      *
-     * @param statistic 当前物品收集的统计值
+     * @param player 统计物品收集等级的玩家实例
+     * @param material 需要统计的物品
      * @return 所有已达成的物品收集等级实例
      */
+
     @NotNull
-    public List<MMOLevelTemplate> getReachedLevels(int statistic) {
+    public List<MMOLevelTemplate> getReachedLevels(Player player, Material material) {
+        int statistic = player.getStatistic(Statistic.PICKUP, material);
         return levels.stream().filter(x -> statistic >= x.getThreshold()).toList();
+    }
+
+    public List<MMOLevelTemplate> getUnclaimedLevels(Player player, Material material) {
+        PlayerData data = PlayerManager.getPlayerData(player);
+        int statistic = player.getStatistic(Statistic.PICKUP, material);
+        Map<Material, Integer> claimed = data.getClaimedCollectionLevel();
+        int claimedLevel = claimed.getOrDefault(material, 0);
+
+        return levels.stream().filter(x -> statistic >= x.getThreshold() && x.getLevel() > claimedLevel).toList();
     }
 }

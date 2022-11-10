@@ -47,7 +47,7 @@ mmomenu:
   inventory-type: chest
   # MMO技能等级界面类型，必须是MMOLevelType的值之一
   # 如果定义了UNDEFINED值，或者没有设置这个属性，表示这只是一个普通的菜单界面而非MMO技能等级界面
-  level-type: UNDEFINED
+  level-type: UNDEFINED2
   # 物品栏的填充内容
   # 各种颜色玻璃板的名称
   # WHITE_STAINED_GLASS_PANE - 白色染色玻璃板
@@ -98,7 +98,7 @@ mmomenu:
         # 点击指令的插槽号，及可执行指令的列表
         # 由于属性slots定义的是插槽号集合，因此需要指明具体的点击插槽号以执行相应的指令集合
         5:
-          - '[console] playgroundmenus open profilemenu %player_name%'
+          - '[console] playgroundmenus OnOpening profilemenu %player_name%'
       right_click: {}
       # 菜单项点击执行条件
       left_conditions: []
@@ -147,7 +147,7 @@ mmomenu:
       material: diamond_sword
       left_click:
         21:
-          - '[console] playgroundmenus open skillmenu %player_name%'
+          - '[console] playgroundmenus OnOpening skillmenu %player_name%'
       flags:
         - HIDE_ATTRIBUTES
       lore:
@@ -160,7 +160,7 @@ mmomenu:
       material: painting
       left_click:
         22:
-          - '[console] playgroundmenus open collectionmenu %player_name%'
+          - '[console] playgroundmenus OnOpening collectionmenu %player_name%'
       lore:
         - '&7查看各种物品收集进度'
         - '&7指令: &a/collectionmenu'
@@ -171,7 +171,7 @@ mmomenu:
       material: book
       left_click:
         23:
-          - '[console] playgroundmenus open recipemenu %player_name%'
+          - '[console] playgroundmenus OnOpening recipemenu %player_name%'
       lore:
         - '&7查看已经解锁的配方'
         - '&7指令: &a/recipemenu'
@@ -182,7 +182,7 @@ mmomenu:
       material: filled_map
       left_click:
         24:
-          - '[console] playgroundmenus open questlogmenu %player_name%'
+          - '[console] playgroundmenus OnOpening questlogmenu %player_name%'
       lore:
         - '&7查看各种任务进度'
         - '&7指令: &a/questlogmenu'
@@ -195,7 +195,7 @@ mmomenu:
       material: item_frame
       left_click:
         25:
-          - '[console] playgroundmenus open calendarmenu %player_name%'
+          - '[console] playgroundmenus OnOpening calendarmenu %player_name%'
       lore:
         - '&7查看服务器正在进行的事件'
         - '&7指令: &a/calendarmenu'
@@ -206,7 +206,7 @@ mmomenu:
       material: chest
       left_click:
         30:
-          - '[console] playgroundmenus open storagemenu %player_name%'
+          - '[console] playgroundmenus OnOpening storagemenu %player_name%'
       lore:
         - '&7配置您的额外储存位置'
         - '&7指令: &a/storagemenu'
@@ -217,7 +217,7 @@ mmomenu:
       material: potion
       left_click:
         31:
-          - '[console] playgroundmenus open potionmenu %player_name%'
+          - '[console] playgroundmenus OnOpening potionmenu %player_name%'
       lore:
         - '&7配置您的药水状态'
         - '&7指令: &a/potionmenu'
@@ -239,7 +239,7 @@ mmomenu:
       material: yellow_shulker_box
       left_click:
         33:
-          - '[console] playgroundmenus open private_bank %player_name%'
+          - '[console] playgroundmenus OnOpening private_bank %player_name%'
       lore:
         - '&7访问您的私人银行经理'
         - '&7指令: &a/private_bank'
@@ -256,7 +256,7 @@ mmomenu:
         - '&c新版本登陆后将会删除'
       left_click:
         51:
-          - '[console] shop open sur_building %player_name%'
+          - '[console] shop OnOpening sur_building %player_name%'
       left_conditions:
         conditions:
           world_compare:
@@ -287,7 +287,7 @@ mmomenu:
         - '&c新版本登陆后将会删除'
       left_click:
         52:
-          - '[console] shop open is_building %player_name%'
+          - '[console] shop OnOpening is_building %player_name%'
       left_conditions:
         conditions:
           world_compare:
@@ -311,7 +311,7 @@ mmomenu:
       material: clock
       left_click:
         53:
-          - '[console] playgroundmenus open surmenu %player_name%'
+          - '[console] playgroundmenus OnOpening surmenu %player_name%'
       lore:
         - '&7使用旧版本的&b空岛菜单'
         - '&7指令: &a/surmenu /sm'
@@ -343,7 +343,7 @@ mmomenu:
       material: clock
       left_click:
         54:
-          - '[console] playgroundmenus open ismenu %player_name%'
+          - '[console] playgroundmenus OnOpening ismenu %player_name%'
       lore:
         - '&7使用旧版本的&b空岛菜单'
         - '&7指令: &a/ismenu /im'

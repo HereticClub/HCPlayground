@@ -7,7 +7,7 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffect;
-import org.hcmc.hcplayground.enums.RecipeType;
+import org.hcmc.hcplayground.enums.CraftingType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,7 +34,7 @@ public class BanItemConfiguration {
     private final List<String> lore = new ArrayList<>();
     @Expose
     @SerializedName(value = "type")
-    private final RecipeType type = RecipeType.SMITHING;
+    private final CraftingType type = CraftingType.SMITHING;
 
 
     @Expose(serialize = false, deserialize = false)
@@ -44,7 +44,7 @@ public class BanItemConfiguration {
 
     }
 
-    public RecipeType getType() {
+    public CraftingType getType() {
         return type;
     }
 

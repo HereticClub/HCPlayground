@@ -1,10 +1,10 @@
 package org.hcmc.hcplayground.manager;
 
 import org.bukkit.Material;
-import org.bukkit.Statistic;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
-import org.hcmc.hcplayground.enums.MMOType;
+//import org.hcmc.hcplayground.enums.MMOType;
+import org.hcmc.hcplayground.model.menu.SkillMenuPanel;
 import org.hcmc.hcplayground.model.mmo.MMOCollectionMaterial;
 import org.hcmc.hcplayground.model.mmo.MMOLevelTemplate;
 import org.hcmc.hcplayground.model.mmo.MMOReward;
@@ -20,80 +20,78 @@ import java.util.Map;
 public class RewardManager {
 
     private static List<MMOReward> rewards = new ArrayList<>();
-    private static List<String> idList = new ArrayList<>();
+    private static List<String> keys = new ArrayList<>();
 
-    public static List<String> getIdList() {
-        return idList;
-    }
-
-    public static List<MMOReward> getRewards() {
-        return rewards;
-    }
 
     public RewardManager() {
 
     }
 
+    public static List<String> getKeys() {
+        return keys;
+    }
+
     public static void Load(YamlConfiguration yaml) {
         rewards = Global.deserializeList(yaml, MMOReward.class);
-        idList = yaml.getKeys(false).stream().toList();
+        keys = yaml.getKeys(false).stream().toList();
     }
 
-    public static MMOReward getReward(String id) {
-        return rewards.stream().filter(x -> x.getId().equalsIgnoreCase(id)).findAny().orElse(null);
+    public static MMOReward getReward(String key) {
+        return rewards.stream().filter(x -> x.getId().equalsIgnoreCase(key)).findAny().orElse(null);
     }
 
-    public static void claim(MMOType type, Player player) {
+    public static void claim(Player player, SkillMenuPanel.SkillType type) {
         PlayerData data = PlayerManager.getPlayerData(player);
         MMOSkillTemplate skill = MMOManager.getSkillTemplate(type);
         String skillName = skill == null ? type.name() : skill.getName();
-        List<MMOLevelTemplate> levels = getUnclaimedLevels(player, type);
+        List<MMOLevelTemplate> unclaimedLevels = skill == null ? new ArrayList<>() : skill.getUnclaimedLevels(player);
 
-        if (levels.size() <= 0) {
+        if (unclaimedLevels.size() == 0) {
             player.sendMessage(LanguageManager.getString("rewardAllClaimed").replace("%reward_type%", skillName));
             return;
         }
 
-        for (MMOLevelTemplate level : levels) {
+        for (MMOLevelTemplate level : unclaimedLevels) {
             level.reward(player);
             player.sendMessage(LanguageManager.getString("rewardLevelClaimed")
                     .replace("%reward_type%", skillName)
                     .replace("%level%", RomanNumber.fromInteger(level.getLevel())));
         }
 
-        int maxLevel = levels.stream().mapToInt(MMOLevelTemplate::getLevel).max().orElse(0);
-        Map<MMOType, Integer> claimed = data.getClaimedSkillLevel();
+        int maxLevel = unclaimedLevels.stream().mapToInt(MMOLevelTemplate::getLevel).max().orElse(0);
+        Map<SkillMenuPanel.SkillType, Integer> claimed = data.getClaimedSkillLevel();
         claimed.put(type, maxLevel);
         data.setClaimedSkillLevel(claimed);
     }
 
-    public static void claim(Material material, Player player) {
+    public static void claim(Player player, Material material) {
         PlayerData data = PlayerManager.getPlayerData(player);
-        List<MMOLevelTemplate> levels = getUnclaimedLevels(player, material);
-        MMOCollectionMaterial collection = MMOManager.getCollectionMaterial(material);
-        String collectionName = collection == null ? material.name() : collection.getName();
+        String collectionName = material.name();
 
-        if (levels.size() <= 0) {
+        MMOCollectionMaterial collectionMaterial = MMOManager.getCollectionMaterial(material);
+        List<MMOLevelTemplate> unclaimedLevels = collectionMaterial == null ? new ArrayList<>() : collectionMaterial.getUnclaimedLevels(player, material);
+
+        if (unclaimedLevels.size() == 0) {
             player.sendMessage(LanguageManager.getString("rewardAllClaimed").replace("%reward_type%", collectionName));
             return;
         }
 
-        for (MMOLevelTemplate level : levels) {
+        for (MMOLevelTemplate level : unclaimedLevels) {
             level.reward(player);
             player.sendMessage(LanguageManager.getString("rewardLevelClaimed")
                     .replace("%reward_type%", collectionName)
                     .replace("%level%", RomanNumber.fromInteger(level.getLevel())));
         }
 
-        int maxLevel = levels.stream().mapToInt(MMOLevelTemplate::getLevel).max().orElse(0);
+        int maxLevel = unclaimedLevels.stream().mapToInt(MMOLevelTemplate::getLevel).max().orElse(0);
         Map<Material, Integer> claimed = data.getClaimedCollectionLevel();
         claimed.put(material, maxLevel);
         data.setClaimedCollectionLevel(claimed);
     }
 
-    public static void reset(MMOType type, Player player) {
+    public static void reset(SkillMenuPanel.SkillType type, Player player) {
         PlayerData data = PlayerManager.getPlayerData(player);
-        Map<MMOType, Integer> claimed = data.getClaimedSkillLevel();
+        Map<SkillMenuPanel.SkillType, Integer> claimed = data.getClaimedSkillLevel();
         if (claimed.containsKey(type)) claimed.put(type, 0);
         data.setClaimedSkillLevel(claimed);
     }
@@ -103,27 +101,5 @@ public class RewardManager {
         Map<Material, Integer> claimed = data.getClaimedCollectionLevel();
         if (claimed.containsKey(material)) claimed.put(material, 0);
         data.setClaimedCollectionLevel(claimed);
-    }
-
-    public static List<MMOLevelTemplate> getUnclaimedLevels(Player player, MMOType type) {
-        PlayerData data = PlayerManager.getPlayerData(player);
-        int statistic = data.getStatisticSkill(type);
-        Map<MMOType, Integer> claimed = data.getClaimedSkillLevel();
-        int claimedLevel = claimed.getOrDefault(type, 0);
-
-        MMOSkillTemplate skill = MMOManager.getSkillTemplate(type);
-        if (skill == null) return new ArrayList<>();
-        return skill.getReachedLevels(statistic).stream().filter(x -> x.getLevel() > claimedLevel).toList();
-    }
-
-    public static List<MMOLevelTemplate> getUnclaimedLevels(Player player, Material material) {
-        PlayerData data = PlayerManager.getPlayerData(player);
-        int statistic = player.getStatistic(Statistic.PICKUP, material);
-        Map<Material, Integer> claimed = data.getClaimedCollectionLevel();
-        int claimedLevel = claimed.getOrDefault(material, 0);
-
-        MMOCollectionMaterial collectionMaterial = MMOManager.getCollectionMaterial(material);
-        if (collectionMaterial == null) return new ArrayList<>();
-        return collectionMaterial.getReachedLevels(statistic).stream().filter(x -> x.getLevel() > claimedLevel).toList();
     }
 }

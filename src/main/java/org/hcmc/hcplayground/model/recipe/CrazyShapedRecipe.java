@@ -16,6 +16,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.hcmc.hcplayground.HCPlayground;
+import org.hcmc.hcplayground.enums.RecipeType;
 import org.hcmc.hcplayground.manager.ItemManager;
 import org.hcmc.hcplayground.model.item.ItemBase;
 import org.jetbrains.annotations.NotNull;
@@ -32,6 +33,12 @@ public class CrazyShapedRecipe implements Recipe {
     @Expose
     @SerializedName(value = "result")
     private ItemBase result;
+    /**
+     * 配方分类，传统配方无视这个属性
+     */
+    @Expose
+    @SerializedName("type")
+    private RecipeType type = RecipeType.UNDEFINED;
     /**
      * 成品数量
      */
@@ -77,7 +84,7 @@ public class CrazyShapedRecipe implements Recipe {
     /**
      * 配方的成分及数量的需求列表，由ingredients属性转换
      */
-    private List<ItemStack> requirements = new ArrayList<>();
+    private final List<ItemStack> requirements = new ArrayList<>();
 
     public CrazyShapedRecipe() {
 
@@ -85,6 +92,10 @@ public class CrazyShapedRecipe implements Recipe {
 
     public String getId() {
         return id;
+    }
+
+    public RecipeType getType() {
+        return type;
     }
 
     public Map<Character, ItemBase> getIngredients() {
@@ -95,20 +106,8 @@ public class CrazyShapedRecipe implements Recipe {
         return ingredientShape;
     }
 
-    public Map<Character, Integer> getIngredientAmount() {
-        return ingredientAmount;
-    }
-
-    public void setIngredients(Map<Character, ItemBase> ingredients) {
-        this.ingredients = ingredients;
-    }
-
     public List<ItemStack> getRequirements() {
         return requirements;
-    }
-
-    public void setRequirements(List<ItemStack> requirements) {
-        this.requirements = requirements;
     }
 
     public NamespacedKey getKey() {

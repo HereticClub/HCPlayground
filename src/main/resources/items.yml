@@ -198,7 +198,7 @@ joins:
       - '&7用&e/menu&7命令也可以打开主菜单'
     # 物品在主手时右键点击的运行指令列表
     mainhand-right-click:
-      - 'console: dm open lobby_menu %player_name%'
+      - 'console: dm OnOpening lobby_menu %player_name%'
     # 物品在主手时左键点击的运行指令列表
     mainhand-left-click: []
     # 物品在菜单(箱子界面)时右键点击的运行指令列表
@@ -342,7 +342,7 @@ joins:
       - '&7用&e/lobbymenu&7或者&e/lm&7命令也可以打开主菜单'
     # 物品在主手时右键点击的运行指令列表
     mainhand-right-click:
-      - 'console: dm open lobby_menu %player_name%'
+      - 'console: dm OnOpening lobby_menu %player_name%'
     # 物品在主手时左键点击的运行指令列表
     mainhand-left-click: []
     # 物品在菜单(箱子界面)时右键点击的运行指令列表

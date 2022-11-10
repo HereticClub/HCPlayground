@@ -12,6 +12,7 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.plugin.Plugin;
 import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.model.menu.*;
@@ -22,7 +23,6 @@ import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Type;
 import java.util.*;
 
@@ -34,6 +34,12 @@ public class MenuManager extends BukkitCommand {
     @Expose(serialize = false, deserialize = false)
     private static List<String> idList = new ArrayList<>();
     private static final Map<String, YamlConfiguration> mapYaml = new HashMap<>();
+    /**
+     * 菜单模板注册表，以菜单模板代替菜单实例<br>
+     * String - 菜单实例id<br>
+     * String - 菜单模板id<br>
+     */
+    private static final Map<String, String> menuRegister = new HashMap<>();
 
     public static void Load() {
         try {
@@ -66,6 +72,18 @@ public class MenuManager extends BukkitCommand {
         }
     }
 
+    public static void registerTemplateName(String menuId, String templateName) {
+        if (!menuRegister.containsKey(menuId)) menuRegister.put(menuId, templateName);
+    }
+
+    public static String getTemplateName(String menuId) {
+        return menuRegister.getOrDefault(menuId, menuId);
+    }
+
+    public static Map<String, String> getMenuRegister() {
+        return menuRegister;
+    }
+
     public static List<String> getIdList() {
         return idList;
     }
@@ -79,20 +97,31 @@ public class MenuManager extends BukkitCommand {
 
         try {
             Player player = (Player) sender;
+            // 显示目标玩家没有权限使用菜单信息
             if (!StringUtils.isBlank(getPermission()) && !player.hasPermission(getPermission()) && !player.isOp()) {
                 player.sendMessage(LanguageManager.getString("no-permission").replace("%permission%", getPermission()));
                 return false;
             }
-
+            // 获取菜单名称和实例
             String menuName = getName();
-            String menuId = MMOManager.getMaterialMenuMapping().getOrDefault(menuName, menuName);
-
+            String menuId = MenuManager.getTemplateName(menuName);
             MenuPanel menu = MenuManager.getMenuPanel(menuId, player);
+            // 显示菜单实例不存在信息
             if (menu == null) {
-                player.sendMessage(LanguageManager.getString("menuNotExist").replace("%menu%", menuId));
+                player.sendMessage(LanguageManager.getString("menuNotExist").replace("%menu%", menuName));
                 return false;
             }
-            menu.open(player, menuName);
+            // 显示菜单在当前世界不可使用信息
+            if (menu.isDisabled(player)) {
+                player.sendMessage(LanguageManager.getString("menuWorldProhibited", player)
+                        .replace("%world%", player.getWorld().getName())
+                        .replace("%menu%", menu.getTitle())
+                );
+                return false;
+            }
+
+            Inventory inventory = menu.OnOpening(player, menuName);
+            if (inventory != null) player.openInventory(inventory);
         } catch (InvalidConfigurationException e) {
             throw new RuntimeException(e);
         }
@@ -102,10 +131,16 @@ public class MenuManager extends BukkitCommand {
     public static MenuPanel getMenuPanel(@NotNull String menuId, @NotNull Player player) throws InvalidConfigurationException {
         YamlConfiguration yaml = mapYaml.get(menuId);
         if (yaml == null) return null;
-
+        // 如果当前菜单实例采用了菜单模板指向
+        String templateName = yaml.getString(String.format("%s.menu-template", menuId));
+        if (!StringUtils.isBlank(templateName)) {
+            menuId = templateName;
+            yaml = mapYaml.get(templateName);
+        }
+        // 获取菜单的yml配置节段
         ConfigurationSection section = yaml.getConfigurationSection(menuId);
         if (section == null) return null;
-
+        // 获取当前菜单是否由特别类设置，并且返回这个类的菜单实例
         String className = section.getString("class-name");
         Class<? extends MenuPanel> cls = getMenuClass(className);
         MenuPanel menu = Global.deserialize(section, player, cls);
@@ -119,6 +154,7 @@ public class MenuManager extends BukkitCommand {
         Type mapType = new TypeToken<Map<Integer, List<String>>>() {
         }.getType();
         for (MenuPanelSlot slot : decorates) {
+            slot.setOwningMenu(menu);
             String slotId = slot.getId().split("\\.")[1];
             String leftClickPath = String.format("%s.decorates.%s.left_click", menuId, slotId);
             String rightClickPath = String.format("%s.decorates.%s.right_click", menuId, slotId);
@@ -132,29 +168,34 @@ public class MenuManager extends BukkitCommand {
             ConfigurationSection rightDenySection = yaml.getConfigurationSection(rightDenyPath);
             ConfigurationSection leftClickSection = yaml.getConfigurationSection(leftClickPath);
             ConfigurationSection rightClickSection = yaml.getConfigurationSection(rightClickPath);
+            // 左键点击指令
             if (leftClickSection != null) {
                 String value = Global.GsonObject.toJson(leftClickSection.getValues(false));
                 Map<Integer, List<String>> mapCommands = Global.GsonObject.fromJson(value, mapType);
                 slot.setLeftCommands(mapCommands);
             }
+            // 右键点击指令
             if (rightClickSection != null) {
                 String value = Global.GsonObject.toJson(rightClickSection.getValues(false));
                 Map<Integer, List<String>> mapCommands = Global.GsonObject.fromJson(value, mapType);
                 slot.setRightCommands(mapCommands);
             }
-
+            // 左键点击拒绝
             if (leftDenySection != null) {
                 List<String> leftDeny = leftDenySection.getStringList("deny-message");
                 leftDeny.replaceAll(x -> PlaceholderAPI.setPlaceholders(player, x).replace('&', '§'));
                 slot.setLeftDenyMessage(leftDeny);
             }
+            // 右键点击拒绝
             if (rightDenySection != null) {
                 List<String> rightDeny = rightDenySection.getStringList("deny-message");
                 rightDeny.replaceAll(x -> PlaceholderAPI.setPlaceholders(player, x).replace('&', '§'));
                 slot.setRightDenyMessage(rightDeny);
             }
+            // 左键点击条件
             if (leftCondSection != null)
                 slot.setLeftConditions(Global.deserializeList(leftCondSection, player, SlotClickCondition.class));
+            // 右键点击条件
             if (rightCondSection != null)
                 slot.setRightConditions(Global.deserializeList(rightCondSection, player, SlotClickCondition.class));
         }
@@ -165,18 +206,8 @@ public class MenuManager extends BukkitCommand {
 
         try {
             if (StringUtils.isBlank(className)) return LegacyMenuPanel.class;
-
-            Class<? extends MenuPanel> resultClass;
-            Class<?> menuClass = Class.forName(className);
-            Constructor<?> constructor = menuClass.getConstructor();
-
-            if (menuClass.isAssignableFrom(MenuPanel.class)) {
-                MenuPanel panel = (MenuPanel) constructor.newInstance();
-                resultClass = panel.getClass();
-            } else {
-                resultClass = LegacyMenuPanel.class;
-            }
-            return resultClass;
+            Class<? extends MenuPanel> menuClass = Class.forName(className).asSubclass(MenuPanel.class);
+            return MenuPanel.class.isAssignableFrom(menuClass) ? menuClass : LegacyMenuPanel.class;
         } catch (Exception e) {
             return LegacyMenuPanel.class;
         }

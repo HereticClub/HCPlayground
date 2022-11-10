@@ -238,14 +238,19 @@ messages:
   # 当玩家尝试打开一个不存在的菜单时显示
   # 可以使用%menu%占位符，表示要尝试打开菜单的名称
   menuNotExist: '&cThe menu &e%menu% &cyou opened is not exist'
+  # 在多页菜单中向下翻页按钮的标题
+  menuNextPage: '&f下一页⇨'
+  # 在多页菜单中向上翻页按钮的标题
+  menuBackPage: '&f⇦上一页'
   # 异族游乐场主菜单指令说明，必须与定义的指令名称一致
   playgroundmenus:
     # 指令说明，当使用/help playgroundmenus时显示
-    description: Open the menu for a player
+    description: Open or close a menu for a player
     # 指令的帮助提示，当使用/help playgroundmenus时显示
     usage: |-
       §f/<command> command usage:
       §9/<command> open {menu_name} [player] §7- §fOpen the specific menu for a player
+      §9/<command> close {menu_name} [player] §7- §fClose the menu for a player is opened
       §9/<command> list §7- §fList all available menu
   # 军需官指令说明，必须与定义的指令名称一致
   quartermaster:

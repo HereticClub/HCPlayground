@@ -15,12 +15,12 @@ import org.bukkit.permissions.PermissionAttachment;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.enums.ItemFeatureType;
-import org.hcmc.hcplayground.enums.MMOType;
 import org.hcmc.hcplayground.enums.PlayerBannedState;
 import org.hcmc.hcplayground.manager.*;
 import org.hcmc.hcplayground.model.armorset.ArmorSetEffect;
 import org.hcmc.hcplayground.model.item.ItemBase;
 import org.hcmc.hcplayground.model.item.Join;
+import org.hcmc.hcplayground.model.menu.SkillMenuPanel;
 import org.hcmc.hcplayground.model.scoreboard.ScoreboardItem;
 import org.hcmc.hcplayground.sqlite.SqliteManager;
 import org.hcmc.hcplayground.sqlite.table.BanPlayerDetail;
@@ -182,7 +182,7 @@ public class PlayerData {
      */
     @Expose
     @SerializedName(value = Section_Key_Claimed_Skill_Level)
-    private Map<MMOType, Integer> claimedSkillLevel = new HashMap<>();
+    private Map<SkillMenuPanel.SkillType, Integer> claimedSkillLevel = new HashMap<>();
     /**
      * 已领取的技能等级奖励<br>
      * MMOType - 技能类型<br>
@@ -306,11 +306,11 @@ public class PlayerData {
      * @return claimedSkillLevel属性的副本
      */
     @NotNull
-    public Map<MMOType, Integer> getClaimedSkillLevel() {
+    public Map<SkillMenuPanel.SkillType, Integer> getClaimedSkillLevel() {
         return claimedSkillLevel == null ? new HashMap<>() : new HashMap<>(claimedSkillLevel);
     }
 
-    public void setClaimedSkillLevel(@NotNull Map<MMOType, Integer> claimedSkillLevel) {
+    public void setClaimedSkillLevel(@NotNull Map<SkillMenuPanel.SkillType, Integer> claimedSkillLevel) {
         this.claimedSkillLevel = new HashMap<>(claimedSkillLevel);
     }
 
@@ -1098,7 +1098,7 @@ public class PlayerData {
         return player.getStatistic(Statistic.FISH_CAUGHT);
     }
 
-    public int getStatisticSkill(MMOType type) {
+    public int getStatisticSkill(SkillMenuPanel.SkillType type) {
         return switch (type) {
             case SKILL_LUMBERING -> statisticBlockMined(MMOManager.LumberingBlocks);
             case SKILL_FISHING -> statisticFishingCaught();

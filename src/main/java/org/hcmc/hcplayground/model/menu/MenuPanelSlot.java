@@ -8,6 +8,7 @@ import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -16,6 +17,7 @@ import org.hcmc.hcplayground.manager.CommandManager;
 import org.hcmc.hcplayground.utility.MaterialData;
 import org.hcmc.hcplayground.utility.PlayerHeader;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
@@ -30,6 +32,8 @@ public class MenuPanelSlot implements Cloneable {
     private final static String COMMAND_PERFORM_PLAYER = "[player]";
     private final static String COMMAND_PERFORM_MESSAGE = "[message]";
     private final static String COMMAND_PERFORM_CLOSE = "[close]";
+    public final static String COMMAND_PERFORM_NEXT_PAGE = "[next-page]";
+    public final static String COMMAND_PERFORM_BACK_PAGE = "[back-page]";
 
     @Expose
     @SerializedName(value = "display")
@@ -74,6 +78,8 @@ public class MenuPanelSlot implements Cloneable {
     @Expose(deserialize = false)
     private String id;
     @Expose(deserialize = false)
+    private MenuPanel owningMenu = null;
+    @Expose(deserialize = false)
     private List<String> leftDenyMessage = new ArrayList<>();
     @Expose(deserialize = false)
     private List<String> rightDenyMessage = new ArrayList<>();
@@ -88,12 +94,20 @@ public class MenuPanelSlot implements Cloneable {
     @Expose(deserialize = false)
     private List<SlotClickCondition> rightConditions = new ArrayList<>();
 
+    public MenuPanelSlot() {
+
+    }
+
     public String getId() {
         return id;
     }
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public void setOwningMenu(MenuPanel owningMenu) {
+        this.owningMenu = owningMenu;
     }
 
     public List<String> getLore() {
@@ -155,6 +169,11 @@ public class MenuPanelSlot implements Cloneable {
         }
     }
 
+    public void clearLeftCommands(Integer slotIndex) {
+        if (!leftCommands.containsKey(slotIndex)) return;
+        leftCommands.remove(slotIndex);
+    }
+
     public Map<Integer, List<String>> getRightCommands() {
         return new HashMap<>(rightCommands);
     }
@@ -172,6 +191,48 @@ public class MenuPanelSlot implements Cloneable {
             if (_commands.contains(s)) continue;
             _commands.add(s);
         }
+    }
+
+    public void clearRightCommands(Integer slotIndex) {
+        if (!rightCommands.containsKey(slotIndex)) return;
+        rightCommands.remove(slotIndex);
+    }
+
+    public void setSlotItem(@NotNull Inventory inventory, int index, @Nullable String display, @Nullable List<String> lore, @Nullable Material material, int amount) {
+        if (StringUtils.isBlank(display)) display = this.display;
+        if (lore == null) lore = this.lore == null ? new ArrayList<>() : this.lore;
+        if (material == null) material = this.material.value;
+        if (amount <= 0) amount = 1;
+
+        ItemStack itemStack = inventory.getItem(index - 1);
+        if (itemStack == null) itemStack = new ItemStack(material, amount);
+        itemStack.setType(material);
+        itemStack.setAmount(amount);
+        ItemMeta meta = itemStack.getItemMeta();
+        if (meta != null) {
+            meta.setDisplayName(display);
+            meta.setLore(lore);
+            itemStack.setItemMeta(meta);
+        }
+        inventory.setItem(index - 1, itemStack);
+    }
+
+    public void clearSlotItem(Inventory inventory, Integer slotIndex) {
+        if (!slots.contains(slotIndex)) return;
+        leftCommands.remove(slotIndex);
+        rightCommands.remove(slotIndex);
+
+        ItemStack itemStack = inventory.getItem(slotIndex - 1);
+        if (itemStack == null) itemStack = new ItemStack(material.value, amount);
+        itemStack.setType(material.value);
+        itemStack.setAmount(amount);
+        ItemMeta itemMeta = itemStack.getItemMeta();
+        if (itemMeta != null) {
+            if (!StringUtils.isBlank(display)) itemMeta.setDisplayName(display);
+            if (lore != null) itemMeta.setLore(lore);
+            itemStack.setItemMeta(itemMeta);
+        }
+        inventory.setItem(slotIndex - 1, itemStack);
     }
 
     public MaterialData getMaterial() {
@@ -228,10 +289,6 @@ public class MenuPanelSlot implements Cloneable {
 
     public void setRightConditions(List<SlotClickCondition> rightConditions) {
         this.rightConditions = rightConditions;
-    }
-
-    public MenuPanelSlot() {
-
     }
 
     @Override
@@ -323,23 +380,26 @@ public class MenuPanelSlot implements Cloneable {
         }
 
         for (String command : commands) {
+            String _prefix = "";
+            String _command = "";
             int location = command.indexOf(" ");
-            if (location <= -1) {
-                if (command.equalsIgnoreCase(COMMAND_PERFORM_CLOSE)) {
-                    player.getOpenInventory().close();
-                } else {
-                    CommandManager.runPlayerCommand(command, player);
-                }
-                return;
+            if (location >= 0) {
+                _prefix = command.substring(0, location);
+                _command = command.substring(location + 1);
+            } else {
+                if (command.charAt(0) == '[' && command.charAt(command.length() - 1) == ']')
+                    _prefix = command;
+                else
+                    _command = command;
             }
 
-            String _prefix = command.substring(0, location);
-            String _command = command.substring(location + 1);
             switch (_prefix.toLowerCase()) {
                 case COMMAND_PERFORM_MESSAGE -> player.sendMessage(_command);
                 case COMMAND_PERFORM_CONSOLE -> CommandManager.runConsoleCommand(_command, player);
                 case COMMAND_PERFORM_PLAYER -> CommandManager.runPlayerCommand(_command, player);
                 case COMMAND_PERFORM_CLOSE -> player.getOpenInventory().close();
+                case COMMAND_PERFORM_NEXT_PAGE -> owningMenu.setPage(owningMenu.getPage() + 1);
+                case COMMAND_PERFORM_BACK_PAGE -> owningMenu.setPage(owningMenu.getPage() - 1);
                 default -> CommandManager.runPlayerCommand(command, player);
             }
         }

@@ -5,7 +5,7 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.hcmc.hcplayground.enums.RecipeType;
+import org.hcmc.hcplayground.enums.CraftingType;
 import org.hcmc.hcplayground.model.config.BanItemConfiguration;
 import org.hcmc.hcplayground.utility.Global;
 
@@ -25,7 +25,7 @@ public class BanItemManager {
         banItems = Global.deserializeList(section, BanItemConfiguration.class);
     }
 
-    public static BanItemConfiguration getBanItem(RecipeType type) {
+    public static BanItemConfiguration getBanItem(CraftingType type) {
         return banItems.stream().filter(x -> x.getType().equals(type)).findAny().orElse(null);
     }
 

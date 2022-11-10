@@ -3,6 +3,7 @@ package org.hcmc.hcplayground.manager;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.*;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.MemorySection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.ArmorStand;
@@ -26,14 +27,18 @@ import org.hcmc.hcplayground.model.minion.MinionPanelSlot;
 import org.hcmc.hcplayground.model.minion.MinionTemplate;
 import org.hcmc.hcplayground.serialization.MinionTypeSerialization;
 import org.hcmc.hcplayground.serialization.PanelSlotTypeSerialization;
-import org.hcmc.hcplayground.utility.Global;
-import org.hcmc.hcplayground.utility.NameBinaryTag;
-import org.hcmc.hcplayground.utility.PlayerHeader;
-import org.hcmc.hcplayground.utility.RomanNumber;
+import org.hcmc.hcplayground.utility.*;
 
+import java.io.File;
+import java.io.FilenameFilter;
+import java.io.IOException;
 import java.util.*;
 
 public class MinionManager {
+    private static final Plugin plugin = HCPlayground.getInstance();
+    private static final String MINION_CONFIGURE_PATH = String.format("%s/minion",plugin.getDataFolder());
+    private static final String MINION_CONTROL_PANEL_SECTION = "minion_panel";
+    private static final String MINION_TEMPLATE_SECTION = "minion_template";
 
     public final static String PERSISTENT_MAIN_KEY = "minion";
     public final static String PERSISTENT_SUB_KEY = "content";
@@ -42,22 +47,39 @@ public class MinionManager {
     /**
      * Minion修整工作平台周期，单位: 秒
      */
-    public final static int DRESSING_PERIOD = 5;
-    private final static Plugin plugin = HCPlayground.getInstance();
-    private static List<MinionTemplate> minions = new ArrayList<>();
-    private static ConfigurationSection panelSection;
+    public static final int DRESSING_PERIOD = 5;
+    private static final List<MinionTemplate> minions = new ArrayList<>();
+    private static ConfigurationSection minionPanelSection;
 
     public MinionManager() {
 
     }
 
-    public static void Load(YamlConfiguration yaml) throws IllegalAccessException {
-        ConfigurationSection _template = yaml.getConfigurationSection("minion_template");
-        panelSection = yaml.getConfigurationSection("minion_panel");
+    public static void Load() throws IllegalAccessException {
+        try {
+            minions.clear();
+            File dir = new File(MINION_CONFIGURE_PATH);
+            FilenameFilter filter = new YamlFileFilter();
+            String[] filenames = dir.list(filter);
+            if (filenames == null) return;
 
-        if (_template == null) return;
-        minions = loadMinionTemplates(_template);
-        ItemManager.setItemMinions(minions);
+            for (String file : filenames) {
+                // 获取路径内每个yaml文档
+                YamlConfiguration yaml = new YamlConfiguration();
+                yaml.load(String.format("%s/%s", MINION_CONFIGURE_PATH, file));
+                // 爪牙控制面板节段，如果定义了多个爪牙控制面板节段，只得到第一个能获取的爪牙控制面板节段
+                if (minionPanelSection == null)
+                    minionPanelSection = yaml.getConfigurationSection(MINION_CONTROL_PANEL_SECTION);
+                // 爪牙模板定义节段
+                ConfigurationSection minionTemplateSection = yaml.getConfigurationSection(MINION_TEMPLATE_SECTION);
+                if (minionTemplateSection == null) continue;
+                List<MinionTemplate> _minions = loadMinionTemplates(minionTemplateSection);
+                minions.addAll(_minions);
+            }
+            ItemManager.setItemMinions(minions);
+        } catch (IOException | InvalidConfigurationException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
@@ -72,7 +94,7 @@ public class MinionManager {
         Inventory inv = Bukkit.createInventory(holder, 54, title);
         holder.setInventory(inv);
         // 获取在minion.yml中minion_panel的所有slots定义
-        List<MinionPanelSlot> slots = Global.deserializeList(panelSection, MinionPanelSlot.class);
+        List<MinionPanelSlot> slots = Global.deserializeList(minionPanelSection, MinionPanelSlot.class);
         holder.setSlots(slots);
         // 按照slots定义摆放控制面板
         for (MinionPanelSlot slot : slots) {
@@ -285,7 +307,6 @@ public class MinionManager {
                 }
             }
         }
-
         return templates;
     }
 }

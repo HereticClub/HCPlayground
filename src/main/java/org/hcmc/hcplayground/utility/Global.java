@@ -36,7 +36,10 @@ import org.hcmc.hcplayground.model.config.CourseConfiguration;
 import org.hcmc.hcplayground.model.config.PotionConfiguration;
 import org.hcmc.hcplayground.model.enchantment.EnchantmentItem;
 import org.hcmc.hcplayground.model.item.ItemBase;
+import org.hcmc.hcplayground.model.menu.CollectionMenuPanel;
 import org.hcmc.hcplayground.model.menu.MenuPanelSlot;
+import org.hcmc.hcplayground.model.menu.RecipeMenuPanel;
+import org.hcmc.hcplayground.model.menu.SkillMenuPanel;
 import org.hcmc.hcplayground.runnable.PluginRunnable;
 import org.hcmc.hcplayground.serialization.*;
 import org.jetbrains.annotations.NotNull;
@@ -116,11 +119,11 @@ public final class Global {
     private final static String FILE_MOBS = "mobs.yml";
     private final static String FILE_BROADCAST = "broadcast.yml";
     private final static String FILE_CLEARLAG = "clearlag.yml";
-    private final static String FILE_RECIPE = "recipe.yml";
+    //private final static String FILE_RECIPE = "recipe.yml";
     private final static String FILE_CCMD = "ccmd.yml";
     private final static String FILE_SIDEBAR = "scoreboard.yml";
     private final static String FILE_HOLOGRAM = "hologram.yml";
-    private final static String FILE_MINION = "minion.yml";
+    //private final static String FILE_MINION = "minion.yml";
     private final static String FILE_MMO_SKILL = "skill.yml";
     private final static String FILE_MMO_REWARD = "reward.yml";
     private final static String FILE_ARMOR_SET = "armorset.yml";
@@ -176,9 +179,9 @@ public final class Global {
                 FILE_DROPS,
                 FILE_HOLOGRAM,
                 FILE_ITEMS,
-                FILE_MINION,
+                //FILE_MINION,
                 FILE_MOBS,
-                FILE_RECIPE,
+                //FILE_RECIPE,
                 FILE_SIDEBAR,
                 FILE_MMO_SKILL,
                 FILE_MMO_REWARD,
@@ -195,7 +198,9 @@ public final class Global {
                 .excludeFieldsWithoutExposeAnnotation()
                 .registerTypeAdapter(ArmorSetType.class, new ArmorSetTypeSerialization())
                 .registerTypeAdapter(CcmdActionType.class, new CcmdActionTypeSerialization())
+                .registerTypeAdapter(CollectionMenuPanel.CollectionType.class, new CollectionTypeSerialization())
                 .registerTypeAdapter(CompareType.class, new CompareTypeSerialization())
+                .registerTypeAdapter(CraftingType.class, new CraftingTypeSerialization())
                 .registerTypeAdapter(CrazyBlockType.class, new CrazyTypeSerialization())
                 .registerTypeAdapter(Enchantment.class, new EnchantmentSerialization())
                 .registerTypeAdapter(EnchantmentItem.class, new EnchantmentItemSerialization())
@@ -215,13 +220,13 @@ public final class Global {
                 .registerTypeAdapter(MaterialData.class, new MaterialDataSerialization())
                 .registerTypeAdapter(MinionCategory.class, new MinionCategorySerialization())
                 .registerTypeAdapter(MinionType.class, new MinionTypeSerialization())
-                .registerTypeAdapter(MMOType.class, new MMOTypeSerialization())
                 .registerTypeAdapter(NamespacedKey.class, new NamespacedKeySerialization())
                 .registerTypeAdapter(OperatorType.class, new OperatorTypeSerialization())
                 .registerTypeAdapter(PanelSlotType.class, new PanelSlotTypeSerialization())
                 .registerTypeAdapter(PermissionDefault.class, new PermissionDefaultSerialization())
                 .registerTypeAdapter(PotionEffect.class, new PotionEffectSerialization())
                 .registerTypeAdapter(RecipeType.class, new RecipeTypeSerialization())
+                .registerTypeAdapter(SkillMenuPanel.SkillType.class, new SkillTypeSerialization())
                 .registerTypeAdapter(Sound.class, new SoundSerialization())
                 .serializeNulls()
                 .setDateFormat(DATE_TIME_FORMAT)
@@ -253,7 +258,7 @@ public final class Global {
         ItemManager.Load(getYamlConfiguration(FILE_ITEMS));
         // 5.加载爪牙模板配置
         // 无依赖，可优先加载
-        MinionManager.Load(getYamlConfiguration(FILE_MINION));
+        MinionManager.Load();
         // 6.加载套装奖励配置
         // 无依赖，可优先加载
         ArmorSetManager.Load(getYamlConfiguration(FILE_ARMOR_SET));
@@ -283,7 +288,7 @@ public final class Global {
         MobManager.Load(getYamlConfiguration(FILE_MOBS));
         // 15.加载配方列表
         // 依赖ItemManager
-        RecipeManager.Load(getYamlConfiguration(FILE_RECIPE));
+        RecipeManager.Load();
         // 16.加载奖励配置
         // 依赖ItemManager, RecipeManager
         RewardManager.Load(getYamlConfiguration(FILE_MMO_REWARD));
@@ -321,20 +326,50 @@ public final class Global {
         LogMessage("Global runnable thread stopped");
     }
 
-    /**
-     * 获取section节段内容，使用Gson反序列到T对象，并且设置placeholder，然后返回T对象
-     */
-    public static <T> T deserialize(@NotNull ConfigurationSection section, @NotNull Player player, @NotNull Class<? extends T> tClass) {
+    public static <T> T deserialize(@NotNull ConfigurationSection section, @NotNull Class<? extends T> cls){
         T item;
         String fieldNameId = "id";
 
         try {
-            String ClassName = tClass.getSimpleName();
+            String ClassName = cls.getSimpleName();
+            String value = GsonObject.toJson((section).getValues(false)).replace(CHAR_0026, CHAR_00A7);
+            item = GsonObject.fromJson(value, cls);
+
+            Class<?> findClass = cls;
+            Field fieldId = null;
+            while (findClass != null) {
+                Field[] fields = findClass.getDeclaredFields();
+                fieldId = Arrays.stream(fields).filter(x -> x.getName().equalsIgnoreCase(fieldNameId)).findAny().orElse(null);
+                if (fieldId != null) break;
+                findClass = findClass.getSuperclass();
+            }
+
+            if (fieldId != null) {
+                fieldId.setAccessible(true);
+                fieldId.set(item, String.format("%s.%s", ClassName, section.getName()));
+            }
+
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+
+        return item;
+    }
+
+    /**
+     * 获取section节段内容，使用Gson反序列到T对象，并且设置placeholder，然后返回T对象
+     */
+    public static <T> T deserialize(@NotNull ConfigurationSection section, @NotNull Player player, @NotNull Class<? extends T> cls) {
+        T item;
+        String fieldNameId = "id";
+
+        try {
+            String ClassName = cls.getSimpleName();
             String value = GsonObject.toJson((section).getValues(false)).replace(CHAR_0026, CHAR_00A7);
             value = PlaceholderAPI.setPlaceholders(player, value);
-            item = GsonObject.fromJson(value, tClass);
+            item = GsonObject.fromJson(value, cls);
 
-            Class<?> findClass = tClass;
+            Class<?> findClass = cls;
             Field fieldId = null;
             while (findClass != null) {
                 Field[] fields = findClass.getDeclaredFields();
@@ -356,9 +391,9 @@ public final class Global {
     }
 
     @NotNull
-    public static <T> List<T> deserializeList(@NotNull ConfigurationSection section, @NotNull Player player, @NotNull Class<? extends T> tClass) {
+    public static <T> List<T> deserializeList(@NotNull ConfigurationSection section, @NotNull Player player, @NotNull Class<? extends T> cls) {
         Set<String> keys = section.getKeys(false);
-        String ClassName = tClass.getSimpleName();
+        String ClassName = cls.getSimpleName();
         List<T> list = new ArrayList<>();
         String fieldNameId = "id";
 
@@ -369,8 +404,8 @@ public final class Global {
                 String value = GsonObject.toJson(itemSection.getValues(false)).replace(CHAR_0026, CHAR_00A7);
                 value = PlaceholderAPI.setPlaceholders(player, value);
 
-                T item = GsonObject.fromJson(value, tClass);
-                Class<?> findClass = tClass;
+                T item = GsonObject.fromJson(value, cls);
+                Class<?> findClass = cls;
                 Field fieldId = null;
                 while (findClass != null) {
                     Field[] fields = findClass.getDeclaredFields();
@@ -395,9 +430,9 @@ public final class Global {
      * 获取section内所有子节段，使用Gson反序列到每一个T对象，然后返回List&lt;T&gt;数组
      */
     @NotNull
-    public static <T> List<T> deserializeList(ConfigurationSection section, Class<? extends T> tClass) {
+    public static <T> List<T> deserializeList(ConfigurationSection section, Class<? extends T> cls) {
         Set<String> keys = section.getKeys(false);
-        String ClassName = tClass.getSimpleName();
+        String ClassName = cls.getSimpleName();
         List<T> list = new ArrayList<>();
         String fieldNameId = "id";
 
@@ -408,8 +443,8 @@ public final class Global {
                 String value = GsonObject.toJson(itemSection.getValues(false)).replace(CHAR_0026, CHAR_00A7);
                 //System.out.println(value);
 
-                T item = GsonObject.fromJson(value, tClass);
-                Class<?> findClass = tClass;
+                T item = GsonObject.fromJson(value, cls);
+                Class<?> findClass = cls;
                 Field fieldId = null;
                 while (findClass != null) {
                     Field[] fields = findClass.getDeclaredFields();
@@ -435,7 +470,7 @@ public final class Global {
      * 获取yml文档内所有子节段，使用Gson反序列到每一个T对象，然后返回List&lt;T&gt;数组
      */
     @NotNull
-    public static <T> List<T> deserializeList(YamlConfiguration yaml, Class<? extends T> tClass) {
+    public static <T> List<T> deserializeList(YamlConfiguration yaml, Class<? extends T> cls) {
         Set<String> keys = yaml.getKeys(false);
         List<T> list = new ArrayList<>();
         String fieldNameId = "id";
@@ -447,8 +482,8 @@ public final class Global {
                 String value = GsonObject.toJson(itemSection.getValues(false)).replace(CHAR_0026, CHAR_00A7);
                 //System.out.println(value);
 
-                T item = GsonObject.fromJson(value, tClass);
-                Field fieldId = Arrays.stream(tClass.getDeclaredFields()).filter(x -> x.getName().equalsIgnoreCase(fieldNameId)).findAny().orElse(null);
+                T item = GsonObject.fromJson(value, cls);
+                Field fieldId = Arrays.stream(cls.getDeclaredFields()).filter(x -> x.getName().equalsIgnoreCase(fieldNameId)).findAny().orElse(null);
                 if (fieldId != null) {
                     fieldId.setAccessible(true);
                     fieldId.set(item, s);

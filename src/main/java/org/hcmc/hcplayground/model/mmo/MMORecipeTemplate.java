@@ -2,7 +2,8 @@ package org.hcmc.hcplayground.model.mmo;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
-import org.hcmc.hcplayground.enums.MMOType;
+import org.hcmc.hcplayground.enums.RecipeType;
+import org.hcmc.hcplayground.model.menu.RecipeMenuPanel;
 
 public class MMORecipeTemplate {
     @Expose
@@ -10,7 +11,7 @@ public class MMORecipeTemplate {
     private String title;
     @Expose
     @SerializedName(value = "type")
-    private MMOType type;
+    private RecipeType type;
 
     @Expose(deserialize = false)
     private String id;
@@ -19,7 +20,7 @@ public class MMORecipeTemplate {
         return title;
     }
 
-    public MMOType getType() {
+    public RecipeType getType() {
         return type;
     }
 

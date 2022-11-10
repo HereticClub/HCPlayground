@@ -4,10 +4,13 @@ import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.plugin.Plugin;
+import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.enums.PanelSlotType;
 import org.hcmc.hcplayground.model.item.ItemBase;
 import org.hcmc.hcplayground.model.recipe.CraftPanel;
@@ -15,19 +18,24 @@ import org.hcmc.hcplayground.model.recipe.CraftPanelSlot;
 import org.hcmc.hcplayground.model.recipe.CrazyShapedRecipe;
 import org.hcmc.hcplayground.serialization.PanelSlotTypeSerialization;
 import org.hcmc.hcplayground.utility.Global;
+import org.hcmc.hcplayground.utility.YamlFileFilter;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.File;
+import java.io.FilenameFilter;
+import java.io.IOException;
 import java.util.*;
 
 public class RecipeManager {
-
-    private static List<CrazyShapedRecipe> recipes = new ArrayList<>();
+    private static final Plugin plugin = HCPlayground.getInstance();
+    private static final String PATH_RECIPE_CONFIGURE = String.format("%s/recipe", plugin.getDataFolder());
+    private static final String SECTION_RECIPES = "recipes";
+    private static final List<CrazyShapedRecipe> recipes = new ArrayList<>();
     private static ConfigurationSection craftPanelSection;
     private static ConfigurationSection anvilPanelSection;
     private static ConfigurationSection enchantPanelSection;
     private static ConfigurationSection barrierItemSection;
     private static ConfigurationSection recipeLockedSection;
-
     private static final List<String> idList = new ArrayList<>();
 
     public RecipeManager() {
@@ -38,30 +46,48 @@ public class RecipeManager {
         return recipes;
     }
 
-    public static void Load(YamlConfiguration yaml) throws IllegalAccessException {
-        ConfigurationSection recipeSection = yaml.getConfigurationSection("recipes");
-        if (recipeSection != null) recipes = Global.deserializeList(recipeSection, CrazyShapedRecipe.class);
+    public static void Load() throws IllegalAccessException {
+        try {
+            recipes.clear();
+            idList.clear();
 
-        idList.clear();
+            File dir = new File(PATH_RECIPE_CONFIGURE);
+            FilenameFilter filter = new YamlFileFilter();
+            String[] filenames = dir.list(filter);
+            if (filenames == null) return;
+            Arrays.sort(filenames);
 
-        craftPanelSection = yaml.getConfigurationSection("crafting_panel");
-        anvilPanelSection = yaml.getConfigurationSection("anvil_panel");
-        enchantPanelSection = yaml.getConfigurationSection("enchanting_panel");
-        barrierItemSection = yaml.getConfigurationSection("barrier_item");
-        recipeLockedSection = yaml.getConfigurationSection("recipe_locked");
-
-        for (CrazyShapedRecipe r : recipes) {
-            // 全部成分都是普通Material
-            // 所有成分数量=1
-            // 成分形状边长<=3
-            // 则添加到传统配方
-            idList.add(r.getId().toLowerCase());
-            if (r.isLegacy()) {
-                r.setLegacyRecipe();
-            } else {
-                r.prepareCrazyRecipe();
-                MMOManager.setRecipeMenuMapping(r.getId());
+            for (String file : filenames) {
+                // 获取路径内每个yaml文档
+                YamlConfiguration yaml = new YamlConfiguration();
+                yaml.load(String.format("%s/%s", PATH_RECIPE_CONFIGURE, file));
+                // 以下节段只获取第一次获得的节段实例，即使在不同的yaml文档中出现多次
+                if (craftPanelSection == null) craftPanelSection = yaml.getConfigurationSection("crafting_panel");
+                if (anvilPanelSection == null) anvilPanelSection = yaml.getConfigurationSection("anvil_panel");
+                if (enchantPanelSection == null) enchantPanelSection = yaml.getConfigurationSection("enchanting_panel");
+                if (barrierItemSection == null) barrierItemSection = yaml.getConfigurationSection("barrier_item");
+                if (recipeLockedSection == null) recipeLockedSection = yaml.getConfigurationSection("recipe_locked");
+                // 获取recipes配置节段实例
+                ConfigurationSection recipeSection = yaml.getConfigurationSection(SECTION_RECIPES);
+                if (recipeSection == null) continue;
+                List<CrazyShapedRecipe> _recipes = Global.deserializeList(recipeSection, CrazyShapedRecipe.class);
+                recipes.addAll(_recipes);
             }
+
+            for (CrazyShapedRecipe r : recipes) {
+                // 全部成分都是普通Material
+                // 所有成分数量=1
+                // 成分形状边长<=3
+                // 则添加到传统配方
+                idList.add(r.getId().toLowerCase());
+                if (r.isLegacy()) {
+                    r.setLegacyRecipe();
+                } else {
+                    r.prepareCrazyRecipe();
+                }
+            }
+        } catch (IOException | InvalidConfigurationException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -142,6 +168,15 @@ public class RecipeManager {
         return recipes.stream().filter(x -> x.getId().equalsIgnoreCase(id)).findAny().orElse(null);
     }
 
+    public static CrazyShapedRecipe getRecipe(@NotNull ItemStack fromResult) {
+        ItemBase fromBase = ItemManager.getItemBase(fromResult);
+        for (CrazyShapedRecipe recipe : recipes) {
+            ItemBase recipeBase = ItemManager.getItemBase(recipe.getResult());
+            if (recipeBase.isSimilar(fromBase)) return recipe;
+        }
+        return null;
+    }
+
     public static CrazyShapedRecipe getRecipe(@NotNull Inventory inventory) {
         List<ItemStack> requirements = getRequirements(inventory);
         if (requirements.size() == 0) return null;
@@ -182,7 +217,7 @@ public class RecipeManager {
         return createBlockedItemStack(_title, _material, _lore);
     }
 
-    private static ItemStack createBlockedItemStack(String display, String material, List<String> lore){
+    private static ItemStack createBlockedItemStack(String display, String material, List<String> lore) {
         lore.replaceAll(x -> x.replace("&", "§"));
 
         String _material = StringUtils.isBlank(material) ? "BARRIER" : material.toUpperCase();

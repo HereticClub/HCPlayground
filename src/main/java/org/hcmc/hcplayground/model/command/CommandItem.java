@@ -19,14 +19,13 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.hcmc.hcplayground.HCPlayground;
-import org.hcmc.hcplayground.enums.MMOType;
 import org.hcmc.hcplayground.enums.MinionType;
 import org.hcmc.hcplayground.manager.*;
 import org.hcmc.hcplayground.model.menu.*;
 import org.hcmc.hcplayground.model.parkour.CourseInfo;
 import org.hcmc.hcplayground.model.player.PlayerData;
-import org.hcmc.hcplayground.serialization.MMOTypeSerialization;
 import org.hcmc.hcplayground.serialization.MaterialSerialization;
+import org.hcmc.hcplayground.serialization.SkillTypeSerialization;
 import org.hcmc.hcplayground.utility.Global;
 import org.hcmc.hcplayground.utility.RomanNumber;
 import org.jetbrains.annotations.NotNull;
@@ -178,13 +177,13 @@ public class CommandItem extends Command {
             // 获取指令字符串
             if (index == 2 && getName().equalsIgnoreCase(COMMAND_REWARD_MANAGER)) {
                 if (args[0].equalsIgnoreCase(COMMAND_REWARD_MANAGER_CLAIM)) {
-                    tabs = new ArrayList<>(MMOManager.getSkillIdList());
-                    tabs.addAll(MMOManager.getCollectionIdList());
+                    tabs = new ArrayList<>(MMOManager.getSkillRewardNames());
+                    tabs.addAll(MMOManager.getCollectionRewardNames());
                 }
                 if (args[0].equalsIgnoreCase(COMMAND_REWARD_MANAGER_RESET)) {
                     tabs = new ArrayList<>(Collections.singleton("*"));
-                    tabs.addAll(MMOManager.getSkillIdList());
-                    tabs.addAll(MMOManager.getCollectionIdList());
+                    tabs.addAll(MMOManager.getSkillRewardNames());
+                    tabs.addAll(MMOManager.getCollectionRewardNames());
                 }
             }
             if (index == 2 && getName().equalsIgnoreCase(COMMAND_RECIPE_MANAGER)) {
@@ -227,7 +226,7 @@ public class CommandItem extends Command {
                 }
             }
             if (index == 2 && getName().equalsIgnoreCase(COMMAND_SKILL_MANAGER)) {
-                tabs = MMOManager.getSkillIdList();
+                tabs = MMOManager.getSkillRewardNames();
             }
             if (index == 2 && getName().equalsIgnoreCase(COMMAND_PLAYGROUND_MENUS)) {
                 if (args[0].equalsIgnoreCase(COMMAND_PLAYGROUND_MENUS_OPEN)) {
@@ -452,7 +451,7 @@ public class CommandItem extends Command {
         // args[1] - Skill Type
         // args[2] - Player Name
         Player target = Bukkit.getPlayer(args[2]);
-        MMOType type = MMOTypeSerialization.valueOf(args[1]);
+        SkillMenuPanel.SkillType type = SkillTypeSerialization.valueOf(args[1]);
         Material material = MaterialSerialization.valueOf(args[1]);
         if (target == null) {
             sender.sendMessage(LanguageManager.getString("playerNotExist").replace("%player%", args[2]));
@@ -460,9 +459,9 @@ public class CommandItem extends Command {
         }
 
         if (args[1].equalsIgnoreCase("*")) {
-            MMOType[] types = MMOType.values();
+            SkillMenuPanel.SkillType[] types = SkillMenuPanel.SkillType.values();
             Material[] materials = Material.values();
-            for (MMOType t : types) {
+            for (SkillMenuPanel.SkillType t : types) {
                 RewardManager.reset(t, target);
             }
             for (Material m : materials) {
@@ -473,12 +472,12 @@ public class CommandItem extends Command {
             return true;
         }
 
-        if (type.equals(MMOType.UNDEFINED) && material.equals(Material.AIR)) {
+        if (type.equals(SkillMenuPanel.SkillType.UNDEFINED) && material.equals(Material.AIR)) {
             sender.sendMessage(LanguageManager.getString("rewardTypeInvalid").replace("%reward%", args[1]));
             return false;
         }
 
-        if (!type.equals(MMOType.UNDEFINED)) RewardManager.reset(type, target);
+        if (!type.equals(SkillMenuPanel.SkillType.UNDEFINED)) RewardManager.reset(type, target);
         if (!material.equals(Material.AIR)) RewardManager.reset(material, target);
 
         target.sendMessage(LanguageManager.getString("rewardLevelReset").replace("%skill%", type.name()));
@@ -489,19 +488,20 @@ public class CommandItem extends Command {
         // args[1] - Skill Type or material
         // args[2] - Player Name
         Player target = Bukkit.getPlayer(args[2]);
-        MMOType type = MMOTypeSerialization.valueOf(args[1]);
+        SkillMenuPanel.SkillType type = SkillTypeSerialization.valueOf(args[1]);
         Material material = MaterialSerialization.valueOf(args[1]);
         if (target == null) {
             sender.sendMessage(LanguageManager.getString("playerNotExist").replace("%player%", args[2]));
             return false;
         }
-        if (type.equals(MMOType.UNDEFINED) && material.equals(Material.AIR)) {
+        if (type.equals(SkillMenuPanel.SkillType.UNDEFINED) && material.equals(Material.AIR)) {
             sender.sendMessage(LanguageManager.getString("rewardTypeInvalid").replace("%reward%", args[1]));
             return false;
         }
 
-        if (!type.equals(MMOType.UNDEFINED)) RewardManager.claim(type, target);
-        if (!material.equals(Material.AIR)) RewardManager.claim(material, target);
+        if (!material.equals(Material.AIR)) RewardManager.claim(target, material);
+        if (!type.equals(SkillMenuPanel.SkillType.UNDEFINED)) RewardManager.claim(target, type);
+
         return true;
     }
 
@@ -522,8 +522,8 @@ public class CommandItem extends Command {
         String playerName = args[2];
         String points = args[3];
         Player target = Bukkit.getPlayer(playerName);
-        MMOType type = MMOTypeSerialization.valueOf(args[1]);
-        if (type.equals(MMOType.UNDEFINED)) {
+        SkillMenuPanel.SkillType type = SkillTypeSerialization.valueOf(args[1]);
+        if (type.equals(SkillMenuPanel.SkillType.UNDEFINED)) {
             sender.sendMessage(LanguageManager.getString("skillTypeInvalid").replace("%skill%", args[1]));
             return false;
         }
@@ -546,8 +546,8 @@ public class CommandItem extends Command {
         String playerName = args[2];
         String points = args[3];
         Player target = Bukkit.getPlayer(playerName);
-        MMOType type = MMOTypeSerialization.valueOf(args[1]);
-        if (type.equals(MMOType.UNDEFINED)) {
+        SkillMenuPanel.SkillType type = SkillTypeSerialization.valueOf(args[1]);
+        if (type.equals(SkillMenuPanel.SkillType.UNDEFINED)) {
             sender.sendMessage(LanguageManager.getString("skillTypeInvalid").replace("%skill%", args[1]));
             return false;
         }
@@ -1252,16 +1252,27 @@ public class CommandItem extends Command {
             sender.sendMessage(LanguageManager.getString("playerNotExist").replace("%player%", target));
             return false;
         }
-        // 获取技能菜单模板名称，skillTemplate为null表示普通菜单而非技能菜单
+        // 获取菜单名称和实例
         String menuName = args[1].toLowerCase();
-        String menuId = MMOManager.getMaterialMenuMapping().getOrDefault(menuName, menuName);
-        // 显示菜单实例不存在信息
+        String menuId = MenuManager.getTemplateName(menuName);
         MenuPanel menu = MenuManager.getMenuPanel(menuId, targetPlayer);
+        // 显示菜单实例不存在信息
         if (menu == null) {
-            targetPlayer.sendMessage(LanguageManager.getString("menuNotExist").replace("%menu%", menuId));
+            targetPlayer.sendMessage(LanguageManager.getString("menuNotExist").replace("%menu%", menuName));
             return false;
         }
-        menu.open(targetPlayer, menuName);
+        // 显示菜单在当前世界不可使用信息
+        if (menu.isDisabled(targetPlayer)) {
+            targetPlayer.sendMessage(LanguageManager.getString("menuWorldProhibited", targetPlayer)
+                    .replace("%world%", targetPlayer.getWorld().getName())
+                    .replace("%menu%", menu.getTitle())
+            );
+            return false;
+        }
+
+        menu.OnConfigured(MMOManager.getYaml());
+        Inventory inventory = menu.OnOpening(targetPlayer, menuName);
+        if (inventory != null) targetPlayer.openInventory(inventory);
         return true;
     }
 
@@ -1277,7 +1288,8 @@ public class CommandItem extends Command {
             return false;
         }
 
-        menu.close(targetPlayer);
+        menu.OnClosed(targetPlayer, menuId);
+        targetPlayer.closeInventory();
         return true;
     }
 

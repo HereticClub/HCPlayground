@@ -4,7 +4,7 @@ import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
-import org.hcmc.hcplayground.enums.MMOType;
+import org.hcmc.hcplayground.model.menu.CollectionMenuPanel;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -17,7 +17,7 @@ public class MMOCollectionCategory {
      */
     @Expose
     @SerializedName(value = "type")
-    private MMOType type;
+    private CollectionMenuPanel.CollectionType type;
     /**
      * 收集类型的显示名称
      */
@@ -39,7 +39,7 @@ public class MMOCollectionCategory {
         return name;
     }
 
-    public MMOType getType() {
+    public CollectionMenuPanel.CollectionType getType() {
         return type;
     }
 

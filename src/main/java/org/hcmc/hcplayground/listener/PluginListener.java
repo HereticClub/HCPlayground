@@ -28,7 +28,7 @@ import org.bukkit.scheduler.BukkitTask;
 import org.hcmc.hcplayground.HCPlayground;
 import org.hcmc.hcplayground.enums.CrazyBlockType;
 import org.hcmc.hcplayground.enums.PanelSlotType;
-import org.hcmc.hcplayground.enums.RecipeType;
+import org.hcmc.hcplayground.enums.CraftingType;
 import org.hcmc.hcplayground.event.WorldMorningEvent;
 import org.hcmc.hcplayground.manager.*;
 import org.hcmc.hcplayground.model.command.CommandItem;
@@ -383,7 +383,7 @@ public class PluginListener implements Listener {
     @EventHandler
     private void onPlayerEnchanting(PrepareAnvilEvent event) {
         AnvilInventory inv = event.getInventory();
-        BanItemConfiguration banItem = BanItemManager.getBanItem(RecipeType.SMITHING);
+        BanItemConfiguration banItem = BanItemManager.getBanItem(CraftingType.SMITHING);
 
         ItemStack item1 = inv.getItem(0);
         boolean hasEnchant1 = BanItemManager.checkEnchantments(item1, banItem.getEnchantments());

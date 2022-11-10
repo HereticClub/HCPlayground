@@ -7,13 +7,13 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.hcmc.hcplayground.enums.MMOType;
 import org.hcmc.hcplayground.manager.*;
 import org.hcmc.hcplayground.model.item.ItemBase;
+import org.hcmc.hcplayground.model.menu.SkillMenuPanel;
 import org.hcmc.hcplayground.model.player.PlayerData;
 import org.hcmc.hcplayground.model.recipe.CrazyShapedRecipe;
-import org.hcmc.hcplayground.serialization.MMOTypeSerialization;
 import org.hcmc.hcplayground.serialization.MaterialSerialization;
+import org.hcmc.hcplayground.serialization.SkillTypeSerialization;
 import org.hcmc.hcplayground.utility.RomanNumber;
 import org.jetbrains.annotations.NotNull;
 
@@ -236,11 +236,11 @@ public class MMOLevelTemplate {
             this.display = String.format("%s %s", display, RomanNumber.fromInteger(level));
 
         String _rewardType = rewardType.toLowerCase();
-        MMOType type = MMOTypeSerialization.valueOf(_rewardType);
+        SkillMenuPanel.SkillType type = SkillTypeSerialization.valueOf(_rewardType);
         Material material = MaterialSerialization.valueOf(_rewardType);
 
         List<String> _rewards = new ArrayList<>();
-        if (!type.equals(MMOType.UNDEFINED) && rewards.containsKey(_rewardType)) _rewards = rewards.get(_rewardType);
+        if (!type.equals(SkillMenuPanel.SkillType.UNDEFINED) && rewards.containsKey(_rewardType)) _rewards = rewards.get(_rewardType);
         if (!material.equals(Material.AIR) && rewards.containsKey(_rewardType)) _rewards = rewards.get(_rewardType);
 
         for (String rewardId : _rewards) {

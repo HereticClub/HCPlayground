@@ -2,8 +2,11 @@ package org.hcmc.hcplayground.model.mmo;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.hcmc.hcplayground.enums.MMOType;
+import org.hcmc.hcplayground.manager.PlayerManager;
+import org.hcmc.hcplayground.model.menu.SkillMenuPanel;
+import org.hcmc.hcplayground.model.player.PlayerData;
 
 import java.util.*;
 
@@ -16,7 +19,7 @@ public class MMOSkillTemplate {
      */
     @Expose
     @SerializedName(value = "type")
-    private MMOType type;
+    private SkillMenuPanel.SkillType type;
     /**
      * 技能的显示名称
      */
@@ -50,11 +53,11 @@ public class MMOSkillTemplate {
         this.levels = new ArrayList<>(levels);
     }
 
-    public MMOType getType() {
+    public SkillMenuPanel.SkillType getType() {
         return type;
     }
 
-    public void setType(MMOType type) {
+    public void setType(SkillMenuPanel.SkillType type) {
         this.type = type;
     }
 
@@ -64,12 +67,25 @@ public class MMOSkillTemplate {
 
     /**
      * 获取所有已达成的技能等级实例
-     * @param statistic 当前技能类型的统计值
+     * @param player 统计技能等级的玩家实例
      * @return 所有已达成当前技能的等级实例
      */
-    public List<MMOLevelTemplate> getReachedLevels(int statistic) {
+    public List<MMOLevelTemplate> getReachedLevels(Player player) {
+        PlayerData data = PlayerManager.getPlayerData(player);
+        int statistic = data.getStatisticSkill(type);
+
         return levels.stream().filter(x -> statistic >= x.getThreshold()).toList();
     }
+
+    public List<MMOLevelTemplate> getUnclaimedLevels(Player player) {
+        PlayerData data = PlayerManager.getPlayerData(player);
+        int statistic = data.getStatisticSkill(type);
+        Map<SkillMenuPanel.SkillType, Integer> claimed = data.getClaimedSkillLevel();
+        int claimedLevel = claimed.getOrDefault(type, 0);
+
+        return levels.stream().filter(x -> statistic >= x.getThreshold() && x.getLevel() > claimedLevel).toList();
+    }
+
 
     public Map<Integer, ItemStack> decorateLevels(int statistic) {
         Map<Integer, ItemStack> itemStacks = new HashMap<>();
